@@ -22,5 +22,69 @@
 body {
   background: var(--background);
   color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+}
+
+/* =====================================================================
+   ESTILOS DE IMPRESIÓN CLÍNICA EDITORIAL (A4 PDF DOSSIER)
+   ===================================================================== */
+@media print {
+  @page {
+    size: A4 portrait;
+    margin: 8mm 10mm;
+  }
+
+  *, *::before, *::after {
+    -webkit-print-color-adjust: exact !important;
+    print-color-adjust: exact !important;
+  }
+
+  html, body {
+    background: #ffffff !important;
+    color: #111827 !important;
+    font-size: 11px !important;
+    height: auto !important;
+    overflow: visible !important;
+  }
+
+  /* Liberar contenedores del dashboard para permitir paginación fluida */
+  .h-screen, .overflow-hidden, .overflow-y-auto {
+    height: auto !important;
+    overflow: visible !important;
+  }
+
+  /* Ocultar elementos de navegación y herramientas web en la impresión */
+  aside, nav, header:not(.dossier-header), .print-hide, .print\:hidden {
+    display: none !important;
+  }
+
+  /* Cada hoja A4 dedicada */
+  .dossier-page {
+    page-break-after: always !important;
+    break-after: page !important;
+    page-break-inside: avoid !important;
+    break-inside: avoid !important;
+    min-height: 275mm !important;
+    height: auto !important;
+    display: flex !important;
+    flex-direction: column !important;
+    justify-content: space-between !important;
+    box-sizing: border-box !important;
+    padding: 0 !important;
+    margin: 0 !important;
+  }
+
+  .dossier-page:last-child {
+    page-break-after: avoid !important;
+    break-after: avoid !important;
+  }
+
+  .print-avoid-break {
+    page-break-inside: avoid !important;
+    break-inside: avoid !important;
+  }
+
+  img {
+    max-width: 100% !important;
+    display: inline-block !important;
+  }
 }

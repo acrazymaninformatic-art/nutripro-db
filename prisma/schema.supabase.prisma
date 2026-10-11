@@ -1,0 +1,354 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider  = "postgresql"
+  url       = env("DATABASE_URL")
+  directUrl = env("DIRECT_URL")
+}
+
+// Modelos adaptados para Supabase (PostgreSQL en la Unión Europea)
+model User {
+  id           String     @id @default(cuid())
+  email        String     @unique
+  name         String
+  passwordHash String
+  image        String?
+  createdAt    DateTime   @default(now())
+  updatedAt    DateTime   @updatedAt
+
+  patients     Patient[]
+  recipes      Recipe[]
+  mealPlans    MealPlan[]
+}
+
+model Patient {
+  id                 String          @id @default(cuid())
+  userId             String
+  user               User            @relation(fields: [userId], references: [id], onDelete: Cascade)
+  firstName          String
+  lastName           String
+  email              String?
+  phone              String?
+  birthDate          DateTime
+  sex                String          // "MALE" | "FEMALE"
+  heightCm           Float
+  objective          String          // Objective enum values
+  activityLevel      String          // ActivityLevel enum values
+  notes              String?
+  allergies          String          @default("") // Comma-separated values
+  intolerances       String          @default("") // Comma-separated values
+  dietaryPreferences String          @default("") // Comma-separated values
+  referralSource     String?
+
+  // === CLINICAL HISTORY (Page 2) ===
+  medicalHistory        String   @default("")  // Comma-separated: diabetes, hipertensión, etc.
+  currentMedications    String   @default("")  // Comma-separated medication list
+  supplements           String   @default("")  // Current supplements
+  surgeries             String   @default("")  // Past surgeries
+  familyHistory         String   @default("")  // Family medical history
+
+  // === DIGESTIVE & METABOLISM (Page 3) ===
+  digestiveIssues       String   @default("")  // Comma-separated: reflujo, hinchazón, estreñimiento
+  bowelFrequency        String?  // daily, every_other_day, irregular
+  foodAversions         String   @default("")  // Foods the patient dislikes/avoids
+  waterIntakeLiters     Float?   // Daily water intake
+  caffeineDaily         Int?     // Number of coffees/teas per day
+  alcoholFrequency      String?  // none, occasional, weekly, daily
+  smoking               Boolean  @default(false)
+
+  // === LIFESTYLE & HABITS (Page 4) ===
+  occupation            String?
+  workSchedule          String?  // morning, afternoon, night, rotating
+  sleepHours            Float?   // Average hours of sleep
+  sleepQuality          String?  // good, regular, poor, insomnia
+  stressLevel           String?  // low, moderate, high, very_high
+  mealSchedule          String   @default("")  // Typical meal times JSON
+  mealsPerDay           Int?     // Number of meals per day
+  eatsOut               String?  // never, rarely, weekly, daily
+  cooksAtHome           Boolean  @default(true)
+
+  // === EXERCISE & SPORTS (Page 5) ===
+  exerciseType          String   @default("")  // Comma-separated: running, weights, swimming
+  exerciseFrequency     Int?     // Times per week
+  exerciseDuration      Int?     // Minutes per session
+  exerciseTime          String?  // morning, afternoon, evening
+  sportGoals            String   @default("")  // Competition goals
+  trainingExperience    String?  // beginner, intermediate, advanced, elite
+
+  // === WOMEN'S HEALTH (Page 6) ===
+  menstrualCycle        String?  // regular, irregular, amenorrhea, menopause, not_applicable
+  pregnant              Boolean  @default(false)
+  breastfeeding         Boolean  @default(false)
+  contraceptive         String?  // none, hormonal, iud, other
+  hormoneTherapy        Boolean  @default(false)
+
+  // === CLINICAL GOALS & PRIORITIES (Page 7) ===
+  shortTermGoal         String?  // Goal for 1-3 months
+  longTermGoal          String?  // Goal for 6-12 months
+  motivation            String?  // health, aesthetics, performance, medical
+  previousDiets         String   @default("")  // Past diet attempts
+  dietDuration          String?  // How long they want to follow the plan
+  consultationFrequency String?  // weekly, biweekly, monthly
+  budgetLevel           String?  // low, medium, high
+  additionalNotes       String?  // Extra notes from intake
+
+  // === ADVANCED CLINICAL PROTOCOLS ===
+  isGLP1Treatment       Boolean  @default(false) // Paciente en tratamiento con análogos GLP-1 (Ozempic/Wegovy)
+  isTCAProtocol         Boolean  @default(false) // Protocolo TCA (ocultar números y centrarse en hábitos)
+
+  // === ANAMNESIS DIGITAL PRE-CONSULTA ===
+  anamnesisStatus       String   @default("NOT_SENT") // "NOT_SENT" | "PENDING" | "COMPLETED"
+  anamnesisSentAt       DateTime?
+  anamnesisCompletedAt  DateTime?
+
+  isActive           Boolean         @default(true)
+  createdAt          DateTime        @default(now())
+  updatedAt          DateTime        @updatedAt
+
+  anthropometries      Anthropometry[]
+  mealPlans            MealPlan[]
+  consultations        Consultation[]
+  bloodAnalyses        BloodAnalysis[]
+  anamnesisSubmissions AnamnesisSubmission[]
+
+  @@index([userId])
+}
+
+model AnamnesisSubmission {
+  id                  String    @id @default(cuid())
+  patientId           String
+  patient             Patient   @relation(fields: [patientId], references: [id], onDelete: Cascade)
+  submittedAt         DateTime  @default(now())
+
+  // Datos declarados por la paciente (en sus propias palabras)
+  declaredName        String?
+  declaredPhone       String?
+  declaredEmail       String?
+  declaredBirthDate   DateTime?
+  declaredGender      String?
+  
+  // Hábitos y Nutrición
+  foodPreferences     String?
+  foodAversions       String?
+  mealsPerDay         Int?
+  mealScheduleNotes   String?
+  waterIntakeLiters   Float?
+  recall24h           String?
+  
+  // Salud y Síntomas
+  digestiveIssues     String?
+  medicalHistory      String?
+  currentMedications  String?
+  isGLP1Treatment     Boolean   @default(false)
+  shortTermGoal       String?
+
+  @@index([patientId])
+}
+
+model BloodAnalysis {
+  id                String   @id @default(cuid())
+  patientId         String
+  patient           Patient  @relation(fields: [patientId], references: [id], onDelete: Cascade)
+  date              DateTime
+  glucoseMgDl       Float?   // Glucosa basal (mg/dL) - ref: 70-100
+  hba1cPct          Float?   // HbA1c (%) - ref: <5.7
+  cholesterolMgDl   Float?   // Colesterol Total (mg/dL) - ref: <200
+  hdlMgDl           Float?   // HDL (mg/dL) - ref: >40/50
+  ldlMgDl           Float?   // LDL (mg/dL) - ref: <100
+  triglyceridesMgDl Float?   // Triglicéridos (mg/dL) - ref: <150
+  ferritinNgMl      Float?   // Ferritina (ng/mL) - ref: 30-300
+  tshUiuMl          Float?   // TSH (µIU/mL) - ref: 0.4-4.0
+  vitaminDNgMl      Float?   // Vitamina D 25-OH (ng/mL) - ref: 30-100
+  creatinineMgDl    Float?   // Creatinina (mg/dL) - ref: 0.7-1.2
+  uricAcidMgDl      Float?   // Ácido Úrico (mg/dL) - ref: 3.5-7.2
+  gotAstUL          Float?   // GOT/AST (U/L) - ref: <35
+  gptAltUL          Float?   // GPT/ALT (U/L) - ref: <45
+  notes             String?
+  createdAt         DateTime @default(now())
+
+  @@index([patientId])
+}
+
+model Anthropometry {
+  id                  String   @id @default(cuid())
+  patientId           String
+  patient             Patient  @relation(fields: [patientId], references: [id], onDelete: Cascade)
+  date                DateTime
+  weightKg            Float
+  bodyFatPct          Float?
+  muscleMassKg        Float?
+  visceralFat         Float?
+  waistCm             Float?
+  hipCm               Float?
+  chestCm             Float?
+  armCm               Float?
+  thighCm             Float?
+  skinfoldTriceps     Float?
+  skinfoldSubscapular Float?
+  skinfoldSuprailiac  Float?
+  skinfoldAbdominal   Float?
+  notes               String?
+  createdAt           DateTime @default(now())
+
+  @@index([patientId])
+}
+
+model Consultation {
+  id        String   @id @default(cuid())
+  patientId String
+  patient   Patient  @relation(fields: [patientId], references: [id], onDelete: Cascade)
+  date      DateTime
+  notes     String?
+  createdAt DateTime @default(now())
+
+  @@index([patientId])
+}
+
+model Food {
+  id                   Int                @id @default(autoincrement())
+  fdcId                Int?               @unique
+  name                 String
+  category             String?
+  source               String             @default("custom")
+  imageUrl             String?
+  servingSize          Float              @default(100)
+  servingUnit          String             @default("g")
+  calories             Float
+  proteinG             Float
+  carbsG               Float
+  fatG                 Float
+  fiberG               Float              @default(0)
+  sugarG               Float              @default(0)
+  saturatedFatG        Float              @default(0)
+  monounsaturatedFatG  Float              @default(0)
+  polyunsaturatedFatG  Float              @default(0)
+  cholesterolMg        Float              @default(0)
+  sodiumMg             Float              @default(0)
+  potassiumMg          Float              @default(0)
+  calciumMg            Float              @default(0)
+  ironMg               Float              @default(0)
+  vitaminAUg           Float              @default(0)
+  vitaminCMg           Float              @default(0)
+  vitaminDUg           Float              @default(0)
+  vitaminEMg           Float              @default(0)
+  vitaminKUg           Float              @default(0)
+  vitaminB1Mg          Float              @default(0)
+  vitaminB2Mg          Float              @default(0)
+  vitaminB3Mg          Float              @default(0)
+  vitaminB6Mg          Float              @default(0)
+  vitaminB12Ug         Float              @default(0)
+  folateUg             Float              @default(0)
+  magnesiumMg          Float              @default(0)
+  zincMg               Float              @default(0)
+  phosphorusMg         Float              @default(0)
+  seleniumUg           Float              @default(0)
+  createdAt            DateTime           @default(now())
+  updatedAt            DateTime           @updatedAt
+
+  recipeIngredients    RecipeIngredient[]
+  mealItems            MealItem[]
+}
+
+model Recipe {
+  id           String             @id @default(cuid())
+  userId       String
+  user         User               @relation(fields: [userId], references: [id], onDelete: Cascade)
+  name         String
+  description  String?
+  servings     Int
+  prepTimeMin  Int?
+  cookTimeMin  Int?
+  instructions String
+  category     String?
+  imageUrl     String?
+  createdAt    DateTime           @default(now())
+  updatedAt    DateTime           @updatedAt
+
+  ingredients  RecipeIngredient[]
+  mealItems    MealItem[]
+
+  @@index([userId])
+}
+
+model RecipeIngredient {
+  id        String   @id @default(cuid())
+  recipeId  String
+  recipe    Recipe   @relation(fields: [recipeId], references: [id], onDelete: Cascade)
+  foodId    Int
+  food      Food     @relation(fields: [foodId], references: [id], onDelete: Cascade)
+  quantityG Float
+  notes     String?
+
+  @@index([recipeId])
+  @@index([foodId])
+}
+
+model MealPlan {
+  id             String    @id @default(cuid())
+  patientId      String
+  patient        Patient   @relation(fields: [patientId], references: [id], onDelete: Cascade)
+  userId         String
+  user           User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  name           String
+  startDate      DateTime
+  endDate        DateTime?
+  targetKcal     Float
+  targetProteinG Float
+  targetCarbsG   Float
+  targetFatG     Float
+  notes          String?
+  hideCaloriesTCA Boolean  @default(false)
+  isGLP1         Boolean   @default(false)
+  isActive       Boolean   @default(true)
+  createdAt      DateTime  @default(now())
+  updatedAt      DateTime  @updatedAt
+
+  days           DayPlan[]
+
+  @@index([patientId])
+  @@index([userId])
+}
+
+model DayPlan {
+  id         String    @id @default(cuid())
+  mealPlanId String
+  mealPlan   MealPlan  @relation(fields: [mealPlanId], references: [id], onDelete: Cascade)
+  dayNumber  Int
+  customName String?
+  date       DateTime?
+
+  meals      Meal[]
+
+  @@index([mealPlanId])
+}
+
+model Meal {
+  id        String     @id @default(cuid())
+  dayPlanId String
+  dayPlan   DayPlan    @relation(fields: [dayPlanId], references: [id], onDelete: Cascade)
+  mealType  String     // MealType enum values
+  order     Int
+
+  items     MealItem[]
+
+  @@index([dayPlanId])
+}
+
+model MealItem {
+  id        String   @id @default(cuid())
+  mealId    String
+  meal      Meal     @relation(fields: [mealId], references: [id], onDelete: Cascade)
+  foodId    Int?
+  food      Food?    @relation(fields: [foodId], references: [id], onDelete: SetNull)
+  recipeId  String?
+  recipe    Recipe?  @relation(fields: [recipeId], references: [id], onDelete: SetNull)
+  quantityG Float
+  servings  Float    @default(1)
+  notes     String?
+
+  @@index([mealId])
+  @@index([foodId])
+  @@index([recipeId])
+}
