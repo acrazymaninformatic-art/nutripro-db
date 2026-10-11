@@ -136,8 +136,13 @@ export async function sendAnamnesisEmail({
   anamnesisUrl: string
   mailtoUrl: string
 }> {
-  // Determinar la URL del cuestionario
-  const resolvedBaseUrl = baseUrl || process.env.APP_PUBLIC_URL || process.env.NEXTAUTH_URL || 'http://localhost:3000'
+  const resolvedBaseUrl =
+    baseUrl ||
+    process.env.APP_PUBLIC_URL ||
+    (process.env.VERCEL_PROJECT_PRODUCTION_URL ? `https://${process.env.VERCEL_PROJECT_PRODUCTION_URL}` : undefined) ||
+    (process.env.VERCEL_URL ? `https://${process.env.VERCEL_URL}` : undefined) ||
+    process.env.NEXTAUTH_URL ||
+    'http://localhost:3000'
   const anamnesisUrl = `${resolvedBaseUrl}/anamnesis?patientId=${patientId}`
 
   const emailSubject = `Cuestionario Clínico Pre-Consulta - ${clinicName}`
