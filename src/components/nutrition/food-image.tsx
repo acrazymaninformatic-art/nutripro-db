@@ -10,6 +10,7 @@ interface FoodImageProps {
   width?: number
   height?: number
   loading?: 'lazy' | 'eager'
+  category?: string | null
 }
 
 export function FoodImage({
