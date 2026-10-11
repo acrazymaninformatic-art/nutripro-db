@@ -34,7 +34,7 @@ export default async function MealPlansPage() {
             <CalendarDays className="h-12 w-12 text-gray-300 mx-auto mb-3" />
             <h3 className="text-base font-bold text-gray-900">No hay planes nutricionales activos</h3>
             <p className="text-sm text-gray-500 max-w-sm mx-auto mt-1 mb-4">
-              Crea una pauta semanal para tus pacientes con ajuste automático de macros y lista de la compra.
+              Crea una pauta semanal para tus pacientes con ajuste automático de macros y recetas clínicas calculadas.
             </p>
             <Link href="/dashboard/plans/new">
               <Button>

@@ -68,7 +68,6 @@ interface RecipeDetailViewProps {
 
 export function RecipeDetailView({ recipe, fallback }: RecipeDetailViewProps) {
   const [servings, setServings] = useState<number>(recipe.servings || 1)
-  const [completedSteps, setCompletedSteps] = useState<Record<number, boolean>>({})
   const [copied, setCopied] = useState(false)
 
   // Base recipe calculations
@@ -133,11 +132,6 @@ export function RecipeDetailView({ recipe, fallback }: RecipeDetailViewProps) {
       fPct,
     }
   }, [recipe, fallback, baseServings, scale, servings])
-
-  // Step toggle
-  const toggleStep = (idx: number) => {
-    setCompletedSteps((prev) => ({ ...prev, [idx]: !prev[idx] }))
-  }
 
   // Copy recipe summary
   const handleCopyRecipe = async () => {
@@ -207,7 +201,7 @@ ${recipe.instructions}
             ) : (
               <>
                 <Copy className="h-3.5 w-3.5 text-gray-500" />
-                <span>Copiar Ficha</span>
+                <span>Copiar Receta</span>
               </>
             )}
           </Button>
@@ -220,7 +214,7 @@ ${recipe.instructions}
             className="rounded-2xl text-xs font-bold border-blue-200 bg-blue-50/60 text-blue-800 hover:bg-blue-100/70 flex items-center gap-1.5"
           >
             <Printer className="h-3.5 w-3.5" />
-            <span>Imprimir Ficha Paciente</span>
+            <span>Imprimir Ficha Técnica</span>
           </Button>
 
           <DeleteRecipeButton recipeId={recipe.id} recipeName={recipe.name} />
@@ -533,54 +527,40 @@ ${recipe.instructions}
         </CardContent>
       </Card>
 
-      {/* Step by step Instructions */}
+      {/* Technical Preparation Instructions */}
       <Card className="rounded-3xl border-gray-200 overflow-hidden shadow-xs">
         <CardHeader className="pb-3 bg-gradient-to-r from-gray-50 to-blue-50/30 border-b border-gray-100 flex flex-row items-center justify-between">
           <div>
             <CardTitle className="text-base flex items-center gap-2 font-bold text-gray-900">
               <FileText className="h-4 w-4 text-blue-600" />
-              <span>Elaboración y Preparación Paso a Paso</span>
+              <span>Instrucciones de Preparación Culinaria</span>
             </CardTitle>
             <CardDescription className="text-xs">
-              Haz clic en cada paso para marcarlo como completado durante el cocinado
+              Procedimiento técnico estandarizado para la elaboración de la receta
             </CardDescription>
           </div>
 
-          <span className="text-xs font-bold text-gray-500">
-            {Object.values(completedSteps).filter(Boolean).length} / {instructionsList.length} completados
+          <span className="text-xs font-bold text-blue-900 bg-blue-50 px-2.5 py-1 rounded-xl border border-blue-200">
+            {instructionsList.length} pasos
           </span>
         </CardHeader>
 
         <CardContent className="p-6">
           <div className="space-y-3">
             {instructionsList.length > 0 ? (
-              instructionsList.map((line, idx) => {
-                const isDone = completedSteps[idx]
-                return (
-                  <div
-                    key={idx}
-                    onClick={() => toggleStep(idx)}
-                    className={`flex items-start gap-3.5 p-4 rounded-2xl border transition-all cursor-pointer ${
-                      isDone
-                        ? 'bg-emerald-50/60 border-emerald-200 text-gray-400 line-through'
-                        : 'bg-gray-50/80 border-gray-200/70 hover:bg-blue-50/40 hover:border-blue-200 text-gray-800'
-                    }`}
-                  >
-                    <span
-                      className={`w-6 h-6 rounded-full font-black text-xs flex items-center justify-center shrink-0 mt-0.5 shadow-2xs transition-colors ${
-                        isDone
-                          ? 'bg-emerald-600 text-white'
-                          : 'bg-blue-600 text-white'
-                      }`}
-                    >
-                      {isDone ? <Check className="h-3.5 w-3.5" /> : idx + 1}
-                    </span>
-                    <p className={`text-sm leading-relaxed font-medium ${isDone ? 'line-through text-gray-400' : 'text-gray-900'}`}>
-                      {line.replace(/^\d+[\.\)]\s*/, '')}
-                    </p>
-                  </div>
-                )
-              })
+              instructionsList.map((line, idx) => (
+                <div
+                  key={idx}
+                  className="flex items-start gap-3.5 p-4 rounded-2xl bg-gray-50/80 border border-gray-200/70 text-gray-900"
+                >
+                  <span className="w-6 h-6 rounded-full font-black text-xs flex items-center justify-center shrink-0 mt-0.5 shadow-2xs bg-blue-600 text-white">
+                    {idx + 1}
+                  </span>
+                  <p className="text-sm leading-relaxed font-medium text-gray-900">
+                    {line.replace(/^\d+[\.\)]\s*/, '')}
+                  </p>
+                </div>
+              ))
             ) : (
               <p className="text-sm text-gray-500 italic">Sin instrucciones detalladas.</p>
             )}

@@ -8,8 +8,6 @@ import {
   CalendarDays,
   ShoppingCart,
   Printer,
-  CheckSquare,
-  Square,
   Flame,
   Leaf,
   User,
@@ -130,7 +128,6 @@ function getPreparationTip(foodName: string, category: string | null, customNote
 export function PlanViewer({ plan }: PlanViewerProps) {
   const [activeTab, setActiveTab] = useState<'dossier' | 'interactive' | 'grocery' | 'exchanges'>('dossier')
   const [activeDayNumber, setActiveDayNumber] = useState(1)
-  const [checkedItems, setCheckedItems] = useState<Record<string, boolean>>({})
   const [selectedRecipe, setSelectedRecipe] = useState<ClinicalRecipe | null>(null)
   const [hideCaloriesTCA, setHideCaloriesTCA] = useState<boolean>(Boolean(plan.hideCaloriesTCA))
 
@@ -180,10 +177,6 @@ export function PlanViewer({ plan }: PlanViewerProps) {
   }, [categorizedGrocery])
 
   const currentDay = plan.days.find((d: any) => d.dayNumber === activeDayNumber) || plan.days[0]
-
-  function toggleGroceryItem(name: string) {
-    setCheckedItems((prev) => ({ ...prev, [name]: !prev[name] }))
-  }
 
   function handlePrint() {
     window.print()
@@ -257,7 +250,7 @@ export function PlanViewer({ plan }: PlanViewerProps) {
               }`}
             >
               <ShoppingCart className="h-4 w-4 text-blue-600" />
-              <span>Lista de la Compra ({totalGroceryCount})</span>
+              <span>Consolidado de Alimentos ({totalGroceryCount})</span>
             </button>
           </div>
         </div>
@@ -854,7 +847,7 @@ export function PlanViewer({ plan }: PlanViewerProps) {
                             key={idx}
                             className="flex items-center gap-2 p-1.5 bg-white rounded-xl border border-gray-200 shadow-2xs"
                           >
-                            <Square className="h-3.5 w-3.5 text-gray-400 shrink-0" />
+                            <div className="w-1.5 h-1.5 rounded-full bg-blue-600 shrink-0" />
                             <div className="h-7 w-7 rounded-lg overflow-hidden bg-gray-100 shrink-0 border border-gray-200">
                               <img
                                 src={imageUrl}
@@ -1013,7 +1006,7 @@ export function PlanViewer({ plan }: PlanViewerProps) {
       )}
 
       {/* =========================================================================
-          VISTA 3: LISTA DE LA COMPRA INTERACTIVA CON CHECKBOXES (SOLO EN PANTALLA)
+          VISTA 3: CONSOLIDADO DE ALIMENTOS Y PESOS SEMANALES (VISTA CLÍNICA)
           ========================================================================= */}
       {activeTab === 'grocery' && (
         <Card className="rounded-3xl border-gray-200 overflow-hidden shadow-sm print:hidden">
@@ -1025,15 +1018,15 @@ export function PlanViewer({ plan }: PlanViewerProps) {
                 </div>
                 <div>
                   <CardTitle className="text-base font-bold text-gray-900">
-                    Lista de la Compra Interactiva
+                    Consolidado de Alimentos y Pesos Semanales
                   </CardTitle>
                   <CardDescription className="text-xs">
-                    Haz clic en cualquier artículo para marcarlo como comprado
+                    Cantidades netas totales calculadas para la pauta nutricional completa
                   </CardDescription>
                 </div>
               </div>
               <Badge variant="default" className="rounded-full px-3 py-1 font-bold bg-blue-100 text-blue-900 border-blue-300 text-xs">
-                {totalGroceryCount} Artículos
+                {totalGroceryCount} Alimentos Únicos
               </Badge>
             </div>
           </CardHeader>
@@ -1042,11 +1035,10 @@ export function PlanViewer({ plan }: PlanViewerProps) {
               <div key={category} className="space-y-2.5 border border-gray-200 rounded-2xl p-4 bg-gray-50/40">
                 <span className="text-xs font-black uppercase tracking-wider text-blue-950 border-b border-blue-200 pb-1.5 flex items-center justify-between">
                   <span>{category}</span>
-                  <span className="text-[10px] text-gray-500 font-semibold">{items.length} productos</span>
+                  <span className="text-[10px] text-gray-500 font-semibold">{items.length} alimentos</span>
                 </span>
                 <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-2.5">
                   {items.map((item, idx) => {
-                    const isChecked = !!checkedItems[item.name]
                     const imageUrl = item.food ? getFoodImage(item.food) : ''
                     const formattedQty =
                       item.quantityG >= 1000
@@ -1054,22 +1046,11 @@ export function PlanViewer({ plan }: PlanViewerProps) {
                         : `${item.quantityG} g`
 
                     return (
-                      <button
+                      <div
                         key={idx}
-                        type="button"
-                        onClick={() => toggleGroceryItem(item.name)}
-                        className={`flex items-center gap-2.5 p-2 rounded-2xl border text-left transition-all cursor-pointer ${
-                          isChecked
-                            ? 'bg-gray-100/70 border-gray-200 opacity-60'
-                            : 'bg-white border-gray-200 hover:border-blue-400 shadow-2xs'
-                        }`}
+                        className="flex items-center gap-2.5 p-2.5 rounded-2xl border border-gray-200 bg-white shadow-2xs"
                       >
-                        {isChecked ? (
-                          <CheckSquare className="h-4 w-4 text-blue-600 shrink-0" />
-                        ) : (
-                          <Square className="h-4 w-4 text-gray-400 shrink-0" />
-                        )}
-                        <div className="h-8 w-8 rounded-xl overflow-hidden bg-gray-100 shrink-0 border border-gray-200">
+                        <div className="h-9 w-9 rounded-xl overflow-hidden bg-gray-100 shrink-0 border border-gray-200">
                           <img
                             src={imageUrl}
                             alt={item.name}
@@ -1081,14 +1062,14 @@ export function PlanViewer({ plan }: PlanViewerProps) {
                           />
                         </div>
                         <div className="min-w-0 flex-1">
-                          <span className={`text-xs block truncate ${isChecked ? 'line-through text-gray-400 font-normal' : 'font-bold text-gray-900'}`}>
+                          <span className="text-xs font-bold text-gray-900 block truncate">
                             {item.name}
                           </span>
-                          <span className="text-[10px] font-extrabold text-blue-800 block">
+                          <span className="text-[11px] font-black text-blue-900 block">
                             {formattedQty}
                           </span>
                         </div>
-                      </button>
+                      </div>
                     )
                   })}
                 </div>
