@@ -47,14 +47,14 @@ export default async function MealPlansPage() {
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           {plans.map((plan) => (
-            <Card key={plan.id} className="flex flex-col hover:shadow-lg transition-all rounded-3xl border-gray-200 overflow-hidden hover:border-emerald-300">
+            <Card key={plan.id} className="flex flex-col hover:shadow-lg transition-all rounded-3xl border-gray-200 overflow-hidden hover:border-blue-300">
               <CardHeader className="pb-3 bg-gradient-to-br from-white to-gray-50/50">
                 <div className="flex items-start justify-between gap-2">
                   <Badge variant={plan.isActive ? 'default' : 'secondary'} className="text-xs rounded-full px-3 py-0.5 font-bold">
                     {plan.isActive ? 'Pauta Activa' : 'Finalizado'}
                   </Badge>
-                  <span className="text-xs font-black text-emerald-800 bg-emerald-50 px-2.5 py-1 rounded-full border border-emerald-200 flex items-center gap-1">
-                    <Flame className="h-3.5 w-3.5 text-emerald-600" />
+                  <span className="text-xs font-black text-blue-800 bg-blue-50 px-2.5 py-1 rounded-full border border-blue-200 flex items-center gap-1">
+                    <Flame className="h-3.5 w-3.5 text-blue-600" />
                     {plan.targetKcal} kcal
                   </span>
                 </div>
@@ -62,7 +62,7 @@ export default async function MealPlansPage() {
                   {plan.name}
                 </CardTitle>
                 <CardDescription className="flex items-center gap-1.5 text-xs text-gray-600 mt-1">
-                  <User className="h-3.5 w-3.5 text-emerald-600" />
+                  <User className="h-3.5 w-3.5 text-blue-600" />
                   <span>
                     Paciente: <strong>{plan.patient.firstName} {plan.patient.lastName}</strong>
                   </span>
@@ -96,7 +96,7 @@ export default async function MealPlansPage() {
 
               <CardFooter className="pt-2 border-t bg-gray-50/70 p-4">
                 <Link href={`/dashboard/plans/${plan.id}`} className="w-full">
-                  <Button variant="outline" size="sm" className="w-full flex items-center justify-center gap-1.5 rounded-2xl font-bold border-gray-200 hover:bg-emerald-50 hover:text-emerald-900 hover:border-emerald-300">
+                  <Button variant="outline" size="sm" className="w-full flex items-center justify-center gap-1.5 rounded-2xl font-bold border-gray-200 hover:bg-blue-50 hover:text-blue-900 hover:border-blue-300">
                     <span>Ver Dossier, Recetas & Compra</span>
                     <ArrowRight className="h-3.5 w-3.5" />
                   </Button>

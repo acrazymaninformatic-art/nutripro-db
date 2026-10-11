@@ -7,6 +7,8 @@ import { Badge } from '@/components/ui/badge'
 import { DeleteRecipeButton } from './delete-recipe-button'
 import { ArrowLeft, ChefHat, Clock, Users, Flame, Utensils, FileText } from 'lucide-react'
 
+import { CLINICAL_RECIPES } from '@/lib/nutrition/recipes-catalog'
+
 export const dynamic = 'force-dynamic'
 
 interface RecipeDetailPageProps {
@@ -34,14 +36,36 @@ export default async function RecipeDetailPage({ params }: RecipeDetailPageProps
     totalProt += ing.food.proteinG * factor
     totalCarbs += ing.food.carbsG * factor
     totalFat += ing.food.fatG * factor
-    totalFiber += ing.food.fiberG * factor
+    totalFiber += (ing.food.fiberG || 0) * factor
   })
 
   const servings = recipe.servings || 1
+
+  // Fallback to clinical catalog if database ingredients are empty
+  if (totalKcal === 0) {
+    const cleanRecName = recipe.name.toLowerCase().trim()
+    const matchedCat = CLINICAL_RECIPES.find(c => {
+      const cName = c.name.toLowerCase().trim()
+      return cleanRecName.includes(cName.slice(0, 15)) || cName.includes(cleanRecName.slice(0, 15))
+    })
+    if (matchedCat) {
+      totalKcal = matchedCat.caloriesPerServing * servings
+      totalProt = matchedCat.proteinG * servings
+      totalCarbs = matchedCat.carbsG * servings
+      totalFat = matchedCat.fatG * servings
+    }
+  }
+
   const kcalPerServing = Math.round(totalKcal / servings)
   const protPerServing = Math.round((totalProt / servings) * 10) / 10
   const carbsPerServing = Math.round((totalCarbs / servings) * 10) / 10
   const fatPerServing = Math.round((totalFat / servings) * 10) / 10
+  const fiberPerServing = Math.round((totalFiber / servings) * 10) / 10
+
+  const totalMacroCal = (protPerServing * 4) + (carbsPerServing * 4) + (fatPerServing * 9)
+  const pPct = totalMacroCal > 0 ? Math.round((protPerServing * 4 / totalMacroCal) * 100) : 30
+  const cPct = totalMacroCal > 0 ? Math.round((carbsPerServing * 4 / totalMacroCal) * 100) : 40
+  const fPct = totalMacroCal > 0 ? Math.max(0, 100 - pPct - cPct) : 30
 
   return (
     <div className="space-y-6 max-w-5xl mx-auto">
@@ -108,14 +132,42 @@ export default async function RecipeDetailPage({ params }: RecipeDetailPageProps
           )}
 
           {/* Highlight Card */}
-          <div className="p-4 rounded-2xl bg-emerald-50/80 border border-emerald-200 text-center min-w-[200px] shrink-0">
-            <span className="text-xs uppercase font-extrabold text-emerald-800 block">Valores por Ración</span>
-            <span className="text-3xl font-black text-emerald-950 block mt-0.5">{kcalPerServing}</span>
-            <span className="text-xs text-emerald-700 font-semibold">kcal netas</span>
-            <div className="grid grid-cols-3 gap-1 mt-2.5 pt-2.5 border-t border-emerald-200 text-xs font-bold">
-              <span className="text-blue-800">{protPerServing}g P</span>
-              <span className="text-amber-800">{carbsPerServing}g C</span>
-              <span className="text-rose-800">{fatPerServing}g G</span>
+          <div className="p-4 rounded-3xl bg-blue-50/90 border border-blue-200 text-center min-w-[240px] shrink-0 shadow-2xs">
+            <span className="text-[11px] uppercase font-black text-blue-900 tracking-wider block">Valores por Ración</span>
+            <span className="text-3xl font-black text-blue-950 block mt-0.5">{kcalPerServing}</span>
+            <span className="text-xs text-blue-700 font-bold">kcal netas</span>
+            
+            <div className="grid grid-cols-4 gap-1 mt-2.5 pt-2.5 border-t border-blue-200 text-xs font-bold">
+              <div className="p-1 rounded-xl bg-white/70">
+                <span className="text-[9px] uppercase font-bold text-blue-700 block">Prot</span>
+                <span className="text-blue-950 text-xs">{protPerServing}g</span>
+              </div>
+              <div className="p-1 rounded-xl bg-white/70">
+                <span className="text-[9px] uppercase font-bold text-amber-700 block">Carb</span>
+                <span className="text-amber-950 text-xs">{carbsPerServing}g</span>
+              </div>
+              <div className="p-1 rounded-xl bg-white/70">
+                <span className="text-[9px] uppercase font-bold text-rose-700 block">Grasa</span>
+                <span className="text-rose-950 text-xs">{fatPerServing}g</span>
+              </div>
+              <div className="p-1 rounded-xl bg-white/70">
+                <span className="text-[9px] uppercase font-bold text-sky-700 block">Fibra</span>
+                <span className="text-sky-950 text-xs">{fiberPerServing}g</span>
+              </div>
+            </div>
+
+            {/* Macro Split Bar */}
+            <div className="mt-2.5 pt-2 border-t border-blue-200/60 space-y-1">
+              <div className="h-1.5 w-full bg-blue-200/50 rounded-full overflow-hidden flex">
+                <div style={{ width: `${pPct}%` }} className="bg-blue-600 h-full" title={`Proteína: ${pPct}%`} />
+                <div style={{ width: `${cPct}%` }} className="bg-amber-500 h-full" title={`Carbohidratos: ${cPct}%`} />
+                <div style={{ width: `${fPct}%` }} className="bg-rose-500 h-full" title={`Grasas: ${fPct}%`} />
+              </div>
+              <div className="flex justify-between text-[9px] font-bold text-blue-900 px-0.5">
+                <span>{pPct}% P</span>
+                <span>{cPct}% C</span>
+                <span>{fPct}% G</span>
+              </div>
             </div>
           </div>
         </div>
@@ -123,9 +175,9 @@ export default async function RecipeDetailPage({ params }: RecipeDetailPageProps
 
       {/* Ingredients Table */}
       <Card className="rounded-3xl border-gray-200 overflow-hidden shadow-xs">
-        <CardHeader className="pb-3 bg-gradient-to-r from-gray-50 to-emerald-50/30 border-b border-gray-100">
+        <CardHeader className="pb-3 bg-gradient-to-r from-gray-50 to-blue-50/30 border-b border-gray-100">
           <CardTitle className="text-base flex items-center gap-2 font-bold text-gray-900">
-            <Utensils className="h-4 w-4 text-emerald-600" />
+            <Utensils className="h-4 w-4 text-blue-600" />
             <span>Ingredientes Necesarios ({recipe.ingredients.length})</span>
           </CardTitle>
           <CardDescription className="text-xs">Cantidades netas pesadas y desglose nutricional</CardDescription>
@@ -163,7 +215,7 @@ export default async function RecipeDetailPage({ params }: RecipeDetailPageProps
                 <td className="px-5 py-3 text-right">
                   {recipe.ingredients.reduce((acc, curr) => acc + curr.quantityG, 0)} g
                 </td>
-                <td className="px-5 py-3 text-right text-emerald-800 font-bold">{Math.round(totalKcal)} kcal</td>
+                <td className="px-5 py-3 text-right text-blue-800 font-bold">{Math.round(totalKcal)} kcal</td>
                 <td className="px-5 py-3 text-right text-blue-700">{Math.round(totalProt)} g</td>
                 <td className="px-5 py-3 text-right text-amber-700">{Math.round(totalCarbs)} g</td>
                 <td className="px-5 py-3 text-right text-rose-700">{Math.round(totalFat)} g</td>
@@ -175,9 +227,9 @@ export default async function RecipeDetailPage({ params }: RecipeDetailPageProps
 
       {/* Instructions */}
       <Card className="rounded-3xl border-gray-200 overflow-hidden shadow-xs">
-        <CardHeader className="pb-3 bg-gradient-to-r from-gray-50 to-emerald-50/30 border-b border-gray-100">
+        <CardHeader className="pb-3 bg-gradient-to-r from-gray-50 to-blue-50/30 border-b border-gray-100">
           <CardTitle className="text-base flex items-center gap-2 font-bold text-gray-900">
-            <FileText className="h-4 w-4 text-emerald-600" />
+            <FileText className="h-4 w-4 text-blue-600" />
             <span>Elaboración y Preparación Paso a Paso</span>
           </CardTitle>
           <CardDescription className="text-xs">
@@ -195,7 +247,7 @@ export default async function RecipeDetailPage({ params }: RecipeDetailPageProps
                       key={idx}
                       className="flex items-start gap-3 p-3.5 rounded-2xl bg-gray-50/70 border border-gray-200/60"
                     >
-                      <span className="w-6 h-6 rounded-full bg-emerald-600 text-white font-bold text-xs flex items-center justify-center shrink-0 mt-0.5 shadow-2xs">
+                      <span className="w-6 h-6 rounded-full bg-blue-600 text-white font-bold text-xs flex items-center justify-center shrink-0 mt-0.5 shadow-2xs">
                         {idx + 1}
                       </span>
                       <p className="text-sm text-gray-800 leading-relaxed font-medium">

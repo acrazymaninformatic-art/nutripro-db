@@ -370,7 +370,7 @@ export function BloodAnalysisCard({ patientId, records }: Props) {
                         key={bm.key}
                         className={`p-3 rounded-2xl border transition-all ${
                           status === 'normal'
-                            ? 'bg-emerald-50/40 border-emerald-100 text-emerald-950'
+                            ? 'bg-blue-50/40 border-blue-100 text-blue-950'
                             : status === 'warning'
                             ? 'bg-amber-50/50 border-amber-200 text-amber-950'
                             : 'bg-rose-50/60 border-rose-200 text-rose-950'
@@ -379,7 +379,7 @@ export function BloodAnalysisCard({ patientId, records }: Props) {
                         <div className="flex items-center justify-between text-xs font-semibold mb-1">
                           <span className="truncate pr-1 text-gray-700">{bm.name}</span>
                           {status === 'normal' && (
-                            <span title="Valor Normal"><CheckCircle2 className="h-4 w-4 text-emerald-600 shrink-0" /></span>
+                            <span title="Valor Normal"><CheckCircle2 className="h-4 w-4 text-blue-600 shrink-0" /></span>
                           )}
                           {status === 'warning' && (
                             <span title="Valor Límite"><AlertTriangle className="h-4 w-4 text-amber-600 shrink-0" /></span>
@@ -397,7 +397,7 @@ export function BloodAnalysisCard({ patientId, records }: Props) {
                         <div className="text-3xs text-gray-500 mt-1 flex justify-between">
                           <span>Ref: {bm.normalRange}</span>
                           <span className={`font-bold ${
-                            status === 'normal' ? 'text-emerald-700' : status === 'warning' ? 'text-amber-700' : 'text-rose-700'
+                            status === 'normal' ? 'text-blue-700' : status === 'warning' ? 'text-amber-700' : 'text-rose-700'
                           }`}>
                             {status === 'normal' ? 'Normal' : status === 'warning' ? 'Límite' : 'Alterado'}
                           </span>

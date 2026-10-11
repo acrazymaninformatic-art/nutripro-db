@@ -10,3 +10,6 @@ export * from './anthropometry';
 export * from './food-images';
 export * from './auto-plan-generator';
 export * from './recipes-catalog';
+export * from './clinical-templates';
+export * from './drug-interactions';
+

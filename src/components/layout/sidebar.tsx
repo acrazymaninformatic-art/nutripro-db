@@ -9,6 +9,8 @@ import {
   Apple,
   ChefHat,
   CalendarDays,
+  Calendar,
+  Calculator,
   Leaf,
   ChevronLeft,
   ChevronRight,
@@ -25,9 +27,11 @@ interface NavItem {
 const navItems: NavItem[] = [
   { name: 'Dashboard', href: '/dashboard', icon: LayoutDashboard },
   { name: 'Pacientes', href: '/dashboard/patients', icon: Users },
+  { name: 'Agenda & Citas', href: '/dashboard/appointments', icon: Calendar },
   { name: 'Alimentos', href: '/dashboard/foods', icon: Apple },
   { name: 'Recetas', href: '/dashboard/recipes', icon: ChefHat },
   { name: 'Planes', href: '/dashboard/plans', icon: CalendarDays },
+  { name: 'Calculadora', href: '/dashboard/calculator', icon: Calculator },
 ]
 
 export function Sidebar() {
@@ -54,13 +58,13 @@ export function Sidebar() {
           href="/dashboard"
           className="flex items-center gap-3 overflow-hidden focus:outline-none"
         >
-          <div className="flex items-center justify-center w-9 h-9 rounded-lg bg-green-600 text-white shrink-0 shadow-sm">
+          <div className="flex items-center justify-center w-9 h-9 rounded-xl bg-blue-600 text-white shrink-0 shadow-sm">
             <Leaf className="w-5 h-5" />
           </div>
           {!isCollapsed && (
             <div className="flex flex-col min-w-0">
               <span className="text-lg font-bold text-gray-900 tracking-tight leading-none">
-                Nutri<span className="text-green-600">Pro</span>
+                Nutri<span className="text-blue-600">Pro</span>
               </span>
               <span className="text-xs text-gray-500 font-medium leading-tight mt-0.5">
                 Dietética & Nutrición
@@ -106,6 +110,7 @@ export function Sidebar() {
             <Link
               key={item.href}
               href={item.href}
+              prefetch={true}
               title={isCollapsed ? item.name : undefined}
               className={cn(
                 'group flex items-center text-sm font-medium transition-colors border-l-3 border-l-[3px]',
@@ -113,14 +118,14 @@ export function Sidebar() {
                   ? 'justify-center px-0 py-3'
                   : 'gap-3 px-4 py-3',
                 isActive
-                  ? 'bg-green-50 text-green-700 border-green-600 font-semibold'
+                  ? 'bg-blue-50 text-blue-700 border-blue-600 font-semibold'
                   : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900 border-transparent'
               )}
             >
               <Icon
                 className={cn(
                   'w-5 h-5 shrink-0 transition-colors',
-                  isActive ? 'text-green-600' : 'text-gray-500 group-hover:text-gray-700'
+                  isActive ? 'text-blue-600' : 'text-gray-500 group-hover:text-gray-700'
                 )}
               />
               {!isCollapsed && (
@@ -134,22 +139,23 @@ export function Sidebar() {
       {/* Bottom section: User avatar with name, settings gear icon */}
       <div className="p-3 border-t border-gray-200 bg-white">
         {!isCollapsed ? (
-          <div className="flex items-center justify-between gap-2 p-2 rounded-lg hover:bg-gray-50 transition-colors">
+          <div className="flex items-center justify-between gap-2 p-2 rounded-xl hover:bg-gray-50 transition-colors">
             <div className="flex items-center gap-3 min-w-0">
-              <div className="flex items-center justify-center w-9 h-9 rounded-full bg-green-100 text-green-800 font-semibold text-sm shrink-0">
-                DR
+              <div className="flex items-center justify-center w-9 h-9 rounded-full bg-blue-100 text-blue-800 font-bold text-xs shrink-0">
+                EV
               </div>
               <div className="flex flex-col min-w-0">
                 <span className="text-sm font-semibold text-gray-900 truncate">
-                  Dr. Ruiz
+                  Eva Vidal
                 </span>
                 <span className="text-xs text-gray-500 truncate">
-                  Nutricionista
+                  Nutricionista Clínica
                 </span>
               </div>
             </div>
             <Link
               href="/dashboard/settings"
+              prefetch={true}
               className="p-1.5 text-gray-400 hover:text-gray-700 hover:bg-gray-100 rounded-md transition-colors shrink-0"
               title="Configuración"
               aria-label="Configuración"
@@ -160,13 +166,14 @@ export function Sidebar() {
         ) : (
           <div className="flex flex-col items-center gap-2">
             <div
-              className="flex items-center justify-center w-9 h-9 rounded-full bg-green-100 text-green-800 font-semibold text-sm shrink-0"
-              title="Dr. Ruiz - Nutricionista"
+              className="flex items-center justify-center w-9 h-9 rounded-full bg-blue-100 text-blue-800 font-bold text-xs shrink-0"
+              title="Eva Vidal - Nutricionista Clínica"
             >
-              DR
+              EV
             </div>
             <Link
               href="/dashboard/settings"
+              prefetch={true}
               className="p-1.5 text-gray-400 hover:text-gray-700 hover:bg-gray-100 rounded-md transition-colors"
               title="Configuración"
               aria-label="Configuración"

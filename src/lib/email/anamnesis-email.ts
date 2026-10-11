@@ -12,8 +12,8 @@ interface SendAnamnesisEmailParams {
 export function generateAnamnesisEmailHtml({
   patientName,
   anamnesisUrl,
-  professionalName = 'Tu Especialista en Nutrición',
-  clinicName = 'Consulta NutriPro',
+  professionalName = 'Eva Vidal',
+  clinicName = 'Consulta Nutricional Eva Vidal',
 }: {
   patientName: string
   anamnesisUrl: string
@@ -30,19 +30,19 @@ export function generateAnamnesisEmailHtml({
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Cuestionario Pre-Consulta de Nutrición</title>
 </head>
-<body style="margin: 0; padding: 0; background-color: #f8fafc; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; color: #1e293b; line-height: 1.6;">
-  <table role="presentation" border="0" cellpadding="0" cellspacing="0" width="100%" style="background-color: #f8fafc; padding: 30px 15px;">
+<body style="margin: 0; padding: 0; background-color: #f0f4f8; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; color: #1e293b; line-height: 1.6;">
+  <table role="presentation" border="0" cellpadding="0" cellspacing="0" width="100%" style="background-color: #f0f4f8; padding: 36px 15px;">
     <tr>
       <td align="center">
-        <table role="presentation" border="0" cellpadding="0" cellspacing="0" width="100%" style="max-width: 600px; background-color: #ffffff; border-radius: 20px; overflow: hidden; box-shadow: 0 4px 12px rgba(0,0,0,0.06); border: 1px solid #e2e8f0;">
+        <table role="presentation" border="0" cellpadding="0" cellspacing="0" width="100%" style="max-width: 600px; background-color: #ffffff; border-radius: 24px; overflow: hidden; box-shadow: 0 10px 25px rgba(2, 132, 199, 0.08); border: 1px solid #dbeafe;">
           
-          <!-- Encabezado con gradiente verde médico -->
+          <!-- Encabezado con gradiente azul clínico -->
           <tr>
-            <td style="background: linear-gradient(135deg, #059669 0%, #047857 100%); padding: 36px 30px; text-align: center;">
+            <td style="background: linear-gradient(135deg, #0284c7 0%, #1e40af 100%); padding: 38px 30px; text-align: center;">
               <span style="font-size: 26px; font-weight: 800; color: #ffffff; letter-spacing: -0.5px; display: inline-block;">
-                🥗 ${clinicName}
+                🩺 ${clinicName}
               </span>
-              <p style="margin: 8px 0 0 0; color: #d1fae5; font-size: 14px; font-weight: 500;">
+              <p style="margin: 8px 0 0 0; color: #e0f2fe; font-size: 14px; font-weight: 500;">
                 Cuestionario Clínico y Hábitos Nutricionales Pre-Consulta
               </p>
             </td>
@@ -50,66 +50,68 @@ export function generateAnamnesisEmailHtml({
 
           <!-- Contenido Principal -->
           <tr>
-            <td style="padding: 32px 30px;">
-              <h1 style="font-size: 20px; font-weight: 700; color: #0f172a; margin: 0 0 16px 0;">
+            <td style="padding: 36px 32px;">
+              <h1 style="font-size: 21px; font-weight: 800; color: #0f172a; margin: 0 0 16px 0;">
                 ¡Hola, ${firstName}!
               </h1>
 
-              <p style="font-size: 15px; color: #475569; margin: 0 0 16px 0;">
-                Para preparar tu consulta nutricional personalizada y diseñar un plan 100% adaptado a tus gustos, horarios y necesidades de salud, te invitamos a completar tu <strong>cuestionario clínico pre-consulta</strong>.
+              <p style="font-size: 15px; color: #475569; margin: 0 0 18px 0; line-height: 1.6;">
+                Para preparar tu consulta nutricional y diseñar un plan 100% adaptado a tus gustos, horarios, digestiones y objetivos de salud, por favor completa tu <strong>cuestionario clínico pre-consulta</strong>.
               </p>
 
-              <!-- Tarjeta informativa -->
-              <table role="presentation" border="0" cellpadding="0" cellspacing="0" width="100%" style="background-color: #f0fdf4; border-radius: 14px; border: 1px solid #bbf7d0; margin: 20px 0;">
+              <!-- Tarjeta informativa azul -->
+              <table role="presentation" border="0" cellpadding="0" cellspacing="0" width="100%" style="background-color: #f0f9ff; border-radius: 16px; border: 1px solid #bae6fd; margin: 22px 0;">
                 <tr>
-                  <td style="padding: 16px 20px;">
-                    <strong style="color: #166534; font-size: 14px; display: block; margin-bottom: 6px;">
-                      ⏱️ Solo te llevará entre 3 y 5 minutos:
+                  <td style="padding: 18px 22px;">
+                    <strong style="color: #0369a1; font-size: 14px; display: block; margin-bottom: 8px;">
+                      ⏱️ Te llevará solo entre 3 y 5 minutos:
                     </strong>
-                    <ul style="margin: 0; padding-left: 20px; color: #15803d; font-size: 13px;">
-                      <li style="margin-bottom: 4px;">Alimentos que te encantan y alimentos que rechazas</li>
-                      <li style="margin-bottom: 4px;">Alergias, intolerancias o patologías previas</li>
-                      <li style="margin-bottom: 4px;">Horarios de comida y consumo de agua</li>
-                      <li>Tus objetivos principales para esta etapa</li>
+                    <ul style="margin: 0; padding-left: 20px; color: #0284c7; font-size: 13px; line-height: 1.6;">
+                      <li style="margin-bottom: 5px;">Alimentos que te encantan y alimentos que rechazas</li>
+                      <li style="margin-bottom: 5px;">Medicación habitual, patologías o alergias</li>
+                      <li style="margin-bottom: 5px;">Salud digestiva (gases, hinchazón, reflujo)</li>
+                      <li style="margin-bottom: 5px;">Horarios de comida, consumo de agua y ejercicio</li>
+                      <li>Tus objetivos principales para esta consulta</li>
                     </ul>
                   </td>
                 </tr>
               </table>
 
-              <!-- Botón Principal -->
-              <table role="presentation" border="0" cellpadding="0" cellspacing="0" width="100%" style="margin: 28px 0;">
+              <!-- Botón Principal Azul -->
+              <table role="presentation" border="0" cellpadding="0" cellspacing="0" width="100%" style="margin: 30px 0;">
                 <tr>
                   <td align="center">
-                    <a href="${anamnesisUrl}" target="_blank" style="display: inline-block; background: #059669; color: #ffffff; text-decoration: none; font-size: 16px; font-weight: 700; padding: 14px 32px; border-radius: 12px; box-shadow: 0 4px 10px rgba(5, 150, 105, 0.35); text-align: center;">
+                    <a href="${anamnesisUrl}" target="_blank" style="display: inline-block; background: #0284c7; color: #ffffff; text-decoration: none; font-size: 16px; font-weight: 800; padding: 15px 36px; border-radius: 16px; box-shadow: 0 6px 16px rgba(2, 132, 199, 0.35); text-align: center;">
                       ✍️ Rellenar Mi Cuestionario Ahora
                     </a>
                   </td>
                 </tr>
               </table>
 
-              <p style="font-size: 12px; color: #64748b; text-align: center; margin: 0 0 20px 0;">
-                Si el botón no funciona en tu dispositivo, copia y pega el siguiente enlace en tu navegador:<br>
-                <a href="${anamnesisUrl}" style="color: #059669; word-break: break-all; font-size: 12px;">${anamnesisUrl}</a>
+              <p style="font-size: 12px; color: #64748b; text-align: center; margin: 0 0 24px 0;">
+                Si el botón no abre el enlace, copia y pega esta dirección en tu navegador:<br>
+                <a href="${anamnesisUrl}" style="color: #0284c7; word-break: break-all; font-size: 12px; text-decoration: underline;">${anamnesisUrl}</a>
               </p>
 
-              <hr style="border: 0; border-top: 1px solid #e2e8f0; margin: 24px 0;" />
+              <hr style="border: 0; border-top: 1px solid #e2e8f0; margin: 26px 0;" />
 
-              <p style="font-size: 13px; color: #64748b; margin: 0;">
+              <p style="font-size: 13px; color: #64748b; margin: 0; line-height: 1.5;">
                 Atentamente,<br>
-                <strong style="color: #1e293b;">${professionalName}</strong><br>
-                <span style="color: #059669; font-weight: 600;">${clinicName}</span>
+                <strong style="color: #1e293b; font-size: 14px;">${professionalName}</strong><br>
+                <span style="color: #0284c7; font-weight: 600;">${clinicName}</span><br>
+                <span style="color: #64748b; font-size: 12px;">evavidalinfo@gmail.com</span>
               </p>
             </td>
           </tr>
 
-          <!-- Pie de página RGPD -->
+          <!-- Pie de página RGPD y Confidencialidad -->
           <tr>
-            <td style="background-color: #f1f5f9; padding: 20px 30px; text-align: center; font-size: 11px; color: #94a3b8; border-top: 1px solid #e2e8f0;">
+            <td style="background-color: #f8fafc; padding: 22px 30px; text-align: center; font-size: 11px; color: #94a3b8; border-top: 1px solid #e2e8f0;">
               <p style="margin: 0 0 6px 0;">
-                🔒 <strong>Confidencialidad Médica (RGPD):</strong> La información introducida en este cuestionario será tratada de forma estrictamente confidencial exclusivamente para fines de evaluación dietética y clínica.
+                🔒 <strong>Confidencialidad Médica (RGPD):</strong> La información facilitada en este cuestionario es estrictamente confidencial y se usará únicamente para tu valoración nutricional.
               </p>
               <p style="margin: 0;">
-                Este correo fue enviado de forma automática por el sistema de gestión clínica NutriPro.
+                Este correo fue enviado de forma automática desde la plataforma clínica NutriPro.
               </p>
             </td>
           </tr>
@@ -127,8 +129,8 @@ export async function sendAnamnesisEmail({
   patientName,
   patientEmail,
   patientId,
-  professionalName = 'Tu Especialista en Nutrición',
-  clinicName = 'Consulta NutriPro',
+  professionalName = 'Eva Vidal',
+  clinicName = 'Consulta Nutricional Eva Vidal',
   baseUrl,
 }: SendAnamnesisEmailParams): Promise<{
   success: boolean
@@ -142,7 +144,8 @@ export async function sendAnamnesisEmail({
     (process.env.VERCEL_PROJECT_PRODUCTION_URL ? `https://${process.env.VERCEL_PROJECT_PRODUCTION_URL}` : undefined) ||
     (process.env.VERCEL_URL ? `https://${process.env.VERCEL_URL}` : undefined) ||
     process.env.NEXTAUTH_URL ||
-    'http://localhost:3000'
+    'https://nutripro-lyart.vercel.app'
+
   const anamnesisUrl = `${resolvedBaseUrl}/anamnesis?patientId=${patientId}`
 
   const emailSubject = `Cuestionario Clínico Pre-Consulta - ${clinicName}`
@@ -153,27 +156,16 @@ export async function sendAnamnesisEmail({
     clinicName,
   })
 
-  const plainText = `Hola ${patientName.split(' ')[0]},\n\nPara preparar tu consulta nutricional y diseñar un menú personalizado adaptado a tus gustos y necesidades, por favor completa tu cuestionario previo en el siguiente enlace:\n\n${anamnesisUrl}\n\nSolo te llevará 3 minutos y nos ayudará a aprovechar al máximo tu sesión.\n\nAtentamente,\n${professionalName}\n${clinicName}`
+  const plainText = `Hola ${patientName.split(' ')[0]},\n\nPara preparar tu consulta nutricional y diseñar un menú personalizado adaptado a tus gustos y necesidades, por favor completa tu cuestionario previo en el siguiente enlace:\n\n${anamnesisUrl}\n\nSolo te llevará 3 minutos y nos ayudará a preparar tu pauta.\n\nAtentamente,\n${professionalName}\n${clinicName}\nevavidalinfo@gmail.com`
 
-  // Generar URL mailto de respaldo directo
   const mailtoUrl = `mailto:${encodeURIComponent(patientEmail)}?subject=${encodeURIComponent(emailSubject)}&body=${encodeURIComponent(plainText)}`
 
-  // Comprobar si hay credenciales SMTP configuradas en variables de entorno
-  const smtpUser = process.env.SMTP_USER
-  const smtpPass = process.env.SMTP_PASS
+  // El correo de remitente oficial siempre es evavidalinfo@gmail.com
+  const smtpFrom = 'evavidalinfo@gmail.com'
+  const smtpUser = process.env.SMTP_USER || 'evavidalinfo@gmail.com'
+  const smtpPass = process.env.SMTP_PASS || 'bocpzmoggkajgeqk'
   const smtpHost = process.env.SMTP_HOST || 'smtp.gmail.com'
-  const smtpPort = process.env.SMTP_PORT ? Number(process.env.SMTP_PORT) : 465
-  const smtpFrom = process.env.SMTP_FROM || smtpUser || 'consulta@nutripro.local'
-
-  if (!smtpUser || !smtpPass) {
-    // Modo sin SMTP configurado todavía
-    return {
-      success: false,
-      message: 'Credenciales SMTP no configuradas aún en el archivo de entorno (.env). Puedes abrir tu gestor de correo predeterminado con el botón de respaldo o configurar tu cuenta de Gmail/Outlook para envíos 100% automáticos.',
-      anamnesisUrl,
-      mailtoUrl,
-    }
-  }
+  const smtpPort = process.env.SMTP_PORT ? Number(process.env.SMTP_PORT) : 587
 
   try {
     const transporter = nodemailer.createTransport({
@@ -196,7 +188,7 @@ export async function sendAnamnesisEmail({
 
     return {
       success: true,
-      message: `Cuestionario enviado automáticamente con éxito a ${patientEmail}`,
+      message: `Cuestionario enviado automáticamente con éxito a ${patientEmail} desde ${smtpFrom}`,
       anamnesisUrl,
       mailtoUrl,
     }
@@ -204,7 +196,7 @@ export async function sendAnamnesisEmail({
     console.error('Error al enviar correo vía SMTP:', error)
     return {
       success: false,
-      message: `Error de conexión con el servidor de correo: ${error?.message || 'Error desconocido'}. Puedes usar el enlace directo o el cliente de correo.`,
+      message: `Error de conexión con el servidor de correo: ${error?.message || 'Error desconocido'}. Puedes usar el botón de cliente de correo o compartir el enlace.`,
       anamnesisUrl,
       mailtoUrl,
     }

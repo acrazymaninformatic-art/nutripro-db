@@ -25,6 +25,9 @@ import {
   Droplets,
   Target,
   Pill,
+  Activity,
+  Moon,
+  Stethoscope,
 } from 'lucide-react'
 
 export interface AnamnesisSubmissionItem {
@@ -39,12 +42,21 @@ export interface AnamnesisSubmissionItem {
   foodAversions?: string | null
   mealsPerDay?: number | null
   mealScheduleNotes?: string | null
+  weekendHabits?: string | null
   waterIntakeLiters?: number | null
+  otherBeverages?: string | null
   recall24h?: string | null
   digestiveIssues?: string | null
+  digestiveSymptoms?: string | null
   medicalHistory?: string | null
   currentMedications?: string | null
   isGLP1Treatment?: boolean
+  intolerancesOrAllergies?: string | null
+  exerciseRoutine?: string | null
+  sleepAndStress?: string | null
+  emotionalEatingNotes?: string | null
+  previousDietsExp?: string | null
+  supplementsNotes?: string | null
   shortTermGoal?: string | null
 }
 
@@ -72,32 +84,45 @@ export function AnamnesisViewerModal({ patientName, submissions }: Props) {
   const copySummary = () => {
     const text = `
 === CUESTIONARIO PRE-CONSULTA DE ${patientName.toUpperCase()} ===
-Fecha de envío: ${dateFormatted}
+Fecha de recepción: ${dateFormatted}
 
-DATOS DECLARADOS:
+1. DATOS DECLARADOS:
 - Nombre: ${activeSubmission.declaredName || 'No indicado'}
 - Teléfono: ${activeSubmission.declaredPhone || 'No indicado'}
 - Email: ${activeSubmission.declaredEmail || 'No indicado'}
 
-GUSTOS Y ALIMENTACIÓN:
-- Alimentos que rechaza: ${activeSubmission.foodAversions || 'Ninguno'}
-- Preferencias: ${activeSubmission.foodPreferences || 'Variada'}
+2. SALUD Y MEDICACIÓN:
+- Patologías/Cirugías: ${activeSubmission.medicalHistory || 'Ninguna'}
+- Medicación: ${activeSubmission.currentMedications || 'Ninguna'}
+- Alergias/Intolerancias: ${activeSubmission.intolerancesOrAllergies || 'Ninguna declarada'}
+- Tratamiento GLP-1: ${activeSubmission.isGLP1Treatment ? 'Sí' : 'No'}
 
-HÁBITOS:
+3. DIGESTIVO:
+- Síntomas: ${activeSubmission.digestiveSymptoms || 'Ninguno declarado'}
+- Ritmo evacuatorio: ${activeSubmission.digestiveIssues || 'Regular'}
+
+4. PREFERENCIAS Y HÁBITOS:
+- Alimentos que le encantan: ${activeSubmission.foodPreferences || 'Variada'}
+- Alimentos que rechaza: ${activeSubmission.foodAversions || 'Ninguno'}
 - Comidas/día: ${activeSubmission.mealsPerDay || 'No indicado'}
 - Horarios: ${activeSubmission.mealScheduleNotes || 'No indicado'}
-- Agua: ${activeSubmission.waterIntakeLiters ? activeSubmission.waterIntakeLiters + ' L/día' : 'No indicado'}
+- Fines de semana: ${activeSubmission.weekendHabits || 'No indicado'}
 
-RECORDATORIO 24H:
+5. HIDRATACIÓN Y ESTILO DE VIDA:
+- Agua: ${activeSubmission.waterIntakeLiters ? activeSubmission.waterIntakeLiters + ' L/día' : 'No indicado'}
+- Otras bebidas: ${activeSubmission.otherBeverages || 'No indicado'}
+- Ejercicio: ${activeSubmission.exerciseRoutine || 'No indicado'}
+- Sueño y Estrés: ${activeSubmission.sleepAndStress || 'No indicado'}
+
+6. RELACIÓN CON LA COMIDA Y DIETAS PREVIAS:
+- Ansiedad/Picar: ${activeSubmission.emotionalEatingNotes || 'No indicado'}
+- Dietas previas: ${activeSubmission.previousDietsExp || 'No indicado'}
+- Suplementos: ${activeSubmission.supplementsNotes || 'Ninguno'}
+
+7. RECORDATORIO 24H:
 ${activeSubmission.recall24h || 'No indicado'}
 
-SALUD Y SÍNTOMAS:
-- Molestias digestivas: ${activeSubmission.digestiveIssues || 'Ninguna'}
-- Medicación: ${activeSubmission.currentMedications || 'Ninguna'}
-- Tratamiento GLP-1: ${activeSubmission.isGLP1Treatment ? 'Sí' : 'No'}
-- Patologías declaradas: ${activeSubmission.medicalHistory || 'Ninguna'}
-
-OBJETIVO DECLARADO:
+8. OBJETIVO PRIORITARIO:
 ${activeSubmission.shortTermGoal || 'No indicado'}
     `.trim()
 
@@ -111,12 +136,12 @@ ${activeSubmission.shortTermGoal || 'No indicado'}
       <Button
         type="button"
         onClick={() => setOpen(true)}
-        className="bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs h-9 px-4 rounded-xl shadow-xs flex items-center gap-2 transition-all"
+        className="bg-blue-600 hover:bg-blue-700 text-white font-bold text-xs h-9 px-4 rounded-xl shadow-xs flex items-center gap-2 transition-all"
       >
         <FileText className="h-4 w-4" />
         <span>Ver Cuestionario Relleno</span>
         {submissions.length > 1 && (
-          <Badge className="bg-emerald-800 text-white text-3xs px-1.5 py-0 rounded-full ml-1">
+          <Badge className="bg-blue-800 text-white text-3xs px-1.5 py-0 rounded-full ml-1">
             {submissions.length}
           </Badge>
         )}
@@ -124,10 +149,10 @@ ${activeSubmission.shortTermGoal || 'No indicado'}
 
       <Dialog open={open} onOpenChange={setOpen}>
         <DialogContent className="max-w-2xl max-h-[85vh] overflow-y-auto p-0 rounded-3xl border-gray-200">
-          <DialogHeader className="p-5 pb-3 bg-gradient-to-r from-emerald-50 via-teal-50/30 to-white border-b border-gray-100">
+          <DialogHeader className="p-5 pb-3 bg-gradient-to-r from-blue-50/80 via-sky-50/40 to-white border-b border-gray-100">
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-2.5">
-                <div className="p-2.5 bg-emerald-600 text-white rounded-2xl shadow-xs">
+                <div className="p-2.5 bg-blue-600 text-white rounded-2xl shadow-xs">
                   <FileText className="h-5 w-5" />
                 </div>
                 <div>
@@ -135,16 +160,15 @@ ${activeSubmission.shortTermGoal || 'No indicado'}
                     Cuestionario Pre-Consulta Rellenado
                   </DialogTitle>
                   <DialogDescription className="text-xs text-gray-500">
-                    Respuestas originales completadas por {patientName}
+                    Respuestas completadas por {patientName}
                   </DialogDescription>
                 </div>
               </div>
-              <Badge className="bg-emerald-100 text-emerald-800 border-emerald-200 text-2xs font-bold rounded-full">
+              <Badge className="bg-blue-100 text-blue-800 border-blue-200 text-2xs font-bold rounded-full">
                 Rellenado por la Paciente
               </Badge>
             </div>
 
-            {/* Selector si hay múltiples envíos */}
             {submissions.length > 1 && (
               <div className="flex items-center gap-2 pt-3">
                 <span className="text-2xs font-semibold text-gray-600">Historial de envíos:</span>
@@ -156,16 +180,11 @@ ${activeSubmission.shortTermGoal || 'No indicado'}
                       onClick={() => setSelectedIndex(idx)}
                       className={`px-2.5 py-1 rounded-lg text-2xs font-semibold transition-all ${
                         selectedIndex === idx
-                          ? 'bg-emerald-600 text-white shadow-2xs'
+                          ? 'bg-blue-600 text-white shadow-2xs'
                           : 'bg-white border text-gray-700 hover:bg-gray-100'
                       }`}
                     >
-                      Envío #{submissions.length - idx} (
-                      {new Date(sub.submittedAt).toLocaleDateString('es-ES', {
-                        day: '2-digit',
-                        month: '2-digit',
-                      })}
-                      )
+                      Envío #{submissions.length - idx} ({new Date(sub.submittedAt).toLocaleDateString('es-ES', { day: '2-digit', month: '2-digit' })})
                     </button>
                   ))}
                 </div>
@@ -176,13 +195,13 @@ ${activeSubmission.shortTermGoal || 'No indicado'}
           <div className="p-5 space-y-4 text-xs">
             {/* Aviso clínico */}
             <div className="p-3 rounded-2xl bg-slate-50 border border-slate-200 text-slate-700 flex items-start gap-2.5 text-2xs">
-              <Clock className="h-4 w-4 text-emerald-600 shrink-0 mt-0.5" />
+              <Clock className="h-4 w-4 text-blue-600 shrink-0 mt-0.5" />
               <div>
                 <span className="font-bold text-slate-900 block">
                   Fecha de recepción: {dateFormatted}
                 </span>
                 <span>
-                  Estos datos fueron escritos por la paciente en su dispositivo. Tu ficha técnica clínica permanece intacta para tus valoraciones profesionales.
+                  Estos datos fueron escritos directamente por la paciente desde su móvil. Tu ficha técnica clínica permanece intacta para tus valoraciones profesionales.
                 </span>
               </div>
             </div>
@@ -190,7 +209,7 @@ ${activeSubmission.shortTermGoal || 'No indicado'}
             {/* 1. Datos Personales Declarados */}
             <div className="p-3.5 bg-gray-50/70 rounded-2xl border border-gray-100 space-y-2">
               <h4 className="font-bold text-gray-900 flex items-center gap-1.5 text-xs">
-                <User className="h-4 w-4 text-emerald-600" />
+                <User className="h-4 w-4 text-blue-600" />
                 <span>1. Datos de Contacto Aportados</span>
               </h4>
               <div className="grid grid-cols-2 sm:grid-cols-3 gap-2 text-2xs">
@@ -209,11 +228,72 @@ ${activeSubmission.shortTermGoal || 'No indicado'}
               </div>
             </div>
 
-            {/* 2. Gustos y Aversiones */}
+            {/* 2. Salud, Medicación y Alergias */}
             <div className="p-3.5 bg-gray-50/70 rounded-2xl border border-gray-100 space-y-2">
               <h4 className="font-bold text-gray-900 flex items-center gap-1.5 text-xs">
-                <Utensils className="h-4 w-4 text-emerald-600" />
-                <span>2. Gustos y Aversiones Alimentarias</span>
+                <HeartPulse className="h-4 w-4 text-rose-600" />
+                <span>2. Historial de Salud, Medicación y Alergias</span>
+              </h4>
+              <div className="space-y-1.5 text-2xs">
+                <div className="p-2 bg-white rounded-xl border">
+                  <span className="font-bold text-gray-700 block flex items-center gap-1">
+                    <Pill className="h-3 w-3 text-blue-600" />
+                    Medicación habitual declarada:
+                  </span>
+                  <p className="text-gray-800 mt-0.5">{activeSubmission.currentMedications || 'Ninguna medicación declarada.'}</p>
+                </div>
+
+                {activeSubmission.isGLP1Treatment && (
+                  <div className="p-2 bg-amber-50 rounded-xl border border-amber-200 text-amber-950">
+                    <strong>⚠️ Tratamiento GLP-1 declarado:</strong> Paciente bajo análogos GLP-1 (Ozempic/Wegovy/Mounjaro). Requiere suelo proteico elevado.
+                  </div>
+                )}
+
+                {activeSubmission.intolerancesOrAllergies && (
+                  <div className="p-2 bg-white rounded-xl border">
+                    <span className="font-bold text-gray-700 block">Alergias o intolerancias declaradas:</span>
+                    <p className="text-gray-800 mt-0.5">{activeSubmission.intolerancesOrAllergies}</p>
+                  </div>
+                )}
+
+                {activeSubmission.medicalHistory && (
+                  <div className="p-2 bg-white rounded-xl border">
+                    <span className="font-bold text-gray-700 block">Patologías o diagnósticos previos:</span>
+                    <p className="text-gray-800 mt-0.5">{activeSubmission.medicalHistory}</p>
+                  </div>
+                )}
+              </div>
+            </div>
+
+            {/* 3. Salud Digestiva */}
+            {(activeSubmission.digestiveSymptoms || activeSubmission.digestiveIssues) && (
+              <div className="p-3.5 bg-gray-50/70 rounded-2xl border border-gray-100 space-y-2">
+                <h4 className="font-bold text-gray-900 flex items-center gap-1.5 text-xs">
+                  <Stethoscope className="h-4 w-4 text-blue-600" />
+                  <span>3. Salud Digestiva y Evacuaciones</span>
+                </h4>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 text-2xs">
+                  {activeSubmission.digestiveSymptoms && (
+                    <div className="p-2 bg-white rounded-xl border">
+                      <span className="text-gray-400 block">Síntomas habituales</span>
+                      <strong className="text-gray-800">{activeSubmission.digestiveSymptoms}</strong>
+                    </div>
+                  )}
+                  {activeSubmission.digestiveIssues && (
+                    <div className="p-2 bg-white rounded-xl border">
+                      <span className="text-gray-400 block">Ritmo evacuatorio</span>
+                      <strong className="text-gray-800">{activeSubmission.digestiveIssues}</strong>
+                    </div>
+                  )}
+                </div>
+              </div>
+            )}
+
+            {/* 4. Gustos y Aversiones */}
+            <div className="p-3.5 bg-gray-50/70 rounded-2xl border border-gray-100 space-y-2">
+              <h4 className="font-bold text-gray-900 flex items-center gap-1.5 text-xs">
+                <Utensils className="h-4 w-4 text-blue-600" />
+                <span>4. Preferencias y Aversiones Alimentarias</span>
               </h4>
               <div className="space-y-1.5">
                 <div>
@@ -226,10 +306,10 @@ ${activeSubmission.shortTermGoal || 'No indicado'}
                 </div>
                 {activeSubmission.foodPreferences && (
                   <div>
-                    <span className="text-2xs font-semibold text-emerald-700 block">
+                    <span className="text-2xs font-semibold text-blue-700 block">
                       Alimentos preferidos:
                     </span>
-                    <p className="p-2 rounded-xl bg-white border border-emerald-100 text-gray-800 text-2xs">
+                    <p className="p-2 rounded-xl bg-white border border-blue-100 text-gray-800 text-2xs">
                       {activeSubmission.foodPreferences}
                     </p>
                   </div>
@@ -237,99 +317,96 @@ ${activeSubmission.shortTermGoal || 'No indicado'}
               </div>
             </div>
 
-            {/* 3. Horarios y Hábitos */}
+            {/* 5. Hábitos, Fines de semana y Estilo de vida */}
             <div className="p-3.5 bg-gray-50/70 rounded-2xl border border-gray-100 space-y-2">
               <h4 className="font-bold text-gray-900 flex items-center gap-1.5 text-xs">
-                <Calendar className="h-4 w-4 text-emerald-600" />
-                <span>3. Rutinas, Comidas y Agua</span>
+                <Calendar className="h-4 w-4 text-blue-600" />
+                <span>5. Rutinas, Hidratación y Descanso</span>
               </h4>
-              <div className="grid grid-cols-2 gap-3 text-2xs">
+              <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 text-2xs">
                 <div className="p-2 bg-white rounded-xl border">
-                  <span className="text-gray-400 block">Comidas habituales/día</span>
-                  <strong className="text-gray-800 text-sm">
-                    {activeSubmission.mealsPerDay ? `${activeSubmission.mealsPerDay} comidas` : 'No indicado'}
-                  </strong>
+                  <span className="text-gray-400 block">Comidas/día</span>
+                  <strong className="text-gray-800 text-xs">{activeSubmission.mealsPerDay || 'No'}</strong>
                 </div>
-                <div className="p-2 bg-white rounded-xl border flex items-center gap-2">
-                  <Droplets className="h-4 w-4 text-blue-500 shrink-0" />
-                  <div>
-                    <span className="text-gray-400 block">Consumo de agua</span>
-                    <strong className="text-gray-800 text-sm">
-                      {activeSubmission.waterIntakeLiters ? `${activeSubmission.waterIntakeLiters} L / día` : 'No indicado'}
-                    </strong>
-                  </div>
+                <div className="p-2 bg-white rounded-xl border">
+                  <span className="text-gray-400 block">Agua/día</span>
+                  <strong className="text-gray-800 text-xs">{activeSubmission.waterIntakeLiters ? activeSubmission.waterIntakeLiters + 'L' : 'No'}</strong>
+                </div>
+                <div className="p-2 bg-white rounded-xl border">
+                  <span className="text-gray-400 block">Ejercicio</span>
+                  <strong className="text-gray-800 text-xs truncate block">{activeSubmission.exerciseRoutine || 'No indicado'}</strong>
+                </div>
+                <div className="p-2 bg-white rounded-xl border">
+                  <span className="text-gray-400 block">Sueño/Estrés</span>
+                  <strong className="text-gray-800 text-xs truncate block">{activeSubmission.sleepAndStress || 'No indicado'}</strong>
                 </div>
               </div>
+
               {activeSubmission.mealScheduleNotes && (
                 <div className="pt-1">
-                  <span className="text-2xs text-gray-500 block font-semibold">Horarios y rutinas descritas:</span>
-                  <p className="p-2 rounded-xl bg-white border text-gray-800 text-2xs">
-                    {activeSubmission.mealScheduleNotes}
-                  </p>
+                  <span className="text-2xs text-gray-500 block font-semibold">Horarios descritos:</span>
+                  <p className="p-2 rounded-xl bg-white border text-gray-800 text-2xs">{activeSubmission.mealScheduleNotes}</p>
+                </div>
+              )}
+              {activeSubmission.weekendHabits && (
+                <div className="pt-1">
+                  <span className="text-2xs text-gray-500 block font-semibold">Fines de semana y comidas fuera:</span>
+                  <p className="p-2 rounded-xl bg-white border text-gray-800 text-2xs">{activeSubmission.weekendHabits}</p>
                 </div>
               )}
             </div>
 
-            {/* 4. Recordatorio 24 Horas */}
-            {activeSubmission.recall24h && (
-              <div className="p-3.5 bg-emerald-50/50 rounded-2xl border border-emerald-200/70 space-y-2">
-                <h4 className="font-bold text-emerald-950 flex items-center gap-1.5 text-xs">
-                  <FileText className="h-4 w-4 text-emerald-700" />
-                  <span>4. Recordatorio Dietético de 24 Horas (Lo que comió ayer)</span>
+            {/* 6. Relación con la Comida y Dietas Previas */}
+            {(activeSubmission.emotionalEatingNotes || activeSubmission.previousDietsExp || activeSubmission.supplementsNotes) && (
+              <div className="p-3.5 bg-gray-50/70 rounded-2xl border border-gray-100 space-y-2">
+                <h4 className="font-bold text-gray-900 flex items-center gap-1.5 text-xs">
+                  <Activity className="h-4 w-4 text-blue-600" />
+                  <span>6. Relación con la Comida, Dietas Previas y Suplementos</span>
                 </h4>
-                <div className="p-3 bg-white rounded-xl border border-emerald-100 text-gray-800 text-xs whitespace-pre-line leading-relaxed font-sans shadow-2xs">
+                <div className="space-y-1.5 text-2xs">
+                  {activeSubmission.emotionalEatingNotes && (
+                    <div className="p-2 bg-white rounded-xl border">
+                      <span className="text-gray-500 block font-semibold">Ansiedad o picoteo:</span>
+                      <p className="text-gray-800">{activeSubmission.emotionalEatingNotes}</p>
+                    </div>
+                  )}
+                  {activeSubmission.previousDietsExp && (
+                    <div className="p-2 bg-white rounded-xl border">
+                      <span className="text-gray-500 block font-semibold">Dietas anteriores:</span>
+                      <p className="text-gray-800">{activeSubmission.previousDietsExp}</p>
+                    </div>
+                  )}
+                  {activeSubmission.supplementsNotes && (
+                    <div className="p-2 bg-white rounded-xl border">
+                      <span className="text-gray-500 block font-semibold">Suplementos actuales:</span>
+                      <p className="text-gray-800">{activeSubmission.supplementsNotes}</p>
+                    </div>
+                  )}
+                </div>
+              </div>
+            )}
+
+            {/* 7. Recordatorio 24 Horas */}
+            {activeSubmission.recall24h && (
+              <div className="p-3.5 bg-blue-50/50 rounded-2xl border border-blue-200/70 space-y-2">
+                <h4 className="font-bold text-blue-950 flex items-center gap-1.5 text-xs">
+                  <FileText className="h-4 w-4 text-blue-700" />
+                  <span>7. Recordatorio Dietético de 24 Horas (Lo que comió ayer)</span>
+                </h4>
+                <div className="p-3 bg-white rounded-xl border border-blue-100 text-gray-800 text-xs whitespace-pre-line leading-relaxed font-sans shadow-2xs">
                   {activeSubmission.recall24h}
                 </div>
               </div>
             )}
 
-            {/* 5. Historial de Salud y Fármacos */}
-            <div className="p-3.5 bg-gray-50/70 rounded-2xl border border-gray-100 space-y-2">
-              <h4 className="font-bold text-gray-900 flex items-center gap-1.5 text-xs">
-                <HeartPulse className="h-4 w-4 text-rose-600" />
-                <span>5. Salud, Síntomas y Medicación</span>
-              </h4>
-              <div className="space-y-1.5 text-2xs">
-                <div className="p-2 bg-white rounded-xl border">
-                  <span className="font-bold text-gray-700 block flex items-center gap-1">
-                    <Pill className="h-3 w-3 text-emerald-600" />
-                    Medicación o suplementos declarados:
-                  </span>
-                  <p className="text-gray-800 mt-0.5">
-                    {activeSubmission.currentMedications || 'Ninguna medicación declarada.'}
-                  </p>
-                </div>
-
-                {activeSubmission.isGLP1Treatment && (
-                  <div className="p-2 bg-amber-50 rounded-xl border border-amber-200 text-amber-950">
-                    <strong>⚠️ Tratamiento GLP-1 declarado:</strong> La paciente toma análogos de GLP-1 (Ozempic/Wegovy/Mounjaro). Requiere suelo proteico elevado.
-                  </div>
-                )}
-
-                {activeSubmission.digestiveIssues && (
-                  <div className="p-2 bg-white rounded-xl border">
-                    <span className="font-bold text-gray-700 block">Molestias digestivas:</span>
-                    <p className="text-gray-800 mt-0.5">{activeSubmission.digestiveIssues}</p>
-                  </div>
-                )}
-
-                {activeSubmission.medicalHistory && (
-                  <div className="p-2 bg-white rounded-xl border">
-                    <span className="font-bold text-gray-700 block">Patologías declaradas:</span>
-                    <p className="text-gray-800 mt-0.5">{activeSubmission.medicalHistory}</p>
-                  </div>
-                )}
-              </div>
-            </div>
-
-            {/* 6. Objetivo */}
+            {/* 8. Objetivo */}
             {activeSubmission.shortTermGoal && (
               <div className="p-3.5 bg-gray-50/70 rounded-2xl border border-gray-100 space-y-1">
                 <h4 className="font-bold text-gray-900 flex items-center gap-1.5 text-xs">
-                  <Target className="h-4 w-4 text-emerald-600" />
-                  <span>6. Lo que la Paciente Busca Conseguir</span>
+                  <Target className="h-4 w-4 text-blue-600" />
+                  <span>8. Lo que la Paciente Busca Conseguir</span>
                 </h4>
-                <p className="p-2 bg-white rounded-xl border text-gray-800 text-2xs">
+                <p className="p-2 bg-white rounded-xl border text-gray-800 text-2xs font-medium">
                   {activeSubmission.shortTermGoal}
                 </p>
               </div>
@@ -344,7 +421,7 @@ ${activeSubmission.shortTermGoal || 'No indicado'}
               onClick={copySummary}
               className="rounded-xl text-xs font-semibold gap-1.5"
             >
-              {copied ? <Check className="h-3.5 w-3.5 text-emerald-600" /> : <Copy className="h-3.5 w-3.5 text-gray-500" />}
+              {copied ? <Check className="h-3.5 w-3.5 text-blue-600" /> : <Copy className="h-3.5 w-3.5 text-gray-500" />}
               {copied ? 'Copiado al Portapapeles' : 'Copiar Respuestas'}
             </Button>
 

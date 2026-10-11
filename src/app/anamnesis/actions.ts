@@ -4,123 +4,113 @@ import { prisma } from '@/lib/prisma'
 import { revalidatePath } from 'next/cache'
 
 export interface AnamnesisPayload {
-  patientId?: string
+  patientId: string
   name: string
   birthDate?: string
   gender?: string
   phone?: string
   email?: string
+  
+  // Salud y medicación
   medicalHistory?: string
   currentMedications?: string
   isGLP1Treatment?: boolean
+  intolerancesOrAllergies?: string
+
+  // Síntomas digestivos
   digestiveIssues?: string
+  digestiveSymptoms?: string
+
+  // Hábitos alimenticios
   foodPreferences?: string
   foodAversions?: string
-  waterIntakeLiters?: number
   mealsPerDay?: number
   mealScheduleNotes?: string
+  weekendHabits?: string
   recall24h?: string
+
+  // Hidratación y estilo de vida
+  waterIntakeLiters?: number
+  otherBeverages?: string
+  exerciseRoutine?: string
+  sleepAndStress?: string
+
+  // Emocional, suplementación y objetivos
+  emotionalEatingNotes?: string
+  previousDietsExp?: string
+  supplementsNotes?: string
   shortTermGoal?: string
 }
 
 export async function submitAnamnesis(data: AnamnesisPayload) {
-  if (data.patientId) {
-    const existing = await prisma.patient.findUnique({
-      where: { id: data.patientId },
-    })
-
-    if (!existing) {
-      throw new Error('Paciente no encontrado en el sistema.')
-    }
-
-    // 1. Guardar la respuesta completa en la entidad dedicada de Anamnesis (NO sobrescribe la ficha técnica)
-    const submission = await prisma.anamnesisSubmission.create({
-      data: {
-        patientId: data.patientId,
-        declaredName: data.name || `${existing.firstName} ${existing.lastName}`,
-        declaredPhone: data.phone || existing.phone,
-        declaredEmail: data.email || existing.email,
-        declaredBirthDate: data.birthDate ? new Date(data.birthDate) : existing.birthDate,
-        declaredGender: data.gender || existing.sex,
-        foodPreferences: data.foodPreferences || null,
-        foodAversions: data.foodAversions || null,
-        mealsPerDay: data.mealsPerDay ? Number(data.mealsPerDay) : null,
-        mealScheduleNotes: data.mealScheduleNotes || null,
-        waterIntakeLiters: data.waterIntakeLiters ? Number(data.waterIntakeLiters) : null,
-        recall24h: data.recall24h || null,
-        digestiveIssues: data.digestiveIssues || null,
-        medicalHistory: data.medicalHistory || null,
-        currentMedications: data.currentMedications || null,
-        isGLP1Treatment: Boolean(data.isGLP1Treatment),
-        shortTermGoal: data.shortTermGoal || null,
-      },
-    })
-
-    // 2. Marcar el estado en el paciente como COMPLETADO sin tocar las notas clínicas del nutricionista
-    await prisma.patient.update({
-      where: { id: data.patientId },
-      data: {
-        anamnesisStatus: 'COMPLETED',
-        anamnesisCompletedAt: new Date(),
-        // Solo actualizar teléfono o email si antes no estaban registrados
-        phone: existing.phone || data.phone || undefined,
-        email: existing.email || data.email || undefined,
-      },
-    })
-
-    revalidatePath(`/dashboard/patients/${data.patientId}`)
-    revalidatePath('/dashboard/patients')
-    return { success: true, patientId: existing.id, submissionId: submission.id }
+  if (!data.patientId) {
+    throw new Error('Acceso no autorizado: Solo puedes enviar el cuestionario a través del enlace personal facilitado por tu nutricionista.')
   }
 
-  // Paciente nuevo que llega a través del formulario público
-  const user = await prisma.user.findFirst()
-  if (!user) throw new Error('No hay usuario profesional registrado')
-
-  const parts = (data.name || '').trim().split(' ')
-  const firstName = parts[0] || 'Paciente'
-  const lastName = parts.slice(1).join(' ') || 'Nuevo'
-
-  const created = await prisma.patient.create({
-    data: {
-      userId: user.id,
-      firstName,
-      lastName,
-      birthDate: data.birthDate ? new Date(data.birthDate) : new Date('1990-01-01'),
-      sex: (data.gender || 'FEMALE').toUpperCase(),
-      heightCm: 168,
-      objective: 'WEIGHT_LOSS',
-      activityLevel: 'MODERATE',
-      phone: data.phone || null,
-      email: data.email || null,
-      anamnesisStatus: 'COMPLETED',
-      anamnesisCompletedAt: new Date(),
-    },
+  const existing = await prisma.patient.findUnique({
+    where: { id: data.patientId },
+    include: { anamnesisSubmissions: true },
   })
 
-  // Crear la submission para el nuevo paciente
-  await prisma.anamnesisSubmission.create({
+  if (!existing) {
+    throw new Error('No se ha encontrado el expediente del paciente asociado a este enlace.')
+  }
+
+  // Comprobar si ya fue rellenado previamente (bloqueo estricto para evitar re-ediciones o duplicados)
+  if (existing.anamnesisStatus === 'COMPLETED' || existing.anamnesisSubmissions.length > 0) {
+    throw new Error('Este cuestionario ya ha sido completado y recibido por tu nutricionista. Para garantizar la seguridad del historial clínico, no se permite volver a editarlo ni enviar otro.')
+  }
+
+  // 1. Guardar la respuesta detallada en la entidad dedicada de Anamnesis (NO sobrescribe la ficha técnica del profesional)
+  const submission = await prisma.anamnesisSubmission.create({
     data: {
-      patientId: created.id,
-      declaredName: data.name,
-      declaredPhone: data.phone || null,
-      declaredEmail: data.email || null,
-      declaredBirthDate: data.birthDate ? new Date(data.birthDate) : null,
-      declaredGender: data.gender || null,
+      patientId: data.patientId,
+      declaredName: data.name || `${existing.firstName} ${existing.lastName}`,
+      declaredPhone: data.phone || existing.phone,
+      declaredEmail: data.email || existing.email,
+      declaredBirthDate: data.birthDate ? new Date(data.birthDate) : existing.birthDate,
+      declaredGender: data.gender || existing.sex,
+
+      // Hábitos y Nutrición
       foodPreferences: data.foodPreferences || null,
       foodAversions: data.foodAversions || null,
       mealsPerDay: data.mealsPerDay ? Number(data.mealsPerDay) : null,
       mealScheduleNotes: data.mealScheduleNotes || null,
+      weekendHabits: data.weekendHabits || null,
       waterIntakeLiters: data.waterIntakeLiters ? Number(data.waterIntakeLiters) : null,
+      otherBeverages: data.otherBeverages || null,
       recall24h: data.recall24h || null,
+
+      // Salud y Síntomas
       digestiveIssues: data.digestiveIssues || null,
+      digestiveSymptoms: data.digestiveSymptoms || null,
       medicalHistory: data.medicalHistory || null,
       currentMedications: data.currentMedications || null,
       isGLP1Treatment: Boolean(data.isGLP1Treatment),
+      intolerancesOrAllergies: data.intolerancesOrAllergies || null,
+
+      // Estilo de vida y bienestar
+      exerciseRoutine: data.exerciseRoutine || null,
+      sleepAndStress: data.sleepAndStress || null,
+      emotionalEatingNotes: data.emotionalEatingNotes || null,
+      previousDietsExp: data.previousDietsExp || null,
+      supplementsNotes: data.supplementsNotes || null,
       shortTermGoal: data.shortTermGoal || null,
     },
   })
 
+  // 2. Marcar el estado en el paciente como COMPLETADO sin tocar las notas clínicas del nutricionista
+  await prisma.patient.update({
+    where: { id: data.patientId },
+    data: {
+      anamnesisStatus: 'COMPLETED',
+      anamnesisCompletedAt: new Date(),
+      phone: existing.phone || data.phone || undefined,
+      email: existing.email || data.email || undefined,
+    },
+  })
+
+  revalidatePath(`/dashboard/patients/${data.patientId}`)
   revalidatePath('/dashboard/patients')
-  return { success: true, patientId: created.id }
+  return { success: true, patientId: existing.id, submissionId: submission.id }
 }

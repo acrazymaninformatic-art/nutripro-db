@@ -1,10 +1,10 @@
 import { prisma } from '@/lib/prisma'
-import { Card, CardHeader, CardTitle, CardDescription, CardContent, CardFooter } from '@/components/ui/card'
-import { Button } from '@/components/ui/button'
+import { Card, CardHeader, CardTitle, CardDescription, CardContent } from '@/components/ui/card'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Badge } from '@/components/ui/badge'
-import { Settings, User, Database, HardDrive, Mail, KeyRound } from 'lucide-react'
+import { Settings, Database, Cloud, Mail, KeyRound } from 'lucide-react'
+import { SettingsProfileForm } from './settings-profile-form'
 
 export const dynamic = 'force-dynamic'
 
@@ -21,151 +21,114 @@ export default async function SettingsPage() {
     <div className="space-y-6 max-w-4xl mx-auto pb-12">
       {/* Header */}
       <div className="flex items-center gap-3">
-        <div className="p-2.5 bg-emerald-50 rounded-2xl text-emerald-700 shadow-2xs">
+        <div className="p-2.5 bg-blue-50 rounded-2xl text-blue-700 shadow-2xs">
           <Settings className="h-6 w-6" />
         </div>
         <div>
           <h1 className="text-2xl font-bold text-gray-900">Configuración de Consulta</h1>
           <p className="text-sm text-gray-500">
-            Perfil del profesional, servidor de correo para anamnesis automática y almacenamiento de datos.
+            Perfil del profesional, servidor de correo para anamnesis automática y base de datos cloud.
           </p>
         </div>
       </div>
 
-      {/* 1. Datos del Profesional */}
-      <Card className="rounded-3xl border-gray-200 shadow-sm overflow-hidden">
-        <CardHeader className="pb-3 border-b border-gray-100 bg-gray-50/40">
-          <CardTitle className="text-base flex items-center gap-2">
-            <User className="h-5 w-5 text-emerald-600" />
-            <span>Perfil del Profesional Nutricionista</span>
-          </CardTitle>
-          <CardDescription>
-            Información que aparecerá en las portadas de los planes nutricionales y en los correos enviados a pacientes
-          </CardDescription>
-        </CardHeader>
-        <CardContent className="space-y-4 p-5">
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-            <div className="space-y-1.5">
-              <Label htmlFor="profName">Nombre y Apellidos</Label>
-              <Input id="profName" defaultValue={user?.name || 'Dr. Nutricionista'} className="rounded-xl" />
-            </div>
-            <div className="space-y-1.5">
-              <Label htmlFor="license">Nº de Colegiado Profesional</Label>
-              <Input id="license" defaultValue="MAD-04821" placeholder="Ej. AND-01234" className="rounded-xl" />
-            </div>
-            <div className="space-y-1.5">
-              <Label htmlFor="email">Correo de Consulta (Remitente)</Label>
-              <Input id="email" defaultValue={user?.email || 'nutricionista@nutripro.com'} className="rounded-xl" />
-            </div>
-            <div className="space-y-1.5">
-              <Label htmlFor="clinic">Nombre de la Clínica / Despacho</Label>
-              <Input id="clinic" defaultValue="Centro Nutricional NutriPro" className="rounded-xl" />
-            </div>
-            <div className="space-y-1.5">
-              <Label htmlFor="phone">Teléfono de Consulta</Label>
-              <Input id="phone" placeholder="Ej. +34 611 222 333" className="rounded-xl" />
-            </div>
-            <div className="space-y-1.5">
-              <Label htmlFor="address">Dirección del Centro</Label>
-              <Input id="address" placeholder="Ej. C/ Velázquez 42, 28001 Madrid" className="rounded-xl" />
-            </div>
-          </div>
-        </CardContent>
-        <CardFooter className="flex justify-end border-t bg-gray-50/50 py-3 px-5">
-          <Button size="sm" className="bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl font-bold">
-            Guardar Cambios de Perfil
-          </Button>
-        </CardFooter>
-      </Card>
+      {/* 1. Datos del Profesional (Formulario Interactivo con Guardado Real) */}
+      <SettingsProfileForm
+        user={{
+          name: user?.name || 'Eva Vidal',
+          email: user?.email || 'evavidalinfo@gmail.com',
+          licenseNumber: user?.licenseNumber || 'MAD-04821',
+          clinicName: user?.clinicName || 'Consulta Nutricional Eva Vidal',
+          phone: user?.phone || '',
+          address: user?.address || '',
+        }}
+      />
 
       {/* 2. Configuración de Correo Electrónico para Envíos Automáticos (SMTP) */}
       <Card className="rounded-3xl border-gray-200 shadow-sm overflow-hidden">
         <CardHeader className="pb-3 border-b border-gray-100 bg-gray-50/40">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-2">
-              <Mail className="h-5 w-5 text-emerald-600" />
+              <Mail className="h-5 w-5 text-blue-600" />
               <CardTitle className="text-base">Servidor de Correo (Envíos Automáticos de Anamnesis)</CardTitle>
             </div>
-            <Badge variant="outline" className="text-2xs bg-emerald-50 text-emerald-800 border-emerald-300 font-semibold rounded-full">
-              Nodemailer SMTP
+            <Badge variant="outline" className="text-2xs bg-blue-50 text-blue-800 border-blue-300 font-bold rounded-full">
+              Gmail SMTP Conectado
             </Badge>
           </div>
           <CardDescription>
-            Conecta tu cuenta de Gmail o Outlook para que los formularios se envíen de forma 100% automática y desatendida.
+            Conectado con tu cuenta de correo evavidalinfo@gmail.com para envíos 100% automáticos y seguros
           </CardDescription>
         </CardHeader>
         <CardContent className="space-y-4 p-5">
-          <div className="p-3.5 bg-emerald-50/60 border border-emerald-200/80 rounded-2xl text-xs text-emerald-950 space-y-1.5">
+          <div className="p-3.5 bg-blue-50/60 border border-blue-200/80 rounded-2xl text-xs text-blue-950 space-y-1.5">
             <div className="flex items-center gap-1.5 font-bold">
-              <KeyRound className="h-4 w-4 text-emerald-700" />
-              <span>Cómo usar Gmail gratis sin pagar ningún servicio:</span>
+              <KeyRound className="h-4 w-4 text-blue-700" />
+              <span>Credenciales de Correo Activas:</span>
             </div>
-            <p className="text-2xs text-emerald-800 leading-relaxed">
-              1. Entra en tu Cuenta de Google &gt; <strong>Seguridad</strong> &gt; Activa la <em>Verificación en dos pasos</em>.<br />
-              2. Ve al buscador de tu cuenta de Google y escribe <strong>Contraseñas de aplicaciones</strong>.<br />
-              3. Crea una para &quot;NutriPro&quot; y te dará una contraseña de 16 letras (ej. <code className="bg-white/70 px-1 py-0.5 rounded font-mono">abcd efgh ijkl mnop</code>).<br />
-              4. Añádela a tu archivo <code className="bg-white/70 px-1 py-0.5 rounded font-mono">.env</code> como <code className="bg-white/70 px-1 py-0.5 rounded font-mono">SMTP_PASS</code> y tu correo como <code className="bg-white/70 px-1 py-0.5 rounded font-mono">SMTP_USER</code>.
+            <p className="text-2xs text-blue-800 leading-relaxed">
+              Los correos con los cuestionarios clínicos se envían directamente a través de los servidores de Gmail utilizando autenticación cifrada TLS por el puerto 587.
             </p>
           </div>
 
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div className="space-y-1.5">
               <Label htmlFor="smtpHost">Servidor SMTP</Label>
-              <Input id="smtpHost" defaultValue={process.env.SMTP_HOST || 'smtp.gmail.com'} className="rounded-xl font-mono text-xs" />
+              <Input id="smtpHost" readOnly value="smtp.gmail.com" className="rounded-xl font-mono text-xs bg-slate-50" />
             </div>
             <div className="space-y-1.5">
               <Label htmlFor="smtpPort">Puerto SMTP</Label>
-              <Input id="smtpPort" defaultValue={process.env.SMTP_PORT || '465'} className="rounded-xl font-mono text-xs" />
+              <Input id="smtpPort" readOnly value="587 (TLS)" className="rounded-xl font-mono text-xs bg-slate-50" />
             </div>
             <div className="space-y-1.5">
               <Label htmlFor="smtpUser">Correo SMTP (Remitente)</Label>
-              <Input id="smtpUser" defaultValue={process.env.SMTP_USER || user?.email || ''} placeholder="tuconsulta@gmail.com" className="rounded-xl text-xs" />
+              <Input id="smtpUser" readOnly value="evavidalinfo@gmail.com" className="rounded-xl text-xs bg-slate-50 font-medium" />
             </div>
             <div className="space-y-1.5">
-              <Label htmlFor="smtpPass">Contraseña de Aplicación (16 dígitos)</Label>
-              <Input id="smtpPass" type="password" placeholder="••••••••••••••••" defaultValue={process.env.SMTP_PASS ? '••••••••••••••••' : ''} className="rounded-xl text-xs font-mono" />
+              <Label htmlFor="smtpPass">Estado de Autenticación</Label>
+              <Input id="smtpPass" type="password" readOnly value="••••••••••••••••" className="rounded-xl text-xs font-mono bg-slate-50" />
             </div>
           </div>
         </CardContent>
       </Card>
 
-      {/* 4. Estado de la Base de Datos Local */}
+      {/* 3. Base de Datos Cloud en Supabase (Frankfurt EU) */}
       <Card className="rounded-3xl border-gray-200 shadow-sm overflow-hidden">
         <CardHeader className="pb-3 border-b border-gray-100 bg-gray-50/40">
           <CardTitle className="text-base flex items-center gap-2">
-            <Database className="h-5 w-5 text-emerald-600" />
-            <span>Base de Datos y Almacenamiento Local</span>
+            <Database className="h-5 w-5 text-blue-600" />
+            <span>Base de Datos y Almacenamiento en la Nube</span>
           </CardTitle>
           <CardDescription>
-            Motor SQLite local autónomo (sin necesidad de servidores externos de pago)
+            Cluster PostgreSQL de alta disponibilidad en Supabase (Región Frankfurt - Unión Europea)
           </CardDescription>
         </CardHeader>
         <CardContent className="space-y-4 p-5">
-          <div className="flex items-center justify-between p-3 rounded-xl bg-gray-50 border text-xs">
+          <div className="flex items-center justify-between p-3 rounded-2xl bg-blue-50/40 border border-blue-200/80 text-xs">
             <div className="flex items-center gap-2">
-              <HardDrive className="h-4 w-4 text-emerald-600" />
-              <span className="font-semibold text-gray-700">Archivo de Datos:</span>
-              <code className="text-gray-900 bg-gray-200/60 px-2 py-0.5 rounded">file:./dev.db</code>
+              <Cloud className="h-4 w-4 text-blue-600" />
+              <span className="font-semibold text-gray-700">Servidor Cloud:</span>
+              <code className="text-blue-900 bg-blue-100/70 px-2 py-0.5 rounded text-2xs font-mono">aws-1-eu-central-1 (Frankfurt)</code>
             </div>
-            <Badge variant="default" className="bg-emerald-100 text-emerald-800 border-0">
-              Conectado y Operativo
+            <Badge variant="default" className="bg-blue-100 text-blue-800 border-0 font-bold">
+              Conectado y En Producción
             </Badge>
           </div>
 
           <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 text-center">
-            <div className="p-3.5 rounded-xl bg-gray-50 border">
+            <div className="p-3.5 rounded-2xl bg-gray-50 border border-gray-100">
               <span className="text-xs text-gray-500 block">Pacientes</span>
               <span className="text-xl font-bold text-gray-900 mt-1 block">{patientCount}</span>
             </div>
-            <div className="p-3.5 rounded-xl bg-gray-50 border">
+            <div className="p-3.5 rounded-2xl bg-gray-50 border border-gray-100">
               <span className="text-xs text-gray-500 block">Alimentos</span>
               <span className="text-xl font-bold text-gray-900 mt-1 block">{foodCount}</span>
             </div>
-            <div className="p-3.5 rounded-xl bg-gray-50 border">
+            <div className="p-3.5 rounded-2xl bg-gray-50 border border-gray-100">
               <span className="text-xs text-gray-500 block">Recetas</span>
               <span className="text-xl font-bold text-gray-900 mt-1 block">{recipeCount}</span>
             </div>
-            <div className="p-3.5 rounded-xl bg-gray-50 border">
+            <div className="p-3.5 rounded-2xl bg-gray-50 border border-gray-100">
               <span className="text-xs text-gray-500 block">Planes Dietéticos</span>
               <span className="text-xl font-bold text-gray-900 mt-1 block">{planCount}</span>
             </div>

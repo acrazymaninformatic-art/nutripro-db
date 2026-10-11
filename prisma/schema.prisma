@@ -16,17 +16,21 @@ datasource db {
 // MealType: "BREAKFAST" | "MID_MORNING" | "LUNCH" | "SNACK" | "DINNER" | "LATE_SNACK"
 
 model User {
-  id           String     @id @default(cuid())
-  email        String     @unique
-  name         String
-  passwordHash String
-  image        String?
-  createdAt    DateTime   @default(now())
-  updatedAt    DateTime   @updatedAt
+  id            String     @id @default(cuid())
+  email         String     @unique
+  name          String
+  passwordHash  String
+  image         String?
+  licenseNumber String?
+  clinicName    String?
+  phone         String?
+  address       String?
+  createdAt     DateTime   @default(now())
+  updatedAt     DateTime   @updatedAt
 
-  patients     Patient[]
-  recipes      Recipe[]
-  mealPlans    MealPlan[]
+  patients      Patient[]
+  recipes       Recipe[]
+  mealPlans     MealPlan[]
 }
 
 model Patient {
@@ -116,6 +120,7 @@ model Patient {
   anthropometries      Anthropometry[]
   mealPlans            MealPlan[]
   consultations        Consultation[]
+  appointments         Appointment[]
   bloodAnalyses        BloodAnalysis[]
   anamnesisSubmissions AnamnesisSubmission[]
 
@@ -141,14 +146,25 @@ model AnamnesisSubmission {
   mealsPerDay         Int?
   mealScheduleNotes   String?
   waterIntakeLiters   Float?
+  otherBeverages      String?
   recall24h           String?
+  weekendHabits       String?
   
-  // Salud y Síntomas
+  // Salud, Medicación y Síntomas
   digestiveIssues     String?
+  digestiveSymptoms   String?
   medicalHistory      String?
   currentMedications  String?
   isGLP1Treatment     Boolean   @default(false)
-  shortTermGoal       String?
+  intolerancesOrAllergies String?
+
+  // Estilo de vida y bienestar
+  exerciseRoutine      String?
+  sleepAndStress       String?
+  emotionalEatingNotes String?
+  previousDietsExp     String?
+  supplementsNotes     String?
+  shortTermGoal        String?
 
   @@index([patientId])
 }
@@ -208,6 +224,28 @@ model Consultation {
   date      DateTime
   notes     String?
   createdAt DateTime @default(now())
+
+  @@index([patientId])
+}
+
+model Appointment {
+  id             String    @id @default(cuid())
+  patientId      String
+  patient        Patient   @relation(fields: [patientId], references: [id], onDelete: Cascade)
+  date           DateTime
+  durationMin    Int       @default(45)
+  modality       String    @default("ONLINE") // "ONLINE" | "PRESENCIAL"
+  status         String    @default("CONFIRMED") // "CONFIRMED" | "COMPLETED" | "CANCELLED"
+  location       String?   @default("Consulta Nutricional Eva Vidal")
+  notes          String?
+  meetUrl        String?
+  emailSent      Boolean   @default(false)
+  emailSentAt    DateTime?
+  reminderSent   Boolean   @default(false)
+  reminderSentAt DateTime?
+  createdAt      DateTime  @default(now())
+  updatedAt      DateTime  @updatedAt
+
 
   @@index([patientId])
 }

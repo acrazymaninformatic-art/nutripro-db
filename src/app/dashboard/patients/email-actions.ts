@@ -49,8 +49,8 @@ export async function sendAnamnesisEmailAction({
     })
     revalidatePath(`/dashboard/patients/${patientId}`)
 
-    const profName = professionalName || patient.user?.name || 'Tu Nutricionista'
-    const clinic = clinicName || 'Consulta NutriPro'
+    const profName = professionalName || patient.user?.name || 'Eva Vidal'
+    const clinic = clinicName || 'Consulta Nutricional Eva Vidal'
 
     const result = await sendAnamnesisEmail({
       patientName: `${patient.firstName} ${patient.lastName}`,

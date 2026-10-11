@@ -40,10 +40,17 @@ import {
   Pill,
   BookOpen,
 } from 'lucide-react'
-import { getFoodImage, generateAutomatedWeeklyPlan, FALLBACK_FOOD_SVG } from '@/lib/nutrition'
+import {
+  getFoodImage,
+  generateAutomatedWeeklyPlan,
+  FALLBACK_FOOD_SVG,
+  CLINICAL_TEMPLATES,
+  buildPlanFromClinicalTemplate,
+} from '@/lib/nutrition'
 import { checkDrugInteractions } from '@/lib/nutrition/drug-interactions'
 import { FOOD_EXCHANGE_GROUPS } from '@/lib/nutrition/exchange-system'
 import { OBJECTIVE_LABELS, ACTIVITY_LEVEL_LABELS, type Objective, type ActivityLevel } from '@/types'
+
 
 interface PatientProfile {
   id: string
@@ -296,6 +303,21 @@ export function PlanBuilderForm({
       `Pauta base generada automáticamente: ${precisionResults.targetKcal} kcal/día, ${precisionResults.targetProteinG}g P, adaptada a ${selectedPatient.firstName}. Puedes modificar cualquier cantidad o arrastrar alimentos.`
     )
   }
+
+  // FUNCTION: Apply 1-Click Clinical Diet Template with automatic proportional scaling
+  const handleApplyTemplate = (templateId: string) => {
+    const template = CLINICAL_TEMPLATES.find((t) => t.id === templateId)
+    if (!template) return
+
+    const targetKcal = precisionResults.targetKcal
+    const scaledGrid = buildPlanFromClinicalTemplate(templateId, targetKcal, foods)
+
+    setGridSchedule(scaledGrid as any)
+    setAutoGenNotice(
+      `✨ Plantilla clínica "${template.name}" aplicada con 1 clic: Escalada proporcionalmente a ${targetKcal} kcal/día (${template.macroRatio.proteinPct}% P / ${template.macroRatio.carbsPct}% C / ${template.macroRatio.fatPct}% G). Gramajes ajustados para ${selectedPatient?.firstName || 'el paciente'}.`
+    )
+  }
+
 
   // Update defaults when patient changes and auto-generate base plan
   useEffect(() => {
@@ -604,14 +626,14 @@ export function PlanBuilderForm({
     <form onSubmit={handleSubmit} noValidate className="space-y-5">
       {/* 1. CALCULADORA DE PRECISIÓN CLÍNICA Y BOTÓN DE GENERACIÓN INTELIGENTE */}
       <Card className="rounded-3xl border border-gray-200 shadow-xs overflow-hidden">
-        <CardHeader className="py-3 px-5 bg-gradient-to-r from-emerald-50/90 to-teal-50/40 border-b border-emerald-100">
+        <CardHeader className="py-3 px-5 bg-gradient-to-r from-blue-50/90 to-sky-50/40 border-b border-blue-100">
           <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2.5">
             <div>
-              <CardTitle className="text-sm flex items-center gap-2 text-green-950 font-bold">
-                <Calculator className="h-4 w-4 text-green-600" />
+              <CardTitle className="text-sm flex items-center gap-2 text-blue-950 font-bold">
+                <Calculator className="h-4 w-4 text-blue-600" />
                 <span>Calculadora Nutricional de Precisión Clínica</span>
               </CardTitle>
-              <CardDescription className="text-[11px]">
+              <CardDescription className="text-[11px] text-blue-900/70">
                 Ajustes biométricos por paciente: Katch-McArdle, Mifflin-St Jeor, Harris-Benedict y distribución de macros en g/kg.
               </CardDescription>
             </div>
@@ -621,7 +643,7 @@ export function PlanBuilderForm({
               <Button
                 type="button"
                 onClick={handleAutoGeneratePlan}
-                className="bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold h-8 px-3 flex items-center gap-1.5 shadow-xs"
+                className="bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold h-8 px-3 flex items-center gap-1.5 shadow-xs"
                 title="Genera una semana completa de alimentos reales ajustados exactamente al objetivo del paciente"
               >
                 <Wand2 className="h-3.5 w-3.5" />
@@ -629,13 +651,14 @@ export function PlanBuilderForm({
               </Button>
 
               {selectedPatient && (
-                <Badge variant="default" className="bg-green-100 text-green-900 border-0 text-xs py-1 px-2.5">
-                  <User className="h-3 w-3 mr-1 text-green-700" />
+                <Badge variant="default" className="bg-blue-100 text-blue-900 border-0 text-xs py-1 px-2.5 font-bold">
+                  <User className="h-3 w-3 mr-1 text-blue-700" />
                   <span>{selectedPatient.firstName} {selectedPatient.lastName}</span>
                 </Badge>
               )}
             </div>
           </div>
+
         </CardHeader>
 
         <CardContent className="p-3.5 space-y-3">
@@ -729,9 +752,9 @@ export function PlanBuilderForm({
               variant="outline"
               size="sm"
               onClick={() => setShowExchangesModal(true)}
-              className="h-7 text-xs gap-1.5 rounded-lg border-emerald-300 text-emerald-800 hover:bg-emerald-50 font-bold"
+              className="h-7 text-xs gap-1.5 rounded-lg border-blue-300 text-blue-800 hover:bg-blue-50 font-bold"
             >
-              <Layers className="h-3.5 w-3.5 text-emerald-600" />
+              <Layers className="h-3.5 w-3.5 text-blue-600" />
               <span>Ver Tabla de Intercambios (CESNID)</span>
             </Button>
           </div>
@@ -828,24 +851,24 @@ export function PlanBuilderForm({
             </div>
 
             {/* Target Output Badge */}
-            <div className="bg-emerald-100/70 p-1 rounded border border-emerald-200 text-center flex flex-col justify-center">
-              <span className="text-[9px] font-bold text-emerald-800 uppercase block">Meta Diaria</span>
-              <span className="text-sm font-black text-emerald-950 leading-tight">{precisionResults.targetKcal} kcal</span>
-              <span className="text-[9px] text-emerald-700 font-semibold">{precisionResults.targetProteinG}g P • {precisionResults.targetCarbsG}g C</span>
+            <div className="bg-blue-100/70 p-1 rounded border border-blue-200 text-center flex flex-col justify-center">
+              <span className="text-[9px] font-bold text-blue-800 uppercase block">Meta Diaria</span>
+              <span className="text-sm font-black text-blue-950 leading-tight">{precisionResults.targetKcal} kcal</span>
+              <span className="text-[9px] text-blue-700 font-semibold">{precisionResults.targetProteinG}g P • {precisionResults.targetCarbsG}g C</span>
             </div>
           </div>
 
           {/* Alert Notice for Auto-generated plan */}
           {autoGenNotice && (
-            <div className="p-2 rounded-lg bg-emerald-50 border border-emerald-200 text-xs text-emerald-900 flex items-center justify-between">
+            <div className="p-2 rounded-lg bg-blue-50 border border-blue-200 text-xs text-blue-900 flex items-center justify-between">
               <div className="flex items-center gap-2">
-                <Sparkles className="h-4 w-4 text-emerald-600 shrink-0" />
+                <Sparkles className="h-4 w-4 text-blue-600 shrink-0" />
                 <span>{autoGenNotice}</span>
               </div>
               <button
                 type="button"
                 onClick={() => setAutoGenNotice(null)}
-                className="text-emerald-700 hover:text-emerald-900 text-[11px] underline"
+                className="text-blue-700 hover:text-blue-900 text-[11px] underline"
               >
                 Cerrar
               </button>
@@ -854,14 +877,68 @@ export function PlanBuilderForm({
         </CardContent>
       </Card>
 
+      {/* PLANTILLAS DIETÉTICAS CLÍNICAS DE 1 CLIC */}
+      <Card className="rounded-3xl border border-blue-200/80 bg-gradient-to-r from-blue-50/70 via-white to-sky-50/40 shadow-xs overflow-hidden">
+        <CardHeader className="py-3 px-5 border-b border-blue-100 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
+          <div>
+            <CardTitle className="text-sm font-bold text-blue-950 flex items-center gap-2">
+              <Sparkles className="h-4 w-4 text-blue-600" />
+              <span>Plantillas Dietéticas Clínicas de 1 Clic</span>
+              <Badge className="bg-blue-600 text-white border-0 text-[10px] font-black uppercase rounded-full px-2 py-0.5">
+                Auto-Escalado Proporcional
+              </Badge>
+            </CardTitle>
+            <CardDescription className="text-xs text-blue-900/80">
+              Menús completos prediseñados que escalan automáticamente todos los gramos al objetivo de <strong>{precisionResults.targetKcal} kcal</strong> del paciente.
+            </CardDescription>
+          </div>
+        </CardHeader>
+        <CardContent className="p-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-3">
+            {CLINICAL_TEMPLATES.map((tmpl) => (
+              <button
+                key={tmpl.id}
+                type="button"
+                onClick={() => handleApplyTemplate(tmpl.id)}
+                className="group p-3.5 rounded-2xl bg-white border border-blue-200/90 hover:border-blue-600 hover:shadow-md text-left transition-all flex flex-col justify-between"
+              >
+                <div>
+                  <div className="flex items-center justify-between mb-1.5">
+                    <Badge variant="outline" className="text-[10px] font-bold bg-blue-50 text-blue-800 border-blue-200 rounded-lg">
+                      {tmpl.badge}
+                    </Badge>
+                    <span className="text-[11px] text-blue-600 font-black group-hover:scale-105 transition-transform">
+                      1 Clic ⚡
+                    </span>
+                  </div>
+                  <h4 className="text-xs font-bold text-gray-900 group-hover:text-blue-700 transition-colors">
+                    {tmpl.name}
+                  </h4>
+                  <p className="text-[10px] text-gray-500 mt-1 line-clamp-2 leading-relaxed">
+                    {tmpl.description}
+                  </p>
+                </div>
+                <div className="mt-3 pt-2 border-t border-gray-100 flex items-center justify-between text-[10px] font-semibold text-gray-600">
+                  <span>{tmpl.macroRatio.proteinPct}% P • {tmpl.macroRatio.carbsPct}% C</span>
+                  <span className="text-blue-700 font-bold bg-blue-50 px-1.5 py-0.5 rounded">
+                    {precisionResults.targetKcal} kcal
+                  </span>
+                </div>
+              </button>
+            ))}
+          </div>
+        </CardContent>
+      </Card>
+
       {/* 2. PORTAPAPELES INTERNO CON 1 CLIC (SI HAY ELEMENTO COPIADO) */}
+
       {copiedItem && (
-        <div className="bg-emerald-50 border border-emerald-300 rounded-xl p-2.5 flex items-center justify-between text-xs shadow-xs animate-in fade-in">
-          <div className="flex items-center gap-2 text-emerald-900 font-semibold">
-            <Copy className="h-4 w-4 text-emerald-600" />
+        <div className="bg-blue-50 border border-blue-300 rounded-xl p-2.5 flex items-center justify-between text-xs shadow-xs animate-in fade-in">
+          <div className="flex items-center gap-2 text-blue-900 font-semibold">
+            <Copy className="h-4 w-4 text-blue-600" />
             <span>Alimento en memoria:</span>
             <span className="font-extrabold underline">{copiedItemName} ({copiedItem.quantityG}g)</span>
-            <span className="text-emerald-700 text-[11px]">→ Haz clic en "Pegar" en cualquier celda de la tabla para duplicarlo al instante.</span>
+            <span className="text-blue-700 text-[11px]">→ Haz clic en "Pegar" en cualquier celda de la tabla para duplicarlo al instante.</span>
           </div>
 
           <Button
@@ -1058,7 +1135,7 @@ export function PlanBuilderForm({
                                 <button
                                   type="button"
                                   onClick={() => handlePasteItem(meal.type, dayIdx)}
-                                  className="text-[9px] font-bold text-emerald-800 bg-emerald-100 hover:bg-emerald-200 px-1 py-0.5 rounded flex items-center gap-0.5 transition-colors"
+                                  className="text-[9px] font-bold text-blue-800 bg-blue-100 hover:bg-blue-200 px-1 py-0.5 rounded flex items-center gap-0.5 transition-colors"
                                   title="Pegar alimento copiado aquí"
                                 >
                                   <ClipboardPaste className="h-2 w-2" />
@@ -1094,7 +1171,7 @@ export function PlanBuilderForm({
                       <td key={dayIdx} className="py-2 px-1 border-l border-gray-300 text-center">
                         <div className="space-y-0.5">
                           <div className="flex items-center justify-center gap-0.5 font-black text-xs text-gray-900">
-                            <Flame className={`h-3 w-3 ${isOptimal ? 'text-emerald-600' : isAcceptable ? 'text-amber-500' : 'text-rose-600'}`} />
+                            <Flame className={`h-3 w-3 ${isOptimal ? 'text-blue-600' : isAcceptable ? 'text-amber-500' : 'text-rose-600'}`} />
                             <span>{tot.kcal}</span>
                             <span className="text-[9px] text-gray-500 font-normal">k</span>
                           </div>
@@ -1109,7 +1186,7 @@ export function PlanBuilderForm({
                             variant="default"
                             className={`text-[8px] py-0 px-1 ${
                               isOptimal
-                                ? 'bg-emerald-100 text-emerald-800'
+                                ? 'bg-blue-100 text-blue-800'
                                 : isAcceptable
                                 ? 'bg-amber-100 text-amber-800'
                                 : 'bg-rose-100 text-rose-800'
@@ -1250,9 +1327,9 @@ export function PlanBuilderForm({
       {showExchangesModal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-xs p-4">
           <div className="bg-white rounded-3xl max-w-3xl w-full max-h-[85vh] overflow-hidden flex flex-col shadow-2xl border border-gray-200">
-            <div className="p-4 bg-emerald-50 border-b flex items-center justify-between">
+            <div className="p-4 bg-blue-50 border-b flex items-center justify-between">
               <div className="flex items-center gap-2">
-                <Layers className="h-5 w-5 text-emerald-700" />
+                <Layers className="h-5 w-5 text-blue-700" />
                 <div>
                   <h3 className="font-black text-sm text-gray-900">
                     Sistema Clínico de Intercambios de Alimentos (Estilo EasyDiet / CESNID)
@@ -1287,7 +1364,7 @@ export function PlanBuilderForm({
                     {group.examples.map((ex, i) => (
                       <div key={i} className="p-2 rounded-xl bg-white border border-gray-100 shadow-2xs">
                         <span className="text-gray-900 font-bold block truncate">{ex.food}</span>
-                        <span className="text-emerald-700 font-extrabold text-2xs block">{ex.quantity}</span>
+                        <span className="text-blue-700 font-extrabold text-2xs block">{ex.quantity}</span>
                       </div>
                     ))}
                   </div>

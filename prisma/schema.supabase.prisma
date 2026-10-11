@@ -8,19 +8,29 @@ datasource db {
   directUrl = env("DIRECT_URL")
 }
 
-// Modelos adaptados para Supabase (PostgreSQL en la Unión Europea)
-model User {
-  id           String     @id @default(cuid())
-  email        String     @unique
-  name         String
-  passwordHash String
-  image        String?
-  createdAt    DateTime   @default(now())
-  updatedAt    DateTime   @updatedAt
+// Note: SQLite doesn't support enums natively.
+// Valid values are enforced at the application level.
+// Sex: "MALE" | "FEMALE"
+// Objective: "WEIGHT_LOSS" | "MUSCLE_GAIN" | "MAINTENANCE" | "HEALTH_IMPROVEMENT" | "SPORTS_PERFORMANCE"
+// ActivityLevel: "SEDENTARY" | "LIGHT" | "MODERATE" | "ACTIVE" | "VERY_ACTIVE"
+// MealType: "BREAKFAST" | "MID_MORNING" | "LUNCH" | "SNACK" | "DINNER" | "LATE_SNACK"
 
-  patients     Patient[]
-  recipes      Recipe[]
-  mealPlans    MealPlan[]
+model User {
+  id            String     @id @default(cuid())
+  email         String     @unique
+  name          String
+  passwordHash  String
+  image         String?
+  licenseNumber String?
+  clinicName    String?
+  phone         String?
+  address       String?
+  createdAt     DateTime   @default(now())
+  updatedAt     DateTime   @updatedAt
+
+  patients      Patient[]
+  recipes       Recipe[]
+  mealPlans     MealPlan[]
 }
 
 model Patient {
@@ -135,14 +145,25 @@ model AnamnesisSubmission {
   mealsPerDay         Int?
   mealScheduleNotes   String?
   waterIntakeLiters   Float?
+  otherBeverages      String?
   recall24h           String?
+  weekendHabits       String?
   
-  // Salud y Síntomas
+  // Salud, Medicación y Síntomas
   digestiveIssues     String?
+  digestiveSymptoms   String?
   medicalHistory      String?
   currentMedications  String?
   isGLP1Treatment     Boolean   @default(false)
-  shortTermGoal       String?
+  intolerancesOrAllergies String?
+
+  // Estilo de vida y bienestar
+  exerciseRoutine      String?
+  sleepAndStress       String?
+  emotionalEatingNotes String?
+  previousDietsExp     String?
+  supplementsNotes     String?
+  shortTermGoal        String?
 
   @@index([patientId])
 }

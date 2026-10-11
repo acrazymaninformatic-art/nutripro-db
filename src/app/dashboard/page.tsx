@@ -59,7 +59,7 @@ export default async function DashboardPage() {
         <div className="flex items-center gap-3">
           <Link href="/dashboard/plans/new">
             <Button variant="outline" className="flex items-center gap-2 rounded-2xl">
-              <CalendarPlus className="h-4 w-4 text-emerald-600" />
+              <CalendarPlus className="h-4 w-4 text-blue-600" />
               <span>Nuevo Plan</span>
             </Button>
           </Link>
@@ -82,11 +82,11 @@ export default async function DashboardPage() {
                 Pacientes Activos
               </p>
               <h3 className="text-3xl font-extrabold text-gray-900 mt-1">{patientCount}</h3>
-              <p className="text-xs text-green-700 mt-1 font-medium flex items-center gap-1">
+              <p className="text-xs text-blue-700 mt-1 font-medium flex items-center gap-1">
                 <TrendingUp className="h-3 w-3" /> Fichas en seguimiento
               </p>
             </div>
-            <div className="h-12 w-12 rounded-xl bg-green-50 text-green-700 flex items-center justify-center">
+            <div className="h-12 w-12 rounded-xl bg-blue-50 text-blue-700 flex items-center justify-center">
               <Users className="h-6 w-6" />
             </div>
           </CardContent>
@@ -152,13 +152,13 @@ export default async function DashboardPage() {
         <h2 className="text-sm font-bold text-gray-900 tracking-wide uppercase">Accesos Directos Clínicos</h2>
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
           <Link href="/dashboard/plans/new">
-            <Card className="p-4.5 rounded-3xl hover:border-emerald-500 hover:shadow-md transition-all cursor-pointer group bg-gradient-to-br from-white to-emerald-50/20 border-gray-200">
+            <Card className="p-4.5 rounded-3xl hover:border-blue-500 hover:shadow-md transition-all cursor-pointer group bg-gradient-to-br from-white to-blue-50/20 border-gray-200">
               <div className="flex items-center gap-3.5">
-                <div className="p-3 bg-emerald-100 text-emerald-800 rounded-2xl group-hover:scale-105 transition-transform shadow-2xs">
+                <div className="p-3 bg-blue-100 text-blue-800 rounded-2xl group-hover:scale-105 transition-transform shadow-2xs">
                   <CalendarDays className="h-5 w-5" />
                 </div>
                 <div>
-                  <h4 className="font-bold text-gray-900 group-hover:text-emerald-700 transition-colors text-sm">
+                  <h4 className="font-bold text-gray-900 group-hover:text-blue-700 transition-colors text-sm">
                     Crear Nuevo Plan Semanal
                   </h4>
                   <p className="text-xs text-gray-500 mt-0.5">
@@ -170,13 +170,13 @@ export default async function DashboardPage() {
           </Link>
 
           <Link href="/dashboard/foods">
-            <Card className="p-4.5 rounded-3xl hover:border-emerald-500 hover:shadow-md transition-all cursor-pointer group bg-gradient-to-br from-white to-emerald-50/20 border-gray-200">
+            <Card className="p-4.5 rounded-3xl hover:border-blue-500 hover:shadow-md transition-all cursor-pointer group bg-gradient-to-br from-white to-blue-50/20 border-gray-200">
               <div className="flex items-center gap-3.5">
-                <div className="p-3 bg-emerald-100 text-emerald-800 rounded-2xl group-hover:scale-105 transition-transform shadow-2xs">
+                <div className="p-3 bg-blue-100 text-blue-800 rounded-2xl group-hover:scale-105 transition-transform shadow-2xs">
                   <Sparkles className="h-5 w-5" />
                 </div>
                 <div>
-                  <h4 className="font-bold text-gray-900 group-hover:text-emerald-700 transition-colors text-sm">
+                  <h4 className="font-bold text-gray-900 group-hover:text-blue-700 transition-colors text-sm">
                     Alimentos y Macros (1.012 items)
                   </h4>
                   <p className="text-xs text-gray-500 mt-0.5">
@@ -188,13 +188,13 @@ export default async function DashboardPage() {
           </Link>
 
           <Link href="/dashboard/recipes">
-            <Card className="p-4.5 rounded-3xl hover:border-emerald-500 hover:shadow-md transition-all cursor-pointer group bg-gradient-to-br from-white to-emerald-50/20 border-gray-200">
+            <Card className="p-4.5 rounded-3xl hover:border-blue-500 hover:shadow-md transition-all cursor-pointer group bg-gradient-to-br from-white to-blue-50/20 border-gray-200">
               <div className="flex items-center gap-3.5">
-                <div className="p-3 bg-emerald-100 text-emerald-800 rounded-2xl group-hover:scale-105 transition-transform shadow-2xs">
+                <div className="p-3 bg-blue-100 text-blue-800 rounded-2xl group-hover:scale-105 transition-transform shadow-2xs">
                   <ChefHat className="h-5 w-5" />
                 </div>
                 <div>
-                  <h4 className="font-bold text-gray-900 group-hover:text-emerald-700 transition-colors text-sm">
+                  <h4 className="font-bold text-gray-900 group-hover:text-blue-700 transition-colors text-sm">
                     Recetario Culinario Clínico
                   </h4>
                   <p className="text-xs text-gray-500 mt-0.5">
@@ -212,14 +212,14 @@ export default async function DashboardPage() {
         <CardHeader className="flex flex-row items-center justify-between pb-4">
           <div>
             <CardTitle className="text-lg flex items-center gap-2">
-              <Users className="h-5 w-5 text-green-600" />
+              <Users className="h-5 w-5 text-blue-600" />
               <span>Pacientes Recientes</span>
             </CardTitle>
             <CardDescription>Últimos expedientes clínicos atendidos</CardDescription>
           </div>
           <Link
             href="/dashboard/patients"
-            className="text-xs font-semibold text-green-700 hover:text-green-800 hover:underline flex items-center gap-1"
+            className="text-xs font-semibold text-blue-700 hover:text-blue-800 hover:underline flex items-center gap-1"
           >
             <span>Ver todos</span>
             <ArrowRight className="h-3.5 w-3.5" />
@@ -256,7 +256,7 @@ export default async function DashboardPage() {
                         <td className="px-6 py-4 font-medium text-gray-900">
                           <Link
                             href={`/dashboard/patients/${p.id}`}
-                            className="text-green-700 hover:text-green-800 hover:underline"
+                            className="text-blue-700 hover:text-blue-800 hover:underline"
                           >
                             {p.lastName}, {p.firstName}
                           </Link>
@@ -274,7 +274,7 @@ export default async function DashboardPage() {
                         </td>
                         <td className="px-6 py-4 text-center">
                           {p.isActive ? (
-                            <Badge variant="default" className="bg-emerald-100 text-emerald-800 hover:bg-emerald-100 border-0">
+                            <Badge variant="default" className="bg-blue-100 text-blue-800 hover:bg-blue-100 border-0">
                               Activo
                             </Badge>
                           ) : (
@@ -283,7 +283,7 @@ export default async function DashboardPage() {
                         </td>
                         <td className="px-6 py-4 text-right">
                           <Link href={`/dashboard/patients/${p.id}`}>
-                            <Button variant="ghost" size="sm" className="text-green-700 hover:text-green-800">
+                            <Button variant="ghost" size="sm" className="text-blue-700 hover:text-blue-800">
                               Ver Ficha →
                             </Button>
                           </Link>

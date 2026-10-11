@@ -12,13 +12,11 @@ import {
   ExternalLink,
   Copy,
   Check,
-  Smartphone,
   ShieldCheck,
   AlertCircle,
   Loader2,
   Clock,
   CheckCircle2,
-  FileCheck,
 } from 'lucide-react'
 import { sendAnamnesisEmailAction, markAnamnesisSentAction } from '../email-actions'
 import { AnamnesisViewerModal, type AnamnesisSubmissionItem } from './anamnesis-viewer-modal'
@@ -39,9 +37,10 @@ interface Props {
 
 export function PatientContactTools({ patient }: Props) {
   const [patientEmail, setPatientEmail] = useState(patient.email || '')
-  const [professionalEmail, setProfessionalEmail] = useState(
-    patient.professionalEmail || 'consulta@nutripro.local'
-  )
+  // El correo profesional de la consulta siempre es evavidalinfo@gmail.com
+  const professionalEmail = 'evavidalinfo@gmail.com'
+  const professionalName = patient.professionalName || 'Eva Vidal'
+  
   const [loading, setLoading] = useState(false)
   const [status, setStatus] = useState<'NOT_SENT' | 'PENDING' | 'COMPLETED'>(
     (patient.anamnesisStatus as any) ||
@@ -62,12 +61,12 @@ export function PatientContactTools({ patient }: Props) {
   const submissions = patient.anamnesisSubmissions || []
   const hasCompletedSubmission = status === 'COMPLETED' || submissions.length > 0
 
-  const origin = typeof window !== 'undefined' ? window.location.origin : 'http://localhost:3000'
+  const origin = typeof window !== 'undefined' ? window.location.origin : 'https://nutripro-lyart.vercel.app'
   const anamnesisUrl = `${origin}/anamnesis?patientId=${patient.id}`
   const firstName = patient.name.split(' ')[0]
 
-  const emailSubject = `Cuestionario Clínico Pre-Consulta - ${patient.professionalName || 'Consulta de Nutrición'}`
-  const emailBody = `Hola ${firstName},\n\nPara preparar tu consulta nutricional y diseñar un menú personalizado adaptado a tus gustos, horarios y necesidades, por favor completa tu cuestionario de salud en el siguiente enlace:\n\n${anamnesisUrl}\n\nSolo te llevará 3-5 minutos y nos permitirá comenzar directamente con tu planificación.\n\nAtentamente,\n${patient.professionalName || 'Tu Nutricionista'}`
+  const emailSubject = `Cuestionario Clínico Pre-Consulta - ${professionalName} • Consulta Nutricional`
+  const emailBody = `Hola ${firstName},\n\nPara preparar tu consulta nutricional y diseñar un menú personalizado adaptado a tus gustos, horarios y necesidades, por favor completa tu cuestionario de salud en el siguiente enlace:\n\n${anamnesisUrl}\n\nSolo te llevará 3-5 minutos y nos permitirá comenzar directamente con tu planificación.\n\nAtentamente,\n${professionalName}\nConsulta Nutricional (${professionalEmail})`
   const mailtoUrl = `mailto:${encodeURIComponent(patientEmail)}?subject=${encodeURIComponent(emailSubject)}&body=${encodeURIComponent(emailBody)}`
 
   const handleSendEmail = async () => {
@@ -87,7 +86,7 @@ export function PatientContactTools({ patient }: Props) {
         patientId: patient.id,
         patientEmail,
         professionalEmail,
-        professionalName: patient.professionalName || undefined,
+        professionalName,
         baseUrl: origin,
       })
 
@@ -151,10 +150,10 @@ export function PatientContactTools({ patient }: Props) {
   return (
     <div className="space-y-4">
       <Card className="rounded-3xl border-gray-200 overflow-hidden shadow-sm">
-        <CardHeader className="bg-gradient-to-r from-emerald-50/70 via-teal-50/40 to-white border-b border-gray-100 pb-3">
+        <CardHeader className="bg-gradient-to-r from-blue-50/80 via-sky-50/40 to-white border-b border-gray-100 pb-3">
           <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
             <div className="flex items-center gap-2.5">
-              <div className="p-2.5 bg-emerald-600 text-white rounded-2xl shadow-xs">
+              <div className="p-2.5 bg-blue-600 text-white rounded-2xl shadow-xs">
                 <Mail className="h-5 w-5" />
               </div>
               <div>
@@ -162,7 +161,7 @@ export function PatientContactTools({ patient }: Props) {
                   <span>Cuestionario de Anamnesis Pre-Consulta</span>
                 </CardTitle>
                 <CardDescription className="text-xs text-gray-500">
-                  Envía el formulario por correo a la paciente y revisa sus respuestas sin alterar tu ficha técnica
+                  Envía el formulario a la paciente desde tu correo ({professionalEmail}) y revisa sus respuestas
                 </CardDescription>
               </div>
             </div>
@@ -171,8 +170,8 @@ export function PatientContactTools({ patient }: Props) {
             <div className="flex items-center gap-2 flex-wrap">
               {hasCompletedSubmission ? (
                 <div className="flex items-center gap-2">
-                  <Badge className="bg-emerald-100 text-emerald-800 border-emerald-300 font-bold rounded-full px-3 py-1 flex items-center gap-1.5 shadow-2xs">
-                    <CheckCircle2 className="h-3.5 w-3.5 text-emerald-600" />
+                  <Badge className="bg-blue-100 text-blue-900 border-blue-300 font-bold rounded-full px-3 py-1 flex items-center gap-1.5 shadow-2xs">
+                    <CheckCircle2 className="h-3.5 w-3.5 text-blue-600" />
                     <span>Rellenado por la Paciente {completedAt ? `(${formatDate(completedAt)})` : ''}</span>
                   </Badge>
                   {/* Botón Destacado para Ver Cuestionario Relleno */}
@@ -202,7 +201,7 @@ export function PatientContactTools({ patient }: Props) {
               <Label className="text-xs font-semibold text-gray-700 flex items-center justify-between">
                 <span>Correo de la Paciente (Destinatario)</span>
                 {patient.email ? (
-                  <span className="text-2xs text-emerald-600 font-normal">Registrado</span>
+                  <span className="text-2xs text-blue-600 font-normal">Registrado</span>
                 ) : (
                   <span className="text-2xs text-amber-600 font-normal">Pendiente de añadir</span>
                 )}
@@ -218,14 +217,13 @@ export function PatientContactTools({ patient }: Props) {
 
             <div className="space-y-1.5">
               <Label className="text-xs font-semibold text-gray-700">
-                Tu Correo Profesional (Remitente)
+                Tu Correo Profesional de Consulta (Remitente)
               </Label>
               <Input
                 type="email"
+                readOnly
                 value={professionalEmail}
-                onChange={(e) => setProfessionalEmail(e.target.value)}
-                placeholder="tuconsulta@gmail.com"
-                className="h-9 text-xs rounded-xl bg-gray-50/70"
+                className="h-9 text-xs rounded-xl bg-slate-50 text-slate-700 font-medium cursor-not-allowed border-gray-200"
               />
             </div>
           </div>
@@ -235,13 +233,13 @@ export function PatientContactTools({ patient }: Props) {
             <div
               className={`p-3 rounded-2xl text-xs flex items-start gap-2.5 border ${
                 statusMessage.type === 'success'
-                  ? 'bg-emerald-50 text-emerald-900 border-emerald-200'
+                  ? 'bg-blue-50 text-blue-900 border-blue-200'
                   : statusMessage.type === 'error'
                   ? 'bg-red-50 text-red-900 border-red-200'
-                  : 'bg-blue-50 text-blue-900 border-blue-200'
+                  : 'bg-slate-50 text-slate-900 border-slate-200'
               }`}
             >
-              {statusMessage.type === 'success' && <ShieldCheck className="h-4 w-4 text-emerald-600 shrink-0 mt-0.5" />}
+              {statusMessage.type === 'success' && <ShieldCheck className="h-4 w-4 text-blue-600 shrink-0 mt-0.5" />}
               {statusMessage.type === 'error' && <AlertCircle className="h-4 w-4 text-red-600 shrink-0 mt-0.5" />}
               {statusMessage.type === 'info' && <AlertCircle className="h-4 w-4 text-blue-600 shrink-0 mt-0.5" />}
               <div className="flex-1">
@@ -268,7 +266,7 @@ export function PatientContactTools({ patient }: Props) {
               type="button"
               onClick={handleSendEmail}
               disabled={loading || !patientEmail}
-              className="bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs h-9 px-4 rounded-xl shadow-xs flex items-center justify-center gap-2 transition-all"
+              className="bg-blue-600 hover:bg-blue-700 text-white font-bold text-xs h-9 px-4 rounded-xl shadow-xs flex items-center justify-center gap-2 transition-all"
             >
               {loading ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Send className="h-3.5 w-3.5" />}
               <span>Enviar Cuestionario por Correo</span>
@@ -289,24 +287,14 @@ export function PatientContactTools({ patient }: Props) {
 
             <div className="h-6 w-px bg-gray-200 hidden sm:block mx-1" />
 
-            <a
-              href={`/anamnesis?patientId=${patient.id}`}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="h-9 px-3.5 rounded-xl bg-gray-100 hover:bg-gray-200 text-gray-700 font-semibold text-xs flex items-center justify-center gap-1.5 transition-all"
-            >
-              <Smartphone className="h-3.5 w-3.5 text-gray-600" />
-              <span>Modo Tablet (En Consulta)</span>
-            </a>
-
             <Button
               type="button"
               variant="outline"
               size="sm"
               onClick={copyAnamnesisLink}
-              className="h-9 px-3 rounded-xl border-gray-200 text-gray-700 hover:bg-gray-50 text-xs font-semibold"
+              className="h-9 px-3.5 rounded-xl border-gray-200 text-gray-700 hover:bg-gray-50 text-xs font-semibold"
             >
-              {copiedLink ? <Check className="h-3.5 w-3.5 text-emerald-600 mr-1" /> : <Copy className="h-3.5 w-3.5 mr-1" />}
+              {copiedLink ? <Check className="h-3.5 w-3.5 text-blue-600 mr-1" /> : <Copy className="h-3.5 w-3.5 mr-1" />}
               {copiedLink ? 'Enlace Copiado' : 'Copiar Enlace'}
             </Button>
           </div>

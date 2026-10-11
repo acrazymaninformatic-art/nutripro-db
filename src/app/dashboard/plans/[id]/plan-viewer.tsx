@@ -213,11 +213,11 @@ export function PlanViewer({ plan }: PlanViewerProps) {
               onClick={() => setActiveTab('dossier')}
               className={`py-2 px-4 rounded-xl transition-all flex items-center gap-2 shrink-0 ${
                 activeTab === 'dossier'
-                  ? 'bg-white text-emerald-950 shadow-xs font-bold'
+                  ? 'bg-white text-blue-950 shadow-xs font-bold'
                   : 'text-gray-600 hover:text-gray-900'
               }`}
             >
-              <FileText className="h-4 w-4 text-emerald-600" />
+              <FileText className="h-4 w-4 text-blue-600" />
               <span>Dossier PDF Oficial (7-9 Hojas A4)</span>
             </button>
 
@@ -226,11 +226,11 @@ export function PlanViewer({ plan }: PlanViewerProps) {
               onClick={() => setActiveTab('interactive')}
               className={`py-2 px-4 rounded-xl transition-all flex items-center gap-2 shrink-0 ${
                 activeTab === 'interactive'
-                  ? 'bg-white text-emerald-950 shadow-xs font-bold'
+                  ? 'bg-white text-blue-950 shadow-xs font-bold'
                   : 'text-gray-600 hover:text-gray-900'
               }`}
             >
-              <CalendarDays className="h-4 w-4 text-emerald-600" />
+              <CalendarDays className="h-4 w-4 text-blue-600" />
               <span>Ver Menú y Recetas por Días</span>
             </button>
 
@@ -239,11 +239,11 @@ export function PlanViewer({ plan }: PlanViewerProps) {
               onClick={() => setActiveTab('exchanges')}
               className={`py-2 px-4 rounded-xl transition-all flex items-center gap-2 shrink-0 ${
                 activeTab === 'exchanges'
-                  ? 'bg-white text-emerald-950 shadow-xs font-bold'
+                  ? 'bg-white text-blue-950 shadow-xs font-bold'
                   : 'text-gray-600 hover:text-gray-900'
               }`}
             >
-              <Layers className="h-4 w-4 text-emerald-600" />
+              <Layers className="h-4 w-4 text-blue-600" />
               <span>Intercambios (CESNID)</span>
             </button>
 
@@ -252,11 +252,11 @@ export function PlanViewer({ plan }: PlanViewerProps) {
               onClick={() => setActiveTab('grocery')}
               className={`py-2 px-4 rounded-xl transition-all flex items-center gap-2 shrink-0 ${
                 activeTab === 'grocery'
-                  ? 'bg-white text-emerald-950 shadow-xs font-bold'
+                  ? 'bg-white text-blue-950 shadow-xs font-bold'
                   : 'text-gray-600 hover:text-gray-900'
               }`}
             >
-              <ShoppingCart className="h-4 w-4 text-emerald-600" />
+              <ShoppingCart className="h-4 w-4 text-blue-600" />
               <span>Lista de la Compra ({totalGroceryCount})</span>
             </button>
           </div>
@@ -281,7 +281,7 @@ export function PlanViewer({ plan }: PlanViewerProps) {
 
           <Button
             onClick={handlePrint}
-            className="bg-emerald-600 hover:bg-emerald-700 text-white font-black h-10 px-5 gap-2 shadow-sm text-xs rounded-2xl"
+            className="bg-blue-600 hover:bg-blue-700 text-white font-black h-10 px-5 gap-2 shadow-sm text-xs rounded-2xl"
             title="Genera el documento PDF oficial paginado a 8-10 hojas limpias con fotos y recetas"
           >
             <Printer className="h-4 w-4" />
@@ -292,16 +292,16 @@ export function PlanViewer({ plan }: PlanViewerProps) {
 
       {/* PRINT NOTICE BANNER (Only on screen in dossier tab) */}
       {activeTab === 'dossier' && (
-        <div className="p-4 bg-gradient-to-r from-emerald-50 via-teal-50 to-green-50 border border-emerald-200/80 rounded-2xl text-xs text-emerald-950 flex flex-col sm:flex-row sm:items-center justify-between gap-3 print:hidden shadow-xs">
+        <div className="p-4 bg-gradient-to-r from-blue-50 via-sky-50 to-green-50 border border-blue-200/80 rounded-2xl text-xs text-blue-950 flex flex-col sm:flex-row sm:items-center justify-between gap-3 print:hidden shadow-xs">
           <div className="flex items-center gap-3">
-            <div className="p-2 bg-emerald-100 rounded-xl text-emerald-700 shrink-0">
+            <div className="p-2 bg-blue-100 rounded-xl text-blue-700 shrink-0">
               <Sparkles className="h-4 w-4" />
             </div>
             <div>
-              <p className="font-bold text-emerald-950">
+              <p className="font-bold text-blue-950">
                 Formato Editorial A4 Clínico con Recetas Integradas
               </p>
-              <p className="text-emerald-800 text-[11px] mt-0.5">
+              <p className="text-blue-800 text-[11px] mt-0.5">
                 Cada uno de los 7 días ocupa exactamente su propia hoja limpia, con las fotos HD de cada alimento, pautas culinarias y el paso a paso de la receta principal. Al imprimir, elige <em>"Guardar como PDF"</em> y tamaño <em>"A4"</em>.
               </p>
             </div>
@@ -310,7 +310,7 @@ export function PlanViewer({ plan }: PlanViewerProps) {
             size="sm"
             onClick={handlePrint}
             variant="outline"
-            className="h-8 text-xs font-black border-emerald-300 text-emerald-900 bg-white hover:bg-emerald-50 shrink-0 rounded-xl"
+            className="h-8 text-xs font-black border-blue-300 text-blue-900 bg-white hover:bg-blue-50 shrink-0 rounded-xl"
           >
             Guardar en PDF Ahora
           </Button>
@@ -328,14 +328,14 @@ export function PlanViewer({ plan }: PlanViewerProps) {
           <section className="dossier-page bg-white p-6 sm:p-8 rounded-3xl border border-gray-200 shadow-sm print:border-none print:shadow-none print:p-0 print:m-0">
             <div className="space-y-6">
               {/* Encabezado Institucional */}
-              <div className="flex items-center justify-between border-b-2 border-emerald-600 pb-5">
+              <div className="flex items-center justify-between border-b-2 border-blue-600 pb-5">
                 <div className="flex items-center gap-3.5">
-                  <div className="w-12 h-12 rounded-2xl bg-emerald-600 text-white flex items-center justify-center shadow-xs">
+                  <div className="w-12 h-12 rounded-2xl bg-blue-600 text-white flex items-center justify-center shadow-xs">
                     <Leaf className="w-7 h-7" />
                   </div>
                   <div>
                     <h1 className="text-2xl font-black text-gray-900 tracking-tight">
-                      NutriPro <span className="text-emerald-600 font-light">• Clinical Nutrition</span>
+                      NutriPro <span className="text-blue-600 font-light">• Clinical Nutrition</span>
                     </h1>
                     <p className="text-xs text-gray-500 font-semibold tracking-wide uppercase">
                       Dossier de Prescripción Dietética y Recetario Clínico
@@ -344,7 +344,7 @@ export function PlanViewer({ plan }: PlanViewerProps) {
                 </div>
 
                 <div className="text-right text-xs text-gray-600 space-y-0.5">
-                  <p className="font-black text-gray-900 text-sm">Dr. Consulta Nutricional</p>
+                  <p className="font-black text-gray-900 text-sm">Eva Vidal - Consulta Nutricional</p>
                   <p className="text-gray-500 font-medium">Nº Colegiado: MAD-4892 • Especialidad Médica</p>
                   <p className="text-gray-400">
                     Fecha de Emisión: {new Date(plan.startDate).toLocaleDateString('es-ES', { day: 'numeric', month: 'long', year: 'numeric' })}
@@ -353,9 +353,9 @@ export function PlanViewer({ plan }: PlanViewerProps) {
               </div>
 
               {/* Ficha Resumen del Paciente */}
-              <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 p-5 rounded-2xl bg-gradient-to-br from-emerald-50/90 to-teal-50/40 border border-emerald-200">
+              <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 p-5 rounded-2xl bg-gradient-to-br from-blue-50/90 to-sky-50/40 border border-blue-200">
                 <div>
-                  <span className="text-[10px] font-black uppercase tracking-wider text-emerald-800 block">
+                  <span className="text-[10px] font-black uppercase tracking-wider text-blue-800 block">
                     Paciente
                   </span>
                   <span className="text-base font-black text-gray-900 block mt-0.5">
@@ -367,7 +367,7 @@ export function PlanViewer({ plan }: PlanViewerProps) {
                 </div>
 
                 <div>
-                  <span className="text-[10px] font-black uppercase tracking-wider text-emerald-800 block">
+                  <span className="text-[10px] font-black uppercase tracking-wider text-blue-800 block">
                     Plan Nutricional
                   </span>
                   <span className="text-sm font-black text-gray-900 block mt-0.5 truncate">
@@ -379,19 +379,19 @@ export function PlanViewer({ plan }: PlanViewerProps) {
                 </div>
 
                 <div>
-                  <span className="text-[10px] font-black uppercase tracking-wider text-emerald-800 block">
+                  <span className="text-[10px] font-black uppercase tracking-wider text-blue-800 block">
                     {hideCaloriesTCA ? 'Enfoque Clínico' : 'Meta Calórica Diaria'}
                   </span>
-                  <span className="text-xl font-black text-emerald-950 block mt-0.5 leading-none">
+                  <span className="text-xl font-black text-blue-950 block mt-0.5 leading-none">
                     {hideCaloriesTCA ? 'Pauta Cualitativa' : `${plan.targetKcal} kcal/día`}
                   </span>
-                  <span className="text-[10px] text-emerald-700 font-bold block mt-1">
+                  <span className="text-[10px] text-blue-700 font-bold block mt-1">
                     {hideCaloriesTCA ? 'Enfoque en hábitos y raciones' : 'Cálculo individualizado'}
                   </span>
                 </div>
 
                 <div>
-                  <span className="text-[10px] font-black uppercase tracking-wider text-emerald-800 block">
+                  <span className="text-[10px] font-black uppercase tracking-wider text-blue-800 block">
                     {hideCaloriesTCA ? 'Estructura Nutricional' : 'Macronutrientes Objetivo'}
                   </span>
                   {hideCaloriesTCA ? (
@@ -430,7 +430,7 @@ export function PlanViewer({ plan }: PlanViewerProps) {
 
                 <div className="p-4 rounded-2xl bg-gray-50 border border-gray-200 space-y-2">
                   <div className="flex items-center gap-2 text-xs font-bold text-gray-900 uppercase tracking-wide">
-                    <ChefHat className="h-4 w-4 text-emerald-600" />
+                    <ChefHat className="h-4 w-4 text-blue-600" />
                     <span>Técnicas Culinarias Recomendadas</span>
                   </div>
                   <ul className="text-xs text-gray-700 space-y-1.5 list-disc list-inside">
@@ -444,9 +444,9 @@ export function PlanViewer({ plan }: PlanViewerProps) {
 
               {/* Indicaciones Específicas del Nutricionista para este Paciente */}
               {plan.notes && (
-                <div className="p-4 rounded-2xl bg-emerald-50/60 border border-emerald-200 space-y-1.5">
-                  <div className="flex items-center gap-2 text-xs font-bold text-emerald-950 uppercase tracking-wide">
-                    <Info className="h-4 w-4 text-emerald-700" />
+                <div className="p-4 rounded-2xl bg-blue-50/60 border border-blue-200 space-y-1.5">
+                  <div className="flex items-center gap-2 text-xs font-bold text-blue-950 uppercase tracking-wide">
+                    <Info className="h-4 w-4 text-blue-700" />
                     <span>Pautas Médicas y Observaciones Individuales</span>
                   </div>
                   <p className="text-xs text-gray-800 leading-relaxed whitespace-pre-wrap font-medium">
@@ -458,7 +458,7 @@ export function PlanViewer({ plan }: PlanViewerProps) {
               {/* Sello y Compromiso Clínico */}
               <div className="pt-4 border-t border-gray-200 flex items-center justify-between text-xs text-gray-500">
                 <div className="flex items-center gap-2">
-                  <ShieldCheck className="h-4 w-4 text-emerald-600" />
+                  <ShieldCheck className="h-4 w-4 text-blue-600" />
                   <span>Documento oficial de prescripción nutricional validado clínicamente.</span>
                 </div>
                 <div className="text-right">
@@ -507,7 +507,7 @@ export function PlanViewer({ plan }: PlanViewerProps) {
                   {/* Encabezado del Día */}
                   <div className="bg-gradient-to-r from-gray-950 via-gray-900 to-gray-800 text-white p-3.5 rounded-2xl flex items-center justify-between shadow-xs">
                     <div className="flex items-center gap-2.5">
-                      <div className="p-1.5 rounded-xl bg-emerald-500/20 text-emerald-400 border border-emerald-500/30">
+                      <div className="p-1.5 rounded-xl bg-blue-500/20 text-blue-400 border border-blue-500/30">
                         <CalendarDays className="h-4 w-4" />
                       </div>
                       <div>
@@ -527,7 +527,7 @@ export function PlanViewer({ plan }: PlanViewerProps) {
                         </span>
                       ) : (
                         <>
-                          <span className="bg-emerald-600/30 text-emerald-300 font-extrabold px-2.5 py-1 rounded-lg border border-emerald-500/40">
+                          <span className="bg-blue-600/30 text-blue-300 font-extrabold px-2.5 py-1 rounded-lg border border-blue-500/40">
                             {Math.round(dayKcal)} kcal
                           </span>
                           <div className="hidden sm:flex items-center gap-2 text-[11px] font-bold text-gray-200 bg-white/10 px-2.5 py-1 rounded-lg">
@@ -569,8 +569,8 @@ export function PlanViewer({ plan }: PlanViewerProps) {
                         >
                           {/* Barra de Título de la Toma */}
                           <div className="bg-gradient-to-r from-gray-100 to-gray-50 px-3 py-1.5 border-b border-gray-200 flex items-center justify-between">
-                            <span className="font-black text-[11px] uppercase tracking-wider text-emerald-950 flex items-center gap-1.5">
-                              <span className="w-2 h-2 rounded-full bg-emerald-600 inline-block"></span>
+                            <span className="font-black text-[11px] uppercase tracking-wider text-blue-950 flex items-center gap-1.5">
+                              <span className="w-2 h-2 rounded-full bg-blue-600 inline-block"></span>
                               {MEAL_LABELS[meal.mealType] || meal.mealType}
                             </span>
                             <span className="text-[10px] font-bold text-gray-600">
@@ -625,10 +625,10 @@ export function PlanViewer({ plan }: PlanViewerProps) {
                                           <button
                                             type="button"
                                             onClick={() => setSelectedRecipe(itemRecipe)}
-                                            className="inline-flex items-center gap-0.5 text-[9px] font-bold text-emerald-800 bg-emerald-50 hover:bg-emerald-100 px-1.5 py-0.2 rounded-full border border-emerald-200 cursor-pointer print:hidden"
+                                            className="inline-flex items-center gap-0.5 text-[9px] font-bold text-blue-800 bg-blue-50 hover:bg-blue-100 px-1.5 py-0.2 rounded-full border border-blue-200 cursor-pointer print:hidden"
                                             title="Ver receta completa paso a paso"
                                           >
-                                            <Utensils className="h-2.5 w-2.5 text-emerald-600" />
+                                            <Utensils className="h-2.5 w-2.5 text-blue-600" />
                                             <span>Receta</span>
                                           </button>
                                         )}
@@ -637,7 +637,7 @@ export function PlanViewer({ plan }: PlanViewerProps) {
 
                                     {/* Cantidad en gramos / Ración */}
                                     <td className="py-1 px-2 text-center align-middle">
-                                      <span className="inline-block px-2 py-0.5 rounded-full font-black text-[10px] bg-emerald-50 text-emerald-900 border border-emerald-200">
+                                      <span className="inline-block px-2 py-0.5 rounded-full font-black text-[10px] bg-blue-50 text-blue-900 border border-blue-200">
                                         {hideCaloriesTCA ? '1 ración' : `${it.quantityG} g`}
                                       </span>
                                     </td>
@@ -663,21 +663,33 @@ export function PlanViewer({ plan }: PlanViewerProps) {
 
                   {/* CAJA DE RECETA PRINCIPAL DEL DÍA EN EL DOSSIER */}
                   {featuredRecipe && (
-                    <div className="border border-emerald-200 rounded-2xl p-3 bg-gradient-to-r from-emerald-50/70 via-teal-50/30 to-green-50/50 space-y-2">
-                      <div className="flex items-center justify-between border-b border-emerald-200/80 pb-1.5">
+                    <div className="border border-blue-200 rounded-2xl p-3 bg-gradient-to-r from-blue-50/70 via-sky-50/30 to-green-50/50 space-y-2">
+                      <div className="flex items-center justify-between border-b border-blue-200/80 pb-1.5">
                         <div className="flex items-center gap-2">
-                          <ChefHat className="h-4 w-4 text-emerald-700" />
-                          <span className="text-xs font-black text-emerald-950">
+                          <ChefHat className="h-4 w-4 text-blue-700" />
+                          <span className="text-xs font-black text-blue-950">
                             Receta Culinaria Destacada: {featuredRecipe.name}
                           </span>
                         </div>
-                        <div className="flex items-center gap-2 text-[10px] text-emerald-800 font-bold">
+                        <div className="flex items-center gap-2 text-[10px] text-blue-800 font-bold flex-wrap">
                           <span className="flex items-center gap-1">
-                            <Clock className="h-3 w-3 text-emerald-600" />
+                            <Clock className="h-3 w-3 text-blue-600" />
                             {featuredRecipe.prepTimeMin + featuredRecipe.cookTimeMin} min
                           </span>
                           <span>•</span>
                           <span>Dificultad {featuredRecipe.difficulty}</span>
+                          {!hideCaloriesTCA && (
+                            <>
+                              <span>•</span>
+                              <span className="bg-blue-100 text-blue-950 px-1.5 py-0.5 rounded font-black flex items-center gap-0.5">
+                                <Flame className="h-3 w-3 text-blue-600" />
+                                {featuredRecipe.caloriesPerServing} kcal
+                              </span>
+                              <span className="text-blue-950 font-extrabold bg-white/70 px-1.5 py-0.5 rounded border border-blue-200">
+                                {featuredRecipe.proteinG}g P · {featuredRecipe.carbsG}g C · {featuredRecipe.fatG}g G
+                              </span>
+                            </>
+                          )}
                         </div>
                       </div>
 
@@ -692,19 +704,19 @@ export function PlanViewer({ plan }: PlanViewerProps) {
                             ))}
                           </ol>
                         </div>
-                        <div className="bg-white/80 p-2 rounded-xl border border-emerald-200/60 flex flex-col justify-between">
+                        <div className="bg-white/80 p-2 rounded-xl border border-blue-200/60 flex flex-col justify-between">
                           <div>
-                            <span className="font-bold text-emerald-900 block mb-0.5">
+                            <span className="font-bold text-blue-900 block mb-0.5">
                               💡 Consejo del Nutricionista:
                             </span>
-                            <p className="text-emerald-800 italic leading-snug">
+                            <p className="text-blue-800 italic leading-snug">
                               {featuredRecipe.chefTip}
                             </p>
                           </div>
                           <button
                             type="button"
                             onClick={() => setSelectedRecipe(featuredRecipe)}
-                            className="mt-1 inline-flex items-center gap-1 text-[10px] font-bold text-emerald-700 hover:text-emerald-900 print:hidden self-start cursor-pointer"
+                            className="mt-1 inline-flex items-center gap-1 text-[10px] font-bold text-blue-700 hover:text-blue-900 print:hidden self-start cursor-pointer"
                           >
                             <span>Ver receta completa con todos los pasos</span>
                             <ChevronRight className="h-3 w-3" />
@@ -730,9 +742,9 @@ export function PlanViewer({ plan }: PlanViewerProps) {
           <section className="dossier-page bg-white p-6 sm:p-8 rounded-3xl border border-gray-200 shadow-sm print:border-none print:shadow-none print:p-0 print:m-0 space-y-4">
             <div className="space-y-4 flex-1">
               {/* Encabezado Hoja de Intercambios */}
-              <div className="flex items-center justify-between border-b-2 border-emerald-600 pb-3">
+              <div className="flex items-center justify-between border-b-2 border-blue-600 pb-3">
                 <div className="flex items-center gap-3">
-                  <div className="p-2.5 bg-emerald-100 rounded-2xl text-emerald-800 shadow-2xs">
+                  <div className="p-2.5 bg-blue-100 rounded-2xl text-blue-800 shadow-2xs">
                     <Layers className="h-6 w-6" />
                   </div>
                   <div>
@@ -747,13 +759,13 @@ export function PlanViewer({ plan }: PlanViewerProps) {
 
                 <div className="text-right text-xs">
                   <span className="font-bold text-gray-800 block">Sustituciones Seguras</span>
-                  <span className="text-[10px] text-emerald-700 font-semibold">1 intercambio = Mismos macros</span>
+                  <span className="text-[10px] text-blue-700 font-semibold">1 intercambio = Mismos macros</span>
                 </div>
               </div>
 
               {/* Pauta pedagógica para el paciente */}
-              <div className="p-3.5 rounded-2xl bg-emerald-50/70 border border-emerald-200 text-xs text-emerald-950 space-y-1">
-                <span className="font-black block text-[11px] uppercase tracking-wide text-emerald-900">
+              <div className="p-3.5 rounded-2xl bg-blue-50/70 border border-blue-200 text-xs text-blue-950 space-y-1">
+                <span className="font-black block text-[11px] uppercase tracking-wide text-blue-900">
                   ¿Cómo utilizar esta guía para sustituir alimentos?
                 </span>
                 <p className="text-[11px] text-gray-700 leading-relaxed">
@@ -778,7 +790,7 @@ export function PlanViewer({ plan }: PlanViewerProps) {
                       {group.examples.slice(0, 6).map((ex, i) => (
                         <div key={i} className="p-1.5 rounded-xl bg-white border border-gray-100 flex items-center justify-between">
                           <span className="text-gray-900 font-bold truncate pr-1">{ex.food}</span>
-                          <span className="text-emerald-800 font-extrabold shrink-0">{ex.quantity}</span>
+                          <span className="text-blue-800 font-extrabold shrink-0">{ex.quantity}</span>
                         </div>
                       ))}
                     </div>
@@ -800,9 +812,9 @@ export function PlanViewer({ plan }: PlanViewerProps) {
           <section className="dossier-page bg-white p-6 sm:p-8 rounded-3xl border border-gray-200 shadow-sm print:border-none print:shadow-none print:p-0 print:m-0 space-y-4">
             <div className="space-y-4 flex-1">
               {/* Encabezado Lista de la Compra */}
-              <div className="flex items-center justify-between border-b-2 border-emerald-600 pb-3">
+              <div className="flex items-center justify-between border-b-2 border-blue-600 pb-3">
                 <div className="flex items-center gap-3">
-                  <div className="p-2.5 bg-emerald-100 rounded-2xl text-emerald-800 shadow-2xs">
+                  <div className="p-2.5 bg-blue-100 rounded-2xl text-blue-800 shadow-2xs">
                     <ShoppingCart className="h-6 w-6" />
                   </div>
                   <div>
@@ -815,7 +827,7 @@ export function PlanViewer({ plan }: PlanViewerProps) {
                   </div>
                 </div>
 
-                <Badge variant="default" className="bg-emerald-100 text-emerald-900 border-emerald-300 text-xs py-1 px-3 font-bold rounded-full">
+                <Badge variant="default" className="bg-blue-100 text-blue-900 border-blue-300 text-xs py-1 px-3 font-bold rounded-full">
                   {totalGroceryCount} artículos consolidados
                 </Badge>
               </div>
@@ -824,7 +836,7 @@ export function PlanViewer({ plan }: PlanViewerProps) {
               <div className="space-y-3.5">
                 {Object.entries(categorizedGrocery).map(([category, items]) => (
                   <div key={category} className="space-y-2 border border-gray-200 rounded-2xl p-3.5 bg-gray-50/50 print:border-gray-300">
-                    <span className="text-[11px] font-black uppercase tracking-wider text-emerald-950 border-b border-emerald-200 pb-1 flex items-center justify-between">
+                    <span className="text-[11px] font-black uppercase tracking-wider text-blue-950 border-b border-blue-200 pb-1 flex items-center justify-between">
                       <span>{category}</span>
                       <span className="text-[10px] text-gray-500 font-semibold">{items.length} productos</span>
                     </span>
@@ -859,7 +871,7 @@ export function PlanViewer({ plan }: PlanViewerProps) {
                               <span className="text-[10px] font-bold text-gray-900 block truncate">
                                 {item.name}
                               </span>
-                              <span className="text-[9px] font-extrabold text-emerald-800 block">
+                              <span className="text-[9px] font-extrabold text-blue-800 block">
                                 {formattedQty}
                               </span>
                             </div>
@@ -897,14 +909,14 @@ export function PlanViewer({ plan }: PlanViewerProps) {
                   onClick={() => setActiveDayNumber(day.dayNumber)}
                   className={`p-3.5 rounded-2xl border text-center transition-all cursor-pointer ${
                     isSelected
-                      ? 'border-emerald-600 bg-emerald-50/80 shadow-xs'
+                      ? 'border-blue-600 bg-blue-50/80 shadow-xs'
                       : 'border-gray-200 bg-white hover:bg-gray-50'
                   }`}
                 >
-                  <span className={`block text-xs font-bold ${isSelected ? 'text-emerald-950' : 'text-gray-900'}`}>
+                  <span className={`block text-xs font-bold ${isSelected ? 'text-blue-950' : 'text-gray-900'}`}>
                     {day.customName || DAY_NAMES[idx] || `Día ${day.dayNumber}`}
                   </span>
-                  <span className={`block text-[10px] mt-0.5 ${isSelected ? 'text-emerald-700 font-semibold' : 'text-gray-400'}`}>
+                  <span className={`block text-[10px] mt-0.5 ${isSelected ? 'text-blue-700 font-semibold' : 'text-gray-400'}`}>
                     Día {day.dayNumber}
                   </span>
                 </button>
@@ -915,10 +927,10 @@ export function PlanViewer({ plan }: PlanViewerProps) {
           {/* Active Day Detail Card */}
           {currentDay && (
             <Card className="rounded-3xl border-gray-200 overflow-hidden shadow-sm">
-              <CardHeader className="bg-gradient-to-r from-gray-50 to-emerald-50/30 border-b pb-4">
+              <CardHeader className="bg-gradient-to-r from-gray-50 to-blue-50/30 border-b pb-4">
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-2.5">
-                    <div className="p-2 bg-emerald-100 rounded-xl text-emerald-700">
+                    <div className="p-2 bg-blue-100 rounded-xl text-blue-700">
                       <CalendarDays className="h-5 w-5" />
                     </div>
                     <div>
@@ -930,7 +942,7 @@ export function PlanViewer({ plan }: PlanViewerProps) {
                       </CardDescription>
                     </div>
                   </div>
-                  <Badge variant="default" className="text-xs rounded-full px-3 py-1 font-bold bg-emerald-100 text-emerald-900 border-emerald-300">
+                  <Badge variant="default" className="text-xs rounded-full px-3 py-1 font-bold bg-blue-100 text-blue-900 border-blue-300">
                     5 Tomas Diarias
                   </Badge>
                 </div>
@@ -940,7 +952,7 @@ export function PlanViewer({ plan }: PlanViewerProps) {
                   <div key={meal.id} className="border border-gray-200 rounded-2xl overflow-hidden shadow-2xs">
                     <div className="bg-gradient-to-r from-gray-100 to-gray-50 px-4 py-2.5 border-b border-gray-200 flex items-center justify-between font-bold text-xs uppercase text-gray-800">
                       <span className="flex items-center gap-1.5">
-                        <span className="w-2 h-2 rounded-full bg-emerald-600"></span>
+                        <span className="w-2 h-2 rounded-full bg-blue-600"></span>
                         {MEAL_LABELS[meal.mealType] || meal.mealType}
                       </span>
                       <span className="text-[11px] font-semibold text-gray-500">{meal.items.length} alimentos</span>
@@ -971,9 +983,9 @@ export function PlanViewer({ plan }: PlanViewerProps) {
                                   <button
                                     type="button"
                                     onClick={() => setSelectedRecipe(itemRecipe)}
-                                    className="inline-flex items-center gap-1 text-[10px] font-bold text-emerald-800 bg-emerald-50 hover:bg-emerald-100 px-2 py-0.5 rounded-full border border-emerald-200 transition-colors cursor-pointer"
+                                    className="inline-flex items-center gap-1 text-[10px] font-bold text-blue-800 bg-blue-50 hover:bg-blue-100 px-2 py-0.5 rounded-full border border-blue-200 transition-colors cursor-pointer"
                                   >
-                                    <ChefHat className="h-3 w-3 text-emerald-600" />
+                                    <ChefHat className="h-3 w-3 text-blue-600" />
                                     <span>Ver Receta</span>
                                   </button>
                                 )}
@@ -981,7 +993,7 @@ export function PlanViewer({ plan }: PlanViewerProps) {
                               <span className="text-[11px] text-gray-500 italic block mt-0.5">{prepTip}</span>
                             </div>
                             <div className="text-right shrink-0">
-                              <span className="text-xs font-black text-emerald-800 block bg-emerald-50 px-2 py-0.5 rounded-full border border-emerald-200">
+                              <span className="text-xs font-black text-blue-800 block bg-blue-50 px-2 py-0.5 rounded-full border border-blue-200">
                                 {it.quantityG} g
                               </span>
                               <span className="text-[10px] text-gray-400 mt-0.5 block">
@@ -1005,10 +1017,10 @@ export function PlanViewer({ plan }: PlanViewerProps) {
           ========================================================================= */}
       {activeTab === 'grocery' && (
         <Card className="rounded-3xl border-gray-200 overflow-hidden shadow-sm print:hidden">
-          <CardHeader className="border-b pb-4 bg-gradient-to-r from-gray-50 to-emerald-50/30">
+          <CardHeader className="border-b pb-4 bg-gradient-to-r from-gray-50 to-blue-50/30">
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-2.5">
-                <div className="p-2 bg-emerald-100 rounded-xl text-emerald-700">
+                <div className="p-2 bg-blue-100 rounded-xl text-blue-700">
                   <ShoppingCart className="h-5 w-5" />
                 </div>
                 <div>
@@ -1020,7 +1032,7 @@ export function PlanViewer({ plan }: PlanViewerProps) {
                   </CardDescription>
                 </div>
               </div>
-              <Badge variant="default" className="rounded-full px-3 py-1 font-bold bg-emerald-100 text-emerald-900 border-emerald-300 text-xs">
+              <Badge variant="default" className="rounded-full px-3 py-1 font-bold bg-blue-100 text-blue-900 border-blue-300 text-xs">
                 {totalGroceryCount} Artículos
               </Badge>
             </div>
@@ -1028,7 +1040,7 @@ export function PlanViewer({ plan }: PlanViewerProps) {
           <CardContent className="p-5 space-y-6">
             {Object.entries(categorizedGrocery).map(([category, items]) => (
               <div key={category} className="space-y-2.5 border border-gray-200 rounded-2xl p-4 bg-gray-50/40">
-                <span className="text-xs font-black uppercase tracking-wider text-emerald-950 border-b border-emerald-200 pb-1.5 flex items-center justify-between">
+                <span className="text-xs font-black uppercase tracking-wider text-blue-950 border-b border-blue-200 pb-1.5 flex items-center justify-between">
                   <span>{category}</span>
                   <span className="text-[10px] text-gray-500 font-semibold">{items.length} productos</span>
                 </span>
@@ -1049,11 +1061,11 @@ export function PlanViewer({ plan }: PlanViewerProps) {
                         className={`flex items-center gap-2.5 p-2 rounded-2xl border text-left transition-all cursor-pointer ${
                           isChecked
                             ? 'bg-gray-100/70 border-gray-200 opacity-60'
-                            : 'bg-white border-gray-200 hover:border-emerald-400 shadow-2xs'
+                            : 'bg-white border-gray-200 hover:border-blue-400 shadow-2xs'
                         }`}
                       >
                         {isChecked ? (
-                          <CheckSquare className="h-4 w-4 text-emerald-600 shrink-0" />
+                          <CheckSquare className="h-4 w-4 text-blue-600 shrink-0" />
                         ) : (
                           <Square className="h-4 w-4 text-gray-400 shrink-0" />
                         )}
@@ -1072,7 +1084,7 @@ export function PlanViewer({ plan }: PlanViewerProps) {
                           <span className={`text-xs block truncate ${isChecked ? 'line-through text-gray-400 font-normal' : 'font-bold text-gray-900'}`}>
                             {item.name}
                           </span>
-                          <span className="text-[10px] font-extrabold text-emerald-800 block">
+                          <span className="text-[10px] font-extrabold text-blue-800 block">
                             {formattedQty}
                           </span>
                         </div>
@@ -1121,7 +1133,7 @@ export function PlanViewer({ plan }: PlanViewerProps) {
                 <X className="h-4 w-4" />
               </button>
               <div className="absolute bottom-3 left-4 right-4 text-white">
-                <span className="text-[10px] font-extrabold uppercase tracking-wider text-emerald-300 block">
+                <span className="text-[10px] font-extrabold uppercase tracking-wider text-blue-300 block">
                   {selectedRecipe.category} • Dificultad {selectedRecipe.difficulty}
                 </span>
                 <h3 className="text-base font-black leading-snug drop-shadow-sm">
@@ -1132,16 +1144,16 @@ export function PlanViewer({ plan }: PlanViewerProps) {
 
             <div className="p-5 space-y-4 text-xs">
               {/* Tiempos y Valores Nutricionales */}
-              <div className="grid grid-cols-4 gap-2 text-center p-3 rounded-2xl bg-emerald-50/70 border border-emerald-200">
+              <div className="grid grid-cols-4 gap-2 text-center p-3 rounded-2xl bg-blue-50/70 border border-blue-200">
                 <div>
                   <span className="text-[9px] text-gray-500 font-bold block uppercase">Tiempo</span>
-                  <span className="font-extrabold text-emerald-950">
+                  <span className="font-extrabold text-blue-950">
                     {selectedRecipe.prepTimeMin + selectedRecipe.cookTimeMin} min
                   </span>
                 </div>
                 <div>
                   <span className="text-[9px] text-gray-500 font-bold block uppercase">Energía</span>
-                  <span className="font-extrabold text-emerald-950">
+                  <span className="font-extrabold text-blue-950">
                     {selectedRecipe.caloriesPerServing} kcal
                   </span>
                 </div>
@@ -1162,14 +1174,14 @@ export function PlanViewer({ plan }: PlanViewerProps) {
               {/* Ingredientes de la Receta */}
               <div className="space-y-2">
                 <h4 className="font-bold text-gray-900 flex items-center gap-1.5">
-                  <Utensils className="h-3.5 w-3.5 text-emerald-600" />
+                  <Utensils className="h-3.5 w-3.5 text-blue-600" />
                   <span>Ingredientes Necesarios (1 ración)</span>
                 </h4>
                 <ul className="space-y-1.5 bg-gray-50 p-3 rounded-2xl border border-gray-200">
                   {selectedRecipe.ingredients.map((ing, iIdx) => (
                     <li key={iIdx} className="flex items-center justify-between text-gray-800">
                       <span className="font-medium">• {ing.name}</span>
-                      <span className="font-bold text-emerald-900 bg-emerald-100/60 px-2 py-0.5 rounded-full text-[10px]">
+                      <span className="font-bold text-blue-900 bg-blue-100/60 px-2 py-0.5 rounded-full text-[10px]">
                         {ing.quantity}
                       </span>
                     </li>
@@ -1180,13 +1192,13 @@ export function PlanViewer({ plan }: PlanViewerProps) {
               {/* Paso a Paso */}
               <div className="space-y-2">
                 <h4 className="font-bold text-gray-900 flex items-center gap-1.5">
-                  <BookOpen className="h-3.5 w-3.5 text-emerald-600" />
+                  <BookOpen className="h-3.5 w-3.5 text-blue-600" />
                   <span>Preparación Paso a Paso</span>
                 </h4>
                 <ol className="space-y-2">
                   {selectedRecipe.steps.map((st, sIdx) => (
                     <li key={sIdx} className="flex items-start gap-2.5 p-2.5 rounded-xl bg-gray-50/70 border border-gray-100">
-                      <span className="w-5 h-5 rounded-full bg-emerald-600 text-white font-black text-[10px] flex items-center justify-center shrink-0 mt-0.5">
+                      <span className="w-5 h-5 rounded-full bg-blue-600 text-white font-black text-[10px] flex items-center justify-center shrink-0 mt-0.5">
                         {sIdx + 1}
                       </span>
                       <p className="text-gray-700 leading-relaxed text-xs">{st}</p>

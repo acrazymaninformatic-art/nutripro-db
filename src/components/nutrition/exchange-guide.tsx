@@ -31,10 +31,10 @@ export function ExchangeGuide() {
   return (
     <div className="space-y-5">
       {/* Explicación clínica */}
-      <Card className="rounded-3xl border-emerald-200 bg-gradient-to-r from-emerald-50/60 via-white to-white overflow-hidden shadow-sm">
+      <Card className="rounded-3xl border-blue-200 bg-gradient-to-r from-blue-50/60 via-white to-white overflow-hidden shadow-sm">
         <CardContent className="p-5 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
           <div className="flex items-center gap-3">
-            <div className="p-3 bg-emerald-100 text-emerald-800 rounded-2xl">
+            <div className="p-3 bg-blue-100 text-blue-800 rounded-2xl">
               <Layers className="h-6 w-6" />
             </div>
             <div>
@@ -46,7 +46,7 @@ export function ExchangeGuide() {
               </p>
             </div>
           </div>
-          <Badge className="bg-emerald-600 text-white rounded-full font-bold px-3 py-1 text-xs shrink-0">
+          <Badge className="bg-blue-600 text-white rounded-full font-bold px-3 py-1 text-xs shrink-0">
             Estándar Español de Nutrición
           </Badge>
         </CardContent>
@@ -60,7 +60,7 @@ export function ExchangeGuide() {
             onClick={() => setSelectedGroup('all')}
             className={`px-3 py-1.5 rounded-xl transition-all shrink-0 ${
               selectedGroup === 'all'
-                ? 'bg-emerald-700 text-white shadow-2xs font-bold'
+                ? 'bg-blue-700 text-white shadow-2xs font-bold'
                 : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
             }`}
           >
@@ -73,7 +73,7 @@ export function ExchangeGuide() {
               onClick={() => setSelectedGroup(g.id)}
               className={`px-3 py-1.5 rounded-xl transition-all shrink-0 ${
                 selectedGroup === g.id
-                  ? 'bg-emerald-700 text-white shadow-2xs font-bold'
+                  ? 'bg-blue-700 text-white shadow-2xs font-bold'
                   : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
               }`}
             >
@@ -97,7 +97,7 @@ export function ExchangeGuide() {
       {/* Grupos y Raciones */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         {filteredGroups.map((group) => (
-          <Card key={group.id} className="rounded-3xl border-gray-200 overflow-hidden shadow-xs hover:border-emerald-300 transition-all">
+          <Card key={group.id} className="rounded-3xl border-gray-200 overflow-hidden shadow-xs hover:border-blue-300 transition-all">
             <CardHeader className="p-4 bg-gray-50/70 border-b border-gray-100">
               <div className="flex items-center justify-between">
                 <span className={`px-2.5 py-0.5 rounded-full text-xs font-black ${group.badgeBg} ${group.badgeText}`}>
@@ -117,7 +117,7 @@ export function ExchangeGuide() {
                 {group.examples.map((ex, i) => (
                   <div key={i} className="p-2.5 rounded-xl bg-gray-50/50 border border-gray-100 flex items-center justify-between text-xs">
                     <span className="font-bold text-gray-900 truncate pr-1">{ex.food}</span>
-                    <span className="font-extrabold text-emerald-800 bg-emerald-100/70 px-2 py-0.5 rounded-lg text-2xs shrink-0">
+                    <span className="font-extrabold text-blue-800 bg-blue-100/70 px-2 py-0.5 rounded-lg text-2xs shrink-0">
                       {ex.quantity}
                     </span>
                   </div>

@@ -6,6 +6,8 @@ import { Badge } from '@/components/ui/badge'
 import { ChefHat, Plus, Clock, Users, Flame, Utensils } from 'lucide-react'
 import { FoodImage } from '@/components/nutrition/food-image'
 
+import { CLINICAL_RECIPES } from '@/lib/nutrition/recipes-catalog'
+
 export const dynamic = 'force-dynamic'
 
 export default async function RecipesPage() {
@@ -53,6 +55,7 @@ export default async function RecipesPage() {
             let totalProt = 0
             let totalCarbs = 0
             let totalFat = 0
+            let totalFiber = 0
 
             recipe.ingredients.forEach((ing) => {
               const factor = ing.quantityG / 100
@@ -60,16 +63,40 @@ export default async function RecipesPage() {
               totalProt += ing.food.proteinG * factor
               totalCarbs += ing.food.carbsG * factor
               totalFat += ing.food.fatG * factor
+              totalFiber += (ing.food.fiberG || 0) * factor
             })
 
             const servings = recipe.servings || 1
+
+            // Fallback to clinical catalog if database ingredients are empty
+            if (totalKcal === 0) {
+              const cleanRecName = recipe.name.toLowerCase().trim()
+              const matchedCat = CLINICAL_RECIPES.find(c => {
+                const cName = c.name.toLowerCase().trim()
+                return cleanRecName.includes(cName.slice(0, 15)) || cName.includes(cleanRecName.slice(0, 15))
+              })
+              if (matchedCat) {
+                totalKcal = matchedCat.caloriesPerServing * servings
+                totalProt = matchedCat.proteinG * servings
+                totalCarbs = matchedCat.carbsG * servings
+                totalFat = matchedCat.fatG * servings
+              }
+            }
+
             const kcalPerServing = Math.round(totalKcal / servings)
             const protPerServing = Math.round((totalProt / servings) * 10) / 10
             const carbsPerServing = Math.round((totalCarbs / servings) * 10) / 10
             const fatPerServing = Math.round((totalFat / servings) * 10) / 10
+            const fiberPerServing = Math.round((totalFiber / servings) * 10) / 10
+
+            // Macronutrient energy percentages
+            const totalMacroCal = (protPerServing * 4) + (carbsPerServing * 4) + (fatPerServing * 9)
+            const pPct = totalMacroCal > 0 ? Math.round((protPerServing * 4 / totalMacroCal) * 100) : 30
+            const cPct = totalMacroCal > 0 ? Math.round((carbsPerServing * 4 / totalMacroCal) * 100) : 40
+            const fPct = totalMacroCal > 0 ? Math.max(0, 100 - pPct - cPct) : 30
 
             return (
-              <Card key={recipe.id} className="flex flex-col hover:shadow-lg transition-all rounded-3xl border-gray-200 overflow-hidden hover:border-emerald-300">
+              <Card key={recipe.id} className="flex flex-col hover:shadow-lg transition-all rounded-3xl border-gray-200 overflow-hidden hover:border-blue-300">
                 {recipe.imageUrl && (
                   <div className="h-44 w-full bg-gray-100 overflow-hidden relative">
                     <FoodImage
@@ -83,8 +110,8 @@ export default async function RecipesPage() {
                       </Badge>
                     </div>
                     <div className="absolute top-3 right-3">
-                      <span className="text-xs font-black text-emerald-950 bg-white/90 backdrop-blur-xs px-2.5 py-0.5 rounded-full shadow-2xs flex items-center gap-1">
-                        <Flame className="h-3.5 w-3.5 text-emerald-600" />
+                      <span className="text-xs font-black text-blue-950 bg-white/90 backdrop-blur-xs px-2.5 py-0.5 rounded-full shadow-2xs flex items-center gap-1">
+                        <Flame className="h-3.5 w-3.5 text-blue-600" />
                         {kcalPerServing} kcal
                       </span>
                     </div>
@@ -96,8 +123,8 @@ export default async function RecipesPage() {
                       <Badge variant="secondary" className="text-xs rounded-full px-3 font-bold">
                         {recipe.category || 'General'}
                       </Badge>
-                      <span className="text-xs font-black text-emerald-800 bg-emerald-50 px-2.5 py-1 rounded-full border border-emerald-200 flex items-center gap-1">
-                        <Flame className="h-3.5 w-3.5 text-emerald-600" />
+                      <span className="text-xs font-black text-blue-800 bg-blue-50 px-2.5 py-1 rounded-full border border-blue-200 flex items-center gap-1">
+                        <Flame className="h-3.5 w-3.5 text-blue-600" />
                         {kcalPerServing} kcal/ración
                       </span>
                     </div>
@@ -128,25 +155,45 @@ export default async function RecipesPage() {
                   </div>
 
                   {/* Macros Per Serving */}
-                  <div className="grid grid-cols-3 gap-2 text-center pt-2 border-t border-gray-100">
-                    <div className="p-2.5 rounded-2xl bg-blue-50/70 border border-blue-100">
-                      <span className="text-[10px] uppercase font-bold text-blue-700 block">Prot</span>
-                      <span className="text-xs font-black text-blue-900">{protPerServing}g</span>
+                  <div className="space-y-2 pt-2 border-t border-gray-100">
+                    <div className="grid grid-cols-4 gap-1.5 text-center">
+                      <div className="p-2 rounded-2xl bg-blue-50/70 border border-blue-100">
+                        <span className="text-[9px] uppercase font-bold text-blue-700 block">Prot</span>
+                        <span className="text-xs font-black text-blue-900">{protPerServing}g</span>
+                      </div>
+                      <div className="p-2 rounded-2xl bg-amber-50/70 border border-amber-100">
+                        <span className="text-[9px] uppercase font-bold text-amber-700 block">Carb</span>
+                        <span className="text-xs font-black text-amber-900">{carbsPerServing}g</span>
+                      </div>
+                      <div className="p-2 rounded-2xl bg-rose-50/70 border border-rose-100">
+                        <span className="text-[9px] uppercase font-bold text-rose-700 block">Grasa</span>
+                        <span className="text-xs font-black text-rose-900">{fatPerServing}g</span>
+                      </div>
+                      <div className="p-2 rounded-2xl bg-sky-50/70 border border-sky-100">
+                        <span className="text-[9px] uppercase font-bold text-sky-700 block">Fibra</span>
+                        <span className="text-xs font-black text-sky-900">{fiberPerServing}g</span>
+                      </div>
                     </div>
-                    <div className="p-2.5 rounded-2xl bg-amber-50/70 border border-amber-100">
-                      <span className="text-[10px] uppercase font-bold text-amber-700 block">Carb</span>
-                      <span className="text-xs font-black text-amber-900">{carbsPerServing}g</span>
-                    </div>
-                    <div className="p-2.5 rounded-2xl bg-rose-50/70 border border-rose-100">
-                      <span className="text-[10px] uppercase font-bold text-rose-700 block">Grasa</span>
-                      <span className="text-xs font-black text-rose-900">{fatPerServing}g</span>
+
+                    {/* Macro Split Bar */}
+                    <div className="space-y-1">
+                      <div className="h-1.5 w-full bg-gray-100 rounded-full overflow-hidden flex">
+                        <div style={{ width: `${pPct}%` }} className="bg-blue-600 h-full" title={`Proteína: ${pPct}%`} />
+                        <div style={{ width: `${cPct}%` }} className="bg-amber-500 h-full" title={`Carbohidratos: ${cPct}%`} />
+                        <div style={{ width: `${fPct}%` }} className="bg-rose-500 h-full" title={`Grasas: ${fPct}%`} />
+                      </div>
+                      <div className="flex justify-between text-[9px] font-semibold text-gray-500 px-0.5">
+                        <span className="text-blue-700">{pPct}% P</span>
+                        <span className="text-amber-700">{cPct}% C</span>
+                        <span className="text-rose-700">{fPct}% G</span>
+                      </div>
                     </div>
                   </div>
                 </CardContent>
 
                 <CardFooter className="pt-2 border-t bg-gray-50/70 p-4">
                   <Link href={`/dashboard/recipes/${recipe.id}`} className="w-full">
-                    <Button variant="outline" size="sm" className="w-full rounded-2xl font-bold border-gray-200 hover:bg-emerald-50 hover:text-emerald-900 hover:border-emerald-300">
+                    <Button variant="outline" size="sm" className="w-full rounded-2xl font-bold border-gray-200 hover:bg-blue-50 hover:text-blue-900 hover:border-blue-300">
                       Ver Elaboración Paso a Paso →
                     </Button>
                   </Link>

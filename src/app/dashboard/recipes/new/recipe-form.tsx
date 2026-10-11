@@ -140,7 +140,7 @@ export function RecipeForm({ foods }: { foods: FoodItem[] }) {
           <Card>
             <CardHeader className="pb-4">
               <CardTitle className="text-base flex items-center gap-2">
-                <ChefHat className="h-5 w-5 text-green-600" />
+                <ChefHat className="h-5 w-5 text-blue-600" />
                 <span>Información General de la Receta</span>
               </CardTitle>
             </CardHeader>
@@ -215,7 +215,7 @@ export function RecipeForm({ foods }: { foods: FoodItem[] }) {
             <CardHeader className="flex flex-row items-center justify-between pb-3">
               <div>
                 <CardTitle className="text-base flex items-center gap-2">
-                  <Scale className="h-5 w-5 text-green-600" />
+                  <Scale className="h-5 w-5 text-blue-600" />
                   <span>Ingredientes de la Receta</span>
                 </CardTitle>
                 <CardDescription>
@@ -310,9 +310,9 @@ export function RecipeForm({ foods }: { foods: FoodItem[] }) {
 
         {/* Right: Real-time Nutritional Values (4 cols) */}
         <div className="lg:col-span-4 space-y-4 sticky top-6">
-          <div className="bg-gradient-to-br from-green-600 to-emerald-700 text-white rounded-xl p-5 shadow-md">
+          <div className="bg-gradient-to-br from-blue-700 to-indigo-800 text-white rounded-3xl p-5 shadow-sm border border-blue-600/30">
             <div className="flex items-center justify-between mb-3">
-              <span className="text-xs font-semibold uppercase tracking-wider text-emerald-100 flex items-center gap-1.5">
+              <span className="text-xs font-semibold uppercase tracking-wider text-blue-100 flex items-center gap-1.5">
                 <Flame className="h-4 w-4 text-amber-300" />
                 Valor por Ración
               </span>
@@ -323,20 +323,20 @@ export function RecipeForm({ foods }: { foods: FoodItem[] }) {
 
             <div>
               <span className="text-3xl font-extrabold">{nutritionalTotals.perServingKcal}</span>
-              <span className="text-emerald-100 text-sm ml-1">kcal / ración</span>
+              <span className="text-blue-100 text-sm ml-1">kcal / ración</span>
             </div>
 
             <div className="grid grid-cols-3 gap-2 mt-4 pt-3 border-t border-white/20 text-center">
               <div>
-                <span className="text-[10px] text-emerald-100 block">PROTEÍNA</span>
+                <span className="text-[10px] text-blue-100 block">PROTEÍNA</span>
                 <span className="text-base font-bold">{nutritionalTotals.perServingProt}g</span>
               </div>
               <div>
-                <span className="text-[10px] text-emerald-100 block">CARBOS</span>
+                <span className="text-[10px] text-blue-100 block">CARBOS</span>
                 <span className="text-base font-bold">{nutritionalTotals.perServingCarbs}g</span>
               </div>
               <div>
-                <span className="text-[10px] text-emerald-100 block">GRASAS</span>
+                <span className="text-[10px] text-blue-100 block">GRASAS</span>
                 <span className="text-base font-bold">{nutritionalTotals.perServingFat}g</span>
               </div>
             </div>
@@ -368,7 +368,7 @@ export function RecipeForm({ foods }: { foods: FoodItem[] }) {
               </div>
               <div className="flex justify-between py-1">
                 <span className="text-gray-500">Fibra Total:</span>
-                <span className="font-semibold text-emerald-700">{nutritionalTotals.totalFiber} g</span>
+                <span className="font-semibold text-blue-700">{nutritionalTotals.totalFiber} g</span>
               </div>
             </CardContent>
           </Card>

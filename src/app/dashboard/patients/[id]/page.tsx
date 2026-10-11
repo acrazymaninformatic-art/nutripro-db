@@ -34,6 +34,8 @@ import {
 } from '@/types'
 import { calculateBMI, calculateIdealWeight } from '@/lib/nutrition'
 
+import { EditPatientModal } from './edit-patient-modal'
+
 export const dynamic = 'force-dynamic'
 
 interface PatientDetailPageProps {
@@ -90,9 +92,16 @@ export default async function PatientDetailPage({ params }: PatientDetailPagePro
           <span>Volver al directorio</span>
         </Link>
         <div className="flex items-center gap-3">
+          <EditPatientModal patient={patient} />
+          <Link href="/dashboard/appointments">
+            <Button variant="outline" size="sm" className="flex items-center gap-1.5 rounded-2xl border-gray-300 bg-white text-gray-800 hover:bg-blue-50 hover:text-blue-900 font-bold">
+              <Calendar className="h-4 w-4 text-blue-600" />
+              <span>Agendar Cita</span>
+            </Button>
+          </Link>
           <Link href={`/dashboard/plans/new?patientId=${patient.id}`}>
-            <Button variant="outline" size="sm" className="flex items-center gap-1.5 rounded-2xl border-emerald-300 bg-emerald-50 text-emerald-800 hover:bg-emerald-100 font-bold">
-              <CalendarPlus className="h-4 w-4 text-emerald-600" />
+            <Button variant="outline" size="sm" className="flex items-center gap-1.5 rounded-2xl border-blue-300 bg-blue-50 text-blue-800 hover:bg-blue-100 font-bold">
+              <CalendarPlus className="h-4 w-4 text-blue-600" />
               <span>Crear Plan Nutricional</span>
             </Button>
           </Link>
@@ -103,7 +112,7 @@ export default async function PatientDetailPage({ params }: PatientDetailPagePro
       {/* Header Profile Hero */}
       <div className="bg-white rounded-3xl border border-gray-200 p-6 shadow-sm flex flex-col md:flex-row md:items-center justify-between gap-6">
         <div className="flex items-center gap-4">
-          <div className="h-16 w-16 rounded-2xl bg-emerald-100 text-emerald-800 flex items-center justify-center text-xl font-bold border-2 border-emerald-200 shadow-xs">
+          <div className="h-16 w-16 rounded-2xl bg-blue-100 text-blue-800 flex items-center justify-center text-xl font-bold border-2 border-blue-200 shadow-xs">
             {patient.firstName[0]}
             {patient.lastName[0]}
           </div>
@@ -113,7 +122,7 @@ export default async function PatientDetailPage({ params }: PatientDetailPagePro
                 {patient.firstName} {patient.lastName}
               </h1>
               {patient.isActive ? (
-                <Badge variant="default" className="bg-emerald-100 text-emerald-800 hover:bg-emerald-100 border-0 rounded-full font-bold">
+                <Badge variant="default" className="bg-blue-100 text-blue-800 hover:bg-blue-100 border-0 rounded-full font-bold">
                   Activo
                 </Badge>
               ) : (
@@ -227,13 +236,59 @@ export default async function PatientDetailPage({ params }: PatientDetailPagePro
         }}
       />
 
+      {/* Citas y Sesiones del Paciente con Google Calendar */}
+      {(patient as any).appointments && (patient as any).appointments.length > 0 && (
+        <Card className="rounded-3xl border-blue-200 overflow-hidden shadow-xs">
+          <CardHeader className="pb-3 bg-gradient-to-r from-blue-50/50 to-white border-b border-gray-100 flex flex-row items-center justify-between">
+            <div>
+              <CardTitle className="text-base font-bold text-gray-900 flex items-center gap-2">
+                <Calendar className="h-4 w-4 text-blue-600" />
+                <span>Citas Programadas y Revisiones ({((patient as any).appointments).length})</span>
+              </CardTitle>
+              <CardDescription className="text-xs">
+                Sesiones con integración de Google Calendar y confirmación por correo electrónico
+              </CardDescription>
+            </div>
+            <Link href="/dashboard/appointments">
+              <Button size="sm" variant="outline" className="rounded-2xl text-xs font-bold hover:bg-blue-50 hover:text-blue-800">
+                Gestionar en Agenda →
+              </Button>
+            </Link>
+          </CardHeader>
+          <CardContent className="p-4 space-y-2">
+            {((patient as any).appointments).map((app: any) => {
+              const d = new Date(app.date)
+              return (
+                <div key={app.id} className="p-3 rounded-2xl bg-gray-50/80 border border-gray-200 flex flex-col sm:flex-row sm:items-center justify-between gap-3 text-xs">
+                  <div className="flex items-center gap-3 flex-wrap">
+                    <span className="font-bold text-blue-950 bg-blue-100/70 px-2.5 py-1 rounded-xl">
+                      {d.toLocaleDateString('es-ES', { day: 'numeric', month: 'short', year: 'numeric' })} — {d.toLocaleTimeString('es-ES', { hour: '2-digit', minute: '2-digit' })} h
+                    </span>
+                    <span className="font-semibold text-gray-700">
+                      {app.modality === 'ONLINE' ? '💻 Online (Videollamada)' : '🏥 Presencial en Consulta'} ({app.durationMin} min)
+                    </span>
+                    {app.notes && <span className="text-gray-500 italic truncate max-w-sm">"{app.notes}"</span>}
+                  </div>
+                  <div className="flex items-center gap-2">
+                    {app.emailSent && <span className="text-[11px] text-blue-700 font-bold">✓ Correo enviado</span>}
+                    {app.reminderSent && <span className="text-[11px] text-indigo-700 font-bold">🔔 Recordatorio 24h</span>}
+                    <Badge variant="outline" className="text-2xs font-bold rounded-full bg-white">{app.status}</Badge>
+                  </div>
+
+                </div>
+              )
+            })}
+          </CardContent>
+        </Card>
+      )}
+
       {/* Grid: 3 summary cards */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
         {/* Card 1: Último Estado Antropométrico */}
-        <Card className="rounded-3xl border-t-4 border-t-emerald-600 shadow-sm">
+        <Card className="rounded-3xl border-t-4 border-t-blue-600 shadow-sm">
           <CardHeader className="pb-2">
             <CardTitle className="text-sm font-semibold uppercase tracking-wider text-gray-500 flex items-center gap-2">
-              <Scale className="h-4 w-4 text-emerald-600" />
+              <Scale className="h-4 w-4 text-blue-600" />
               <span>Composición Actual</span>
             </CardTitle>
           </CardHeader>
@@ -356,7 +411,7 @@ export default async function PatientDetailPage({ params }: PatientDetailPagePro
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
           <div>
             <h2 className="text-lg font-bold text-gray-900 flex items-center gap-2">
-              <History className="h-5 w-5 text-emerald-600" />
+              <History className="h-5 w-5 text-blue-600" />
               <span>Evolución Antropométrica</span>
             </h2>
             <p className="text-sm text-gray-500">
@@ -423,7 +478,7 @@ export default async function PatientDetailPage({ params }: PatientDetailPagePro
         <Card className="rounded-3xl shadow-sm">
           <CardHeader className="pb-3">
             <CardTitle className="text-base flex items-center gap-2">
-              <FileText className="h-4 w-4 text-emerald-600" />
+              <FileText className="h-4 w-4 text-blue-600" />
               <span>Notas de Consulta y Antecedentes</span>
             </CardTitle>
           </CardHeader>

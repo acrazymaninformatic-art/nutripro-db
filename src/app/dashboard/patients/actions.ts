@@ -40,6 +40,9 @@ export async function getPatient(id: string) {
       bloodAnalyses: {
         orderBy: { date: 'desc' },
       },
+      appointments: {
+        orderBy: { date: 'asc' },
+      },
       anamnesisSubmissions: {
         orderBy: { submittedAt: 'desc' },
       },
@@ -230,6 +233,10 @@ export async function updatePatient(id: string, formData: FormData) {
   const allergies = (formData.get('allergies') as string) || ''
   const intolerances = (formData.get('intolerances') as string) || ''
   const dietaryPreferences = (formData.get('dietaryPreferences') as string) || ''
+  const medicalHistory = (formData.get('medicalHistory') as string) || ''
+  const currentMedications = (formData.get('currentMedications') as string) || ''
+  const isGLP1Treatment = formData.get('isGLP1Treatment') === 'true' || formData.get('isGLP1Treatment') === 'on'
+  const isTCAProtocol = formData.get('isTCAProtocol') === 'true' || formData.get('isTCAProtocol') === 'on'
   const isActive = formData.get('isActive') !== 'false'
 
   const patient = await prisma.patient.update({
@@ -239,15 +246,19 @@ export async function updatePatient(id: string, formData: FormData) {
       lastName,
       email,
       phone,
-      birthDate: new Date(birthDateStr),
-      sex,
-      heightCm,
-      objective,
-      activityLevel,
+      birthDate: birthDateStr ? new Date(birthDateStr) : undefined,
+      sex: sex || undefined,
+      heightCm: isNaN(heightCm) ? undefined : heightCm,
+      objective: objective || undefined,
+      activityLevel: activityLevel || undefined,
       notes,
       allergies,
       intolerances,
       dietaryPreferences,
+      medicalHistory,
+      currentMedications,
+      isGLP1Treatment,
+      isTCAProtocol,
       isActive,
     },
   })

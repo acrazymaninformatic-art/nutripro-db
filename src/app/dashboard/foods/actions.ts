@@ -49,6 +49,25 @@ export async function getCategories() {
   return foods.map(f => f.category).filter(Boolean) as string[]
 }
 
+export async function getAllFoodsForBrowser() {
+  return prisma.food.findMany({
+    select: {
+      id: true,
+      name: true,
+      category: true,
+      calories: true,
+      proteinG: true,
+      carbsG: true,
+      fatG: true,
+      fiberG: true,
+      imageUrl: true,
+      source: true,
+    },
+    orderBy: { name: 'asc' },
+  })
+}
+
+
 export async function createFood(formData: FormData) {
   const name = formData.get('name') as string
   const category = (formData.get('category') as string) || 'Otros'

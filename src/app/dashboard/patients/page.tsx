@@ -31,10 +31,10 @@ export default async function PatientsPage() {
 
       {/* Patients Table Card */}
       <Card className="rounded-3xl border-gray-200 overflow-hidden shadow-xs">
-        <CardHeader className="flex flex-row items-center justify-between pb-4 bg-gradient-to-r from-gray-50 to-emerald-50/30 border-b border-gray-100">
+        <CardHeader className="flex flex-row items-center justify-between pb-4 bg-gradient-to-r from-gray-50 to-blue-50/30 border-b border-gray-100">
           <div>
             <CardTitle className="text-base flex items-center gap-2 font-bold text-gray-900">
-              <Users className="h-5 w-5 text-emerald-600" />
+              <Users className="h-5 w-5 text-blue-600" />
               <span>Pacientes Registrados ({patients.length})</span>
             </CardTitle>
             <CardDescription className="text-xs">
@@ -80,7 +80,7 @@ export default async function PatientsPage() {
                         <td className="px-6 py-4 font-medium text-gray-900">
                           <Link
                             href={`/dashboard/patients/${patient.id}`}
-                            className="text-green-700 hover:text-green-800 hover:underline flex items-center gap-1.5"
+                            className="text-blue-700 hover:text-blue-800 hover:underline flex items-center gap-1.5"
                           >
                             <span>{patient.lastName}, {patient.firstName}</span>
                           </Link>
@@ -124,7 +124,7 @@ export default async function PatientsPage() {
                         </td>
                         <td className="px-6 py-4 text-center">
                           {patient.isActive ? (
-                            <Badge variant="default" className="bg-emerald-100 text-emerald-800 hover:bg-emerald-100 border-0">
+                            <Badge variant="default" className="bg-blue-100 text-blue-800 hover:bg-blue-100 border-0">
                               Activo
                             </Badge>
                           ) : (
@@ -133,7 +133,7 @@ export default async function PatientsPage() {
                         </td>
                         <td className="px-6 py-4 text-right">
                           <Link href={`/dashboard/patients/${patient.id}`}>
-                            <Button variant="ghost" size="sm" className="text-green-700 hover:text-green-800">
+                            <Button variant="ghost" size="sm" className="text-blue-700 hover:text-blue-800">
                               <Eye className="h-4 w-4 mr-1" />
                               Ficha
                             </Button>
