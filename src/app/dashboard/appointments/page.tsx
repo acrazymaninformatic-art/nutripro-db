@@ -1,12 +1,17 @@
 import { prisma } from '@/lib/prisma'
 import { AppointmentManager } from './appointment-manager'
-import { CalendarCheck, Calendar } from 'lucide-react'
+import { autoProcessDueReminders } from './actions'
+import { Calendar } from 'lucide-react'
 
 export const dynamic = 'force-dynamic'
 
 export default async function AppointmentsPage() {
+  // Automatically process any due reminders for tomorrow in the background (100% automated)
+  await autoProcessDueReminders().catch((e) => console.error('Auto reminder check:', e))
+
   const [appointments, patients] = await Promise.all([
     prisma.appointment.findMany({
+
       orderBy: { date: 'asc' },
       include: {
         patient: {

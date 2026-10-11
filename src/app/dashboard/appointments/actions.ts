@@ -249,3 +249,72 @@ export async function sendUpcomingReminders24h() {
   }
 }
 
+/**
+ * Automatically processes and dispatches reminders for any appointments scheduled for tomorrow
+ * (within the next 36 hours). Can be called by server page renders or cron jobs without user intervention.
+ */
+export async function autoProcessDueReminders() {
+  const now = new Date()
+  const minDate = new Date(now.getTime() + 60 * 60 * 1000) // at least 1h in future
+  const maxDate = new Date(now.getTime() + 36 * 60 * 60 * 1000) // up to 36 hours ahead (the day before)
+
+  try {
+    const dueAppointments = await prisma.appointment.findMany({
+      where: {
+        status: 'CONFIRMED',
+        reminderSent: false,
+        date: {
+          gte: minDate,
+          lte: maxDate,
+        },
+        patient: {
+          email: { not: null },
+        },
+      },
+      include: {
+        patient: true,
+      },
+    })
+
+    if (dueAppointments.length === 0) return { sentCount: 0 }
+
+    let sentCount = 0
+    for (const app of dueAppointments) {
+      if (!app.patient.email) continue
+
+      try {
+        const res = await sendAppointmentReminderEmail({
+          patientName: `${app.patient.firstName} ${app.patient.lastName}`,
+          patientEmail: app.patient.email,
+          appointmentDate: app.date,
+          durationMin: app.durationMin,
+          modality: app.modality,
+          notes: app.notes || '',
+          location: app.location || '',
+          professionalName: 'Eva Vidal',
+          clinicName: 'Consulta Nutricional Eva Vidal',
+        })
+
+        if (res.success) {
+          await prisma.appointment.update({
+            where: { id: app.id },
+            data: {
+              reminderSent: true,
+              reminderSentAt: new Date(),
+            },
+          })
+          sentCount++
+        }
+      } catch (e) {
+        console.error(`Error auto-sending reminder for appointment ${app.id}:`, e)
+      }
+    }
+
+    return { sentCount }
+  } catch (err) {
+    console.error('Error in autoProcessDueReminders:', err)
+    return { sentCount: 0 }
+  }
+}
+
+
