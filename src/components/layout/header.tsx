@@ -6,6 +6,7 @@ import { CommandPalette } from './command-palette'
 const routeTitles: Record<string, string> = {
   '/dashboard': 'Panel Principal',
   '/dashboard/patients': 'Pacientes',
+  '/dashboard/questionnaires': 'Cuestionarios Pre-Consulta (Anamnesis)',
   '/dashboard/foods': 'Alimentos',
   '/dashboard/recipes': 'Recetario Clínico',
   '/dashboard/plans': 'Planes Nutricionales',

@@ -63,10 +63,23 @@ export interface AnamnesisSubmissionItem {
 interface Props {
   patientName: string
   submissions: AnamnesisSubmissionItem[]
+  open?: boolean
+  onOpenChange?: (open: boolean) => void
+  showTriggerButton?: boolean
 }
 
-export function AnamnesisViewerModal({ patientName, submissions }: Props) {
-  const [open, setOpen] = useState(false)
+export function AnamnesisViewerModal({
+  patientName,
+  submissions,
+  open: controlledOpen,
+  onOpenChange: setControlledOpen,
+  showTriggerButton = true,
+}: Props) {
+  const [internalOpen, setInternalOpen] = useState(false)
+  const isControlled = controlledOpen !== undefined
+  const open = isControlled ? controlledOpen : internalOpen
+  const setOpen = isControlled ? (setControlledOpen || (() => {})) : setInternalOpen
+
   const [selectedIndex, setSelectedIndex] = useState(0)
   const [copied, setCopied] = useState(false)
 
@@ -133,19 +146,21 @@ ${activeSubmission.shortTermGoal || 'No indicado'}
 
   return (
     <>
-      <Button
-        type="button"
-        onClick={() => setOpen(true)}
-        className="bg-blue-600 hover:bg-blue-700 text-white font-bold text-xs h-9 px-4 rounded-xl shadow-xs flex items-center gap-2 transition-all"
-      >
-        <FileText className="h-4 w-4" />
-        <span>Ver Cuestionario Relleno</span>
-        {submissions.length > 1 && (
-          <Badge className="bg-blue-800 text-white text-3xs px-1.5 py-0 rounded-full ml-1">
-            {submissions.length}
-          </Badge>
-        )}
-      </Button>
+      {showTriggerButton && (
+        <Button
+          type="button"
+          onClick={() => setOpen(true)}
+          className="bg-blue-600 hover:bg-blue-700 text-white font-bold text-xs h-9 px-4 rounded-xl shadow-xs flex items-center gap-2 transition-all"
+        >
+          <FileText className="h-4 w-4" />
+          <span>Ver Cuestionario Relleno</span>
+          {submissions.length > 1 && (
+            <Badge className="bg-blue-800 text-white text-3xs px-1.5 py-0 rounded-full ml-1">
+              {submissions.length}
+            </Badge>
+          )}
+        </Button>
+      )}
 
       <Dialog open={open} onOpenChange={setOpen}>
         <DialogContent className="max-w-2xl max-h-[85vh] overflow-y-auto p-0 rounded-3xl border-gray-200">

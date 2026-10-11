@@ -15,6 +15,7 @@ import {
   ChevronLeft,
   ChevronRight,
   Settings,
+  ClipboardCheck,
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
 
@@ -27,6 +28,7 @@ interface NavItem {
 const navItems: NavItem[] = [
   { name: 'Dashboard', href: '/dashboard', icon: LayoutDashboard },
   { name: 'Pacientes', href: '/dashboard/patients', icon: Users },
+  { name: 'Cuestionarios Pre-Consulta', href: '/dashboard/questionnaires', icon: ClipboardCheck },
   { name: 'Agenda & Citas', href: '/dashboard/appointments', icon: Calendar },
   { name: 'Alimentos', href: '/dashboard/foods', icon: Apple },
   { name: 'Recetas', href: '/dashboard/recipes', icon: ChefHat },

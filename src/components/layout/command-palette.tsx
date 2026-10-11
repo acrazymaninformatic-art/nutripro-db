@@ -14,6 +14,7 @@ import {
   ArrowRight,
   Sparkles,
   X,
+  ClipboardCheck,
 } from 'lucide-react'
 
 interface SearchItem {
@@ -97,6 +98,14 @@ const DEFAULT_COMMANDS: SearchItem[] = [
     category: 'Navegación',
     href: '/dashboard/patients',
     icon: Users,
+  },
+  {
+    id: 'nav-questionnaires',
+    title: 'Cuestionarios Pre-Consulta (Anamnesis)',
+    subtitle: 'Control y envío de cuestionarios médicos a pacientes',
+    category: 'Navegación',
+    href: '/dashboard/questionnaires',
+    icon: ClipboardCheck,
   },
   {
     id: 'nav-settings',
