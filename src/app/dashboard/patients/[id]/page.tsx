@@ -9,6 +9,12 @@ import { DeletePatientButton } from './delete-button'
 import { ImportExportSection } from './import-export'
 import { BloodAnalysisCard } from './blood-analysis-card'
 import { PatientContactTools } from './patient-contact-tools'
+import { EvolutionChart } from './evolution-chart'
+import { ClinicalProgressCard } from './clinical-progress-card'
+import { PrivacyPanel } from './privacy-panel'
+import { SoapConsultationPanel } from './soap-consultation-panel'
+import { ConsentsDocumentsPanel } from './consents-documents-panel'
+import { HardDeleteModal } from './hard-delete-modal'
 import { checkDrugInteractions } from '@/lib/nutrition/drug-interactions'
 import {
   ArrowLeft,
@@ -106,6 +112,7 @@ export default async function PatientDetailPage({ params }: PatientDetailPagePro
             </Button>
           </Link>
           <DeletePatientButton patientId={patient.id} patientName={`${patient.firstName} ${patient.lastName}`} />
+          <HardDeleteModal patientId={patient.id} patientName={`${patient.firstName} ${patient.lastName}`} />
         </div>
       </div>
 
@@ -406,6 +413,38 @@ export default async function PatientDetailPage({ params }: PatientDetailPagePro
         records={(patient as any).bloodAnalyses || []}
       />
 
+      <EvolutionChart measurements={patient.anthropometries} />
+
+      <ClinicalProgressCard patientId={patient.id} checkIns={patient.clinicalCheckIns} />
+
+      {/* Notas de Consulta SOAP (Subjetivo, Objetivo, Análisis, Plan) */}
+      <SoapConsultationPanel patientId={patient.id} consultations={(patient as any).consultations || []} />
+
+      {/* Consentimientos Informados y Documentos del Paciente */}
+      <ConsentsDocumentsPanel
+        patientId={patient.id}
+        consents={((patient as any).consents || []).map((c: any) => ({
+          id: c.id,
+          type: c.type,
+          title: c.title,
+          version: c.version || '1.0',
+          accepted: c.accepted,
+          acceptedAt: c.acceptedAt,
+          signatureData: c.signatureData,
+          revokedAt: c.revokedAt,
+        }))}
+        documents={((patient as any).documents || []).map((d: any) => ({
+          id: d.id,
+          title: d.title,
+          category: d.category,
+          fileUrl: d.fileUrl,
+          fileName: d.fileName,
+          isSharedWithPatient: d.isSharedWithPatient,
+          notes: d.notes,
+          uploadedAt: d.uploadedAt,
+        }))}
+      />
+
       {/* Historial Antropométrico y Botón Nueva Medición */}
       <div className="space-y-4">
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
@@ -471,6 +510,14 @@ export default async function PatientDetailPage({ params }: PatientDetailPagePro
       <ImportExportSection
         patientId={patient.id}
         patientName={`${patient.firstName} ${patient.lastName}`}
+      />
+
+      <PrivacyPanel
+        patientId={patient.id}
+        consentAcceptedAt={patient.consentAcceptedAt}
+        consentPolicyVersion={patient.consentPolicyVersion}
+        consentRevokedAt={patient.consentRevokedAt}
+        requests={(patient as any).dataRequests || []}
       />
 
       {/* Notas Clínicas del Paciente */}

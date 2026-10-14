@@ -46,6 +46,10 @@ import {
   FALLBACK_FOOD_SVG,
   CLINICAL_TEMPLATES,
   buildPlanFromClinicalTemplate,
+  checkPatientAllergenConflict,
+  detectAllergensInFood,
+  scanPlanForAllergens,
+  type PatientAllergenConflict,
 } from '@/lib/nutrition'
 import { checkDrugInteractions } from '@/lib/nutrition/drug-interactions'
 import { FOOD_EXCHANGE_GROUPS } from '@/lib/nutrition/exchange-system'
@@ -187,6 +191,12 @@ export function PlanBuilderForm({
     itemIndex: number
   } | null>(null)
 
+  // 8. ALLERGEN SAFETY VERIFICATION TARGET MODAL
+  const [allergenWarningTarget, setAllergenWarningTarget] = useState<{
+    food: FoodOption
+    conflict: PatientAllergenConflict
+  } | null>(null)
+
   // Map foods for quick O(1) lookup
   const foodMap = useMemo(() => {
     const map = new Map<number, FoodOption>()
@@ -201,6 +211,11 @@ export function PlanBuilderForm({
       selectedPatient?.medicalHistory || ''
     )
   }, [selectedPatient])
+
+  // Clinical allergen scanner for the current plan
+  const planAllergenConflicts = useMemo(() => {
+    return scanPlanForAllergens(gridSchedule, foodMap, selectedPatient, dayNames)
+  }, [gridSchedule, foodMap, selectedPatient, dayNames])
 
   // Precision Calculator outputs
   const precisionResults = useMemo(() => {
@@ -310,7 +325,7 @@ export function PlanBuilderForm({
     if (!template) return
 
     const targetKcal = precisionResults.targetKcal
-    const scaledGrid = buildPlanFromClinicalTemplate(templateId, targetKcal, foods)
+    const scaledGrid = buildPlanFromClinicalTemplate(templateId, targetKcal, foods, selectedPatient)
 
     setGridSchedule(scaledGrid as any)
     setAutoGenNotice(
@@ -509,10 +524,23 @@ export function PlanBuilderForm({
     setGridSchedule(updated)
   }
 
-  // --- ACTIONS: ADD FOOD FROM SEARCH MODAL ---
-  function handleSelectFoodForCell(food: FoodOption) {
+  // --- ACTIONS: ADD FOOD FROM SEARCH MODAL WITH ALLERGEN INTERCEPTION ---
+  function handleSelectFoodForCell(food: FoodOption, bypassWarning = false) {
     if (!modalTarget) return
     const { mealType, dayIndex } = modalTarget
+
+    // Clinical Allergen Interception: warn immediately if patient has allergy/intolerance
+    if (!bypassWarning && selectedPatient) {
+      const conflict = checkPatientAllergenConflict(food, selectedPatient)
+      if (conflict) {
+        setAllergenWarningTarget({
+          food,
+          conflict,
+        })
+        return
+      }
+    }
+
     const updated = { ...gridSchedule }
     const cellItems = [...(updated[mealType]?.[dayIndex] || [])]
 
@@ -527,6 +555,7 @@ export function PlanBuilderForm({
     setGridSchedule(updated)
     setModalTarget(null)
     setFoodSearchQuery('')
+    setAllergenWarningTarget(null)
   }
 
   // --- ACTIONS: DRAG AND DROP HANDLERS ---
@@ -954,6 +983,46 @@ export function PlanBuilderForm({
         </div>
       )}
 
+      {/* 2.5. ALERTA CLÍNICA CRÍTICA DE ALÉRGENOS DEL PACIENTE */}
+      {planAllergenConflicts.length > 0 && (
+        <div className="bg-red-50 border-2 border-red-500 rounded-3xl p-4 shadow-md space-y-3 animate-in fade-in slide-in-from-top-2">
+          <div className="flex items-start gap-3">
+            <div className="w-10 h-10 rounded-2xl bg-red-600 text-white flex items-center justify-center shrink-0 shadow-sm">
+              <ShieldAlert className="w-6 h-6" />
+            </div>
+            <div className="flex-1">
+              <div className="flex flex-wrap items-center justify-between gap-2">
+                <h3 className="text-sm font-black text-red-950 flex items-center gap-1.5">
+                  🚨 ALERTA CRÍTICA: {planAllergenConflicts.length} ALIMENTO{planAllergenConflicts.length > 1 ? 'S' : ''} INCOMPATIBLE{planAllergenConflicts.length > 1 ? 'S' : ''} CON ALÉRGENOS DEL PACIENTE
+                </h3>
+                <span className="text-[11px] font-bold text-red-700 bg-red-100 px-2.5 py-0.5 rounded-full border border-red-300">
+                  Riesgo Médico Grave
+                </span>
+              </div>
+              <p className="text-xs text-red-900 mt-1">
+                El paciente <strong>{selectedPatient?.firstName} {selectedPatient?.lastName}</strong> tiene registrado en su expediente:
+                <span className="font-extrabold underline ml-1">
+                  {[selectedPatient?.allergies && `Alergias: ${selectedPatient.allergies}`, selectedPatient?.intolerances && `Intolerancias: ${selectedPatient.intolerances}`].filter(Boolean).join(' • ')}
+                </span>
+                . Se han detectado alimentos en la pauta que representan un peligro alérgico directo:
+              </p>
+
+              <div className="mt-3 flex flex-wrap gap-2">
+                {planAllergenConflicts.map((c, i) => (
+                  <div key={i} className="text-xs font-bold bg-white text-red-950 px-3 py-1.5 rounded-xl border-2 border-red-300 shadow-xs flex items-center gap-2">
+                    <span className="text-sm">⚠️</span>
+                    <span className="font-black text-red-900">{c.foodName}</span>
+                    <span className="text-[10px] text-red-700 font-bold bg-red-100 px-1.5 py-0.5 rounded">
+                      {c.conflict.allergenLabel} • {c.mealLabel} ({c.dayName})
+                    </span>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* 3. LA GRAN TABLA SEMANAL INTERACTIVA (AJUSTADA AL 100% DE LA PANTALLA SIN SCROLL LATERAL) */}
       <Card className="rounded-3xl shadow-xs border border-gray-200 overflow-hidden">
         <CardHeader className="py-2.5 px-4 bg-gray-50/80 border-b flex flex-row items-center justify-between">
@@ -1036,20 +1105,25 @@ export function PlanBuilderForm({
                                 const food = foodMap.get(it.foodId)
                                 const imageUrl = food ? getFoodImage(food) : ''
                                 const kcal = food ? Math.round(food.calories * (it.quantityG / 100)) : 0
+                                const itemConflict = food && selectedPatient ? checkPatientAllergenConflict(food, selectedPatient) : null
 
                                 return (
                                   <div
                                     key={it.uid || itIdx}
                                     draggable={true}
                                     onDragStart={() => handleDragStart(meal.type, dayIdx, itIdx)}
-                                    className="p-1 rounded bg-gray-50 border border-gray-200 hover:border-green-400 hover:shadow-2xs transition-all cursor-grab active:cursor-grabbing group relative"
-                                    title="Arrastra para mover este alimento a otro día u otra comida"
+                                    className={`p-1 rounded transition-all cursor-grab active:cursor-grabbing group relative ${
+                                      itemConflict
+                                        ? 'bg-red-50/95 border-2 border-red-400 shadow-xs ring-1 ring-red-400'
+                                        : 'bg-gray-50 border border-gray-200 hover:border-green-400 hover:shadow-2xs'
+                                    }`}
+                                    title={itemConflict ? itemConflict.alertMessage : 'Arrastra para mover este alimento a otro día u otra comida'}
                                   >
                                     <div className="flex items-center gap-1 min-w-0">
                                       <GripVertical className="h-2.5 w-2.5 text-gray-400 group-hover:text-green-600 shrink-0" />
 
                                       {/* Food Photo Thumbnail */}
-                                      <div className="h-6 w-6 rounded overflow-hidden bg-gray-200 shrink-0 border border-gray-200">
+                                      <div className={`h-6 w-6 rounded overflow-hidden shrink-0 border ${itemConflict ? 'border-red-300' : 'border-gray-200 bg-gray-200'}`}>
                                         <img
                                           src={imageUrl}
                                           alt={food?.name || 'Alimento'}
@@ -1063,9 +1137,16 @@ export function PlanBuilderForm({
                                       </div>
 
                                       <div className="min-w-0 flex-1">
-                                        <span className="font-bold text-[10px] text-gray-900 block truncate leading-tight">
-                                          {food?.name || 'Alimento'}
-                                        </span>
+                                        <div className="flex items-center gap-1">
+                                          <span className={`font-bold text-[10px] block truncate leading-tight ${itemConflict ? 'text-red-950 font-black' : 'text-gray-900'}`}>
+                                            {food?.name || 'Alimento'}
+                                          </span>
+                                          {itemConflict && (
+                                            <span className="shrink-0 px-1 py-0.2 rounded text-[7.5px] font-black bg-red-600 text-white shadow-2xs">
+                                              🚨 {itemConflict.allergenLabel}
+                                            </span>
+                                          )}
+                                        </div>
                                         <div className="flex items-center justify-between mt-0.5">
                                           {/* Quantity Grams Inline Input */}
                                           <div className="flex items-center gap-0.5">
@@ -1269,15 +1350,21 @@ export function PlanBuilderForm({
             <div className="overflow-y-auto divide-y divide-gray-100 flex-1 p-2 space-y-1">
               {filteredFoods.map((food) => {
                 const imageUrl = getFoodImage(food)
+                const conflict = selectedPatient ? checkPatientAllergenConflict(food, selectedPatient) : null
+
                 return (
                   <button
                     key={food.id}
                     type="button"
                     onClick={() => handleSelectFoodForCell(food)}
-                    className="w-full text-left p-1.5 rounded-xl flex items-center justify-between hover:bg-green-50/80 transition-colors group"
+                    className={`w-full text-left p-2 rounded-xl flex items-center justify-between transition-colors group ${
+                      conflict
+                        ? 'bg-red-50/90 border-2 border-red-400 hover:bg-red-100/90'
+                        : 'hover:bg-green-50/80 border border-transparent'
+                    }`}
                   >
-                    <div className="flex items-center gap-2.5">
-                      <div className="h-8 w-8 rounded-lg overflow-hidden bg-gray-100 border border-gray-200 shrink-0">
+                    <div className="flex items-center gap-2.5 min-w-0 flex-1 mr-2">
+                      <div className={`h-8 w-8 rounded-lg overflow-hidden shrink-0 border ${conflict ? 'border-red-300' : 'border-gray-200 bg-gray-100'}`}>
                         <img
                           src={imageUrl}
                           alt={food.name}
@@ -1289,18 +1376,26 @@ export function PlanBuilderForm({
                           }}
                         />
                       </div>
-                      <div>
-                        <span className="font-bold text-xs text-gray-900 block group-hover:text-green-800">
-                          {food.name}
-                        </span>
-                        <span className="text-[10px] text-gray-400">
+                      <div className="min-w-0 flex-1">
+                        <div className="flex items-center gap-1.5 flex-wrap">
+                          <span className={`font-bold text-xs block ${conflict ? 'text-red-950 font-black' : 'text-gray-900 group-hover:text-green-800'}`}>
+                            {food.name}
+                          </span>
+                          {conflict && (
+                            <span className="px-1.5 py-0.5 rounded-md bg-red-600 text-white font-black text-[9px] tracking-wide inline-flex items-center gap-0.5 shadow-xs">
+                              🚨 ALÉRGENO: {conflict.allergenLabel.toUpperCase()}
+                            </span>
+                          )}
+                        </div>
+                        <span className={`text-[10px] block ${conflict ? 'text-red-700 font-semibold' : 'text-gray-400'}`}>
                           {food.category || 'General'}
+                          {conflict && ` • ⚠️ Incompatible con ${selectedPatient?.firstName}`}
                         </span>
                       </div>
                     </div>
 
-                    <div className="text-right text-[10px]">
-                      <span className="font-black text-gray-900 block">{food.calories} kcal</span>
+                    <div className="text-right text-[10px] shrink-0">
+                      <span className={`font-black block ${conflict ? 'text-red-950' : 'text-gray-900'}`}>{food.calories} kcal</span>
                       <span className="text-[9px] text-gray-500">{food.proteinG}P • {food.carbsG}C • {food.fatG}G</span>
                     </div>
                   </button>
@@ -1322,6 +1417,60 @@ export function PlanBuilderForm({
           </div>
         </div>
       )}
+
+      {/* 5.5. MODAL DE CONFIRMACIÓN CLÍNICA ANTE ALÉRGENOS DEL PACIENTE */}
+      {allergenWarningTarget && (
+        <div className="fixed inset-0 bg-red-950/70 z-[70] flex items-center justify-center p-4 backdrop-blur-xs animate-in fade-in">
+          <div className="bg-white rounded-3xl shadow-2xl max-w-md w-full p-6 border-2 border-red-500 animate-in zoom-in-95 space-y-4">
+            <div className="w-14 h-14 rounded-2xl bg-red-100 text-red-600 flex items-center justify-center mx-auto border border-red-200 shadow-inner">
+              <ShieldAlert className="w-8 h-8" />
+            </div>
+
+            <div className="text-center">
+              <h3 className="text-base font-black text-red-950 tracking-tight">
+                {allergenWarningTarget.conflict.alertTitle}
+              </h3>
+              <p className="text-xs text-red-900/90 mt-2 font-medium leading-relaxed">
+                {allergenWarningTarget.conflict.alertMessage}
+              </p>
+            </div>
+
+            <div className="p-3 bg-red-50 rounded-2xl border border-red-200 text-xs space-y-1.5">
+              <div className="flex justify-between">
+                <span className="text-gray-600 font-semibold">Alimento:</span>
+                <span className="font-extrabold text-gray-900">{allergenWarningTarget.food.name}</span>
+              </div>
+              <div className="flex justify-between">
+                <span className="text-gray-600 font-semibold">Alérgeno detectado:</span>
+                <span className="font-extrabold text-red-700">{allergenWarningTarget.conflict.allergenLabel} ({allergenWarningTarget.conflict.matchedFoodTerm})</span>
+              </div>
+              <div className="flex justify-between">
+                <span className="text-gray-600 font-semibold">Ficha del paciente:</span>
+                <span className="font-extrabold text-red-700">{selectedPatient?.firstName}: {allergenWarningTarget.conflict.severity === 'CRITICAL_ALLERGY' ? 'Alergia Médica Registrada' : 'Intolerancia Registrada'}</span>
+              </div>
+            </div>
+
+            <div className="flex flex-col sm:flex-row gap-2.5 pt-2">
+              <Button
+                type="button"
+                variant="outline"
+                onClick={() => setAllergenWarningTarget(null)}
+                className="flex-1 border-gray-300 font-bold text-gray-700 hover:bg-gray-100 text-xs h-9"
+              >
+                Cancelar (Recomendado)
+              </Button>
+              <Button
+                type="button"
+                onClick={() => handleSelectFoodForCell(allergenWarningTarget.food, true)}
+                className="flex-1 bg-red-600 hover:bg-red-700 text-white font-black text-xs h-9 shadow-md shadow-red-600/20"
+              >
+                Añadir de todos modos
+              </Button>
+            </div>
+          </div>
+        </div>
+      )}
+
 
       {/* MODAL SISTEMA DE INTERCAMBIOS (CESNID / SEEDO) */}
       {showExchangesModal && (

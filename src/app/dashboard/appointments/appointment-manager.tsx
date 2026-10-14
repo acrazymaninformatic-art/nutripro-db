@@ -31,6 +31,7 @@ import {
   Search,
   Building,
   Phone,
+  MessageCircle,
   CalendarDays,
   List,
 } from 'lucide-react'
@@ -268,6 +269,16 @@ export function AppointmentManager({
         alert(err.message || 'Error al reenviar email')
       }
     })
+  }
+
+  const handleWhatsAppReminder = (appointment: AppointmentItem) => {
+    const phone = appointment.patient.phone?.replace(/\D/g, '')
+    if (!phone) return
+    const appointmentDate = new Date(appointment.date)
+    const date = appointmentDate.toLocaleDateString('es-ES', { weekday: 'long', day: 'numeric', month: 'long' })
+    const time = appointmentDate.toLocaleTimeString('es-ES', { hour: '2-digit', minute: '2-digit' })
+    const message = `Hola ${appointment.patient.firstName}, te recuerdo tu cita de nutrición el ${date} a las ${time} h. Si necesitas reprogramarla, usa el enlace seguro que recibiste por correo. — Eva Vidal`
+    window.open(`https://wa.me/${phone}?text=${encodeURIComponent(message)}`, '_blank', 'noopener,noreferrer')
   }
 
   // Month grid computation
@@ -1050,6 +1061,19 @@ export function AppointmentManager({
                   >
                     <Mail className="h-3.5 w-3.5 mr-1" />
                     Reenviar Email
+                  </Button>
+                )}
+                {selectedAppointment.patient.phone && (
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    onClick={() => handleWhatsAppReminder(selectedAppointment)}
+                    disabled={isPending}
+                    className="rounded-2xl text-xs font-bold text-emerald-700 hover:bg-emerald-50 border-emerald-200"
+                    title="Abrir recordatorio de WhatsApp con el mensaje preparado"
+                  >
+                    <MessageCircle className="h-3.5 w-3.5 mr-1" />
+                    WhatsApp
                   </Button>
                 )}
               </div>

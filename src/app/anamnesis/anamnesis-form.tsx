@@ -24,8 +24,8 @@ import {
 import { submitAnamnesis } from './actions'
 
 interface Props {
+  token: string
   patient: {
-    id: string
     name: string
     phone?: string | null
     email?: string | null
@@ -37,7 +37,7 @@ interface Props {
   }
 }
 
-export function AnamnesisForm({ patient }: Props) {
+export function AnamnesisForm({ patient, token }: Props) {
   const [isSubmitted, setIsSubmitted] = useState(false)
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
@@ -52,7 +52,7 @@ export function AnamnesisForm({ patient }: Props) {
 
     try {
       await submitAnamnesis({
-        patientId: patient.id,
+        token,
         name: (formData.get('name') as string) || patient.name,
         birthDate: formData.get('birthDate') as string,
         gender: formData.get('gender') as string,
@@ -126,7 +126,7 @@ export function AnamnesisForm({ patient }: Props) {
         </div>
 
         <div className="text-xs text-gray-400 font-medium">
-          Consulta de Nutrición Eva Vidal • NutriPro
+          Consulta de Nutrición Eva Vidal • EVSoftware
         </div>
       </Card>
     )

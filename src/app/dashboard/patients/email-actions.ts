@@ -3,6 +3,8 @@
 import { prisma } from '@/lib/prisma'
 import { sendAnamnesisEmail } from '@/lib/email/anamnesis-email'
 import { revalidatePath } from 'next/cache'
+import { requireUserId } from '@/lib/auth'
+import { createAnamnesisToken } from '@/lib/anamnesis-token'
 
 interface SendAnamnesisEmailActionParams {
   patientId: string
@@ -10,7 +12,6 @@ interface SendAnamnesisEmailActionParams {
   professionalEmail?: string
   professionalName?: string
   clinicName?: string
-  baseUrl?: string
 }
 
 export async function sendAnamnesisEmailAction({
@@ -19,12 +20,12 @@ export async function sendAnamnesisEmailAction({
   professionalEmail,
   professionalName,
   clinicName,
-  baseUrl,
 }: SendAnamnesisEmailActionParams) {
   try {
-    const patient = await prisma.patient.findUnique({
-      where: { id: patientId },
-      include: { user: true },
+    const userId = await requireUserId()
+    const patient = await prisma.patient.findFirst({
+      where: { id: patientId, userId },
+      include: { user: { select: { name: true, email: true, clinicName: true } } },
     })
 
     if (!patient) {
@@ -33,12 +34,17 @@ export async function sendAnamnesisEmailAction({
         message: 'Paciente no encontrado en el sistema.',
       }
     }
+    if (patient.anamnesisStatus === 'COMPLETED') {
+      return { success: false, message: 'Este cuestionario ya consta como completado.', anamnesisUrl: '', mailtoUrl: '' }
+    }
 
-    // Actualizar el correo del paciente y marcar estado PENDIENTE si no estaba ya completado
+    const access = createAnamnesisToken()
     await prisma.patient.update({
-      where: { id: patientId },
+      where: { id: patientId, userId },
       data: {
         email: patientEmail || undefined,
+        anamnesisAccessTokenHash: access.hash,
+        anamnesisAccessTokenExpiresAt: access.expiresAt,
         ...(patient.anamnesisStatus !== 'COMPLETED'
           ? {
               anamnesisStatus: 'PENDING',
@@ -55,10 +61,9 @@ export async function sendAnamnesisEmailAction({
     const result = await sendAnamnesisEmail({
       patientName: `${patient.firstName} ${patient.lastName}`,
       patientEmail,
-      patientId: patient.id,
-      professionalName: profName,
-      clinicName: clinic,
-      baseUrl,
+      accessToken: access.token,
+      professionalName: patient.user?.name || profName,
+      clinicName: patient.user?.clinicName || clinic,
     })
 
     return result
@@ -75,15 +80,24 @@ export async function sendAnamnesisEmailAction({
 
 export async function markAnamnesisSentAction(patientId: string) {
   try {
+    const userId = await requireUserId()
+    const patient = await prisma.patient.findFirst({ where: { id: patientId, userId }, select: { id: true } })
+    if (!patient) throw new Error('Paciente no encontrado.')
+    const fullPatient = await prisma.patient.findFirst({ where: { id: patientId, userId }, select: { anamnesisStatus: true } })
+    if (fullPatient?.anamnesisStatus === 'COMPLETED') throw new Error('El cuestionario ya está completado.')
+    const access = createAnamnesisToken()
     await prisma.patient.update({
-      where: { id: patientId },
+      where: { id: patientId, userId },
       data: {
         anamnesisStatus: 'PENDING',
         anamnesisSentAt: new Date(),
+        anamnesisAccessTokenHash: access.hash,
+        anamnesisAccessTokenExpiresAt: access.expiresAt,
       },
     })
     revalidatePath(`/dashboard/patients/${patientId}`)
-    return { success: true }
+    const baseUrl = process.env.APP_PUBLIC_URL || process.env.NEXTAUTH_URL || ''
+    return { success: true, anamnesisUrl: `${baseUrl}/anamnesis?token=${encodeURIComponent(access.token)}` }
   } catch (error: any) {
     return { success: false, error: error.message }
   }

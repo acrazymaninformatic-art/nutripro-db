@@ -1,6 +1,6 @@
 /**
  * @file food-images.ts
- * @description Curated high-resolution food photography mapping for NutriPro.
+ * @description Curated high-resolution food photography mapping for EVSoftware.
  * Provides realistic, professional culinary images from Unsplash CDN for each food item.
  */
 

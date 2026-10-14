@@ -16,8 +16,12 @@ import {
   ChevronRight,
   Settings,
   ClipboardCheck,
+  LogOut,
+  ReceiptText,
+  Activity,
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
+import { logout } from '@/app/login/actions'
 
 interface NavItem {
   name: string
@@ -33,10 +37,12 @@ const navItems: NavItem[] = [
   { name: 'Alimentos', href: '/dashboard/foods', icon: Apple },
   { name: 'Recetas', href: '/dashboard/recipes', icon: ChefHat },
   { name: 'Planes', href: '/dashboard/plans', icon: CalendarDays },
+  { name: 'Cobros', href: '/dashboard/billing', icon: ReceiptText },
+  { name: 'Control', href: '/dashboard/operations', icon: Activity },
   { name: 'Calculadora', href: '/dashboard/calculator', icon: Calculator },
 ]
 
-export function Sidebar() {
+export function Sidebar({ professionalName }: { professionalName: string }) {
   const [isCollapsed, setIsCollapsed] = useState(false)
   const pathname = usePathname()
 
@@ -60,16 +66,20 @@ export function Sidebar() {
           href="/dashboard"
           className="flex items-center gap-3 overflow-hidden focus:outline-none"
         >
-          <div className="flex items-center justify-center w-9 h-9 rounded-xl bg-blue-600 text-white shrink-0 shadow-sm">
-            <Leaf className="w-5 h-5" />
+          <div className="flex items-center justify-center w-9 h-9 rounded-xl bg-white border border-gray-200 shrink-0 shadow-xs overflow-hidden p-0.5">
+            <img
+              src="/logo.png"
+              alt="Eva Vidal"
+              className="w-full h-full object-contain"
+            />
           </div>
           {!isCollapsed && (
             <div className="flex flex-col min-w-0">
-              <span className="text-lg font-bold text-gray-900 tracking-tight leading-none">
-                Nutri<span className="text-blue-600">Pro</span>
+              <span className="text-sm font-black text-gray-900 tracking-tight leading-none">
+                Eva Vidal
               </span>
-              <span className="text-xs text-gray-500 font-medium leading-tight mt-0.5">
-                Dietética & Nutrición
+              <span className="text-[10px] text-blue-600 font-bold leading-tight mt-0.5">
+                Consulta Nutricional
               </span>
             </div>
           )}
@@ -147,9 +157,7 @@ export function Sidebar() {
                 EV
               </div>
               <div className="flex flex-col min-w-0">
-                <span className="text-sm font-semibold text-gray-900 truncate">
-                  Eva Vidal
-                </span>
+                <span className="text-sm font-semibold text-gray-900 truncate">{professionalName}</span>
                 <span className="text-xs text-gray-500 truncate">
                   Nutricionista Clínica
                 </span>
@@ -164,6 +172,11 @@ export function Sidebar() {
             >
               <Settings className="w-5 h-5" />
             </Link>
+            <form action={logout}>
+              <button type="submit" className="p-1.5 text-gray-400 hover:text-red-700 hover:bg-red-50 rounded-md" title="Cerrar sesión" aria-label="Cerrar sesión">
+                <LogOut className="w-5 h-5" />
+              </button>
+            </form>
           </div>
         ) : (
           <div className="flex flex-col items-center gap-2">
@@ -182,6 +195,11 @@ export function Sidebar() {
             >
               <Settings className="w-4 h-4" />
             </Link>
+            <form action={logout}>
+              <button type="submit" className="p-1.5 text-gray-400 hover:text-red-700 hover:bg-red-50 rounded-md" title="Cerrar sesión" aria-label="Cerrar sesión">
+                <LogOut className="w-4 h-4" />
+              </button>
+            </form>
           </div>
         )}
       </div>

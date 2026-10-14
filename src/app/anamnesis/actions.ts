@@ -2,9 +2,10 @@
 
 import { prisma } from '@/lib/prisma'
 import { revalidatePath } from 'next/cache'
+import { hashAnamnesisToken } from '@/lib/anamnesis-token'
 
 export interface AnamnesisPayload {
-  patientId: string
+  token: string
   name: string
   birthDate?: string
   gender?: string
@@ -43,12 +44,13 @@ export interface AnamnesisPayload {
 }
 
 export async function submitAnamnesis(data: AnamnesisPayload) {
-  if (!data.patientId) {
+  if (!data.token || data.token.length > 200) {
     throw new Error('Acceso no autorizado: Solo puedes enviar el cuestionario a través del enlace personal facilitado por tu nutricionista.')
   }
 
-  const existing = await prisma.patient.findUnique({
-    where: { id: data.patientId },
+  const tokenHash = hashAnamnesisToken(data.token)
+  const existing = await prisma.patient.findFirst({
+    where: { anamnesisAccessTokenHash: tokenHash, anamnesisAccessTokenExpiresAt: { gt: new Date() } },
     include: { anamnesisSubmissions: true },
   })
 
@@ -64,7 +66,7 @@ export async function submitAnamnesis(data: AnamnesisPayload) {
   // 1. Guardar la respuesta detallada en la entidad dedicada de Anamnesis (NO sobrescribe la ficha técnica del profesional)
   const submission = await prisma.anamnesisSubmission.create({
     data: {
-      patientId: data.patientId,
+      patientId: existing.id,
       declaredName: data.name || `${existing.firstName} ${existing.lastName}`,
       declaredPhone: data.phone || existing.phone,
       declaredEmail: data.email || existing.email,
@@ -101,16 +103,18 @@ export async function submitAnamnesis(data: AnamnesisPayload) {
 
   // 2. Marcar el estado en el paciente como COMPLETADO sin tocar las notas clínicas del nutricionista
   await prisma.patient.update({
-    where: { id: data.patientId },
+    where: { id: existing.id },
     data: {
       anamnesisStatus: 'COMPLETED',
       anamnesisCompletedAt: new Date(),
+      anamnesisAccessTokenHash: null,
+      anamnesisAccessTokenExpiresAt: null,
       phone: existing.phone || data.phone || undefined,
       email: existing.email || data.email || undefined,
     },
   })
 
-  revalidatePath(`/dashboard/patients/${data.patientId}`)
+  revalidatePath(`/dashboard/patients/${existing.id}`)
   revalidatePath('/dashboard/patients')
-  return { success: true, patientId: existing.id, submissionId: submission.id }
+  return { success: true }
 }

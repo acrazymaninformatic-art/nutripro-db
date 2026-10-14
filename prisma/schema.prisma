@@ -20,6 +20,13 @@ model User {
   email         String     @unique
   name          String
   passwordHash  String
+  passwordChangeRequired Boolean @default(false)
+  passwordResetTokenHash String? @unique
+  passwordResetExpiresAt DateTime?
+  passwordResetRequestedAt DateTime?
+  role          String     @default("ADMIN") // "ADMIN" | "PATIENT"
+  patientId     String?    @unique
+  patientAccount Patient?  @relation("PatientAccount", fields: [patientId], references: [id], onDelete: Cascade)
   image         String?
   licenseNumber String?
   clinicName    String?
@@ -28,15 +35,20 @@ model User {
   createdAt     DateTime   @default(now())
   updatedAt     DateTime   @updatedAt
 
-  patients      Patient[]
+  patients      Patient[]  @relation("NutritionistPatients")
   recipes       Recipe[]
   mealPlans     MealPlan[]
+  waitlistEntries WaitlistEntry[]
+  invoices      Invoice[]
+  dataRequests  DataSubjectRequest[]
+  auditLogs     AuditLog[]
 }
 
 model Patient {
-  id                 String          @id @default(cuid())
+  id                 String          @id @default(uuid())
   userId             String
-  user               User            @relation(fields: [userId], references: [id], onDelete: Cascade)
+  user               User            @relation("NutritionistPatients", fields: [userId], references: [id], onDelete: Cascade)
+  portalUser         User?           @relation("PatientAccount")
   firstName          String
   lastName           String
   email              String?
@@ -48,13 +60,17 @@ model Patient {
   activityLevel      String          // ActivityLevel enum values
   notes              String?
   allergies          String          @default("") // Comma-separated values
+  allergiesStatus    String          @default("NO_CONSTA") // "NO_CONSTA" | "NINGUNA_CONOCIDA" | "CONFIRMED"
   intolerances       String          @default("") // Comma-separated values
+  intolerancesStatus String          @default("NO_CONSTA") // "NO_CONSTA" | "NINGUNA_CONOCIDA" | "CONFIRMED"
   dietaryPreferences String          @default("") // Comma-separated values
   referralSource     String?
 
   // === CLINICAL HISTORY (Page 2) ===
   medicalHistory        String   @default("")  // Comma-separated: diabetes, hipertensión, etc.
+  pathologiesStatus     String   @default("NO_CONSTA") // "NO_CONSTA" | "NINGUNA_CONOCIDA" | "CONFIRMED"
   currentMedications    String   @default("")  // Comma-separated medication list
+  medicationsStatus     String   @default("NO_CONSTA") // "NO_CONSTA" | "NINGUNA_CONOCIDA" | "CONFIRMED"
   supplements           String   @default("")  // Current supplements
   surgeries             String   @default("")  // Past surgeries
   familyHistory         String   @default("")  // Family medical history
@@ -112,6 +128,17 @@ model Patient {
   anamnesisStatus       String   @default("NOT_SENT") // "NOT_SENT" | "PENDING" | "COMPLETED"
   anamnesisSentAt       DateTime?
   anamnesisCompletedAt  DateTime?
+  anamnesisAccessTokenHash String?    @unique
+  anamnesisAccessTokenExpiresAt DateTime?
+  consentAcceptedAt   DateTime?
+  consentPolicyVersion String?
+  consentRevokedAt    DateTime?
+  consentRevocationReason String?
+
+  // === PORTAL DEL PACIENTE & SEGURIDAD ===
+  portalAccessEnabled Boolean         @default(true)
+  portalLastLoginAt   DateTime?
+  isHardDeleted       Boolean         @default(false)
 
   isActive           Boolean         @default(true)
   createdAt          DateTime        @default(now())
@@ -123,6 +150,14 @@ model Patient {
   appointments         Appointment[]
   bloodAnalyses        BloodAnalysis[]
   anamnesisSubmissions AnamnesisSubmission[]
+  waitlistEntries      WaitlistEntry[]
+  invoices             Invoice[]
+  dataRequests         DataSubjectRequest[]
+  auditLogs            AuditLog[]
+  clinicalCheckIns     ClinicalCheckIn[]
+  consents             PatientConsent[]
+  documents            PatientDocument[]
+  emailLogs            EmailLog[]
 
   @@index([userId])
 }
@@ -212,20 +247,41 @@ model Anthropometry {
   skinfoldSuprailiac  Float?
   skinfoldAbdominal   Float?
   notes               String?
+  isPublishedToPatient Boolean @default(true)
   createdAt           DateTime @default(now())
 
   @@index([patientId])
 }
 
 model Consultation {
-  id        String   @id @default(cuid())
-  patientId String
-  patient   Patient  @relation(fields: [patientId], references: [id], onDelete: Cascade)
-  date      DateTime
-  notes     String?
-  createdAt DateTime @default(now())
+  id                  String   @id @default(cuid())
+  patientId           String
+  patient             Patient  @relation(fields: [patientId], references: [id], onDelete: Cascade)
+  date                DateTime
+  notes               String?
+  // SOAP Notes
+  subjectiveNotes     String?  // S: Lo que el paciente refiere (ánimo, apetito, dificultades)
+  objectiveNotes      String?  // O: Datos medidos y observaciones de consulta
+  assessmentNotes     String?  // A: Juicio clínico y diagnóstico de evolución
+  planNotes           String?  // P: Pautas acordadas y próximos pasos
+  isSharedWithPatient Boolean  @default(false)
+  createdAt           DateTime @default(now())
 
   @@index([patientId])
+}
+
+model ClinicalCheckIn {
+  id               String   @id @default(cuid())
+  patientId        String
+  patient          Patient  @relation(fields: [patientId], references: [id], onDelete: Cascade)
+  date             DateTime @default(now())
+  adherencePct     Int      // 0-100, estimated adherence to the current plan
+  digestionScore   Int?     // 0-10, patient-reported digestive comfort
+  habitsScore      Int?     // 0-10, patient-reported habits/routine
+  notes            String?
+  createdAt        DateTime @default(now())
+
+  @@index([patientId, date])
 }
 
 model Appointment {
@@ -243,10 +299,103 @@ model Appointment {
   emailSentAt    DateTime?
   reminderSent   Boolean   @default(false)
   reminderSentAt DateTime?
+  rescheduleTokenHash String? @unique
+  rescheduleTokenExpiresAt DateTime?
   createdAt      DateTime  @default(now())
   updatedAt      DateTime  @updatedAt
 
 
+  @@index([patientId])
+  @@index([date])
+}
+
+model WaitlistEntry {
+  id            String   @id @default(cuid())
+  userId        String
+  user          User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  patientId     String
+  patient       Patient  @relation(fields: [patientId], references: [id], onDelete: Cascade)
+  preferredFrom DateTime?
+  preferredTo   DateTime?
+  notes         String?
+  status        String   @default("WAITING") // WAITING | CONTACTED | BOOKED | CANCELLED
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  @@index([userId, status])
+  @@index([patientId])
+}
+
+model Invoice {
+  id            String   @id @default(cuid())
+  userId        String
+  user          User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  patientId     String?
+  patient       Patient? @relation(fields: [patientId], references: [id], onDelete: SetNull)
+  number        String   @unique
+  description   String
+  amountCents   Int
+  paidCents     Int      @default(0)
+  currency      String   @default("EUR")
+  status        String   @default("DRAFT") // DRAFT | SENT | PARTIALLY_PAID | PAID | OVERDUE | VOID
+  dueDate       DateTime?
+  issuedAt      DateTime @default(now())
+  paidAt        DateTime?
+  paymentMethod String?
+  notes         String?
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  payments      Payment[]
+
+  @@index([userId, status])
+  @@index([patientId])
+}
+
+model Payment {
+  id          String   @id @default(cuid())
+  invoiceId   String
+  invoice     Invoice  @relation(fields: [invoiceId], references: [id], onDelete: Cascade)
+  amountCents Int
+  method      String   // STRIPE | BIZUM | TRANSFER | CASH | CARD | OTHER
+  reference   String?
+  notes       String?
+  paidAt      DateTime @default(now())
+  createdAt   DateTime @default(now())
+
+  @@index([invoiceId])
+}
+
+model DataSubjectRequest {
+  id          String   @id @default(cuid())
+  userId      String
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  patientId   String
+  patient     Patient  @relation(fields: [patientId], references: [id], onDelete: Cascade)
+  requestType String   // EXPORT | ERASURE | RECTIFICATION | ACCESS
+  status      String   @default("PENDING") // PENDING | IN_PROGRESS | COMPLETED | REJECTED
+  notes       String?
+  completedAt DateTime?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@index([userId, status])
+  @@index([patientId])
+}
+
+model AuditLog {
+  id         String   @id @default(cuid())
+  userId     String
+  user       User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  patientId  String?
+  patient    Patient? @relation(fields: [patientId], references: [id], onDelete: SetNull)
+  action     String
+  entityType String
+  entityId   String?
+  details    String?
+  createdAt  DateTime @default(now())
+
+  @@index([userId, createdAt])
   @@index([patientId])
 }
 
@@ -345,6 +494,12 @@ model MealPlan {
   notes          String?
   hideCaloriesTCA Boolean  @default(false)
   isGLP1         Boolean   @default(false)
+  status         String    @default("PUBLISHED") // "DRAFT" | "PUBLISHED" | "ARCHIVED"
+  publishedAt    DateTime?
+  publishedBy    String?
+  checklistPassed Boolean  @default(true)
+  clinicalChecklistNotes String?
+  isSharedWithPatient Boolean @default(true)
   isActive       Boolean   @default(true)
   createdAt      DateTime  @default(now())
   updatedAt      DateTime  @updatedAt
@@ -396,3 +551,69 @@ model MealItem {
   @@index([foodId])
   @@index([recipeId])
 }
+
+model PatientConsent {
+  id               String    @id @default(cuid())
+  patientId        String
+  patient          Patient   @relation(fields: [patientId], references: [id], onDelete: Cascade)
+  type             String    // "RGPD" | "INFORMED_CONSENT" | "IMAGE_RIGHTS" | "ONLINE_CONSULTATION"
+  title            String
+  version          String    @default("1.0")
+  accepted         Boolean   @default(false)
+  acceptedAt       DateTime?
+  signatureData    String?   // Base64 signature image or confirmation hash
+  ipAddress        String?
+  userAgent        String?
+  revokedAt        DateTime?
+  revocationReason String?
+  createdAt        DateTime  @default(now())
+  updatedAt        DateTime  @updatedAt
+
+  @@index([patientId])
+}
+
+model PatientDocument {
+  id                  String    @id @default(cuid())
+  patientId           String
+  patient             Patient   @relation(fields: [patientId], references: [id], onDelete: Cascade)
+  title               String
+  category            String    // "ANALYSIS" | "MEDICAL_REPORT" | "BODY_COMP" | "DIET_HISTORY" | "OTHER"
+  fileUrl             String
+  fileName            String
+  fileSizeKb          Int?
+  mimeType            String?
+  isSharedWithPatient Boolean   @default(true)
+  notes               String?
+  uploadedAt          DateTime  @default(now())
+  updatedAt           DateTime  @updatedAt
+
+  @@index([patientId])
+}
+
+model EmailLog {
+  id             String    @id @default(cuid())
+  recipientEmail String
+  recipientName  String?
+  patientId      String?
+  patient        Patient?  @relation(fields: [patientId], references: [id], onDelete: SetNull)
+  subject        String
+  type           String    // "APPOINTMENT" | "REMINDER_24H" | "PLAN_PUBLISHED" | "ANAMNESIS" | "PORTAL_INVITE" | "SECURITY"
+  status         String    // "SENT" | "FAILED"
+  errorDetails   String?
+  sentAt         DateTime  @default(now())
+
+  @@index([patientId])
+  @@index([sentAt])
+}
+
+model EmergencyLockdown {
+  id               String    @id @default(cuid())
+  isActive         Boolean   @default(false)
+  activatedAt      DateTime?
+  expiresAt        DateTime?
+  reason           String?
+  activatedByEmail String?
+  createdAt        DateTime  @default(now())
+  updatedAt        DateTime  @updatedAt
+}
+

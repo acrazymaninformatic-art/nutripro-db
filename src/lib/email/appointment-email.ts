@@ -14,6 +14,7 @@ interface SendAppointmentEmailParams {
   location?: string
   professionalName?: string
   clinicName?: string
+  rescheduleUrl?: string
 }
 
 
@@ -27,6 +28,7 @@ export function generateAppointmentEmailHtml({
   professionalName = 'Eva Vidal',
   clinicName = 'Consulta Nutricional Eva Vidal',
   googleCalendarUrl,
+  rescheduleUrl,
 }: {
   patientName: string
   appointmentDate: Date
@@ -37,6 +39,7 @@ export function generateAppointmentEmailHtml({
   professionalName?: string
   clinicName?: string
   googleCalendarUrl: string
+  rescheduleUrl?: string
 }) {
   const firstName = patientName.split(' ')[0]
   
@@ -70,10 +73,12 @@ export function generateAppointmentEmailHtml({
       <td align="center">
         <table role="presentation" border="0" cellpadding="0" cellspacing="0" width="100%" style="max-width: 600px; background-color: #ffffff; border-radius: 24px; overflow: hidden; box-shadow: 0 10px 25px rgba(2, 132, 199, 0.08); border: 1px solid #dbeafe;">
           
-          <!-- Encabezado con gradiente azul clínico -->
+          <!-- Encabezado con gradiente azul clínico y logotipo oficial -->
           <tr>
             <td style="background: linear-gradient(135deg, #0284c7 0%, #1e40af 100%); padding: 38px 30px; text-align: center;">
-              <span style="font-size: 26px; font-weight: 800; color: #ffffff; letter-spacing: -0.5px; display: inline-block;">
+              <span style="display: inline-block; width: 56px; height: 56px; line-height: 56px; border-radius: 14px; background: #ffffff; color: #0284c7; font-weight: 900; font-size: 22px; box-shadow: 0 4px 12px rgba(0,0,0,0.15); margin-bottom: 12px;">EV</span>
+              <br/>
+              <span style="font-size: 24px; font-weight: 800; color: #ffffff; letter-spacing: -0.5px; display: inline-block;">
                 📅 ${clinicName}
               </span>
               <p style="margin: 8px 0 0 0; color: #e0f2fe; font-size: 14px; font-weight: 500;">
@@ -179,6 +184,7 @@ export async function sendAppointmentEmail({
   location = 'Consulta Nutricional Eva Vidal',
   professionalName = 'Eva Vidal',
   clinicName = 'Consulta Nutricional Eva Vidal',
+  rescheduleUrl,
 }: SendAppointmentEmailParams) {
   const isOnline = modality.toUpperCase() === 'ONLINE'
   const eventTitle = `Cita de Nutrición: ${patientName} - ${professionalName}`
@@ -211,15 +217,17 @@ export async function sendAppointmentEmail({
     professionalName,
     clinicName,
     googleCalendarUrl,
+    rescheduleUrl,
   })
 
   const plainText = `Hola ${patientName.split(' ')[0]},\n\nTu cita de nutrición con ${professionalName} está confirmada para el ${appointmentDate.toLocaleDateString('es-ES')} a las ${appointmentDate.toLocaleTimeString('es-ES', { hour: '2-digit', minute: '2-digit' })} h.\n\nModalidad: ${isOnline ? 'Online' : 'Presencial'}\n\nAñadir a Google Calendar: ${googleCalendarUrl}\n\nAtentamente,\n${professionalName}\n${clinicName}\nevavidalinfo@gmail.com`
 
-  const smtpFrom = 'evavidalinfo@gmail.com'
-  const smtpUser = process.env.SMTP_USER || 'evavidalinfo@gmail.com'
-  const smtpPass = process.env.SMTP_PASS || 'bocpzmoggkajgeqk'
-  const smtpHost = process.env.SMTP_HOST || 'smtp.gmail.com'
+  const smtpFrom = process.env.SMTP_FROM || process.env.SMTP_USER
+  const smtpUser = process.env.SMTP_USER
+  const smtpPass = process.env.SMTP_PASS
+  const smtpHost = process.env.SMTP_HOST
   const smtpPort = process.env.SMTP_PORT ? Number(process.env.SMTP_PORT) : 587
+  if (!smtpFrom || !smtpUser || !smtpPass || !smtpHost) return { success: false, message: 'Falta configuración del servicio de correo.' }
 
   try {
     const transporter = nodemailer.createTransport({
@@ -236,13 +244,22 @@ export async function sendAppointmentEmail({
       from: `"${professionalName} - ${clinicName}" <${smtpFrom}>`,
       to: patientEmail,
       subject: emailSubject,
-      text: plainText,
-      html: emailHtml,
+      text: `${plainText}${rescheduleUrl ? `\n\nReprogramar de forma segura: ${rescheduleUrl}` : ''}`,
+      html: `${emailHtml}${rescheduleUrl ? `<p style="font-family:Arial,sans-serif;text-align:center"><a href="${rescheduleUrl}">Reprogramar esta cita de forma segura</a></p>` : ''}`,
       icalEvent: {
         filename: 'cita-nutricion.ics',
         method: 'REQUEST',
         content: icsData,
       },
+    })
+
+    const { logEmailSent } = await import('./log-email')
+    await logEmailSent({
+      recipientEmail: patientEmail,
+      recipientName: patientName,
+      subject: emailSubject,
+      type: 'APPOINTMENT',
+      status: 'SENT',
     })
 
     return {
@@ -252,6 +269,18 @@ export async function sendAppointmentEmail({
     }
   } catch (error: any) {
     console.error('Error al enviar email de cita:', error)
+    try {
+      const { logEmailSent } = await import('./log-email')
+      await logEmailSent({
+        recipientEmail: patientEmail,
+        recipientName: patientName,
+        subject: emailSubject,
+        type: 'APPOINTMENT',
+        status: 'FAILED',
+        errorDetails: error?.message,
+      })
+    } catch {}
+
     return {
       success: false,
       message: `Error al enviar correo: ${error?.message || 'Error desconocido'}`,
@@ -312,9 +341,11 @@ export function generateAppointmentReminderEmailHtml({
       <td align="center">
         <table role="presentation" border="0" cellpadding="0" cellspacing="0" width="100%" style="max-width: 600px; background-color: #ffffff; border-radius: 24px; overflow: hidden; box-shadow: 0 10px 25px rgba(2, 132, 199, 0.08); border: 1px solid #dbeafe;">
           
-          <!-- Encabezado con gradiente azul clínico -->
+          <!-- Encabezado con gradiente azul clínico y logotipo oficial -->
           <tr>
             <td style="background: linear-gradient(135deg, #0369a1 0%, #1d4ed8 100%); padding: 36px 30px; text-align: center;">
+              <span style="display: inline-block; width: 56px; height: 56px; line-height: 56px; border-radius: 14px; background: #ffffff; color: #0369a1; font-weight: 900; font-size: 22px; box-shadow: 0 4px 12px rgba(0,0,0,0.15); margin-bottom: 12px;">EV</span>
+              <br/>
               <span style="font-size: 24px; font-weight: 800; color: #ffffff; letter-spacing: -0.5px; display: inline-block;">
                 🔔 Recordatorio de Cita: Mañana
               </span>
@@ -457,11 +488,12 @@ export async function sendAppointmentReminderEmail({
 
   const plainText = `Hola ${patientName.split(' ')[0]},\n\nTe recordamos que mañana ${appointmentDate.toLocaleDateString('es-ES')} a las ${appointmentDate.toLocaleTimeString('es-ES', { hour: '2-digit', minute: '2-digit' })} h tienes tu consulta de nutrición con ${professionalName}.\n\nModalidad: ${isOnline ? 'Online' : 'Presencial'}\n\nAñadir / Ver en Google Calendar: ${googleCalendarUrl}\n\nAtentamente,\n${professionalName}\n${clinicName}\nevavidalinfo@gmail.com`
 
-  const smtpFrom = 'evavidalinfo@gmail.com'
-  const smtpUser = process.env.SMTP_USER || 'evavidalinfo@gmail.com'
-  const smtpPass = process.env.SMTP_PASS || 'bocpzmoggkajgeqk'
-  const smtpHost = process.env.SMTP_HOST || 'smtp.gmail.com'
+  const smtpFrom = process.env.SMTP_FROM || process.env.SMTP_USER
+  const smtpUser = process.env.SMTP_USER
+  const smtpPass = process.env.SMTP_PASS
+  const smtpHost = process.env.SMTP_HOST
   const smtpPort = process.env.SMTP_PORT ? Number(process.env.SMTP_PORT) : 587
+  if (!smtpFrom || !smtpUser || !smtpPass || !smtpHost) return { success: false, message: 'Falta configuración del servicio de correo.' }
 
   try {
     const transporter = nodemailer.createTransport({
@@ -487,6 +519,15 @@ export async function sendAppointmentReminderEmail({
       },
     })
 
+    const { logEmailSent } = await import('./log-email')
+    await logEmailSent({
+      recipientEmail: patientEmail,
+      recipientName: patientName,
+      subject: emailSubject,
+      type: 'REMINDER_24H',
+      status: 'SENT',
+    })
+
     return {
       success: true,
       message: `Recordatorio enviado por email a ${patientEmail} desde ${smtpFrom}`,
@@ -494,6 +535,18 @@ export async function sendAppointmentReminderEmail({
     }
   } catch (error: any) {
     console.error('Error al enviar recordatorio de cita:', error)
+    try {
+      const { logEmailSent } = await import('./log-email')
+      await logEmailSent({
+        recipientEmail: patientEmail,
+        recipientName: patientName,
+        subject: emailSubject,
+        type: 'REMINDER_24H',
+        status: 'FAILED',
+        errorDetails: error?.message,
+      })
+    } catch {}
+
     return {
       success: false,
       message: `Error al enviar recordatorio: ${error?.message || 'Error desconocido'}`,

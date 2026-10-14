@@ -2,17 +2,16 @@
 
 import { prisma } from '@/lib/prisma'
 import { revalidatePath } from 'next/cache'
+import { requireUserId } from '@/lib/auth'
 
 async function getDefaultUserId(): Promise<string> {
-  const user = await prisma.user.findFirst()
-  if (!user) {
-    throw new Error('Usuario no encontrado.')
-  }
-  return user.id
+  return requireUserId()
 }
 
 export async function getRecipes() {
+  const userId = await requireUserId()
   return await prisma.recipe.findMany({
+    where: { userId },
     orderBy: { createdAt: 'desc' },
     include: {
       ingredients: {
@@ -25,8 +24,9 @@ export async function getRecipes() {
 }
 
 export async function getRecipe(id: string) {
-  return await prisma.recipe.findUnique({
-    where: { id },
+  const userId = await requireUserId()
+  return await prisma.recipe.findFirst({
+    where: { id, userId },
     include: {
       ingredients: {
         include: {
@@ -81,8 +81,9 @@ export async function createRecipe(input: CreateRecipeInput) {
 }
 
 export async function deleteRecipe(id: string) {
+  const userId = await requireUserId()
   await prisma.recipe.delete({
-    where: { id },
+    where: { id, userId },
   })
 
   revalidatePath('/dashboard')

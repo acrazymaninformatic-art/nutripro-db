@@ -49,11 +49,11 @@ export function generateIcsContent({
   return [
     'BEGIN:VCALENDAR',
     'VERSION:2.0',
-    'PRODID:-//NutriPro Eva Vidal//Consulta Nutricional//ES',
+    'PRODID:-//EVSoftware Eva Vidal//Consulta Nutricional//ES',
     'CALSCALE:GREGORIAN',
     'METHOD:REQUEST',
     'BEGIN:VEVENT',
-    `UID:nutripro-${Date.now()}@nutripro.com`,
+    `UID:evsoftware-${Date.now()}@evavidalnutricion.es`,
     `DTSTAMP:${nowIso}`,
     `DTSTART:${startIso}`,
     `DTEND:${endIso}`,

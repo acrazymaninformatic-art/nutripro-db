@@ -2,15 +2,16 @@
 
 import { prisma } from '@/lib/prisma'
 import { revalidatePath } from 'next/cache'
+import { requireUserId } from '@/lib/auth'
 
 async function getDefaultUserId(): Promise<string> {
-  const user = await prisma.user.findFirst()
-  if (!user) throw new Error('Usuario no encontrado.')
-  return user.id
+  return requireUserId()
 }
 
 export async function getMealPlans() {
+  const userId = await requireUserId()
   return await prisma.mealPlan.findMany({
+    where: { userId },
     orderBy: { createdAt: 'desc' },
     include: {
       patient: true,
@@ -33,8 +34,9 @@ export async function getMealPlans() {
 }
 
 export async function getMealPlan(id: string) {
-  return await prisma.mealPlan.findUnique({
-    where: { id },
+  const userId = await requireUserId()
+  return await prisma.mealPlan.findFirst({
+    where: { id, userId },
     include: {
       patient: true,
       days: {
@@ -88,6 +90,7 @@ export interface CreateMealPlanInput {
 
 export async function createMealPlan(input: CreateMealPlanInput) {
   const userId = await getDefaultUserId()
+  if (!await prisma.patient.findFirst({ where: { id: input.patientId, userId }, select: { id: true } })) throw new Error('Paciente no encontrado.')
 
   const mealPlan = await prisma.mealPlan.create({
     data: {
@@ -133,10 +136,50 @@ export async function createMealPlan(input: CreateMealPlanInput) {
 }
 
 export async function deleteMealPlan(id: string) {
+  const userId = await requireUserId()
   await prisma.mealPlan.delete({
-    where: { id },
+    where: { id, userId },
   })
 
   revalidatePath('/dashboard')
   revalidatePath('/dashboard/plans')
 }
+
+export async function publishMealPlan(planId: string, checklistNotes?: string) {
+  const userId = await requireUserId()
+  const plan = await prisma.mealPlan.findFirst({
+    where: { id: planId, userId },
+    select: { id: true, patientId: true, name: true },
+  })
+  if (!plan) throw new Error('Plan no encontrado.')
+
+  const updated = await prisma.mealPlan.update({
+    where: { id: planId },
+    data: {
+      status: 'PUBLISHED',
+      publishedAt: new Date(),
+      publishedBy: 'Eva Vidal',
+      checklistPassed: true,
+      clinicalChecklistNotes: checklistNotes || null,
+      isSharedWithPatient: true,
+    },
+  })
+
+  await prisma.auditLog.create({
+    data: {
+      userId,
+      patientId: plan.patientId,
+      action: 'MEAL_PLAN_PUBLISHED',
+      entityType: 'MEAL_PLAN',
+      entityId: planId,
+      details: `Plan nutricional "${plan.name}" validado clínicamente y publicado para el paciente.`,
+    },
+  })
+
+  revalidatePath('/dashboard/plans')
+  revalidatePath(`/dashboard/plans/${planId}`)
+  revalidatePath(`/dashboard/patients/${plan.patientId}`)
+  revalidatePath('/paciente/plan')
+  return updated
+}
+

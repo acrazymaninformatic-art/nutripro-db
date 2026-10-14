@@ -2,6 +2,7 @@
 
 import { prisma } from '@/lib/prisma'
 import { revalidatePath } from 'next/cache'
+import { requireUserId } from '@/lib/auth'
 
 export async function getFoods(
   search?: string,
@@ -9,6 +10,7 @@ export async function getFoods(
   page: number = 1,
   pageSize: number = 40
 ) {
+  await requireUserId()
   const where: any = {}
 
   if (search && search.trim() !== '') {
@@ -42,6 +44,7 @@ export async function getFoods(
 
 
 export async function getCategories() {
+  await requireUserId()
   const foods = await prisma.food.findMany({
     select: { category: true },
     distinct: ['category'],
@@ -50,6 +53,7 @@ export async function getCategories() {
 }
 
 export async function getAllFoodsForBrowser() {
+  await requireUserId()
   return prisma.food.findMany({
     select: {
       id: true,
@@ -69,6 +73,7 @@ export async function getAllFoodsForBrowser() {
 
 
 export async function createFood(formData: FormData) {
+  await requireUserId()
   const name = formData.get('name') as string
   const category = (formData.get('category') as string) || 'Otros'
   const servingSize = parseFloat(formData.get('servingSize') as string) || 100
@@ -102,6 +107,7 @@ export async function createFood(formData: FormData) {
 }
 
 export async function deleteFood(id: number) {
+  await requireUserId()
   await prisma.food.delete({
     where: { id },
   })

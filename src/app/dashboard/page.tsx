@@ -15,20 +15,23 @@ import {
   TrendingUp,
 } from 'lucide-react'
 import { OBJECTIVE_LABELS, type Objective } from '@/types'
+import { requireUser } from '@/lib/auth'
 
 export const dynamic = 'force-dynamic'
 
 export default async function DashboardPage() {
+  const user = await requireUser()
   const startOfMonth = new Date(new Date().getFullYear(), new Date().getMonth(), 1)
 
   // Fetch real data from SQLite
   const [patientCount, activePlanCount, consultationCount, recipeCount, recentPatients] =
     await Promise.all([
-      prisma.patient.count({ where: { isActive: true } }),
-      prisma.mealPlan.count({ where: { isActive: true } }),
-      prisma.consultation.count({ where: { date: { gte: startOfMonth } } }),
-      prisma.recipe.count(),
+      prisma.patient.count({ where: { userId: user.id, isActive: true } }),
+      prisma.mealPlan.count({ where: { userId: user.id, isActive: true } }),
+      prisma.consultation.count({ where: { patient: { userId: user.id }, date: { gte: startOfMonth } } }),
+      prisma.recipe.count({ where: { userId: user.id } }),
       prisma.patient.findMany({
+        where: { userId: user.id },
         take: 5,
         orderBy: { createdAt: 'desc' },
         include: {

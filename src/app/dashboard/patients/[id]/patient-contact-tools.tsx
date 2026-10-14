@@ -57,17 +57,19 @@ export function PatientContactTools({ patient }: Props) {
     text: string
   } | null>(null)
   const [copiedLink, setCopiedLink] = useState(false)
+  const [issuedAnamnesisUrl, setIssuedAnamnesisUrl] = useState('')
 
   const submissions = patient.anamnesisSubmissions || []
   const hasCompletedSubmission = status === 'COMPLETED' || submissions.length > 0
 
-  const origin = typeof window !== 'undefined' ? window.location.origin : 'https://nutripro-lyart.vercel.app'
-  const anamnesisUrl = `${origin}/anamnesis?patientId=${patient.id}`
+  const origin = typeof window !== 'undefined' ? window.location.origin : (process.env.NEXT_PUBLIC_APP_URL || '')
+  const anamnesisUrl = issuedAnamnesisUrl
   const firstName = patient.name.split(' ')[0]
 
   const emailSubject = `Cuestionario Clínico Pre-Consulta - ${professionalName} • Consulta Nutricional`
   const emailBody = `Hola ${firstName},\n\nPara preparar tu consulta nutricional y diseñar un menú personalizado adaptado a tus gustos, horarios y necesidades, por favor completa tu cuestionario de salud en el siguiente enlace:\n\n${anamnesisUrl}\n\nSolo te llevará 3-5 minutos y nos permitirá comenzar directamente con tu planificación.\n\nAtentamente,\n${professionalName}\nConsulta Nutricional (${professionalEmail})`
   const mailtoUrl = `mailto:${encodeURIComponent(patientEmail)}?subject=${encodeURIComponent(emailSubject)}&body=${encodeURIComponent(emailBody)}`
+  const makeMailtoUrl = (link: string) => `mailto:${encodeURIComponent(patientEmail)}?subject=${encodeURIComponent(emailSubject)}&body=${encodeURIComponent(`Hola ${firstName},\n\nCompleta tu cuestionario privado, válido durante 7 días:\n\n${link}\n\nAtentamente,\n${professionalName}`)}`
 
   const handleSendEmail = async () => {
     if (!patientEmail || !patientEmail.includes('@')) {
@@ -87,7 +89,6 @@ export function PatientContactTools({ patient }: Props) {
         patientEmail,
         professionalEmail,
         professionalName,
-        baseUrl: origin,
       })
 
       if (res.success) {
@@ -124,15 +125,23 @@ export function PatientContactTools({ patient }: Props) {
       alert('Introduce primero el correo de la paciente.')
       return
     }
-    await markAnamnesisSentAction(patient.id)
+    const result = await markAnamnesisSentAction(patient.id)
+    if (!result.success || !result.anamnesisUrl) return
+    const link = new URL(result.anamnesisUrl, origin).toString()
+    setIssuedAnamnesisUrl(link)
+    window.location.href = makeMailtoUrl(link)
     if (status !== 'COMPLETED') {
       setStatus('PENDING')
       setSentAt(new Date())
     }
   }
 
-  const copyAnamnesisLink = () => {
-    navigator.clipboard.writeText(anamnesisUrl)
+  const copyAnamnesisLink = async () => {
+    const result = await markAnamnesisSentAction(patient.id)
+    if (!result.success || !result.anamnesisUrl) return
+    const link = new URL(result.anamnesisUrl, origin).toString()
+    setIssuedAnamnesisUrl(link)
+    await navigator.clipboard.writeText(link)
     setCopiedLink(true)
     setTimeout(() => setCopiedLink(false), 2500)
   }
@@ -248,7 +257,7 @@ export function PatientContactTools({ patient }: Props) {
                   <div className="mt-2 flex items-center gap-2">
                     <a
                       href={mailtoUrl}
-                      onClick={handleOpenMailClient}
+                      onClick={(event) => { event.preventDefault(); void handleOpenMailClient() }}
                       className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-blue-600 hover:bg-blue-700 text-white rounded-lg font-bold text-2xs transition-all shadow-xs"
                     >
                       <ExternalLink className="h-3 w-3" />
@@ -273,8 +282,8 @@ export function PatientContactTools({ patient }: Props) {
             </Button>
 
             <a
-              href={patientEmail ? mailtoUrl : '#'}
-              onClick={handleOpenMailClient}
+              href={mailtoUrl}
+              onClick={(event) => { event.preventDefault(); void handleOpenMailClient() }}
               className={`h-9 px-3.5 rounded-xl border border-gray-300 font-semibold text-xs flex items-center justify-center gap-1.5 transition-all ${
                 patientEmail
                   ? 'bg-white text-gray-700 hover:bg-gray-50'

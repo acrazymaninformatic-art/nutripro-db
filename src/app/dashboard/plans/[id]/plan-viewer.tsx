@@ -31,8 +31,9 @@ import {
   Layers,
   Pill,
 } from 'lucide-react'
-import { getFoodImage, getRecipeForFood, FALLBACK_FOOD_SVG, type ClinicalRecipe } from '@/lib/nutrition'
+import { getFoodImage, getRecipeForFood, FALLBACK_FOOD_SVG, type ClinicalRecipe, checkPatientAllergenConflict } from '@/lib/nutrition'
 import { FOOD_EXCHANGE_GROUPS } from '@/lib/nutrition/exchange-system'
+import { PrePublishChecklistModal } from './pre-publish-checklist-modal'
 import { ExchangeGuide } from '@/components/nutrition/exchange-guide'
 
 interface PlanViewerProps {
@@ -257,6 +258,14 @@ export function PlanViewer({ plan }: PlanViewerProps) {
 
         {/* PRIMARY PRINT / PDF DOWNLOAD BUTTON & TCA TOGGLE */}
         <div className="flex items-center gap-2 flex-wrap">
+          <PrePublishChecklistModal
+            planId={plan.id}
+            planName={plan.name}
+            patient={plan.patient}
+            isPublished={plan.status === 'PUBLISHED'}
+            publishedAt={plan.publishedAt}
+          />
+
           <Button
             type="button"
             variant="outline"
@@ -318,17 +327,30 @@ export function PlanViewer({ plan }: PlanViewerProps) {
           {/* ---------------------------------------------------------------------
               HOJA 1: PORTADA CLÍNICA Y RESUMEN DEL PACIENTE (A4 PAGE 1)
               --------------------------------------------------------------------- */}
-          <section className="dossier-page bg-white p-6 sm:p-8 rounded-3xl border border-gray-200 shadow-sm print:border-none print:shadow-none print:p-0 print:m-0">
-            <div className="space-y-6">
+          <section className="dossier-page relative bg-white p-6 sm:p-8 rounded-3xl border border-gray-200 shadow-sm print:border-none print:shadow-none print:p-0 print:m-0 overflow-hidden">
+            {/* Watermark con el logo de Eva Vidal con baja opacidad */}
+            <div className="absolute inset-0 pointer-events-none select-none flex items-center justify-center opacity-[0.035] print:opacity-[0.055] z-0 overflow-hidden" aria-hidden="true">
+              <img
+                src="/logo.png"
+                alt=""
+                className="w-[420px] max-w-[70%] object-contain filter grayscale"
+              />
+            </div>
+
+            <div className="relative z-10 space-y-6">
               {/* Encabezado Institucional */}
               <div className="flex items-center justify-between border-b-2 border-blue-600 pb-5">
                 <div className="flex items-center gap-3.5">
-                  <div className="w-12 h-12 rounded-2xl bg-blue-600 text-white flex items-center justify-center shadow-xs">
-                    <Leaf className="w-7 h-7" />
+                  <div className="w-14 h-14 rounded-2xl bg-white border border-blue-200 p-1 flex items-center justify-center shadow-xs overflow-hidden">
+                    <img
+                      src="/logo.png"
+                      alt="Eva Vidal"
+                      className="w-full h-full object-contain"
+                    />
                   </div>
                   <div>
                     <h1 className="text-2xl font-black text-gray-900 tracking-tight">
-                      NutriPro <span className="text-blue-600 font-light">• Clinical Nutrition</span>
+                      Consulta Nutricional Eva Vidal <span className="text-blue-600 font-light">• EVSoftware</span>
                     </h1>
                     <p className="text-xs text-gray-500 font-semibold tracking-wide uppercase">
                       Dossier de Prescripción Dietética y Recetario Clínico
@@ -354,9 +376,14 @@ export function PlanViewer({ plan }: PlanViewerProps) {
                   <span className="text-base font-black text-gray-900 block mt-0.5">
                     {plan.patient.firstName} {plan.patient.lastName}
                   </span>
-                  <span className="text-xs text-gray-600 font-medium">
+                  <span className="text-xs text-gray-600 font-medium block">
                     {plan.patient.sex === 'FEMALE' ? 'Mujer' : 'Hombre'} • {plan.patient.heightCm} cm
                   </span>
+                  {(plan.patient.allergies || plan.patient.intolerances) && (
+                    <span className="inline-block mt-1 text-[9px] font-black bg-red-100 text-red-800 border border-red-300 px-1.5 py-0.5 rounded-md">
+                      ⚠️ Alergias: {[plan.patient.allergies, plan.patient.intolerances].filter(Boolean).join(', ')}
+                    </span>
+                  )}
                 </div>
 
                 <div>
@@ -462,7 +489,7 @@ export function PlanViewer({ plan }: PlanViewerProps) {
 
             {/* Pie de Página Hoja 1 */}
             <div className="dossier-footer pt-3 mt-6 border-t border-gray-200 flex items-center justify-between text-[10px] text-gray-400">
-              <span>NutriPro Clinical Nutrition • Expediente: {plan.patient.lastName}, {plan.patient.firstName}</span>
+              <span>Eva Vidal Nutrición • Expediente: {plan.patient.lastName}, {plan.patient.firstName}</span>
               <span className="font-bold">Hoja 1 de 10 • Portada y Prescripción General</span>
             </div>
           </section>
@@ -494,9 +521,18 @@ export function PlanViewer({ plan }: PlanViewerProps) {
             return (
               <section
                 key={day.id}
-                className="dossier-page bg-white p-5 sm:p-6 rounded-3xl border border-gray-200 shadow-sm print:border-none print:shadow-none print:p-0 print:m-0 space-y-3.5"
+                className="dossier-page relative bg-white p-5 sm:p-6 rounded-3xl border border-gray-200 shadow-sm print:border-none print:shadow-none print:p-0 print:m-0 space-y-3.5 overflow-hidden"
               >
-                <div className="space-y-3 flex-1">
+                {/* Watermark de Eva Vidal con baja opacidad */}
+                <div className="absolute inset-0 pointer-events-none select-none flex items-center justify-center opacity-[0.035] print:opacity-[0.055] z-0 overflow-hidden" aria-hidden="true">
+                  <img
+                    src="/logo.png"
+                    alt=""
+                    className="w-[380px] max-w-[65%] object-contain filter grayscale"
+                  />
+                </div>
+
+                <div className="relative z-10 space-y-3 flex-1">
                   {/* Encabezado del Día */}
                   <div className="bg-gradient-to-r from-gray-950 via-gray-900 to-gray-800 text-white p-3.5 rounded-2xl flex items-center justify-between shadow-xs">
                     <div className="flex items-center gap-2.5">
@@ -591,12 +627,13 @@ export function PlanViewer({ plan }: PlanViewerProps) {
                                 const imageUrl = it.food ? getFoodImage(it.food) : ''
                                 const prepTip = getPreparationTip(it.food?.name || '', it.food?.category || null, it.notes)
                                 const itemRecipe = it.food ? getRecipeForFood(it.food.name, it.food.category) : null
+                                const itemConflict = it.food && plan.patient ? checkPatientAllergenConflict(it.food, plan.patient) : null
 
                                 return (
-                                  <tr key={it.id} className="hover:bg-gray-50/40">
+                                  <tr key={it.id} className={`hover:bg-gray-50/40 ${itemConflict ? 'bg-red-50/60' : ''}`}>
                                     {/* Foto Culinaria HD */}
                                     <td className="py-1 px-2 text-center align-middle">
-                                      <div className="h-8 w-8 mx-auto rounded-lg overflow-hidden bg-gray-100 border border-gray-200 shadow-2xs">
+                                      <div className={`h-8 w-8 mx-auto rounded-lg overflow-hidden bg-gray-100 border shadow-2xs ${itemConflict ? 'border-red-300' : 'border-gray-200'}`}>
                                         <img
                                           src={imageUrl}
                                           alt={it.food?.name || 'Alimento'}
@@ -613,7 +650,12 @@ export function PlanViewer({ plan }: PlanViewerProps) {
                                     {/* Nombre */}
                                     <td className="py-1 px-2.5 font-bold text-gray-900 align-middle">
                                       <div className="flex items-center gap-1.5 flex-wrap">
-                                        <span>{it.food?.name || 'Alimento'}</span>
+                                        <span className={itemConflict ? 'text-red-950 font-black' : ''}>{it.food?.name || 'Alimento'}</span>
+                                        {itemConflict && (
+                                          <span className="inline-flex items-center gap-0.5 text-[8.5px] font-black bg-red-600 text-white px-1.5 py-0.2 rounded shadow-2xs" title={itemConflict.alertMessage}>
+                                            🚨 {itemConflict.allergenLabel}
+                                          </span>
+                                        )}
                                         {itemRecipe && (
                                           <button
                                             type="button"
@@ -720,9 +762,12 @@ export function PlanViewer({ plan }: PlanViewerProps) {
                   )}
                 </div>
 
-                {/* Pie de Página Hoja Diaria */}
-                <div className="dossier-footer pt-2.5 border-t border-gray-200 flex items-center justify-between text-[10px] text-gray-400">
-                  <span>NutriPro • Paciente: {plan.patient.firstName} {plan.patient.lastName}</span>
+                {/* Pie de Página Hoja Diaria con Identidad de Eva Vidal */}
+                <div className="dossier-footer relative z-10 pt-2.5 border-t border-gray-200 flex items-center justify-between text-[10px] text-gray-500">
+                  <div className="flex items-center gap-1.5">
+                    <img src="/logo.png" alt="" className="h-4 w-4 object-contain inline-block" />
+                    <span>Consulta Nutricional Eva Vidal • Paciente: {plan.patient.firstName} {plan.patient.lastName}</span>
+                  </div>
                   <span className="font-bold text-gray-500">Hoja {pageNumber} de 10 • {day.customName || DAY_NAMES[dIdx]}</span>
                 </div>
               </section>
@@ -732,8 +777,17 @@ export function PlanViewer({ plan }: PlanViewerProps) {
           {/* ---------------------------------------------------------------------
               HOJA 9: GUÍA OFICIAL DE RACIONES DE INTERCAMBIO (A4 PAGE 9)
               --------------------------------------------------------------------- */}
-          <section className="dossier-page bg-white p-6 sm:p-8 rounded-3xl border border-gray-200 shadow-sm print:border-none print:shadow-none print:p-0 print:m-0 space-y-4">
-            <div className="space-y-4 flex-1">
+          <section className="dossier-page relative bg-white p-6 sm:p-8 rounded-3xl border border-gray-200 shadow-sm print:border-none print:shadow-none print:p-0 print:m-0 space-y-4 overflow-hidden">
+            {/* Watermark con el logo de Eva Vidal con baja opacidad */}
+            <div className="absolute inset-0 pointer-events-none select-none flex items-center justify-center opacity-[0.035] print:opacity-[0.055] z-0 overflow-hidden" aria-hidden="true">
+              <img
+                src="/logo.png"
+                alt=""
+                className="w-[420px] max-w-[70%] object-contain filter grayscale"
+              />
+            </div>
+
+            <div className="relative z-10 space-y-4 flex-1">
               {/* Encabezado Hoja de Intercambios */}
               <div className="flex items-center justify-between border-b-2 border-blue-600 pb-3">
                 <div className="flex items-center gap-3">
@@ -793,8 +847,11 @@ export function PlanViewer({ plan }: PlanViewerProps) {
             </div>
 
             {/* Pie de Página Hoja 9 */}
-            <div className="dossier-footer pt-3 border-t border-gray-200 flex items-center justify-between text-[10px] text-gray-400">
-              <span>NutriPro Clinical Nutrition • Guía de Intercambios Clínicos</span>
+            <div className="dossier-footer relative z-10 pt-3 border-t border-gray-200 flex items-center justify-between text-[10px] text-gray-500">
+              <div className="flex items-center gap-1.5">
+                <img src="/logo.png" alt="" className="h-3.5 w-3.5 object-contain" />
+                <span>Consulta Nutricional Eva Vidal • Guía de Intercambios Clínicos</span>
+              </div>
               <span className="font-bold text-gray-500">Hoja 9 de 10 • Flexibilidad Dietética</span>
             </div>
           </section>
@@ -802,8 +859,17 @@ export function PlanViewer({ plan }: PlanViewerProps) {
           {/* ---------------------------------------------------------------------
               HOJA 10: LISTA DE LA COMPRA SEMANAL CONSOLIDADA (A4 PAGE 10)
               --------------------------------------------------------------------- */}
-          <section className="dossier-page bg-white p-6 sm:p-8 rounded-3xl border border-gray-200 shadow-sm print:border-none print:shadow-none print:p-0 print:m-0 space-y-4">
-            <div className="space-y-4 flex-1">
+          <section className="dossier-page relative bg-white p-6 sm:p-8 rounded-3xl border border-gray-200 shadow-sm print:border-none print:shadow-none print:p-0 print:m-0 space-y-4 overflow-hidden">
+            {/* Watermark con el logo de Eva Vidal con baja opacidad */}
+            <div className="absolute inset-0 pointer-events-none select-none flex items-center justify-center opacity-[0.035] print:opacity-[0.055] z-0 overflow-hidden" aria-hidden="true">
+              <img
+                src="/logo.png"
+                alt=""
+                className="w-[420px] max-w-[70%] object-contain filter grayscale"
+              />
+            </div>
+
+            <div className="relative z-10 space-y-4 flex-1">
               {/* Encabezado Lista de la Compra */}
               <div className="flex items-center justify-between border-b-2 border-blue-600 pb-3">
                 <div className="flex items-center gap-3">
@@ -877,10 +943,13 @@ export function PlanViewer({ plan }: PlanViewerProps) {
               </div>
             </div>
 
-            {/* Pie de Página Hoja 10 */}
-            <div className="dossier-footer pt-3 border-t border-gray-200 flex items-center justify-between text-[10px] text-gray-400">
-              <span>NutriPro Clinical Nutrition • Lista de la Compra Semanal</span>
-              <span className="font-bold text-gray-500">Hoja 10 de 10 • Aprovisionamiento</span>
+            {/* Pie de Página Hoja 10 con Identidad */}
+            <div className="dossier-footer relative z-10 pt-3 border-t border-gray-200 flex items-center justify-between text-[10px] text-gray-500">
+              <div className="flex items-center gap-1.5">
+                <img src="/logo.png" alt="" className="h-3.5 w-3.5 object-contain" />
+                <span>Consulta Nutricional Eva Vidal • Consolidado Semanal</span>
+              </div>
+              <span className="font-bold text-gray-500">Hoja 10 de 10 • Plan Nutricional</span>
             </div>
           </section>
         </div>

@@ -3,10 +3,9 @@ import nodemailer from 'nodemailer'
 interface SendAnamnesisEmailParams {
   patientName: string
   patientEmail: string
-  patientId: string
+  accessToken: string
   professionalName?: string
   clinicName?: string
-  baseUrl?: string
 }
 
 export function generateAnamnesisEmailHtml({
@@ -36,11 +35,13 @@ export function generateAnamnesisEmailHtml({
       <td align="center">
         <table role="presentation" border="0" cellpadding="0" cellspacing="0" width="100%" style="max-width: 600px; background-color: #ffffff; border-radius: 24px; overflow: hidden; box-shadow: 0 10px 25px rgba(2, 132, 199, 0.08); border: 1px solid #dbeafe;">
           
-          <!-- Encabezado con gradiente azul clínico -->
+          <!-- Encabezado con gradiente azul clínico y logotipo oficial -->
           <tr>
             <td style="background: linear-gradient(135deg, #0284c7 0%, #1e40af 100%); padding: 38px 30px; text-align: center;">
-              <span style="font-size: 26px; font-weight: 800; color: #ffffff; letter-spacing: -0.5px; display: inline-block;">
-                🩺 ${clinicName}
+              <span style="display: inline-block; width: 56px; height: 56px; line-height: 56px; border-radius: 14px; background: #ffffff; color: #0284c7; font-weight: 900; font-size: 22px; box-shadow: 0 4px 12px rgba(0,0,0,0.15); margin-bottom: 12px;">EV</span>
+              <br/>
+              <span style="font-size: 24px; font-weight: 800; color: #ffffff; letter-spacing: -0.5px; display: inline-block;">
+                ${clinicName}
               </span>
               <p style="margin: 8px 0 0 0; color: #e0f2fe; font-size: 14px; font-weight: 500;">
                 Cuestionario Clínico y Hábitos Nutricionales Pre-Consulta
@@ -111,7 +112,7 @@ export function generateAnamnesisEmailHtml({
                 🔒 <strong>Confidencialidad Médica (RGPD):</strong> La información facilitada en este cuestionario es estrictamente confidencial y se usará únicamente para tu valoración nutricional.
               </p>
               <p style="margin: 0;">
-                Este correo fue enviado de forma automática desde la plataforma clínica NutriPro.
+                Este correo fue enviado de forma automática desde la plataforma clínica EVSoftware.
               </p>
             </td>
           </tr>
@@ -128,10 +129,9 @@ export function generateAnamnesisEmailHtml({
 export async function sendAnamnesisEmail({
   patientName,
   patientEmail,
-  patientId,
+  accessToken,
   professionalName = 'Eva Vidal',
   clinicName = 'Consulta Nutricional Eva Vidal',
-  baseUrl,
 }: SendAnamnesisEmailParams): Promise<{
   success: boolean
   message: string
@@ -139,14 +139,13 @@ export async function sendAnamnesisEmail({
   mailtoUrl: string
 }> {
   const resolvedBaseUrl =
-    baseUrl ||
     process.env.APP_PUBLIC_URL ||
     (process.env.VERCEL_PROJECT_PRODUCTION_URL ? `https://${process.env.VERCEL_PROJECT_PRODUCTION_URL}` : undefined) ||
     (process.env.VERCEL_URL ? `https://${process.env.VERCEL_URL}` : undefined) ||
     process.env.NEXTAUTH_URL ||
-    'https://nutripro-lyart.vercel.app'
+    'https://evavidalnutricion.es'
 
-  const anamnesisUrl = `${resolvedBaseUrl}/anamnesis?patientId=${patientId}`
+  const anamnesisUrl = `${resolvedBaseUrl}/anamnesis?token=${encodeURIComponent(accessToken)}`
 
   const emailSubject = `Cuestionario Clínico Pre-Consulta - ${clinicName}`
   const emailHtml = generateAnamnesisEmailHtml({
@@ -161,11 +160,15 @@ export async function sendAnamnesisEmail({
   const mailtoUrl = `mailto:${encodeURIComponent(patientEmail)}?subject=${encodeURIComponent(emailSubject)}&body=${encodeURIComponent(plainText)}`
 
   // El correo de remitente oficial siempre es evavidalinfo@gmail.com
-  const smtpFrom = 'evavidalinfo@gmail.com'
-  const smtpUser = process.env.SMTP_USER || 'evavidalinfo@gmail.com'
-  const smtpPass = process.env.SMTP_PASS || 'bocpzmoggkajgeqk'
-  const smtpHost = process.env.SMTP_HOST || 'smtp.gmail.com'
+  const smtpFrom = process.env.SMTP_FROM || process.env.SMTP_USER
+  const smtpUser = process.env.SMTP_USER
+  const smtpPass = process.env.SMTP_PASS
+  const smtpHost = process.env.SMTP_HOST
   const smtpPort = process.env.SMTP_PORT ? Number(process.env.SMTP_PORT) : 587
+
+  if (!smtpFrom || !smtpUser || !smtpPass || !smtpHost) {
+    return { success: false, message: 'Falta configuración del servicio de correo.', anamnesisUrl, mailtoUrl }
+  }
 
   try {
     const transporter = nodemailer.createTransport({
@@ -186,6 +189,15 @@ export async function sendAnamnesisEmail({
       html: emailHtml,
     })
 
+    const { logEmailSent } = await import('./log-email')
+    await logEmailSent({
+      recipientEmail: patientEmail,
+      recipientName: patientName,
+      subject: emailSubject,
+      type: 'ANAMNESIS',
+      status: 'SENT',
+    })
+
     return {
       success: true,
       message: `Cuestionario enviado automáticamente con éxito a ${patientEmail} desde ${smtpFrom}`,
@@ -194,6 +206,18 @@ export async function sendAnamnesisEmail({
     }
   } catch (error: any) {
     console.error('Error al enviar correo vía SMTP:', error)
+    try {
+      const { logEmailSent } = await import('./log-email')
+      await logEmailSent({
+        recipientEmail: patientEmail,
+        recipientName: patientName,
+        subject: emailSubject,
+        type: 'ANAMNESIS',
+        status: 'FAILED',
+        errorDetails: error?.message,
+      })
+    } catch {}
+
     return {
       success: false,
       message: `Error de conexión con el servidor de correo: ${error?.message || 'Error desconocido'}. Puedes usar el botón de cliente de correo o compartir el enlace.`,

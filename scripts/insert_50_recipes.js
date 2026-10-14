@@ -1,6 +1,6 @@
 /**
  * @file insert_50_recipes.js
- * @description Adds 50 new clinical and Mediterranean recipes to NutriPro database,
+ * @description Adds 50 new clinical and Mediterranean recipes to EVSoftware database,
  * complete with ingredients linked to Food items, culinary instructions, macros,
  * and high quality Unsplash photos.
  */

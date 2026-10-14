@@ -37,7 +37,7 @@ import {
   FileText,
   Filter,
 } from 'lucide-react'
-import { sendAnamnesisEmailAction } from '@/app/dashboard/patients/email-actions'
+import { markAnamnesisSentAction, sendAnamnesisEmailAction } from '@/app/dashboard/patients/email-actions'
 import { AnamnesisViewerModal, type AnamnesisSubmissionItem } from '@/app/dashboard/patients/[id]/anamnesis-viewer-modal'
 
 export interface QuestionnairePatient {
@@ -80,7 +80,7 @@ export function QuestionnairesClient({
   // Feedback message
   const [feedback, setFeedback] = useState<{ type: 'success' | 'error' | 'info'; message: string } | null>(null)
 
-  const origin = typeof window !== 'undefined' ? window.location.origin : 'https://nutripro-lyart.vercel.app'
+  const origin = typeof window !== 'undefined' ? window.location.origin : (process.env.NEXT_PUBLIC_APP_URL || '')
 
   // Counters
   const counts = useMemo(() => {
@@ -180,7 +180,6 @@ export function QuestionnairesClient({
         patientEmail: emailToSend,
         professionalEmail,
         professionalName,
-        baseUrl: origin,
       })
 
       if (res.success) {
@@ -230,8 +229,10 @@ export function QuestionnairesClient({
   }
 
   // Copy WhatsApp invitation message
-  const handleCopyWhatsAppLink = (patient: QuestionnairePatient) => {
-    const url = `${origin}/anamnesis?patientId=${patient.id}`
+  const handleCopyWhatsAppLink = async (patient: QuestionnairePatient) => {
+    const access = await markAnamnesisSentAction(patient.id)
+    if (!access.success || !access.anamnesisUrl) return
+    const url = new URL(access.anamnesisUrl, origin).toString()
     const msg = `Hola ${patient.firstName},\n\nPara preparar tu consulta nutricional con ${professionalName} y diseñar tu menú a medida, por favor completa tu cuestionario de salud previo en este enlace:\n\n${url}\n\nSolo te llevará 3 minutos y nos permitirá preparar tu pauta antes de la cita.`
 
     navigator.clipboard.writeText(msg)

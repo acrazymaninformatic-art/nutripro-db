@@ -1,8 +1,8 @@
 import { ClinicalCalculator } from './calculator-client'
 
 export const metadata = {
-  title: 'Calculadora Nutricional & TMB | NutriPro',
-  description: 'Calculadora metabólica clínica para dietistas y nutricionistas.',
+  title: 'Calculadora Nutricional & TMB | EVSoftware',
+  description: 'Calculadora metabólica clínica para dietistas y nutricionistas · Eva Vidal Nutrición.',
 }
 
 export default function CalculatorPage() {

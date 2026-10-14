@@ -2,10 +2,11 @@
 
 import { prisma } from '@/lib/prisma'
 import { revalidatePath } from 'next/cache'
+import { requireUserId } from '@/lib/auth'
 
 // Helper to get or fallback to demo nutritionist user
 async function getDefaultUserId(): Promise<string> {
-  const user = await prisma.user.findFirst()
+  const user = await prisma.user.findUnique({ where: { id: await requireUserId() } })
   if (!user) {
     throw new Error('No se encontró ningún usuario registrado en la base de datos.')
   }
@@ -13,7 +14,9 @@ async function getDefaultUserId(): Promise<string> {
 }
 
 export async function getPatients() {
+  const userId = await requireUserId()
   return await prisma.patient.findMany({
+    where: { userId },
     orderBy: { lastName: 'asc' },
     include: {
       anthropometries: {
@@ -25,8 +28,9 @@ export async function getPatients() {
 }
 
 export async function getPatient(id: string) {
-  return await prisma.patient.findUnique({
-    where: { id },
+  const userId = await requireUserId()
+  return await prisma.patient.findFirst({
+    where: { id, userId },
     include: {
       anthropometries: {
         orderBy: { date: 'desc' },
@@ -46,13 +50,27 @@ export async function getPatient(id: string) {
       anamnesisSubmissions: {
         orderBy: { submittedAt: 'desc' },
       },
-      user: true,
+      dataRequests: {
+        orderBy: { createdAt: 'desc' },
+      },
+      clinicalCheckIns: {
+        orderBy: { date: 'desc' },
+      },
+      consents: {
+        orderBy: { createdAt: 'desc' },
+      },
+      documents: {
+        orderBy: { uploadedAt: 'desc' },
+      },
+      user: { select: { id: true, name: true, email: true, licenseNumber: true, clinicName: true, phone: true, address: true } },
     },
   })
 }
 
 export async function createPatient(formData: FormData) {
+  await requireUserId()
   const userId = await getDefaultUserId()
+  if (formData.get('consentAccepted') !== 'true') throw new Error('Es obligatorio registrar el consentimiento para tratar datos personales y de salud.')
 
   // Step 1: Datos Personales
   const firstName = formData.get('firstName') as string
@@ -123,7 +141,9 @@ export async function createPatient(formData: FormData) {
   const consultationFrequency = (formData.get('consultationFrequency') as string) || null
   const budgetLevel = (formData.get('budgetLevel') as string) || null
   const allergies = (formData.get('allergies') as string) || ''
+  const allergiesStatus = (formData.get('allergiesStatus') as string) || (allergies ? 'CONFIRMED' : 'NO_CONSTA')
   const intolerances = (formData.get('intolerances') as string) || ''
+  const intolerancesStatus = (formData.get('intolerancesStatus') as string) || (intolerances ? 'CONFIRMED' : 'NO_CONSTA')
   const dietaryPreferences = (formData.get('dietaryPreferences') as string) || ''
   const additionalNotes = (formData.get('additionalNotes') as string) || null
   const notes = (formData.get('notes') as string) || additionalNotes
@@ -137,6 +157,8 @@ export async function createPatient(formData: FormData) {
   const patient = await prisma.patient.create({
     data: {
       userId,
+      consentAcceptedAt: new Date(),
+      consentPolicyVersion: '2026-10-14',
       firstName,
       lastName,
       email,
@@ -149,11 +171,15 @@ export async function createPatient(formData: FormData) {
       activityLevel,
       notes,
       allergies,
+      allergiesStatus,
       intolerances,
+      intolerancesStatus,
       dietaryPreferences,
       // Clinical History
       medicalHistory,
+      pathologiesStatus: (formData.get('pathologiesStatus') as string) || (medicalHistory ? 'CONFIRMED' : 'NO_CONSTA'),
       currentMedications,
+      medicationsStatus: (formData.get('medicationsStatus') as string) || (currentMedications ? 'CONFIRMED' : 'NO_CONSTA'),
       supplements,
       surgeries,
       familyHistory,
@@ -220,6 +246,7 @@ export async function createPatient(formData: FormData) {
 }
 
 export async function updatePatient(id: string, formData: FormData) {
+  const userId = await requireUserId()
   const firstName = formData.get('firstName') as string
   const lastName = formData.get('lastName') as string
   const email = (formData.get('email') as string) || null
@@ -239,8 +266,13 @@ export async function updatePatient(id: string, formData: FormData) {
   const isTCAProtocol = formData.get('isTCAProtocol') === 'true' || formData.get('isTCAProtocol') === 'on'
   const isActive = formData.get('isActive') !== 'false'
 
+  const allergiesStatus = formData.has('allergiesStatus') ? (formData.get('allergiesStatus') as string) : undefined
+  const intolerancesStatus = formData.has('intolerancesStatus') ? (formData.get('intolerancesStatus') as string) : undefined
+  const medicationsStatus = formData.has('medicationsStatus') ? (formData.get('medicationsStatus') as string) : undefined
+  const pathologiesStatus = formData.has('pathologiesStatus') ? (formData.get('pathologiesStatus') as string) : undefined
+
   const patient = await prisma.patient.update({
-    where: { id },
+    where: { id, userId },
     data: {
       firstName,
       lastName,
@@ -253,10 +285,14 @@ export async function updatePatient(id: string, formData: FormData) {
       activityLevel: activityLevel || undefined,
       notes,
       allergies,
+      allergiesStatus,
       intolerances,
+      intolerancesStatus,
       dietaryPreferences,
       medicalHistory,
+      pathologiesStatus,
       currentMedications,
+      medicationsStatus,
       isGLP1Treatment,
       isTCAProtocol,
       isActive,
@@ -270,15 +306,45 @@ export async function updatePatient(id: string, formData: FormData) {
 }
 
 export async function deletePatient(id: string) {
+  const userId = await requireUserId()
   await prisma.patient.delete({
-    where: { id },
+    where: { id, userId },
   })
 
   revalidatePath('/dashboard')
   revalidatePath('/dashboard/patients')
 }
 
+export async function hardDeletePatient(patientId: string) {
+  const userId = await requireUserId()
+  const patient = await prisma.patient.findFirst({
+    where: { id: patientId, userId },
+    select: { id: true, firstName: true, lastName: true },
+  })
+  if (!patient) throw new Error('Paciente no encontrado.')
+
+  await prisma.auditLog.create({
+    data: {
+      userId,
+      action: 'HARD_DELETE_PATIENT',
+      entityType: 'PATIENT',
+      entityId: patientId,
+      details: `Eliminación definitiva de expediente RGPD: ${patient.firstName} ${patient.lastName}.`,
+    },
+  })
+
+  await prisma.patient.delete({
+    where: { id: patientId },
+  })
+
+  revalidatePath('/dashboard')
+  revalidatePath('/dashboard/patients')
+  return { success: true }
+}
+
 export async function createAnthropometry(patientId: string, formData: FormData) {
+  const userId = await requireUserId()
+  if (!await prisma.patient.findFirst({ where: { id: patientId, userId }, select: { id: true } })) throw new Error('Paciente no encontrado.')
   const dateStr = (formData.get('date') as string) || new Date().toISOString()
   const weightKg = parseFloat(formData.get('weightKg') as string)
   const bodyFatPct = formData.get('bodyFatPct') ? parseFloat(formData.get('bodyFatPct') as string) : null
@@ -320,11 +386,57 @@ export async function createAnthropometry(patientId: string, formData: FormData)
   return anthropometry
 }
 
+export async function createClinicalCheckIn(patientId: string, formData: FormData) {
+  const userId = await requireUserId()
+  const patient = await prisma.patient.findFirst({ where: { id: patientId, userId }, select: { id: true } })
+  if (!patient) throw new Error('Paciente no encontrado.')
+
+  const adherencePct = Number(formData.get('adherencePct'))
+  const digestionRaw = String(formData.get('digestionScore') || '').trim()
+  const habitsRaw = String(formData.get('habitsScore') || '').trim()
+  const digestionScore = digestionRaw ? Number(digestionRaw) : null
+  const habitsScore = habitsRaw ? Number(habitsRaw) : null
+  const dateRaw = String(formData.get('date') || '')
+
+  if (!Number.isInteger(adherencePct) || adherencePct < 0 || adherencePct > 100) {
+    throw new Error('La adherencia debe estar entre 0 y 100%.')
+  }
+  if (digestionScore !== null && (!Number.isInteger(digestionScore) || digestionScore < 0 || digestionScore > 10)) {
+    throw new Error('La puntuación digestiva debe estar entre 0 y 10.')
+  }
+  if (habitsScore !== null && (!Number.isInteger(habitsScore) || habitsScore < 0 || habitsScore > 10)) {
+    throw new Error('La puntuación de hábitos debe estar entre 0 y 10.')
+  }
+  const date = dateRaw ? new Date(dateRaw) : new Date()
+  if (Number.isNaN(date.getTime())) throw new Error('La fecha de seguimiento no es válida.')
+
+  const checkIn = await prisma.$transaction(async (tx) => {
+    const created = await tx.clinicalCheckIn.create({
+      data: {
+        patientId,
+        date,
+        adherencePct,
+        digestionScore,
+        habitsScore,
+        notes: String(formData.get('notes') || '').trim().slice(0, 2000) || null,
+      },
+    })
+    await tx.auditLog.create({
+      data: { userId, patientId, action: 'CLINICAL_CHECKIN_CREATED', entityType: 'ClinicalCheckIn', entityId: created.id },
+    })
+    return created
+  })
+
+  revalidatePath(`/dashboard/patients/${patientId}`)
+  return checkIn
+}
+
 
 export async function exportPatientData(patientId: string): Promise<string> {
+  const userId = await requireUserId()
   // Fetch patient with all anthropometries
-  const patient = await prisma.patient.findUnique({
-    where: { id: patientId },
+  const patient = await prisma.patient.findFirst({
+    where: { id: patientId, userId },
     include: { anthropometries: { orderBy: { date: 'desc' } } }
   })
   if (!patient) throw new Error('Paciente no encontrado')
@@ -333,7 +445,7 @@ export async function exportPatientData(patientId: string): Promise<string> {
   return JSON.stringify({
     exportVersion: '1.0',
     exportDate: new Date().toISOString(),
-    software: 'NutriPro',
+    software: 'EVSoftware',
     patient: {
       firstName: patient.firstName,
       lastName: patient.lastName,
@@ -370,6 +482,7 @@ export async function exportPatientData(patientId: string): Promise<string> {
 }
 
 export async function importPatientFromCSV(content: string) {
+  await requireUserId()
   // Comprehensive scale parser supporting:
   // 1. JSON exports from apps / bioimpedance software
   // 2. Tabular CSV/TXT/TSV with metadata preambles (Tanita MC-780, SECA mBCA, InBody 770/270)
@@ -583,6 +696,8 @@ function parseScaleDate(dateStr: any): Date {
 }
 
 export async function importAnthropometryBatch(patientId: string, measurements: any[]) {
+  const userId = await requireUserId()
+  if (!await prisma.patient.findFirst({ where: { id: patientId, userId }, select: { id: true } })) throw new Error('Paciente no encontrado.')
   for (const m of measurements) {
     await prisma.anthropometry.create({
       data: {

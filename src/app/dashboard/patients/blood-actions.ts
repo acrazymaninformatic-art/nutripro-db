@@ -2,6 +2,7 @@
 
 import { prisma } from '@/lib/prisma'
 import { revalidatePath } from 'next/cache'
+import { requireUserId } from '@/lib/auth'
 
 export interface CreateBloodAnalysisInput {
   patientId: string
@@ -60,6 +61,8 @@ export async function createBloodAnalysis(input: CreateBloodAnalysisInput) {
 }
 
 export async function deleteBloodAnalysis(id: string, patientId: string) {
+  const userId = await requireUserId()
+  if (!await prisma.bloodAnalysis.findFirst({ where: { id, patientId, patient: { userId } }, select: { id: true } })) throw new Error('Analítica no encontrada.')
   await prisma.bloodAnalysis.delete({
     where: { id },
   })

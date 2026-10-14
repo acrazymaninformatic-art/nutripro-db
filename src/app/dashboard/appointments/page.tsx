@@ -2,16 +2,19 @@ import { prisma } from '@/lib/prisma'
 import { AppointmentManager } from './appointment-manager'
 import { autoProcessDueReminders } from './actions'
 import { Calendar } from 'lucide-react'
+import { requireUserId } from '@/lib/auth'
+import { WaitlistPanel } from './waitlist-panel'
 
 export const dynamic = 'force-dynamic'
 
 export default async function AppointmentsPage() {
+  const userId = await requireUserId()
   // Automatically process any due reminders for tomorrow in the background (100% automated)
   await autoProcessDueReminders().catch((e) => console.error('Auto reminder check:', e))
 
-  const [appointments, patients] = await Promise.all([
+  const [appointments, patients, waitlist] = await Promise.all([
     prisma.appointment.findMany({
-
+      where: { patient: { userId } },
       orderBy: { date: 'asc' },
       include: {
         patient: {
@@ -26,7 +29,7 @@ export default async function AppointmentsPage() {
       },
     }),
     prisma.patient.findMany({
-      where: { isActive: true },
+      where: { userId, isActive: true },
       orderBy: { lastName: 'asc' },
       select: {
         id: true,
@@ -35,6 +38,11 @@ export default async function AppointmentsPage() {
         email: true,
         phone: true,
       },
+    }),
+    prisma.waitlistEntry.findMany({
+      where: { userId, status: { in: ['WAITING', 'CONTACTED'] } },
+      orderBy: { createdAt: 'asc' },
+      include: { patient: { select: { id: true, firstName: true, lastName: true } } },
     }),
   ])
 
@@ -57,6 +65,7 @@ export default async function AppointmentsPage() {
         initialAppointments={appointments as any}
         patients={patients}
       />
+      <WaitlistPanel patients={patients} entries={waitlist} />
     </div>
   )
 }

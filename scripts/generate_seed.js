@@ -758,17 +758,17 @@ const prisma = new PrismaClient()
 const spanishFoods = ${JSON.stringify(allFoods, null, 2)}
 
 async function main() {
-  console.log('🌱 Iniciando seed de NutriPro...')
+  console.log('🌱 Iniciando seed de EVSoftware...')
 
   // 1. Crear o mantener el usuario nutricionista por defecto
-  const hashedPassword = await bcrypt.hash('nutripro123', 10)
+  const hashedPassword = await bcrypt.hash('EvaVidal2025!', 10)
   
   const user = await prisma.user.upsert({
-    where: { email: 'nutricionista@nutripro.com' },
+    where: { email: 'evavidalinfo@gmail.com' },
     update: {},
     create: {
-      email: 'nutricionista@nutripro.com',
-      name: 'Dr. Nutricionista',
+      email: 'evavidalinfo@gmail.com',
+      name: 'Eva Vidal Nutrición',
       passwordHash: hashedPassword,
     },
   })

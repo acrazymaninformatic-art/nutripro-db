@@ -1,6 +1,6 @@
 /**
  * @file index.ts
- * @description Central export index for the NutriPro nutrition calculation engine.
+ * @description Central export index for the EVSoftware nutrition calculation engine.
  */
 
 export * from './bmr';
@@ -12,4 +12,5 @@ export * from './auto-plan-generator';
 export * from './recipes-catalog';
 export * from './clinical-templates';
 export * from './drug-interactions';
+export * from './allergens';
 

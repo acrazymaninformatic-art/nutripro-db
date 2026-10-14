@@ -2,17 +2,20 @@ import { prisma } from '@/lib/prisma'
 import { AnamnesisForm } from './anamnesis-form'
 import { CheckCircle2, AlertCircle, ShieldCheck } from 'lucide-react'
 import { Card } from '@/components/ui/card'
+import type { Metadata } from 'next'
+import { hashAnamnesisToken } from '@/lib/anamnesis-token'
 
 export const dynamic = 'force-dynamic'
+export const metadata: Metadata = { title: 'Cuestionario de salud · Eva Vidal Nutrición', robots: { index: false, follow: false, noarchive: true } }
 
 interface Props {
-  searchParams: Promise<{ patientId?: string }>
+  searchParams: Promise<{ token?: string }>
 }
 
 export default async function AnamnesisPage({ searchParams }: Props) {
-  const { patientId } = await searchParams
+  const { token } = await searchParams
 
-  if (!patientId) {
+  if (!token || token.length > 200) {
     return (
       <div className="min-h-screen bg-slate-50 py-16 px-4 flex items-center justify-center">
         <Card className="max-w-md w-full p-8 rounded-3xl border-gray-200 bg-white text-center shadow-lg">
@@ -31,8 +34,8 @@ export default async function AnamnesisPage({ searchParams }: Props) {
     )
   }
 
-  const patient = await prisma.patient.findUnique({
-    where: { id: patientId },
+  const patient = await prisma.patient.findFirst({
+    where: { anamnesisAccessTokenHash: hashAnamnesisToken(token), anamnesisAccessTokenExpiresAt: { gt: new Date() } },
     include: {
       anamnesisSubmissions: {
         select: { id: true, submittedAt: true },
@@ -65,8 +68,15 @@ export default async function AnamnesisPage({ searchParams }: Props) {
     return (
       <div className="min-h-screen bg-slate-50 py-16 px-4 flex items-center justify-center">
         <Card className="max-w-lg w-full p-8 rounded-3xl border-blue-200 bg-white text-center shadow-xl">
-          <div className="w-20 h-20 rounded-full bg-blue-100 text-blue-600 flex items-center justify-center mx-auto mb-5 shadow-inner">
-            <CheckCircle2 className="w-12 h-12" />
+          <div className="w-16 h-16 rounded-2xl bg-white border border-blue-200 p-1 flex items-center justify-center mx-auto mb-4 shadow-sm overflow-hidden">
+            <img
+              src="/logo.png"
+              alt="Consulta Nutricional Eva Vidal"
+              className="w-full h-full object-contain"
+            />
+          </div>
+          <div className="w-12 h-12 rounded-full bg-blue-100 text-blue-600 flex items-center justify-center mx-auto mb-3 shadow-inner">
+            <CheckCircle2 className="w-7 h-7" />
           </div>
           <h1 className="text-2xl font-black text-gray-900 tracking-tight">
             Cuestionario Ya Completado
@@ -92,7 +102,7 @@ export default async function AnamnesisPage({ searchParams }: Props) {
           </div>
 
           <div className="text-2xs text-gray-400 font-medium">
-            NutriPro • Consulta Nutricional Eva Vidal
+            EVSoftware • Consulta Nutricional Eva Vidal
           </div>
         </Card>
       </div>
@@ -103,8 +113,15 @@ export default async function AnamnesisPage({ searchParams }: Props) {
     <div className="min-h-screen bg-gradient-to-b from-slate-100 via-blue-50/20 to-slate-50 py-10 px-4 sm:px-6">
       <div className="max-w-3xl mx-auto">
         <div className="text-center mb-8">
-          <div className="inline-flex items-center justify-center w-14 h-14 rounded-2xl bg-blue-600 text-white font-black text-2xl shadow-md mb-3">
-            NP
+          <div className="inline-flex items-center justify-center w-16 h-16 rounded-2xl bg-white border border-blue-200 p-1.5 shadow-md mb-3 overflow-hidden">
+            <img
+              src="/logo.png"
+              alt="Consulta Nutricional Eva Vidal"
+              className="w-full h-full object-contain"
+            />
+          </div>
+          <div className="text-xs font-bold text-blue-800 uppercase tracking-widest mb-1">
+            Consulta Nutricional Eva Vidal
           </div>
           <h1 className="text-2xl sm:text-3xl font-black text-gray-900 tracking-tight">
             Anamnesis Nutricional Pre-Consulta
@@ -115,8 +132,8 @@ export default async function AnamnesisPage({ searchParams }: Props) {
         </div>
 
         <AnamnesisForm
+          token={token}
           patient={{
-            id: patient.id,
             name: `${patient.firstName} ${patient.lastName}`,
             phone: patient.phone,
             email: patient.email,

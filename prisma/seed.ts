@@ -6943,18 +6943,24 @@ const spanishFoods = [
 ]
 
 async function main() {
-  console.log('🌱 Iniciando seed de NutriPro...')
+  console.log('🌱 Iniciando seed de EVSoftware...')
 
   // 1. Crear o mantener el usuario nutricionista por defecto
-  const hashedPassword = await bcrypt.hash('nutripro123', 10)
+  const adminEmail = (process.env.EVSOFTWARE_ADMIN_EMAIL || process.env.ADMIN_EMAIL)?.trim().toLowerCase()
+  const adminPassword = process.env.EVSOFTWARE_ADMIN_PASSWORD || process.env.ADMIN_PASSWORD
+  if (!adminEmail || !adminPassword || adminPassword.length < 14) {
+    throw new Error('Define EVSOFTWARE_ADMIN_EMAIL y EVSOFTWARE_ADMIN_PASSWORD (mínimo 14 caracteres) antes de ejecutar el seed.')
+  }
+  const hashedPassword = await bcrypt.hash(adminPassword, 12)
   
   const user = await prisma.user.upsert({
-    where: { email: 'nutricionista@nutripro.com' },
-    update: {},
+    where: { email: adminEmail },
+    update: { passwordHash: hashedPassword, passwordChangeRequired: false },
     create: {
-      email: 'nutricionista@nutripro.com',
-      name: 'Dr. Nutricionista',
+      email: adminEmail,
+      name: process.env.EVSOFTWARE_ADMIN_NAME || 'Eva Vidal Nutrición',
       passwordHash: hashedPassword,
+      passwordChangeRequired: false,
     },
   })
 

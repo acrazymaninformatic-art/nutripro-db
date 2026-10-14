@@ -2,13 +2,15 @@ import Link from 'next/link'
 import { prisma } from '@/lib/prisma'
 import { PlanBuilderForm } from './plan-builder-form'
 import { ArrowLeft, CalendarDays } from 'lucide-react'
+import { requireUserId } from '@/lib/auth'
 
 export const dynamic = 'force-dynamic'
 
 export default async function NewMealPlanPage() {
+  const userId = await requireUserId()
   const [patients, foods] = await Promise.all([
     prisma.patient.findMany({
-      where: { isActive: true },
+      where: { userId, isActive: true },
       orderBy: { lastName: 'asc' },
       include: {
         anthropometries: {

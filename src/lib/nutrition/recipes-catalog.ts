@@ -1,7 +1,7 @@
 /**
  * @file recipes-catalog.ts
  * @description Catálogo clínico y culinario de recetas estructuradas paso a paso
- * para NutriPro. Asocia a cada plato y preparación del plan su receta real con
+ * para EVSoftware. Asocia a cada plato y preparación del plan su receta real con
  * tiempos, ingredientes, pasos detallados y consejos de preparación del chef.
  */
 
@@ -303,7 +303,7 @@ export const CLINICAL_RECIPES: ClinicalRecipe[] = [
     proteinG: 40,
     carbsG: 28,
     fatG: 11,
-    imageUrl: 'https://images.unsplash.com/photo-1534422298391-e4f8c172dddb?auto=format&fit=crop&w=600&q=80',
+    imageUrl: 'https://images.unsplash.com/photo-1535400255456-984241443b29?auto=format&fit=crop&w=600&q=80',
     keywords: ['dorada', 'lubina', 'pescado al horno'],
     ingredients: [
       { name: 'Dorada fresca limpia abierta a la espalda', quantity: '180 g limpia' },
@@ -362,7 +362,7 @@ export const CLINICAL_RECIPES: ClinicalRecipe[] = [
     proteinG: 30,
     carbsG: 24,
     fatG: 18,
-    imageUrl: 'https://images.unsplash.com/photo-1546069901-ba9599a7e63c?auto=format&fit=crop&w=600&q=80',
+    imageUrl: 'https://images.unsplash.com/photo-1546069901-d5bfd2cbfb1f?auto=format&fit=crop&w=600&q=80',
     keywords: ['tofu', 'vegetariano', 'vegano'],
     ingredients: [
       { name: 'Tofu firme bien prensado', quantity: '180 g' },
@@ -513,7 +513,7 @@ export const CLINICAL_RECIPES: ClinicalRecipe[] = [
     proteinG: 22,
     carbsG: 6,
     fatG: 18,
-    imageUrl: 'https://images.unsplash.com/photo-1525351484163-7529414344d8?auto=format&fit=crop&w=600&q=80',
+    imageUrl: 'https://images.unsplash.com/photo-1510693206972-df098062cb71?auto=format&fit=crop&w=600&q=80',
     keywords: ['champiñón', 'espinaca', 'revuelto', 'seta'],
     ingredients: [
       { name: 'Huevos camperos L', quantity: '2 unidades' },
@@ -663,7 +663,7 @@ export const CLINICAL_RECIPES: ClinicalRecipe[] = [
     proteinG: 38,
     carbsG: 58,
     fatG: 14,
-    imageUrl: 'https://images.unsplash.com/photo-1585937421612-70a008356fbe?auto=format&fit=crop&w=600&q=80',
+    imageUrl: 'https://images.unsplash.com/photo-1541518763669-27fef04b14ea?auto=format&fit=crop&w=600&q=80',
     keywords: ['cuscús', 'cuscus', 'couscous'],
     ingredients: [
       { name: 'Cuscús de trigo sémola', quantity: '80 g en crudo' },
@@ -723,7 +723,7 @@ export const CLINICAL_RECIPES: ClinicalRecipe[] = [
     proteinG: 32,
     carbsG: 18,
     fatG: 16,
-    imageUrl: 'https://images.unsplash.com/photo-1519708227418-c8fd9a32b7a2?auto=format&fit=crop&w=600&q=80',
+    imageUrl: 'https://images.unsplash.com/photo-1534422298391-e4f8c172dddb?auto=format&fit=crop&w=600&q=80',
     keywords: ['bacalao', 'pisto'],
     ingredients: [
       { name: 'Lomo de bacalao fresco', quantity: '160 g' },

@@ -1,9 +1,11 @@
 /**
  * @file clinical-templates.ts
  * @description Plantillas Dietéticas Clínicas de 1 Clic con escalado automático proporcional
- * para NutriPro (Pérdida de Grasa 1.500 kcal, SOP / Resistencia a la Insulina,
+ * para EVSoftware (Pérdida de Grasa 1.500 kcal, SOP / Resistencia a la Insulina,
  * Antiinflamatoria FODMAP, Hipertrofia 2.500 kcal, Mediterránea Cardio-Protectora).
  */
+
+import { checkPatientAllergenConflict } from './allergens'
 
 export interface ClinicalDietTemplate {
   id: string
@@ -304,7 +306,8 @@ export const CLINICAL_TEMPLATES: ClinicalDietTemplate[] = [
 export function buildPlanFromClinicalTemplate(
   templateId: string,
   targetKcal: number,
-  allFoods: Array<{ id: number; name: string; category: string | null }>
+  allFoods: Array<{ id: number; name: string; category: string | null }>,
+  patient?: { allergies?: string | null; intolerances?: string | null; firstName?: string; lastName?: string } | null
 ): { [mealType: string]: { [dayIndex: number]: Array<{ uid: string; foodId: number; quantityG: number; notes: string }> } } {
   const template = CLINICAL_TEMPLATES.find((t) => t.id === templateId) || CLINICAL_TEMPLATES[0]
 
@@ -327,23 +330,46 @@ export function buildPlanFromClinicalTemplate(
     }
   }
 
-  // Helper to find best matching food in database
+  // Helper to find best matching food in database with strict allergen checking
   function findFood(query: string): number | null {
-    const q = query.toLowerCase().trim()
-    // Exact or contains match
-    const exact = allFoods.find((f) => f.name.toLowerCase().includes(q))
-    if (exact) return exact.id
+    let q = query.toLowerCase().trim()
 
-    // Token match
-    const tokens = q.split(/\s+/)
-    const tokenMatch = allFoods.find((f) => {
-      const name = f.name.toLowerCase()
-      return tokens.every((t) => name.includes(t))
+    // Automatic safe substitution mapping if patient has allergies
+    if (patient?.allergies || patient?.intolerances) {
+      const allNorm = ((patient.allergies || '') + ' ' + (patient.intolerances || '')).toLowerCase()
+      if ((allNorm.includes('gluten') || allNorm.includes('celiaqu')) && (q.includes('pan') || q.includes('avena') || q.includes('pasta'))) {
+        q = 'tortitas de arroz'
+      }
+      if ((allNorm.includes('lactos') || allNorm.includes('leche')) && (q.includes('yogur') || q.includes('skyr') || q.includes('queso') || q.includes('leche'))) {
+        q = 'bebida de avena'
+      }
+      if (allNorm.includes('fruto') && (q.includes('nuez') || q.includes('almendra'))) {
+        q = 'frutas'
+      }
+    }
+
+    // Exact or contains match, strictly filtering out any allergen conflict
+    const matches = allFoods.filter((f) => {
+      if (!f.name.toLowerCase().includes(q)) return false
+      if (patient) {
+        const conflict = checkPatientAllergenConflict(f, patient)
+        if (conflict) return false
+      }
+      return true
     })
-    if (tokenMatch) return tokenMatch.id
 
-    // Fallback first food
-    return allFoods[0]?.id || 1
+    if (matches.length > 0) return matches[0].id
+
+    // Fallback safe food
+    const safeFallback = allFoods.find((f) => {
+      if (patient) {
+        const conflict = checkPatientAllergenConflict(f, patient)
+        if (conflict) return false
+      }
+      return true
+    })
+
+    return safeFallback?.id || allFoods[0]?.id || 1
   }
 
   const numTemplates = template.daysStructure.length

@@ -2,10 +2,12 @@ import Link from 'next/link'
 import { prisma } from '@/lib/prisma'
 import { RecipeForm } from './recipe-form'
 import { ArrowLeft, ChefHat } from 'lucide-react'
+import { requireUserId } from '@/lib/auth'
 
 export const dynamic = 'force-dynamic'
 
 export default async function NewRecipePage() {
+  await requireUserId()
   const foods = await prisma.food.findMany({
     orderBy: { name: 'asc' },
     select: {

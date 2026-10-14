@@ -100,6 +100,7 @@ export default function NewPatientPage() {
   const [visitedSteps, setVisitedSteps] = useState<Set<number>>(new Set([1]))
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
+  const [consentAccepted, setConsentAccepted] = useState(false)
 
   // Step 1: Personal
   const [firstName, setFirstName] = useState('')
@@ -343,6 +344,7 @@ export default function NewPatientPage() {
       formData.append('bodyFatPct', bodyFatPct)
       formData.append('waistCm', waistCm)
       formData.append('hipCm', hipCm)
+      formData.append('consentAccepted', String(consentAccepted))
 
       await createPatient(formData)
       router.push('/dashboard/patients')
@@ -1430,7 +1432,12 @@ export default function NewPatientPage() {
         )}
 
         {/* Wizard Footer Controls */}
-        <div className="mt-6 flex items-center justify-between p-4 bg-white rounded-xl border border-gray-200 shadow-sm">
+        <div className="mt-6 flex flex-wrap items-center justify-between gap-4 p-4 bg-white rounded-xl border border-gray-200 shadow-sm">
+          <p className="w-full text-xs leading-relaxed text-gray-500">Consulta la <Link href="/privacy-policy" target="_blank" className="font-semibold text-blue-700 underline">información de privacidad y tratamiento de datos (versión 2026-10-13)</Link> antes de registrar el consentimiento.</p>
+          <label className="mr-4 flex max-w-2xl items-start gap-2 text-xs leading-relaxed text-gray-700">
+            <input type="checkbox" checked={consentAccepted} onChange={(e) => setConsentAccepted(e.target.checked)} className="mt-0.5" />
+            <span>Confirmo que he informado al paciente y obtenido su consentimiento explícito para registrar y tratar sus datos personales y de salud con fines de atención nutricional. Versión de información: 2026-10-13. *</span>
+          </label>
           <div>
             {currentStep > 1 ? (
               <Button
@@ -1468,7 +1475,7 @@ export default function NewPatientPage() {
                   variant="outline"
                   size="sm"
                   onClick={() => handleFinalSubmit()}
-                  disabled={loading}
+                  disabled={loading || !consentAccepted}
                   className="text-xs text-green-700 border-green-200 hover:bg-green-50"
                   title="Guardar paciente directamente con los datos ingresados hasta ahora"
                 >
@@ -1490,7 +1497,7 @@ export default function NewPatientPage() {
             ) : (
               <Button
                 type="submit"
-                disabled={loading}
+                disabled={loading || !consentAccepted}
                 className="bg-green-600 hover:bg-green-700 text-white gap-2 min-w-[170px]"
               >
                 {loading ? (

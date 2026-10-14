@@ -7,9 +7,10 @@ const inter = Inter({
 })
 
 export const metadata: Metadata = {
-  title: 'NutriPro - Software de Nutrición Profesional',
+  title: 'EVSoftware · Eva Vidal Nutrición',
+  robots: { index: false, follow: false, noarchive: true },
   description:
-    'Software profesional de nutrición y dietética para la gestión de pacientes y planificación de dietas',
+    'EVSoftware - Plataforma clínica de nutrición y dietética · Consulta Nutricional Eva Vidal',
 }
 
 export default function RootLayout({
