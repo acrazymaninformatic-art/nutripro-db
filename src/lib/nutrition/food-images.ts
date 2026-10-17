@@ -137,17 +137,25 @@ export const FALLBACK_FOOD_SVG =
  * Resolves a realistic high-definition food photograph for any food item.
  * Prioritizes custom database URL, then specific food name keywords, then food category fallback.
  */
-export function getFoodImage(food: {
-  name: string
+export function getFoodImage(food?: {
+  name?: string | null
   category?: string | null
   imageUrl?: string | null
-}): string {
+} | null): string {
+  if (!food) return GLOBAL_DEFAULT_IMAGE
+
   // 1. If explicit URL provided and valid, return it
-  if (food.imageUrl && food.imageUrl.startsWith('http')) {
+  if (food.imageUrl && typeof food.imageUrl === 'string' && food.imageUrl.startsWith('http')) {
     return food.imageUrl
   }
 
-  const normalizedName = food.name.toLowerCase()
+  const normalizedName = (food.name || '').trim().toLowerCase()
+  if (!normalizedName) {
+    if (food.category && CATEGORY_FALLBACK_IMAGES[food.category]) {
+      return CATEGORY_FALLBACK_IMAGES[food.category]
+    }
+    return GLOBAL_DEFAULT_IMAGE
+  }
 
   // 2. Check keyword matches in specific food images
   for (const [key, url] of Object.entries(SPECIFIC_FOOD_IMAGES)) {

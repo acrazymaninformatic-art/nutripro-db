@@ -1704,40 +1704,43 @@ export function AppointmentManager({
               </div>
 
               {/* Enlace Google Meet para citas online */}
-              {(selectedAppointment.modality === 'ONLINE' || selectedAppointment.meetUrl) && (
-                <div className="p-3.5 rounded-2xl bg-purple-50 border border-purple-200 space-y-2">
-                  <div className="flex items-center justify-between">
-                    <span className="font-bold text-purple-950 text-xs flex items-center gap-1.5">
-                      <Video className="h-4 w-4 text-purple-700" />
-                      <span>Videollamada Google Meet (Portal Paciente)</span>
-                    </span>
-                    <button
-                      type="button"
-                      onClick={() => handleCopyMeet(selectedAppointment.id, selectedAppointment.meetUrl || 'https://meet.google.com')}
-                      className="text-3xs font-bold text-purple-700 hover:text-purple-950 flex items-center gap-1 bg-white px-2 py-1 rounded-lg border border-purple-200 shadow-2xs"
-                    >
-                      <Copy className="h-3 w-3" />
-                      <span>{copiedMeetId === selectedAppointment.id ? '¡Copiado!' : 'Copiar Enlace'}</span>
-                    </button>
-                  </div>
-                  {selectedAppointment.meetUrl && (
+              {(selectedAppointment.modality === 'ONLINE' || selectedAppointment.meetUrl) && (() => {
+                const meetLink = (selectedAppointment.meetUrl && !selectedAppointment.meetUrl.includes('meet.google.com/evv-'))
+                  ? selectedAppointment.meetUrl
+                  : 'https://meet.google.com/new'
+                return (
+                  <div className="p-3.5 rounded-2xl bg-purple-50 border border-purple-200 space-y-2">
+                    <div className="flex items-center justify-between">
+                      <span className="font-bold text-purple-950 text-xs flex items-center gap-1.5">
+                        <Video className="h-4 w-4 text-purple-700" />
+                        <span>Videollamada Google Meet (Portal Paciente)</span>
+                      </span>
+                      <button
+                        type="button"
+                        onClick={() => handleCopyMeet(selectedAppointment.id, meetLink)}
+                        className="text-3xs font-bold text-purple-700 hover:text-purple-950 flex items-center gap-1 bg-white px-2 py-1 rounded-lg border border-purple-200 shadow-2xs"
+                      >
+                        <Copy className="h-3 w-3" />
+                        <span>{copiedMeetId === selectedAppointment.id ? '¡Copiado!' : 'Copiar Enlace'}</span>
+                      </button>
+                    </div>
                     <div className="flex items-center gap-2">
                       <span className="text-2xs text-purple-800 font-mono truncate flex-1 bg-white/80 p-2 rounded-xl border border-purple-100">
-                        {selectedAppointment.meetUrl}
+                        {meetLink}
                       </span>
                       <a
-                        href={selectedAppointment.meetUrl}
+                        href={meetLink}
                         target="_blank"
                         rel="noreferrer"
-                        className="text-xs font-bold bg-purple-600 hover:bg-purple-700 text-white px-3 py-2 rounded-xl shrink-0 flex items-center gap-1"
+                        className="text-xs font-bold bg-purple-600 hover:bg-purple-700 text-white px-3 py-2 rounded-xl shrink-0 flex items-center gap-1 shadow-2xs transition-all active:scale-[0.98]"
                       >
                         <span>Abrir Meet</span>
                         <ExternalLink className="h-3 w-3" />
                       </a>
                     </div>
-                  )}
-                </div>
-              )}
+                  </div>
+                )
+              })()}
 
               {selectedAppointment.notes && (
                 <div className="p-3 rounded-2xl bg-gray-50 border border-gray-200">

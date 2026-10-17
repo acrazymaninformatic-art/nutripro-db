@@ -299,7 +299,7 @@ export default async function PacienteDashboardPage() {
                     Activo
                   </Badge>
                   <span className="text-xs text-slate-500 truncate font-medium">
-                    Desde {new Date(activeMealPlan.startDate).toLocaleDateString('es-ES', { month: 'short', day: 'numeric' })}
+                    Desde {activeMealPlan.startDate ? new Date(activeMealPlan.startDate).toLocaleDateString('es-ES', { month: 'short', day: 'numeric' }) : 'reciente'}
                   </span>
                 </div>
               </div>
@@ -420,13 +420,10 @@ export default async function PacienteDashboardPage() {
                           return (
                             <li key={it.id} className="text-xs text-slate-700 leading-snug flex items-center gap-2">
                               <img
-                                src={img}
+                                src={img || FALLBACK_FOOD_SVG}
                                 alt=""
                                 className="w-6 h-6 rounded-lg object-cover border border-slate-200 shrink-0"
-                                onError={(e) => {
-                                  e.currentTarget.onerror = null
-                                  e.currentTarget.src = FALLBACK_FOOD_SVG
-                                }}
+                                loading="lazy"
                               />
                               <div className="min-w-0 flex-1">
                                 {it.recipe ? (

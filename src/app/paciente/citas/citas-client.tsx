@@ -262,24 +262,33 @@ export function CitasClient({ appointments, pendingRequests = [] }: Props) {
                     </div>
 
                     {/* Enlace Google Meet si es Online y confirmada */}
-                    {isOnline && app.status === 'CONFIRMED' && app.meetUrl && (
+                    {isOnline && app.status === 'CONFIRMED' && (
                       <div className="space-y-1.5">
-                        <a
-                          href={app.meetUrl}
-                          target="_blank"
-                          rel="noreferrer"
-                          className="inline-flex items-center justify-center gap-2 w-full py-2.5 px-4 rounded-xl bg-blue-600 hover:bg-blue-700 text-white font-bold text-xs shadow-xs transition-colors"
-                        >
-                          <Video className="w-4 h-4" />
-                          <span>Entrar a la Videollamada (Google Meet)</span>
-                        </a>
-                        <button
-                          type="button"
-                          onClick={() => handleCopyMeet(app.id, app.meetUrl!)}
-                          className="w-full text-center text-3xs font-semibold text-blue-600 hover:text-blue-800 transition-colors"
-                        >
-                          {copiedMeetId === app.id ? '✓ ¡Enlace copiado al portapapeles!' : 'Copiar enlace de Google Meet'}
-                        </button>
+                        {(() => {
+                          const meetLink = app.meetUrl && !app.meetUrl.includes('meet.google.com/evv-')
+                            ? app.meetUrl
+                            : 'https://meet.google.com/new'
+                          return (
+                            <>
+                              <a
+                                href={meetLink}
+                                target="_blank"
+                                rel="noreferrer"
+                                className="inline-flex items-center justify-center gap-2 w-full py-2.5 px-4 rounded-xl bg-blue-600 hover:bg-blue-700 text-white font-bold text-xs shadow-xs transition-colors"
+                              >
+                                <Video className="w-4 h-4" />
+                                <span>Entrar a la Videollamada (Google Meet)</span>
+                              </a>
+                              <button
+                                type="button"
+                                onClick={() => handleCopyMeet(app.id, meetLink)}
+                                className="w-full text-center text-3xs font-semibold text-blue-600 hover:text-blue-800 transition-colors"
+                              >
+                                {copiedMeetId === app.id ? '✓ ¡Enlace copiado al portapapeles!' : 'Copiar enlace de Google Meet'}
+                              </button>
+                            </>
+                          )
+                        })()}
                       </div>
                     )}
 

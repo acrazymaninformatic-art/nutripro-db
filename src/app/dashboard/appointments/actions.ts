@@ -24,6 +24,7 @@ export interface CreateAppointmentInput {
   typeColor?: string
   notes?: string
   location?: string
+  meetUrl?: string
   sendEmailNotification?: boolean
 }
 
@@ -69,9 +70,9 @@ export async function createAppointment(input: CreateAppointmentInput) {
   const modality = input.modality || (appointmentType === 'ONLINE' ? 'ONLINE' : 'PRESENCIAL')
   const typeColor = input.typeColor || typeConfig.color
 
-  // 5.5 Videollamada en las citas online: generación de enlace Google Meet
+  // 5.5 Videollamada en las citas online: enlace válido de Google Meet
   const meetUrl = modality === 'ONLINE'
-    ? `https://meet.google.com/evv-${Math.random().toString(36).substring(2, 6)}-${Math.random().toString(36).substring(2, 5)}`
+    ? (input.meetUrl?.trim() || process.env.GOOGLE_MEET_URL || process.env.NEXT_PUBLIC_GOOGLE_MEET_URL || 'https://meet.google.com/new')
     : null
 
   const location = input.location || (modality === 'ONLINE' ? 'Videollamada Google Meet' : 'Consulta Nutricional Eva Vidal')
@@ -625,9 +626,11 @@ export async function assignSlotToAppointmentRequestAction(
   const modality = req.modality || 'ONLINE'
   const typeConfig = APPOINTMENT_TYPE_CONFIG[req.appointmentType] || APPOINTMENT_TYPE_CONFIG.REVISION
 
-  // Generar Meet URL para online
+  // Generar Meet URL válido para cita online
   const meetUrl = modality === 'ONLINE'
-    ? `https://meet.google.com/evv-${Math.random().toString(36).substring(2, 6)}-${Math.random().toString(36).substring(2, 5)}`
+    ? (req.appointment?.meetUrl && !req.appointment.meetUrl.includes('meet.google.com/evv-')
+        ? req.appointment.meetUrl
+        : (process.env.GOOGLE_MEET_URL || process.env.NEXT_PUBLIC_GOOGLE_MEET_URL || 'https://meet.google.com/new'))
     : null
 
   let appointmentId = req.appointmentId
@@ -772,7 +775,7 @@ export async function offerSlotToWaitlistPatientAction(
       modality: 'ONLINE',
       appointmentType: 'REVISION',
       typeColor: '#16a34a',
-      meetUrl: `https://meet.google.com/evv-${Math.random().toString(36).substring(2, 6)}-${Math.random().toString(36).substring(2, 5)}`,
+      meetUrl: process.env.GOOGLE_MEET_URL || process.env.NEXT_PUBLIC_GOOGLE_MEET_URL || 'https://meet.google.com/new',
       status: 'CONFIRMED',
       notes: `Asignado desde lista de espera tras cancelación.`,
     },

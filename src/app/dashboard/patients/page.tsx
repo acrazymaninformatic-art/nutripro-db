@@ -3,8 +3,9 @@ import { getPatients, restorePatient } from './actions'
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
-import { UserPlus, Users, ArrowRight, Eye, Phone, Mail, Trash2, RotateCcw } from 'lucide-react'
+import { UserPlus, Users, ArrowRight, Eye, Phone, Mail, Trash2, RotateCcw, Calendar, CalendarPlus, FileText } from 'lucide-react'
 import { OBJECTIVE_LABELS, type Objective } from '@/types'
+import { startPatientPreview } from './preview-actions'
 
 export const dynamic = 'force-dynamic'
 
@@ -188,10 +189,11 @@ export default async function PatientsPage({ searchParams }: PatientsPageProps) 
                   <tr>
                     <th scope="col" className="px-6 py-3.5">Nombre</th>
                     <th scope="col" className="px-6 py-3.5">Contacto</th>
+                    <th scope="col" className="px-4 py-3.5 text-center">Acciones</th>
                     <th scope="col" className="px-6 py-3.5">Objetivo</th>
                     <th scope="col" className="px-6 py-3.5 text-center">Último Peso</th>
                     <th scope="col" className="px-6 py-3.5 text-center">Estado</th>
-                    <th scope="col" className="px-6 py-3.5 text-right">Acción</th>
+                    <th scope="col" className="px-6 py-3.5 text-right">Ficha</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-slate-100">
@@ -244,6 +246,47 @@ export default async function PatientsPage({ searchParams }: PatientsPageProps) 
                             </div>
                           )}
                           {!patient.email && !patient.phone && '-'}
+                        </td>
+                        <td className="px-4 py-4 text-center">
+                          <div className="inline-flex items-center gap-1.5 p-1 rounded-2xl bg-slate-50/90 border border-slate-200/80 shadow-2xs">
+                            <Link
+                              href={`/dashboard/appointments?patientId=${patient.id}`}
+                              title="Agendar Cita"
+                              className="w-8 h-8 rounded-xl border border-sky-300 bg-sky-50 text-sky-700 hover:bg-sky-100 flex items-center justify-center transition-all active:scale-[0.95] shadow-2xs"
+                            >
+                              <Calendar className="h-4 w-4 text-sky-600" />
+                            </Link>
+                            <Link
+                              href={`/dashboard/plans/new?patientId=${patient.id}`}
+                              title="Crear Plan Nutricional"
+                              className="w-8 h-8 rounded-xl border border-blue-300 bg-blue-50 text-blue-700 hover:bg-blue-100 flex items-center justify-center transition-all active:scale-[0.95] shadow-2xs"
+                            >
+                              <CalendarPlus className="h-4 w-4 text-blue-600" />
+                            </Link>
+                            <form action={startPatientPreview.bind(null, patient.id)} title="Vista previa como paciente" className="inline-block">
+                              <button
+                                type="submit"
+                                aria-label="Vista previa como paciente"
+                                className="w-8 h-8 rounded-xl border border-purple-300 bg-purple-50 text-purple-700 hover:bg-purple-100 flex items-center justify-center transition-all active:scale-[0.95] shadow-2xs cursor-pointer"
+                              >
+                                <Eye className="h-4 w-4 text-purple-600" />
+                              </button>
+                            </form>
+                            <Link
+                              href={`/dashboard/emails?patientId=${patient.id}`}
+                              title="Enviar Correo Transaccional"
+                              className="w-8 h-8 rounded-xl border border-emerald-300 bg-emerald-50 text-emerald-700 hover:bg-emerald-100 flex items-center justify-center transition-all active:scale-[0.95] shadow-2xs"
+                            >
+                              <Mail className="h-4 w-4 text-emerald-600" />
+                            </Link>
+                            <Link
+                              href={`/dashboard/patients/${patient.id}`}
+                              title="Abrir Expediente Clínico"
+                              className="w-8 h-8 rounded-xl border border-slate-300 bg-slate-100 text-slate-700 hover:bg-slate-200 flex items-center justify-center transition-all active:scale-[0.95] shadow-2xs"
+                            >
+                              <FileText className="h-4 w-4 text-slate-700" />
+                            </Link>
+                          </div>
                         </td>
                         <td className="px-6 py-4">
                           <Badge variant="medical" className="text-2xs font-bold">
