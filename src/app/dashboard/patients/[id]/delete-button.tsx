@@ -10,10 +10,12 @@ export function DeletePatientButton({
   patientId,
   patientName,
   isActive = true,
+  iconOnly = false,
 }: {
   patientId: string
   patientName: string
   isActive?: boolean
+  iconOnly?: boolean
 }) {
   const router = useRouter()
   const [loading, setLoading] = useState(false)
@@ -56,10 +58,16 @@ export function DeletePatientButton({
         size="sm"
         onClick={handleToggle}
         disabled={loading}
-        className="flex items-center gap-1.5 border-emerald-300 bg-emerald-50 text-emerald-800 hover:bg-emerald-100 font-bold rounded-2xl"
+        title="Restaurar ficha de la papelera"
+        aria-label="Restaurar de Papelera"
+        className={
+          iconOnly
+            ? 'w-9 h-9 p-0 rounded-xl border-emerald-300 bg-emerald-50 text-emerald-800 hover:bg-emerald-100 font-bold shadow-2xs flex items-center justify-center transition-all active:scale-[0.96] shrink-0'
+            : 'flex items-center gap-1.5 border-emerald-300 bg-emerald-50 text-emerald-800 hover:bg-emerald-100 font-bold rounded-2xl'
+        }
       >
         {loading ? <Loader2 className="h-4 w-4 animate-spin" /> : <RotateCcw className="h-4 w-4" />}
-        <span>Restaurar de Papelera</span>
+        {!iconOnly && <span>Restaurar de Papelera</span>}
       </Button>
     )
   }
@@ -70,10 +78,16 @@ export function DeletePatientButton({
       size="sm"
       onClick={handleToggle}
       disabled={loading}
-      className="flex items-center gap-1.5 border-amber-300 bg-amber-50 text-amber-800 hover:bg-amber-100 font-bold rounded-2xl"
+      title="Mover paciente a la Papelera"
+      aria-label="Mover a Papelera"
+      className={
+        iconOnly
+          ? 'w-9 h-9 p-0 rounded-xl border-amber-300 bg-amber-50 text-amber-800 hover:bg-amber-100 font-bold shadow-2xs flex items-center justify-center transition-all active:scale-[0.96] shrink-0'
+          : 'flex items-center gap-1.5 border-amber-300 bg-amber-50 text-amber-800 hover:bg-amber-100 font-bold rounded-2xl'
+      }
     >
       {loading ? <Loader2 className="h-4 w-4 animate-spin" /> : <Trash2 className="h-4 w-4 text-amber-600" />}
-      <span>Mover a Papelera</span>
+      {!iconOnly && <span>Mover a Papelera</span>}
     </Button>
   )
 }

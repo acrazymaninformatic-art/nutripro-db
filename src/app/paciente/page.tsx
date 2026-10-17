@@ -23,6 +23,7 @@ import {
   Settings,
 } from 'lucide-react'
 import { PatientProtocolCard } from './patient-protocol-card'
+import { getFoodImage, FALLBACK_FOOD_SVG } from '@/lib/nutrition'
 
 export const dynamic = 'force-dynamic'
 
@@ -414,27 +415,41 @@ export default async function PacienteDashboardPage() {
                         {label}
                       </span>
                       <ul className="space-y-2">
-                        {meal.items.map((it) => (
-                          <li key={it.id} className="text-xs text-slate-700 leading-snug">
-                            {it.recipe ? (
-                              <span className="font-bold text-slate-900 flex items-center gap-1.5">
-                                <span className="text-amber-500">🍳</span> {it.recipe.name}
-                              </span>
-                            ) : it.food ? (
-                              <span>
-                                <span className="text-slate-400">•</span> <strong className="text-slate-800">{it.food.name}</strong>{' '}
-                                <span className="text-slate-400 font-mono text-[11px]">
-                                  ({it.quantityG} {it.food.servingUnit || 'g'})
-                                </span>
-                              </span>
-                            ) : (
-                              <span>• Porción pautada</span>
-                            )}
-                            {it.notes && (
-                              <p className="text-[11px] text-slate-500 italic mt-0.5">{it.notes}</p>
-                            )}
-                          </li>
-                        ))}
+                        {meal.items.map((it) => {
+                          const img = it.food ? getFoodImage(it.food) : (it.recipe as any)?.imageUrl || FALLBACK_FOOD_SVG
+                          return (
+                            <li key={it.id} className="text-xs text-slate-700 leading-snug flex items-center gap-2">
+                              <img
+                                src={img}
+                                alt=""
+                                className="w-6 h-6 rounded-lg object-cover border border-slate-200 shrink-0"
+                                onError={(e) => {
+                                  e.currentTarget.onerror = null
+                                  e.currentTarget.src = FALLBACK_FOOD_SVG
+                                }}
+                              />
+                              <div className="min-w-0 flex-1">
+                                {it.recipe ? (
+                                  <span className="font-bold text-slate-900 block truncate">
+                                    🍳 {it.recipe.name}
+                                  </span>
+                                ) : it.food ? (
+                                  <span className="block truncate">
+                                    <strong className="text-slate-800">{it.food.name}</strong>{' '}
+                                    <span className="text-slate-400 font-mono text-[10px]">
+                                      ({it.quantityG} {it.food.servingUnit || 'g'})
+                                    </span>
+                                  </span>
+                                ) : (
+                                  <span>Porción pautada</span>
+                                )}
+                                {it.notes && (
+                                  <p className="text-[10px] text-slate-500 italic truncate">{it.notes}</p>
+                                )}
+                              </div>
+                            </li>
+                          )
+                        })}
                       </ul>
                     </div>
                   </div>

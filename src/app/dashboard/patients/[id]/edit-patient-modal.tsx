@@ -41,9 +41,10 @@ interface Props {
     pathologiesStatus?: string | null
     dietaryPreferences?: string | null
   }
+  iconOnly?: boolean
 }
 
-export function EditPatientModal({ patient }: Props) {
+export function EditPatientModal({ patient, iconOnly = false }: Props) {
   const [open, setOpen] = useState(false)
   const [isPending, startTransition] = useTransition()
   const [isGLP1, setIsGLP1] = useState(Boolean(patient.isGLP1Treatment))
@@ -78,10 +79,16 @@ export function EditPatientModal({ patient }: Props) {
         variant="outline"
         size="sm"
         onClick={() => setOpen(true)}
-        className="flex items-center gap-1.5 rounded-2xl border-gray-200 text-gray-700 hover:bg-gray-50 font-bold"
+        title="Editar Ficha del Paciente"
+        aria-label="Editar Ficha"
+        className={
+          iconOnly
+            ? 'w-9 h-9 p-0 rounded-xl border-blue-200 bg-blue-50/80 text-blue-700 hover:bg-blue-100 font-bold shadow-2xs flex items-center justify-center transition-all active:scale-[0.96] shrink-0'
+            : 'flex items-center gap-1.5 rounded-2xl border-gray-200 text-gray-700 hover:bg-gray-50 font-bold'
+        }
       >
         <Edit3 className="h-4 w-4 text-blue-600" />
-        <span>Editar Ficha</span>
+        {!iconOnly && <span>Editar Ficha</span>}
       </Button>
 
       <Dialog open={open} onOpenChange={setOpen}>

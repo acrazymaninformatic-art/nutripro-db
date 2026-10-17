@@ -10,9 +10,10 @@ import { useRouter } from 'next/navigation'
 interface Props {
   patientId: string
   patientName: string
+  iconOnly?: boolean
 }
 
-export function HardDeleteModal({ patientId, patientName }: Props) {
+export function HardDeleteModal({ patientId, patientName, iconOnly = false }: Props) {
   const [open, setOpen] = useState(false)
   const [loading, setLoading] = useState(false)
   const [confirmText, setConfirmText] = useState('')
@@ -38,11 +39,16 @@ export function HardDeleteModal({ patientId, patientName }: Props) {
         <Button
           variant="outline"
           size="sm"
-          className="flex items-center gap-1.5 rounded-2xl border-red-200 text-red-600 hover:bg-red-50 hover:text-red-700 font-bold"
-          title="Supresión irreversible por derecho al olvido RGPD"
+          className={
+            iconOnly
+              ? 'w-9 h-9 p-0 rounded-xl border-rose-300 bg-rose-50 text-rose-700 hover:bg-rose-100 font-bold shadow-2xs flex items-center justify-center transition-all active:scale-[0.96] shrink-0'
+              : 'flex items-center gap-1.5 rounded-2xl border-red-200 text-red-600 hover:bg-red-50 hover:text-red-700 font-bold'
+          }
+          title="Eliminar Paciente por Completo (Derecho al Olvido RGPD)"
+          aria-label="Eliminar Paciente por Completo"
         >
-          <Trash2 className="h-4 w-4" />
-          <span>Eliminar Paciente por Completo</span>
+          <Trash2 className="h-4 w-4 text-rose-600" />
+          {!iconOnly && <span>Eliminar Paciente por Completo</span>}
         </Button>
       </DialogTrigger>
       <DialogContent className="max-w-md rounded-3xl p-6 bg-white border border-red-200 shadow-xl">

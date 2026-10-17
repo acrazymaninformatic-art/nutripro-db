@@ -91,9 +91,9 @@ export default async function PacienteLayout({
   }
 
   return (
-    <div className="min-h-screen bg-ambient-patient flex flex-col">
+    <div className="flex flex-col h-screen overflow-hidden bg-ambient-patient">
       {isAdminPreview && (
-        <div className="bg-amber-500 text-amber-950 px-4 py-2.5 font-medium text-xs flex flex-wrap items-center justify-between gap-3 shadow-sm border-b border-amber-600 z-50">
+        <div className="bg-amber-500 text-amber-950 px-4 py-2.5 font-medium text-xs flex flex-wrap items-center justify-between gap-3 shadow-sm border-b border-amber-600 z-50 shrink-0">
           <div className="flex items-center gap-2">
             <ShieldAlert className="w-4 h-4 text-amber-950 shrink-0" />
             <span>
@@ -111,11 +111,11 @@ export default async function PacienteLayout({
           </form>
         </div>
       )}
-      <div className="flex-1 flex flex-col md:flex-row min-h-screen">
-        {/* Sidebar for Desktop */}
-        <aside className="hidden md:flex w-72 bg-white/90 backdrop-blur-md border-r border-slate-200/80 shrink-0 flex-col min-h-screen sticky top-0 shadow-xs z-30">
+      <div className="flex-1 flex overflow-hidden min-w-0">
+        {/* Sidebar for Desktop (Estático e inamovible, igual que en admin) */}
+        <aside className="hidden md:flex w-72 h-full bg-white/95 backdrop-blur-md border-r border-slate-200/80 shrink-0 flex-col overflow-hidden shadow-xs z-30">
           {/* Brand Header */}
-          <div className="flex items-center justify-between p-6 border-b border-slate-100">
+          <div className="flex items-center justify-between p-6 border-b border-slate-100 shrink-0">
             <Link href="/paciente" className="flex items-center gap-3.5 group">
               <div className="flex items-center justify-center w-11 h-11 rounded-2xl bg-gradient-to-br from-blue-50 to-indigo-50 border border-blue-200/70 shrink-0 overflow-hidden p-1.5 shadow-2xs group-hover:scale-105 transition-transform duration-200">
                 <img
@@ -137,7 +137,7 @@ export default async function PacienteLayout({
 
           {/* Admin Preview Notice */}
           {isAdminPreview && (
-            <div className="mx-4 mt-3 p-3 bg-amber-50/90 border border-amber-200 rounded-2xl flex items-center gap-2.5 text-xs text-amber-900 shadow-2xs">
+            <div className="mx-4 mt-3 p-3 bg-amber-50/90 border border-amber-200 rounded-2xl flex items-center gap-2.5 text-xs text-amber-900 shadow-2xs shrink-0">
               <ShieldAlert className="w-4 h-4 text-amber-600 shrink-0" />
               <div>
                 <span className="font-bold block">Modo Vista Previa</span>
@@ -150,7 +150,7 @@ export default async function PacienteLayout({
           <PacienteDesktopNav />
 
           {/* User Card & Logout Button in Sidebar */}
-          <div className="p-4 border-t border-slate-100 bg-slate-50/50 mt-auto space-y-3">
+          <div className="p-4 border-t border-slate-100 bg-slate-50/50 mt-auto shrink-0 space-y-3">
             <div className="flex items-center gap-3 p-2.5 rounded-2xl bg-white border border-slate-200/80 shadow-2xs">
               <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-blue-600 to-indigo-700 text-white flex items-center justify-center font-bold text-xs shrink-0 shadow-2xs">
                 {patientName.charAt(0).toUpperCase()}
@@ -176,9 +176,9 @@ export default async function PacienteLayout({
         </aside>
 
         {/* Main Content Area */}
-        <div className="flex-1 flex flex-col min-w-0">
+        <div className="flex-1 flex flex-col overflow-hidden min-w-0">
           {/* Top Header Bar for Desktop & Mobile */}
-          <header className="h-16 glass-panel sticky top-0 z-30 px-4 md:px-8 flex items-center justify-between shrink-0 shadow-2xs">
+          <header className="h-16 glass-panel shrink-0 z-20 px-4 md:px-8 flex items-center justify-between shadow-2xs">
             {/* Mobile Brand */}
             <div className="flex items-center gap-3 md:hidden">
               <Link href="/paciente" className="flex items-center gap-2.5">

@@ -38,7 +38,15 @@ export default async function PacientePlanPage() {
                   items: {
                     include: {
                       food: true,
-                      recipe: true,
+                      recipe: {
+                        include: {
+                          ingredients: {
+                            include: {
+                              food: true,
+                            },
+                          },
+                        },
+                      },
                     },
                   },
                 },
@@ -160,10 +168,29 @@ export default async function PacientePlanPage() {
                     prepTimeMin: it.recipe.prepTimeMin,
                     cookTimeMin: it.recipe.cookTimeMin,
                     difficulty: it.recipe.difficulty,
+                    imageUrl: (it.recipe as any).imageUrl || null,
                     equipmentJson: it.recipe.equipmentJson,
                     dietaryTagsJson: it.recipe.dietaryTagsJson,
                     isBatchCooking: it.recipe.isBatchCooking,
                     isFreezable: it.recipe.isFreezable,
+                    ingredients: ((it.recipe as any).ingredients || []).map((ing: any) => ({
+                      id: ing.id,
+                      quantityG: ing.quantityG,
+                      notes: ing.notes,
+                      food: ing.food
+                        ? {
+                            id: ing.food.id,
+                            name: ing.food.name,
+                            category: ing.food.category,
+                            calories: ing.food.calories,
+                            proteinG: ing.food.proteinG,
+                            carbsG: ing.food.carbsG,
+                            fatG: ing.food.fatG,
+                            servingSize: ing.food.servingSize,
+                            servingUnit: ing.food.servingUnit,
+                          }
+                        : null,
+                    })),
                   }
                 : null,
             })),
@@ -178,6 +205,7 @@ export default async function PacientePlanPage() {
         prepTimeMin: r.prepTimeMin,
         cookTimeMin: r.cookTimeMin,
         difficulty: r.difficulty,
+        imageUrl: r.imageUrl || null,
         equipmentJson: r.equipmentJson,
         dietaryTagsJson: r.dietaryTagsJson,
         isBatchCooking: r.isBatchCooking,

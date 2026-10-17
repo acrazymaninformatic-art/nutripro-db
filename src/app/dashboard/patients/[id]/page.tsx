@@ -176,8 +176,8 @@ export default async function PatientDetailPage({ params, searchParams }: Patien
 
   return (
     <div className="space-y-6">
-      {/* Top action row */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+      {/* Top navigation row */}
+      <div className="flex items-center justify-between">
         <Link
           href="/dashboard/patients"
           className="inline-flex items-center gap-1.5 text-xs text-gray-500 hover:text-gray-900 transition-colors"
@@ -185,38 +185,6 @@ export default async function PatientDetailPage({ params, searchParams }: Patien
           <ArrowLeft className="h-4 w-4" />
           <span>Volver al listado de pacientes</span>
         </Link>
-        <div className="flex flex-wrap items-center gap-2">
-          <EditPatientModal patient={patient} />
-          <Link href={`/dashboard/appointments?patientId=${patient.id}`}>
-            <Button variant="outline" size="sm" className="flex items-center gap-1.5 rounded-2xl border-gray-300 font-bold hover:bg-gray-50">
-              <Calendar className="h-4 w-4 text-blue-600" />
-              <span>Agendar Cita</span>
-            </Button>
-          </Link>
-          <Link href={`/dashboard/plans/new?patientId=${patient.id}`}>
-            <Button variant="outline" size="sm" className="flex items-center gap-1.5 rounded-2xl border-blue-300 bg-blue-50 text-blue-800 hover:bg-blue-100 font-bold">
-              <CalendarPlus className="h-4 w-4 text-blue-600" />
-              <span>Crear Plan Nutricional</span>
-            </Button>
-          </Link>
-          <form action={startPatientPreview.bind(null, patient.id)}>
-            <Button
-              type="submit"
-              variant="outline"
-              size="sm"
-              className="flex items-center gap-1.5 rounded-2xl border-purple-300 bg-purple-50 text-purple-900 hover:bg-purple-100 font-bold shadow-2xs"
-            >
-              <Eye className="h-4 w-4 text-purple-600" />
-              <span>Vista previa como paciente</span>
-            </Button>
-          </form>
-          <DeletePatientButton
-            patientId={patient.id}
-            patientName={`${patient.firstName} ${patient.lastName}`}
-            isActive={patient.isActive}
-          />
-          <HardDeleteModal patientId={patient.id} patientName={`${patient.firstName} ${patient.lastName}`} />
-        </div>
       </div>
 
       {!patient.isActive && (
@@ -240,16 +208,16 @@ export default async function PatientDetailPage({ params, searchParams }: Patien
         </div>
       )}
 
-      {/* Header Profile Hero */}
-      <div className="bg-white rounded-3xl border border-gray-200 p-6 shadow-sm flex flex-col md:flex-row md:items-center justify-between gap-6">
-        <div className="flex items-center gap-4">
-          <div className="h-16 w-16 rounded-2xl bg-blue-100 text-blue-800 flex items-center justify-center text-xl font-bold border-2 border-blue-200 shadow-xs">
+      {/* Header Profile Hero con Botones de Acción (Icono + Color entre Contacto y Objetivo) */}
+      <div className="bg-white rounded-3xl border border-gray-200 p-5 sm:p-6 shadow-sm flex flex-col lg:flex-row lg:items-center justify-between gap-5">
+        <div className="flex items-center gap-4 min-w-0">
+          <div className="h-16 w-16 rounded-2xl bg-blue-100 text-blue-800 flex items-center justify-center text-xl font-bold border-2 border-blue-200 shadow-xs shrink-0">
             {patient.firstName[0]}
             {patient.lastName[0]}
           </div>
-          <div>
+          <div className="min-w-0">
             <div className="flex items-center gap-2.5 flex-wrap">
-              <h1 className="text-2xl font-bold text-gray-900">
+              <h1 className="text-xl sm:text-2xl font-bold text-gray-900 truncate">
                 {patient.firstName} {patient.lastName}
               </h1>
               {patient.isActive ? (
@@ -264,29 +232,76 @@ export default async function PatientDetailPage({ params, searchParams }: Patien
               {patient.isGLP1Treatment && (
                 <Badge variant="outline" className="bg-amber-100/80 text-amber-900 border-amber-300 rounded-full font-bold flex items-center gap-1">
                   <Pill className="h-3 w-3 text-amber-700" />
-                  <span>Tratamiento GLP-1 (Ozempic/Wegovy)</span>
+                  <span>Tratamiento GLP-1</span>
                 </Badge>
               )}
 
               {patient.isTCAProtocol && (
                 <Badge variant="outline" className="bg-purple-100 text-purple-900 border-purple-300 rounded-full font-bold flex items-center gap-1">
                   <Sparkles className="h-3 w-3 text-purple-700" />
-                  <span>Protocolo TCA (Sin Números)</span>
+                  <span>Protocolo TCA</span>
                 </Badge>
               )}
             </div>
-            <p className="text-sm text-gray-500 mt-1">
-              {patient.sex === 'MALE' ? 'Hombre' : 'Mujer'} • {age} años • {patient.heightCm} cm de estatura
-              {patient.phone ? ` • Tel: ${patient.phone}` : ''}
+            <p className="text-xs sm:text-sm text-gray-500 mt-1 flex items-center gap-2 flex-wrap">
+              <span>{patient.sex === 'MALE' ? 'Hombre' : 'Mujer'} • {age} años • {patient.heightCm} cm</span>
+              {patient.phone && <span>• Tel: {patient.phone}</span>}
+              {patient.email && <span>• {patient.email}</span>}
             </p>
           </div>
         </div>
 
-        <div className="flex flex-wrap gap-2 md:justify-end">
-          <Badge variant="outline" className="text-xs px-3 py-1 bg-blue-50 text-blue-700 border-blue-200 rounded-full font-semibold">
+        {/* Botones de acción: Solo Icono + Color (entre Contacto y Objetivo) */}
+        <div className="flex items-center gap-1.5 p-1 rounded-2xl bg-slate-50/90 border border-slate-200/80 shadow-2xs shrink-0">
+          <EditPatientModal patient={patient} iconOnly />
+          <Link href={`/dashboard/appointments?patientId=${patient.id}`} title="Agendar Cita" aria-label="Agendar Cita">
+            <Button
+              variant="outline"
+              size="sm"
+              className="w-9 h-9 p-0 rounded-xl border-sky-300 bg-sky-50 text-sky-700 hover:bg-sky-100 font-bold shadow-2xs flex items-center justify-center transition-all active:scale-[0.96] shrink-0"
+            >
+              <Calendar className="h-4 w-4 text-sky-600" />
+            </Button>
+          </Link>
+          <Link href={`/dashboard/plans/new?patientId=${patient.id}`} title="Crear Plan Nutricional" aria-label="Crear Plan Nutricional">
+            <Button
+              variant="outline"
+              size="sm"
+              className="w-9 h-9 p-0 rounded-xl border-blue-300 bg-blue-50 text-blue-700 hover:bg-blue-100 font-bold shadow-2xs flex items-center justify-center transition-all active:scale-[0.96] shrink-0"
+            >
+              <CalendarPlus className="h-4 w-4 text-blue-600" />
+            </Button>
+          </Link>
+          <form action={startPatientPreview.bind(null, patient.id)} title="Vista previa como paciente">
+            <Button
+              type="submit"
+              variant="outline"
+              size="sm"
+              aria-label="Vista previa como paciente"
+              className="w-9 h-9 p-0 rounded-xl border-purple-300 bg-purple-50 text-purple-800 hover:bg-purple-100 font-bold shadow-2xs flex items-center justify-center transition-all active:scale-[0.96] shrink-0 cursor-pointer"
+            >
+              <Eye className="h-4 w-4 text-purple-600" />
+            </Button>
+          </form>
+          <DeletePatientButton
+            patientId={patient.id}
+            patientName={`${patient.firstName} ${patient.lastName}`}
+            isActive={patient.isActive}
+            iconOnly
+          />
+          <HardDeleteModal
+            patientId={patient.id}
+            patientName={`${patient.firstName} ${patient.lastName}`}
+            iconOnly
+          />
+        </div>
+
+        {/* Bloque Objetivo Clínico */}
+        <div className="flex flex-wrap gap-2 lg:justify-end shrink-0">
+          <Badge variant="outline" className="text-xs px-3 py-1.5 bg-blue-50 text-blue-700 border-blue-200 rounded-xl font-semibold">
             🎯 {objectiveLabel}
           </Badge>
-          <Badge variant="outline" className="text-xs px-3 py-1 bg-amber-50 text-amber-700 border-amber-200 rounded-full font-semibold">
+          <Badge variant="outline" className="text-xs px-3 py-1.5 bg-amber-50 text-amber-700 border-amber-200 rounded-xl font-semibold">
             ⚡ {activityLabel}
           </Badge>
         </div>
