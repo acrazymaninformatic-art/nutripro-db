@@ -27,9 +27,18 @@ export function hashPasswordResetToken(token: string) {
 }
 
 export function getPublicAppUrl() {
+  const vercelProd = process.env.VERCEL_PROJECT_PRODUCTION_URL
+  if (vercelProd) return `https://${vercelProd.replace(/^https?:\/\//, '').replace(/\/$/, '')}`
+
   const configured = process.env.APP_PUBLIC_URL || process.env.NEXTAUTH_URL
-  if (configured) return configured.replace(/\/$/, '')
-  const vercel = process.env.VERCEL_PROJECT_PRODUCTION_URL || process.env.VERCEL_URL
+  if (configured && !configured.includes('localhost')) {
+    return configured.replace(/\/$/, '')
+  }
+
+  const vercel = process.env.VERCEL_URL
   if (vercel) return `https://${vercel.replace(/^https?:\/\//, '').replace(/\/$/, '')}`
+
+  if (configured) return configured.replace(/\/$/, '')
+
   return 'http://localhost:3000'
 }

@@ -68,11 +68,41 @@ export default async function PacienteLayout({
     }
   }
 
-  // Redirigir a políticas si no están aceptadas (salvo si estamos ya en /paciente/politicas o en preview de admin)
+  // Comprobar si el consentimiento RGPD está aceptado
   const headerList = await headers()
-  const pathname = headerList.get('x-invoke-path') || ''
-  if (!consentAccepted && !isAdminPreview && !pathname.includes('/politicas')) {
-    redirect('/paciente/politicas')
+  const pathname = headerList.get('x-pathname') || headerList.get('x-invoke-path') || ''
+  const isPoliticasPage = pathname.includes('/politicas')
+
+  if (!consentAccepted && !isAdminPreview) {
+    if (pathname && !isPoliticasPage) {
+      redirect('/paciente/politicas')
+    }
+    // Si estamos en /paciente/politicas o no se puede inferir con certeza la ruta en el layout,
+    // renderizamos el contenido directamente sin el menú del portal para evitar bucles (ERR_TOO_MANY_REDIRECTS)
+    return (
+      <div className="min-h-screen bg-slate-50 flex flex-col">
+        {isAdminPreview && (
+          <div className="bg-amber-500 text-amber-950 px-4 py-2.5 font-medium text-xs flex flex-wrap items-center justify-between gap-3 shadow-sm border-b border-amber-600 z-50">
+            <div className="flex items-center gap-2">
+              <ShieldAlert className="w-4 h-4 text-amber-950 shrink-0" />
+              <span>
+                <strong>Modo Vista Previa de Consulta (Solo Lectura):</strong> Viendo el portal del paciente <strong>{patientName}</strong>.
+              </span>
+            </div>
+            <form action={exitPatientPreview}>
+              <Button
+                type="submit"
+                size="sm"
+                className="rounded-xl bg-amber-950 hover:bg-black text-amber-50 text-xs font-bold shadow-xs py-1 px-3 h-auto"
+              >
+                Volver al expediente de consulta →
+              </Button>
+            </form>
+          </div>
+        )}
+        <main className="flex-1">{children}</main>
+      </div>
+    )
   }
 
   return (

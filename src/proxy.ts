@@ -3,15 +3,20 @@ import { SESSION_COOKIE, verifySessionToken } from '@/lib/session-token'
 
 export function proxy(request: NextRequest) {
   const { pathname } = request.nextUrl
-  if (pathname === '/login' || pathname === '/forgot-password' || pathname === '/privacy-policy' || pathname === '/robots.txt') return NextResponse.next()
+  const requestHeaders = new Headers(request.headers)
+  requestHeaders.set('x-pathname', pathname)
+
+  if (pathname === '/login' || pathname === '/forgot-password' || pathname === '/privacy-policy' || pathname === '/robots.txt') {
+    return NextResponse.next({ request: { headers: requestHeaders } })
+  }
   if (pathname.startsWith('/anamnesis') || pathname === '/reschedule' || pathname === '/reset-password') {
-    const response = NextResponse.next()
+    const response = NextResponse.next({ request: { headers: requestHeaders } })
     response.headers.set('Cache-Control', 'private, no-store, max-age=0')
     response.headers.set('Referrer-Policy', 'no-referrer')
     response.headers.set('X-Robots-Tag', 'noindex, nofollow, noarchive')
     return response
   }
-  if (pathname === '/api/cron/reminders') return NextResponse.next()
+  if (pathname === '/api/cron/reminders') return NextResponse.next({ request: { headers: requestHeaders } })
 
   const token = request.cookies.get(SESSION_COOKIE)?.value
   let valid = false
@@ -21,7 +26,7 @@ export function proxy(request: NextRequest) {
     valid = false
   }
   if (valid) {
-    const response = NextResponse.next()
+    const response = NextResponse.next({ request: { headers: requestHeaders } })
     response.headers.set('Cache-Control', 'private, no-store, max-age=0')
     response.headers.set('Vary', 'Cookie')
     return response

@@ -181,7 +181,7 @@ export function PortalAccessCard({
                 Este paciente aún no tiene credenciales de acceso al portal
               </p>
               <p className="text-xs text-gray-500 mt-0.5">
-                Al pulsar en crear, se generará una cuenta protegida y un enlace seguro de un solo uso (válido 24 horas) para que fije su contraseña.
+                Al pulsar en crear, se generará su cuenta y se enviará un correo electrónico automático a su dirección con el enlace seguro (válido 24 horas) para definir su contraseña.
               </p>
             </div>
             <Button
@@ -312,7 +312,7 @@ export function PortalAccessCard({
               </Button>
             </div>
             <p className="text-3xs text-emerald-800 leading-tight">
-              Puedes enviar este enlace directamente a tu paciente por correo o WhatsApp para que fije su contraseña y acceda a su portal privado.
+              Se ha enviado un correo automático a la dirección del paciente. Si lo deseas, también puedes copiar este enlace directo para facilitárselo por WhatsApp u otro canal.
             </p>
           </div>
         )}

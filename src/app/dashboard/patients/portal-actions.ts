@@ -6,6 +6,8 @@ import { prisma } from '@/lib/prisma'
 import { revalidatePath } from 'next/cache'
 import { requireAdmin } from '@/lib/auth'
 import { createPortalInviteToken, getPublicAppUrl } from '@/lib/password-reset-token'
+import { sendPatientPortalWelcomeEmail } from '@/lib/email/password-reset-email'
+import { logEmailSent } from '@/lib/email/log-email'
 
 export async function createPortalAccount(patientId: string) {
   const admin = await requireAdmin()
@@ -90,12 +92,47 @@ export async function createPortalAccount(patientId: string) {
 
   const inviteUrl = `${getPublicAppUrl()}/reset-password?token=${token}`
 
+  // Envío automático de correo con enlace de 24h para definir contraseña
+  let emailSent = false
+  let emailError: string | null = null
+  try {
+    await sendPatientPortalWelcomeEmail({
+      email: patientEmail,
+      name: `${patient.firstName} ${patient.lastName}`.trim(),
+      inviteUrl,
+    })
+    emailSent = true
+    await logEmailSent({
+      recipientEmail: patientEmail,
+      recipientName: `${patient.firstName} ${patient.lastName}`.trim(),
+      patientId: patient.id,
+      subject: 'Activa tu acceso al Portal del Paciente · Eva Vidal Nutrición',
+      type: 'PORTAL_INVITE',
+      status: 'SENT',
+    })
+  } catch (err: any) {
+    console.error('Error enviando correo de bienvenida al portal:', err)
+    emailError = err?.message || 'Error al conectar con servidor SMTP'
+    await logEmailSent({
+      recipientEmail: patientEmail,
+      recipientName: `${patient.firstName} ${patient.lastName}`.trim(),
+      patientId: patient.id,
+      subject: 'Activa tu acceso al Portal del Paciente · Eva Vidal Nutrición',
+      type: 'PORTAL_INVITE',
+      status: 'FAILED',
+      errorDetails: emailError,
+    })
+  }
+
   revalidatePath(`/dashboard/patients/${patientId}`)
   return {
     success: true,
     inviteUrl,
     expiresAt: expiresAt.toISOString(),
-    message: 'Acceso al portal creado correctamente. El enlace caduca en 24 horas.',
+    emailSent,
+    message: emailSent
+      ? `Acceso al portal creado y correo electrónico enviado automáticamente a ${patientEmail}. El paciente podrá definir su contraseña con el enlace recibido (válido por 24 horas).`
+      : `Acceso al portal creado. No se pudo enviar el correo automático (${emailError}), pero puedes copiar el enlace directo generado.`,
   }
 }
 
@@ -173,11 +210,46 @@ export async function generateNewPortalInviteLink(patientId: string) {
 
   const inviteUrl = `${getPublicAppUrl()}/reset-password?token=${token}`
 
+  // Envío automático de correo con el nuevo enlace de 24h
+  let emailSent = false
+  let emailError: string | null = null
+  try {
+    await sendPatientPortalWelcomeEmail({
+      email: patient.portalUser.email,
+      name: `${patient.firstName} ${patient.lastName}`.trim(),
+      inviteUrl,
+    })
+    emailSent = true
+    await logEmailSent({
+      recipientEmail: patient.portalUser.email,
+      recipientName: `${patient.firstName} ${patient.lastName}`.trim(),
+      patientId: patient.id,
+      subject: 'Activa tu acceso al Portal del Paciente · Eva Vidal Nutrición',
+      type: 'PORTAL_INVITE',
+      status: 'SENT',
+    })
+  } catch (err: any) {
+    console.error('Error enviando enlace de invitación al portal:', err)
+    emailError = err?.message || 'Error al conectar con servidor SMTP'
+    await logEmailSent({
+      recipientEmail: patient.portalUser.email,
+      recipientName: `${patient.firstName} ${patient.lastName}`.trim(),
+      patientId: patient.id,
+      subject: 'Activa tu acceso al Portal del Paciente · Eva Vidal Nutrición',
+      type: 'PORTAL_INVITE',
+      status: 'FAILED',
+      errorDetails: emailError,
+    })
+  }
+
   revalidatePath(`/dashboard/patients/${patientId}`)
   return {
     success: true,
     inviteUrl,
     expiresAt: expiresAt.toISOString(),
-    message: 'Nuevo enlace de 24 horas generado con éxito.',
+    emailSent,
+    message: emailSent
+      ? `Nuevo enlace generado y enviado por correo a ${patient.portalUser.email} (válido por 24 horas).`
+      : `Nuevo enlace de 24 horas generado con éxito. Copia el enlace a continuación para facilitárselo al paciente.`,
   }
 }

@@ -1,4 +1,5 @@
 import Link from 'next/link'
+import { redirect } from 'next/navigation'
 import { requirePatient } from '@/lib/auth'
 import { prisma } from '@/lib/prisma'
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from '@/components/ui/card'
@@ -71,7 +72,7 @@ export default async function PacienteDashboardPage() {
     const [patientData, anthropometry, mealPlan, docsCount, appointment, consents, protocol] = await Promise.all([
       prisma.patient.findUnique({
         where: { id: patientId },
-        select: { firstName: true, lastName: true, anamnesisStatus: true },
+        select: { firstName: true, lastName: true, anamnesisStatus: true, consentAcceptedAt: true, consentPolicyVersion: true },
       }),
       prisma.anthropometry.findFirst({
         where: { patientId, isPublishedToPatient: true },
@@ -124,6 +125,10 @@ export default async function PacienteDashboardPage() {
         orderBy: { createdAt: 'desc' },
       }),
     ])
+
+    if (!isAdminPreview && (!patientData?.consentAcceptedAt || patientData.consentPolicyVersion !== '1.0')) {
+      redirect('/paciente/politicas')
+    }
 
     if (patientData?.firstName) {
       firstName = patientData.firstName
