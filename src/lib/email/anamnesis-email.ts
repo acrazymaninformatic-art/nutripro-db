@@ -29,90 +29,148 @@ export function generateAnamnesisEmailHtml({
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Cuestionario Pre-Consulta de Nutrición</title>
 </head>
-<body style="margin: 0; padding: 0; background-color: #f0f4f8; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; color: #1e293b; line-height: 1.6;">
-  <table role="presentation" border="0" cellpadding="0" cellspacing="0" width="100%" style="background-color: #f0f4f8; padding: 36px 15px;">
+<body style="margin: 0; padding: 0; background-color: #f8fafc; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; color: #0f172a; line-height: 1.6;">
+  <table role="presentation" border="0" cellpadding="0" cellspacing="0" width="100%" style="background-color: #f8fafc; padding: 40px 16px;">
     <tr>
       <td align="center">
-        <table role="presentation" border="0" cellpadding="0" cellspacing="0" width="100%" style="max-width: 600px; background-color: #ffffff; border-radius: 24px; overflow: hidden; box-shadow: 0 10px 25px rgba(2, 132, 199, 0.08); border: 1px solid #dbeafe;">
+        <table role="presentation" border="0" cellpadding="0" cellspacing="0" width="100%" style="max-width: 580px; background-color: #ffffff; border-radius: 20px; overflow: hidden; box-shadow: 0 4px 20px -2px rgba(15, 23, 42, 0.06); border: 1px solid #e2e8f0;">
           
-          <!-- Encabezado con gradiente azul clínico y logotipo oficial -->
+          <!-- Barra superior clínica -->
           <tr>
-            <td style="background: linear-gradient(135deg, #0284c7 0%, #1e40af 100%); padding: 38px 30px; text-align: center;">
-              <span style="display: inline-block; width: 56px; height: 56px; line-height: 56px; border-radius: 14px; background: #ffffff; color: #0284c7; font-weight: 900; font-size: 22px; box-shadow: 0 4px 12px rgba(0,0,0,0.15); margin-bottom: 12px;">EV</span>
-              <br/>
-              <span style="font-size: 24px; font-weight: 800; color: #ffffff; letter-spacing: -0.5px; display: inline-block;">
-                ${clinicName}
-              </span>
-              <p style="margin: 8px 0 0 0; color: #e0f2fe; font-size: 14px; font-weight: 500;">
-                Cuestionario Clínico y Hábitos Nutricionales Pre-Consulta
-              </p>
+            <td style="height: 4px; background: linear-gradient(90deg, #0284c7 0%, #0369a1 50%, #0284c7 100%);"></td>
+          </tr>
+
+          <!-- Encabezado Institucional Refinado -->
+          <tr>
+            <td style="padding: 32px 32px 24px 32px; background-color: #ffffff; border-bottom: 1px solid #f1f5f9;">
+              <table role="presentation" border="0" cellpadding="0" cellspacing="0" width="100%">
+                <tr>
+                  <td>
+                    <div style="font-size: 11px; font-weight: 800; letter-spacing: 1.5px; text-transform: uppercase; color: #0284c7; margin-bottom: 4px;">
+                      EVA VIDAL &bull; NUTRICIÓN CLÍNICA
+                    </div>
+                    <div style="font-size: 20px; font-weight: 800; color: #0f172a; letter-spacing: -0.3px;">
+                      Cuestionario Clínico Pre-Consulta
+                    </div>
+                  </td>
+                  <td align="right" style="vertical-align: middle;">
+                    <span style="display: inline-block; padding: 4px 10px; background-color: #f0f9ff; border: 1px solid #bae6fd; border-radius: 9999px; font-size: 11px; font-weight: 700; color: #0284c7;">
+                      Pauta Inicial
+                    </span>
+                  </td>
+                </tr>
+              </table>
             </td>
           </tr>
 
           <!-- Contenido Principal -->
           <tr>
-            <td style="padding: 36px 32px;">
-              <h1 style="font-size: 21px; font-weight: 800; color: #0f172a; margin: 0 0 16px 0;">
-                ¡Hola, ${firstName}!
+            <td style="padding: 32px;">
+              <h1 style="font-size: 18px; font-weight: 700; color: #0f172a; margin: 0 0 14px 0;">
+                Hola, ${firstName}:
               </h1>
 
-              <p style="font-size: 15px; color: #475569; margin: 0 0 18px 0; line-height: 1.6;">
-                Para preparar tu consulta nutricional y diseñar un plan 100% adaptado a tus gustos, horarios, digestiones y objetivos de salud, por favor completa tu <strong>cuestionario clínico pre-consulta</strong>.
+              <p style="font-size: 15px; color: #334155; margin: 0 0 20px 0; line-height: 1.6;">
+                Para preparar tu consulta nutricional y diseñar una pauta 100% personalizada y adaptada a tus ritmos, gustos, digestiones y objetivos de salud, por favor completa tu <strong>cuestionario clínico previo</strong>.
               </p>
 
-              <!-- Tarjeta informativa azul -->
-              <table role="presentation" border="0" cellpadding="0" cellspacing="0" width="100%" style="background-color: #f0f9ff; border-radius: 16px; border: 1px solid #bae6fd; margin: 22px 0;">
+              <!-- Tarjeta de información con icono SVG -->
+              <table role="presentation" border="0" cellpadding="0" cellspacing="0" width="100%" style="background-color: #f8fafc; border-radius: 14px; border: 1px solid #e2e8f0; margin: 24px 0;">
                 <tr>
-                  <td style="padding: 18px 22px;">
-                    <strong style="color: #0369a1; font-size: 14px; display: block; margin-bottom: 8px;">
-                      ⏱️ Te llevará solo entre 3 y 5 minutos:
-                    </strong>
-                    <ul style="margin: 0; padding-left: 20px; color: #0284c7; font-size: 13px; line-height: 1.6;">
-                      <li style="margin-bottom: 5px;">Alimentos que te encantan y alimentos que rechazas</li>
-                      <li style="margin-bottom: 5px;">Medicación habitual, patologías o alergias</li>
-                      <li style="margin-bottom: 5px;">Salud digestiva (gases, hinchazón, reflujo)</li>
-                      <li style="margin-bottom: 5px;">Horarios de comida, consumo de agua y ejercicio</li>
-                      <li>Tus objetivos principales para esta consulta</li>
-                    </ul>
+                  <td style="padding: 20px 22px;">
+                    <table role="presentation" border="0" cellpadding="0" cellspacing="0" width="100%" style="margin-bottom: 12px;">
+                      <tr>
+                        <td style="width: 28px; vertical-align: middle;">
+                          <div style="width: 24px; height: 24px; border-radius: 6px; background-color: #e0f2fe; text-align: center; line-height: 24px;">
+                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#0284c7" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="display:inline-block;vertical-align:middle;"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+                          </div>
+                        </td>
+                        <td style="padding-left: 8px; vertical-align: middle;">
+                          <strong style="color: #0369a1; font-size: 13px; text-transform: uppercase; letter-spacing: 0.5px;">
+                            Duración estimada: 3 a 5 minutos
+                          </strong>
+                        </td>
+                      </tr>
+                    </table>
+
+                    <table role="presentation" border="0" cellpadding="0" cellspacing="0" width="100%" style="font-size: 13px; color: #475569; line-height: 1.7;">
+                      <tr>
+                        <td style="width: 18px; vertical-align: top; padding-top: 4px;">
+                          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#0284c7" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+                        </td>
+                        <td style="padding-bottom: 6px;">Preferencias, intolerancias y aversiones alimentarias</td>
+                      </tr>
+                      <tr>
+                        <td style="width: 18px; vertical-align: top; padding-top: 4px;">
+                          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#0284c7" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+                        </td>
+                        <td style="padding-bottom: 6px;">Medicación habitual, patologías o analíticas recientes</td>
+                      </tr>
+                      <tr>
+                        <td style="width: 18px; vertical-align: top; padding-top: 4px;">
+                          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#0284c7" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+                        </td>
+                        <td style="padding-bottom: 6px;">Salud digestiva (hinchazón, reflujo, regularidad)</td>
+                      </tr>
+                      <tr>
+                        <td style="width: 18px; vertical-align: top; padding-top: 4px;">
+                          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#0284c7" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+                        </td>
+                        <td style="padding-bottom: 6px;">Horarios diarios, actividad física y ritmos de vida</td>
+                      </tr>
+                      <tr>
+                        <td style="width: 18px; vertical-align: top; padding-top: 4px;">
+                          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#0284c7" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+                        </td>
+                        <td>Tus objetivos primordiales para la consulta</td>
+                      </tr>
+                    </table>
                   </td>
                 </tr>
               </table>
 
-              <!-- Botón Principal Azul -->
-              <table role="presentation" border="0" cellpadding="0" cellspacing="0" width="100%" style="margin: 30px 0;">
+              <!-- Botón Principal Clínico -->
+              <table role="presentation" border="0" cellpadding="0" cellspacing="0" width="100%" style="margin: 28px 0;">
                 <tr>
                   <td align="center">
-                    <a href="${anamnesisUrl}" target="_blank" style="display: inline-block; background: #0284c7; color: #ffffff; text-decoration: none; font-size: 16px; font-weight: 800; padding: 15px 36px; border-radius: 16px; box-shadow: 0 6px 16px rgba(2, 132, 199, 0.35); text-align: center;">
-                      ✍️ Rellenar Mi Cuestionario Ahora
+                    <a href="${anamnesisUrl}" target="_blank" style="display: inline-block; background-color: #0284c7; color: #ffffff; text-decoration: none; font-size: 15px; font-weight: 700; padding: 14px 32px; border-radius: 12px; box-shadow: 0 4px 12px rgba(2, 132, 199, 0.25); text-align: center;">
+                      Completar Cuestionario Clínico &rarr;
                     </a>
                   </td>
                 </tr>
               </table>
 
-              <p style="font-size: 12px; color: #64748b; text-align: center; margin: 0 0 24px 0;">
-                Si el botón no abre el enlace, copia y pega esta dirección en tu navegador:<br>
+              <p style="font-size: 12px; color: #64748b; text-align: center; margin: 0 0 24px 0; line-height: 1.5;">
+                Si el botón no abre el formulario, accede directamente mediante este enlace:<br>
                 <a href="${anamnesisUrl}" style="color: #0284c7; word-break: break-all; font-size: 12px; text-decoration: underline;">${anamnesisUrl}</a>
               </p>
 
-              <hr style="border: 0; border-top: 1px solid #e2e8f0; margin: 26px 0;" />
-
-              <p style="font-size: 13px; color: #64748b; margin: 0; line-height: 1.5;">
-                Atentamente,<br>
-                <strong style="color: #1e293b; font-size: 14px;">${professionalName}</strong><br>
-                <span style="color: #0284c7; font-weight: 600;">${clinicName}</span><br>
-                <span style="color: #64748b; font-size: 12px;">info@evavidalnutricion.com</span>
-              </p>
+              <div style="border-top: 1px solid #e2e8f0; margin-top: 26px; padding-top: 22px;">
+                <p style="font-size: 13px; color: #64748b; margin: 0; line-height: 1.5;">
+                  Atentamente,<br>
+                  <strong style="color: #0f172a; font-size: 14px;">${professionalName}</strong><br>
+                  <span style="color: #0284c7; font-weight: 600;">Dietista &bull; Nutricionista Colegiada</span><br>
+                  <span style="color: #64748b; font-size: 12px;">info@evavidalnutricion.com</span>
+                </p>
+              </div>
             </td>
           </tr>
 
           <!-- Pie de página RGPD y Confidencialidad -->
           <tr>
-            <td style="background-color: #f8fafc; padding: 22px 30px; text-align: center; font-size: 11px; color: #94a3b8; border-top: 1px solid #e2e8f0;">
-              <p style="margin: 0 0 6px 0;">
-                🔒 <strong>Confidencialidad Médica (RGPD):</strong> La información facilitada en este cuestionario es estrictamente confidencial y se usará únicamente para tu valoración nutricional.
-              </p>
+            <td style="background-color: #f8fafc; padding: 20px 32px; text-align: center; font-size: 11px; color: #94a3b8; border-top: 1px solid #e2e8f0; line-height: 1.5;">
+              <table role="presentation" border="0" cellpadding="0" cellspacing="0" align="center" style="margin-bottom: 6px;">
+                <tr>
+                  <td style="vertical-align: middle; padding-right: 6px;">
+                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#64748b" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display:inline-block;vertical-align:middle;"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+                  </td>
+                  <td style="vertical-align: middle; font-size: 11px; font-weight: 700; color: #475569;">
+                    Confidencialidad Médica y RGPD
+                  </td>
+                </tr>
+              </table>
               <p style="margin: 0;">
-                Este correo fue enviado de forma automática desde la plataforma clínica EVSoftware.
+                La información clínica recogida en este cuestionario es estrictamente confidencial bajo el Reglamento (UE) 2016/679 (RGPD) y se utilizará exclusivamente para tu plan nutricional personalizado.
               </p>
             </td>
           </tr>
@@ -183,6 +241,7 @@ export async function sendAnamnesisEmail({
 
     await transporter.sendMail({
       from: `"${professionalName} - ${clinicName}" <${smtpFrom}>`,
+      replyTo: smtpFrom,
       to: patientEmail,
       subject: emailSubject,
       text: plainText,
