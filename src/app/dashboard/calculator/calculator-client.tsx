@@ -420,25 +420,26 @@ export function ClinicalCalculator({
   return (
     <div className="space-y-6">
       {/* Top Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+      <div className="glass-panel p-6 sm:p-7 rounded-3xl border border-slate-200/80 shadow-xs relative overflow-hidden flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+        <div className="absolute top-0 right-0 w-80 h-80 bg-blue-500/5 rounded-full blur-3xl pointer-events-none -mr-20 -mt-20" />
         <div>
-          <h1 className="text-2xl font-bold text-gray-900 tracking-tight flex items-center gap-2.5">
+          <h1 className="text-2xl font-black text-slate-900 tracking-tight flex items-center gap-2.5">
             <Calculator className="h-6 w-6 text-blue-600" />
             <span>Calculadora Metabólica Clínica & Protocolos 5.10</span>
           </h1>
-          <p className="text-sm text-gray-500 mt-0.5">
+          <p className="text-xs font-semibold text-slate-500 mt-1">
             Fórmulas científicas (Schofield, FAO, Owen, Ireton-Jones, Penn State), predicción dinámica NIH y protocolos clínicos.
           </p>
         </div>
 
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-2.5">
           {selectedPatientId && (
             <Button
               variant="outline"
               size="sm"
               onClick={handleSaveToPatient}
               disabled={isSaving}
-              className="rounded-2xl border-blue-200 text-blue-700 hover:bg-blue-50 text-xs font-bold gap-1.5"
+              className="rounded-2xl border-blue-200 text-blue-700 hover:bg-blue-50 text-xs font-bold gap-1.5 h-10 px-4 active:scale-[0.98]"
             >
               <Save className="h-3.5 w-3.5" />
               <span>{isSaving ? 'Guardando...' : 'Guardar en Ficha'}</span>
@@ -450,7 +451,7 @@ export function ClinicalCalculator({
           >
             <Button
               size="sm"
-              className="rounded-2xl bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold shadow-xs gap-1.5"
+              className="rounded-2xl bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold shadow-xs gap-1.5 h-10 px-5 active:scale-[0.98]"
             >
               <CalendarPlus className="h-4 w-4" />
               <span>Crear Plan con estos Macros</span>
@@ -461,20 +462,20 @@ export function ClinicalCalculator({
 
       {/* Recalculation Notice Banner (5.10) */}
       {recalculationNotice && recalculationNotice.needsRecalculation && (
-        <div className="p-4 rounded-3xl bg-amber-50 border border-amber-200 text-amber-950 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 animate-in slide-in-from-top-2">
+        <div className="p-5 rounded-3xl bg-amber-50/90 border border-amber-200 text-amber-950 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 animate-in slide-in-from-top-2 shadow-xs">
           <div className="flex items-start gap-3">
             <AlertCircle className="w-5 h-5 text-amber-600 shrink-0 mt-0.5" />
             <div className="text-xs">
               <span className="font-bold block text-sm text-amber-900">
                 Aviso de Recálculo de Objetivos (Sección 5.10)
               </span>
-              <span>{recalculationNotice.message}</span>
+              <span className="mt-0.5 block">{recalculationNotice.message}</span>
             </div>
           </div>
           <Button
             size="sm"
             onClick={handleApplyRecalculation}
-            className="rounded-xl bg-amber-600 hover:bg-amber-700 text-white text-xs font-bold shrink-0"
+            className="rounded-xl bg-amber-600 hover:bg-amber-700 text-white text-xs font-bold shrink-0 h-9 px-4 active:scale-[0.98]"
           >
             Aplicar ~{recalculationNotice.suggestedTargetKcal} kcal al Plan
           </Button>
@@ -482,63 +483,63 @@ export function ClinicalCalculator({
       )}
 
       {saveSuccessMessage && (
-        <div className="p-3.5 rounded-2xl bg-emerald-50 border border-emerald-200 text-emerald-900 text-xs flex items-center gap-2">
-          <CheckCircle2 className="w-4 h-4 text-emerald-600" />
+        <div className="p-4 rounded-2xl bg-emerald-50 border border-emerald-200 text-emerald-900 text-xs flex items-center gap-2.5 shadow-2xs">
+          <CheckCircle2 className="w-4 h-4 text-emerald-600 shrink-0" />
           <span>{saveSuccessMessage}</span>
         </div>
       )}
 
       {/* Navigation Tabs (5.9 / 5.10) */}
-      <div className="flex items-center gap-2 overflow-x-auto pb-1 border-b border-gray-200">
+      <div className="inline-flex p-1.5 bg-slate-100/80 rounded-2xl border border-slate-200/60 shadow-2xs overflow-x-auto max-w-full medical-scrollbar gap-1">
         <button
           type="button"
           onClick={() => setActiveTab('metabolic')}
-          className={`px-4 py-2 rounded-2xl text-xs font-bold transition-all flex items-center gap-2 shrink-0 ${
+          className={`px-4 py-2 rounded-xl text-xs font-bold transition-all flex items-center gap-2 shrink-0 cursor-pointer ${
             activeTab === 'metabolic'
-              ? 'bg-blue-600 text-white shadow-xs'
-              : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+              ? 'bg-white text-slate-900 shadow-2xs'
+              : 'text-slate-600 hover:text-slate-900'
           }`}
         >
-          <Flame className="w-4 h-4" />
+          <Flame className="w-4 h-4 text-amber-500" />
           <span>1. Gasto Metabólico & Fórmulas</span>
         </button>
 
         <button
           type="button"
           onClick={() => setActiveTab('prediction')}
-          className={`px-4 py-2 rounded-2xl text-xs font-bold transition-all flex items-center gap-2 shrink-0 ${
+          className={`px-4 py-2 rounded-xl text-xs font-bold transition-all flex items-center gap-2 shrink-0 cursor-pointer ${
             activeTab === 'prediction'
-              ? 'bg-blue-600 text-white shadow-xs'
-              : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+              ? 'bg-white text-slate-900 shadow-2xs'
+              : 'text-slate-600 hover:text-slate-900'
           }`}
         >
-          <TrendingDown className="w-4 h-4" />
+          <TrendingDown className="w-4 h-4 text-blue-600" />
           <span>2. Predicción Dinámica NIH</span>
         </button>
 
         <button
           type="button"
           onClick={() => setActiveTab('risk')}
-          className={`px-4 py-2 rounded-2xl text-xs font-bold transition-all flex items-center gap-2 shrink-0 ${
+          className={`px-4 py-2 rounded-xl text-xs font-bold transition-all flex items-center gap-2 shrink-0 cursor-pointer ${
             activeTab === 'risk'
-              ? 'bg-blue-600 text-white shadow-xs'
-              : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+              ? 'bg-white text-slate-900 shadow-2xs'
+              : 'text-slate-600 hover:text-slate-900'
           }`}
         >
-          <HeartPulse className="w-4 h-4" />
+          <HeartPulse className="w-4 h-4 text-rose-500" />
           <span>3. Riesgo SCORE2 / REGICOR & DRI</span>
         </button>
 
         <button
           type="button"
           onClick={() => setActiveTab('protocols')}
-          className={`px-4 py-2 rounded-2xl text-xs font-bold transition-all flex items-center gap-2 shrink-0 ${
+          className={`px-4 py-2 rounded-xl text-xs font-bold transition-all flex items-center gap-2 shrink-0 cursor-pointer ${
             activeTab === 'protocols'
-              ? 'bg-blue-600 text-white shadow-xs'
-              : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+              ? 'bg-white text-slate-900 shadow-2xs'
+              : 'text-slate-600 hover:text-slate-900'
           }`}
         >
-          <BookOpen className="w-4 h-4" />
+          <BookOpen className="w-4 h-4 text-teal-600" />
           <span>4. Protocolos Clínicos (5.9)</span>
         </button>
       </div>

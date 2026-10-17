@@ -72,24 +72,24 @@ export function PatientProtocolCard({ protocol }: PatientProtocolCardProps) {
   }
 
   return (
-    <Card className="rounded-3xl border-emerald-200/90 bg-white shadow-xs overflow-hidden">
-      <CardHeader className="bg-gradient-to-r from-emerald-50 via-teal-50/40 to-white pb-3 border-b border-emerald-100/70 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+    <Card className="rounded-3xl border-slate-200/80 bg-white shadow-xs overflow-hidden">
+      <CardHeader className="bg-gradient-to-r from-teal-50/70 via-emerald-50/40 to-white pb-3.5 border-b border-slate-100 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
         <div className="flex items-center gap-3">
-          <div className="w-10 h-10 rounded-2xl bg-emerald-100 text-emerald-800 flex items-center justify-center shrink-0">
+          <div className="w-10 h-10 rounded-2xl bg-teal-50 text-teal-700 flex items-center justify-center shrink-0 border border-teal-100 shadow-2xs">
             <HeartPulse className="w-5 h-5" />
           </div>
           <div>
             <div className="flex items-center gap-2">
-              <Badge className="bg-emerald-600 text-white text-2xs uppercase tracking-wider font-bold">
+              <Badge variant="teal" className="text-3xs font-black uppercase tracking-wider">
                 {def?.badge || 'Protocolo Clínico Activo'}
               </Badge>
               {protocol.currentPhase && (
-                <span className="text-xs font-semibold text-emerald-900 bg-emerald-100/60 px-2 py-0.5 rounded-full">
+                <span className="text-xs font-semibold text-teal-900 bg-teal-100/70 px-2.5 py-0.5 rounded-full border border-teal-200/60">
                   {protocol.currentPhase}
                 </span>
               )}
             </div>
-            <CardTitle className="text-base font-bold text-gray-900 mt-1">
+            <CardTitle className="text-base font-bold text-slate-900 mt-1">
               {protocol.title}
             </CardTitle>
           </div>
@@ -98,7 +98,7 @@ export function PatientProtocolCard({ protocol }: PatientProtocolCardProps) {
         <Button
           size="sm"
           onClick={() => setShowLogModal(true)}
-          className="rounded-2xl bg-emerald-700 hover:bg-emerald-800 text-white font-bold text-xs gap-1.5 shrink-0"
+          className="rounded-2xl bg-teal-600 hover:bg-teal-700 text-white font-bold text-xs gap-1.5 shrink-0 shadow-xs transition-all active:scale-[0.98]"
         >
           <Thermometer className="w-3.5 h-3.5" />
           <span>Anotar síntomas de hoy</span>

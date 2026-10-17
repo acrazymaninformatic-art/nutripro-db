@@ -56,14 +56,17 @@ export default async function OperationsPage() {
 
   return (
     <div className="mx-auto max-w-6xl space-y-6">
-      <div>
-        <h1 className="flex items-center gap-2 text-2xl font-bold text-gray-900">
-          <Activity className="h-6 w-6 text-blue-700" />
-          Control de consulta
-        </h1>
-        <p className="mt-1 text-sm text-gray-500">
-          Estado privado de los servicios, auditoría de correos, derechos RGPD y actividad sensible.
-        </p>
+      <div className="glass-panel p-6 sm:p-7 rounded-3xl border border-slate-200/80 shadow-xs relative overflow-hidden flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+        <div className="absolute top-0 right-0 w-80 h-80 bg-blue-500/5 rounded-full blur-3xl pointer-events-none -mr-20 -mt-20" />
+        <div>
+          <h1 className="flex items-center gap-2.5 text-2xl font-black text-slate-900 tracking-tight">
+            <Activity className="h-6 w-6 text-blue-600" />
+            <span>Control de Consulta & Operaciones</span>
+          </h1>
+          <p className="mt-1 text-xs font-semibold text-slate-500">
+            Estado privado de los servicios, auditoría de correos, derechos RGPD y actividad sensible.
+          </p>
+        </div>
       </div>
 
       <div className="grid gap-4 md:grid-cols-3">

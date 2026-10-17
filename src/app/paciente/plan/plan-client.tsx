@@ -222,23 +222,23 @@ export function PlanClient({ plan, visibleRecipes }: Props) {
       </div>
 
       {/* Plan Header */}
-      <Card className="rounded-3xl border border-blue-100 bg-white p-6 sm:p-8 shadow-xs">
+      <Card className="glass-card rounded-3xl border-slate-200/80 bg-white p-6 sm:p-8 shadow-xs">
         <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
           <div className="space-y-1.5">
             <div className="flex items-center gap-2 flex-wrap">
-              <Badge className="bg-emerald-100 text-emerald-900 font-bold text-xs rounded-full border-0">
+              <Badge variant="teal" className="text-xs font-bold rounded-full">
                 Plan Activo Publicado
               </Badge>
               {plan.targetKcal > 0 && !plan.hideCaloriesTCA && (
-                <Badge variant="outline" className="text-xs font-semibold rounded-full bg-blue-50 text-blue-800 border-blue-200">
+                <Badge variant="outline" className="text-xs font-mono tabular-nums font-bold rounded-full bg-blue-50/80 text-blue-800 border-blue-200">
                   ⚡ ~{Math.round(plan.targetKcal)} kcal/día
                 </Badge>
               )}
             </div>
-            <h1 className="text-2xl sm:text-3xl font-extrabold text-gray-900 tracking-tight">
+            <h1 className="text-2xl sm:text-3.5xl font-extrabold text-slate-900 tracking-tight">
               {plan.name}
             </h1>
-            <p className="text-xs text-gray-500 flex items-center gap-2">
+            <p className="text-xs text-slate-500 flex items-center gap-2 font-medium">
               <Calendar className="w-4 h-4 text-blue-600" />
               <span>Pauta nutricional personalizada por Eva Vidal</span>
             </p>
@@ -246,83 +246,85 @@ export function PlanClient({ plan, visibleRecipes }: Props) {
         </div>
 
         {plan.notes && (
-          <div className="mt-5 p-4 rounded-2xl bg-blue-50/70 border border-blue-100 text-xs text-blue-950 flex items-start gap-2.5">
+          <div className="mt-5 p-4 rounded-2xl bg-blue-50/60 border border-blue-100/90 text-xs text-blue-950 flex items-start gap-2.5">
             <Info className="w-4 h-4 text-blue-600 shrink-0 mt-0.5" />
             <div>
-              <span className="font-bold block mb-0.5">Indicaciones de Eva:</span>
-              <span className="leading-relaxed">{plan.notes}</span>
+              <span className="font-bold block mb-0.5 text-blue-900">Indicaciones de Eva:</span>
+              <span className="leading-relaxed text-slate-700">{plan.notes}</span>
             </div>
           </div>
         )}
 
-        {/* View Switcher Tabs (PDF pág 17) */}
-        <div className="flex items-center gap-2 mt-6 pt-6 border-t border-gray-100 print:hidden overflow-x-auto">
-          <button
-            type="button"
-            onClick={() => setActiveTab('today')}
-            className={`px-4 py-2 rounded-2xl text-xs font-bold transition-all flex items-center gap-2 shrink-0 ${
-              activeTab === 'today'
-                ? 'bg-blue-600 text-white shadow-xs'
-                : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
-            }`}
-          >
-            <Clock className="w-4 h-4" />
-            <span>Hoy ({DAY_NAMES[todayDayNumber - 1]})</span>
-          </button>
-
-          <button
-            type="button"
-            onClick={() => setActiveTab('week')}
-            className={`px-4 py-2 rounded-2xl text-xs font-bold transition-all flex items-center gap-2 shrink-0 ${
-              activeTab === 'week'
-                ? 'bg-blue-600 text-white shadow-xs'
-                : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
-            }`}
-          >
-            <CalendarDays className="w-4 h-4" />
-            <span>Semana Completa (L-D)</span>
-          </button>
-
-          <button
-            type="button"
-            onClick={() => setActiveTab('recipes')}
-            className={`px-4 py-2 rounded-2xl text-xs font-bold transition-all flex items-center gap-2 shrink-0 ${
-              activeTab === 'recipes'
-                ? 'bg-blue-600 text-white shadow-xs'
-                : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
-            }`}
-          >
-            <ChefHat className="w-4 h-4" />
-            <span>Recetario ({allRecipeCards.length})</span>
-          </button>
-
-          <button
-            type="button"
-            onClick={() => setActiveTab('shopping')}
-            className={`px-4 py-2 rounded-2xl text-xs font-bold transition-all flex items-center gap-2 shrink-0 ${
-              activeTab === 'shopping'
-                ? 'bg-blue-600 text-white shadow-xs'
-                : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
-            }`}
-          >
-            <ShoppingCart className="w-4 h-4" />
-            <span>Lista de la Compra</span>
-          </button>
-
-          {plan.eatingOutGuide && (
+        {/* View Switcher Tabs (Segmented Control) */}
+        <div className="mt-6 pt-5 border-t border-slate-100 print:hidden">
+          <div className="p-1.5 bg-slate-100/90 rounded-2xl flex items-center gap-1.5 overflow-x-auto border border-slate-200/60 shadow-2xs">
             <button
               type="button"
-              onClick={() => setActiveTab('guide')}
-              className={`px-4 py-2 rounded-2xl text-xs font-bold transition-all flex items-center gap-2 shrink-0 ${
-                activeTab === 'guide'
-                  ? 'bg-blue-600 text-white shadow-xs'
-                  : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+              onClick={() => setActiveTab('today')}
+              className={`px-4 py-2 rounded-xl text-xs font-bold transition-all flex items-center gap-2 shrink-0 ${
+                activeTab === 'today'
+                  ? 'bg-white text-blue-900 shadow-xs border border-slate-200/80'
+                  : 'text-slate-600 hover:text-slate-900 hover:bg-white/50'
               }`}
             >
-              <Sparkles className="w-4 h-4" />
-              <span>Comer Fuera & Viajes</span>
+              <Clock className="w-4 h-4" />
+              <span>Hoy ({DAY_NAMES[todayDayNumber - 1]})</span>
             </button>
-          )}
+
+            <button
+              type="button"
+              onClick={() => setActiveTab('week')}
+              className={`px-4 py-2 rounded-xl text-xs font-bold transition-all flex items-center gap-2 shrink-0 ${
+                activeTab === 'week'
+                  ? 'bg-white text-blue-900 shadow-xs border border-slate-200/80'
+                  : 'text-slate-600 hover:text-slate-900 hover:bg-white/50'
+              }`}
+            >
+              <CalendarDays className="w-4 h-4" />
+              <span>Semana Completa</span>
+            </button>
+
+            <button
+              type="button"
+              onClick={() => setActiveTab('recipes')}
+              className={`px-4 py-2 rounded-xl text-xs font-bold transition-all flex items-center gap-2 shrink-0 ${
+                activeTab === 'recipes'
+                  ? 'bg-white text-blue-900 shadow-xs border border-slate-200/80'
+                  : 'text-slate-600 hover:text-slate-900 hover:bg-white/50'
+              }`}
+            >
+              <ChefHat className="w-4 h-4" />
+              <span>Recetario ({allRecipeCards.length})</span>
+            </button>
+
+            <button
+              type="button"
+              onClick={() => setActiveTab('shopping')}
+              className={`px-4 py-2 rounded-xl text-xs font-bold transition-all flex items-center gap-2 shrink-0 ${
+                activeTab === 'shopping'
+                  ? 'bg-white text-blue-900 shadow-xs border border-slate-200/80'
+                  : 'text-slate-600 hover:text-slate-900 hover:bg-white/50'
+              }`}
+            >
+              <ShoppingCart className="w-4 h-4" />
+              <span>Lista de la Compra</span>
+            </button>
+
+            {plan.eatingOutGuide && (
+              <button
+                type="button"
+                onClick={() => setActiveTab('guide')}
+                className={`px-4 py-2 rounded-xl text-xs font-bold transition-all flex items-center gap-2 shrink-0 ${
+                  activeTab === 'guide'
+                    ? 'bg-white text-blue-900 shadow-xs border border-slate-200/80'
+                    : 'text-slate-600 hover:text-slate-900 hover:bg-white/50'
+                }`}
+              >
+                <Sparkles className="w-4 h-4" />
+                <span>Comer Fuera & Viajes</span>
+              </button>
+            )}
+          </div>
         </div>
       </Card>
 
@@ -663,17 +665,20 @@ export function PlanClient({ plan, visibleRecipes }: Props) {
 
       {/* Modal Ficha de Receta Interactiva */}
       {selectedRecipe && (
-        <div className="fixed inset-0 z-50 bg-black/50 backdrop-blur-xs flex items-center justify-center p-4">
-          <div className="bg-white rounded-3xl p-6 sm:p-8 max-w-lg w-full shadow-2xl border border-gray-200 overflow-hidden animate-in fade-in zoom-in-95 duration-150 max-h-[85vh] flex flex-col">
-            <div className="flex items-center justify-between pb-3 border-b border-gray-100 mb-4">
-              <div className="flex items-center gap-2">
-                <ChefHat className="w-5 h-5 text-amber-600" />
-                <h3 className="text-base font-bold text-gray-900 truncate">{selectedRecipe.name}</h3>
+        <div className="fixed inset-0 z-50 bg-slate-950/60 backdrop-blur-sm flex items-center justify-center p-4">
+          <div className="bg-white rounded-3xl p-6 sm:p-8 max-w-lg w-full shadow-2xl border border-slate-200/90 overflow-hidden animate-in fade-in zoom-in-95 duration-150 max-h-[85vh] flex flex-col">
+            <div className="flex items-center justify-between pb-3.5 border-b border-slate-100 mb-4">
+              <div className="flex items-center gap-2.5">
+                <div className="w-9 h-9 rounded-xl bg-amber-50 text-amber-600 flex items-center justify-center border border-amber-200/60 shadow-2xs">
+                  <ChefHat className="w-5 h-5" />
+                </div>
+                <h3 className="text-base font-extrabold text-slate-900 truncate">{selectedRecipe.name}</h3>
               </div>
               <button
                 type="button"
                 onClick={() => setSelectedRecipe(null)}
-                className="p-1 rounded-full text-gray-400 hover:text-gray-700 hover:bg-gray-100"
+                className="p-1.5 rounded-full text-slate-400 hover:text-slate-700 hover:bg-slate-100 transition-colors"
+                aria-label="Cerrar receta"
               >
                 <X className="w-5 h-5" />
               </button>

@@ -37,8 +37,8 @@ export function Header() {
   const title = getTitle(pathname)
 
   return (
-    <header className="flex items-center justify-between h-14 px-6 bg-white border-b border-gray-200 shrink-0 select-none">
-      <h1 className="text-lg font-bold text-gray-900 tracking-tight">
+    <header className="flex items-center justify-between h-14 px-6 glass-nav border-b border-slate-200/80 shrink-0 select-none sticky top-0 z-10">
+      <h1 className="text-base font-bold text-slate-900 tracking-tight">
         {title}
       </h1>
 

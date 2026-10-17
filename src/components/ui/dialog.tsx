@@ -119,7 +119,7 @@ const DialogOverlay = React.forwardRef<
     <div
       ref={ref}
       className={cn(
-        'fixed inset-0 z-50 bg-black/50 backdrop-blur-xs transition-opacity duration-200 animate-in fade-in',
+        'fixed inset-0 z-50 bg-slate-950/50 backdrop-blur-sm transition-opacity duration-200 animate-in fade-in',
         className
       )}
       {...props}
@@ -174,7 +174,7 @@ const DialogContent = React.forwardRef<HTMLDivElement, DialogContentProps>(
           role="dialog"
           aria-modal="true"
           className={cn(
-            'fixed left-1/2 top-1/2 z-50 grid w-full max-w-lg -translate-x-1/2 -translate-y-1/2 gap-4 border border-gray-200 bg-white p-6 shadow-xl duration-200 sm:rounded-xl',
+            'fixed left-1/2 top-1/2 z-50 grid w-full max-w-lg -translate-x-1/2 -translate-y-1/2 gap-4 border border-slate-200/90 bg-white p-6 shadow-2xl duration-200 sm:rounded-3xl',
             'animate-in fade-in zoom-in-95',
             className
           )}

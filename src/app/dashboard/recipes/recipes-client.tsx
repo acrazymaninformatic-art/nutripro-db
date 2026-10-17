@@ -195,19 +195,20 @@ export function RecipesClient({ initialRecipes }: RecipesClientProps) {
   return (
     <div className="space-y-6 pb-24">
       {/* Header bar */}
-      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+      <div className="glass-panel p-6 sm:p-7 rounded-3xl border border-slate-200/80 shadow-xs relative overflow-hidden flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+        <div className="absolute top-0 right-0 w-80 h-80 bg-blue-500/5 rounded-full blur-3xl pointer-events-none -mr-20 -mt-20" />
         <div>
-          <h1 className="text-2xl font-black text-gray-900 tracking-tight flex items-center gap-2.5">
+          <h1 className="text-2xl font-black text-slate-900 tracking-tight flex items-center gap-2.5">
             <ChefHat className="h-6 w-6 text-blue-600" />
             <span>Recetario Clínico & Culinario</span>
           </h1>
-          <p className="text-sm text-gray-500 mt-0.5">
+          <p className="text-xs font-semibold text-slate-500 mt-1">
             Platos calculados con desglose exacto de macronutrientes e instrucciones paso a paso para pautas dietéticas ({recipes.length} recetas).
           </p>
         </div>
 
         <Link href="/dashboard/recipes/new">
-          <Button className="flex items-center gap-2 rounded-2xl bg-blue-600 hover:bg-blue-700 text-white font-bold shadow-sm h-10 px-4">
+          <Button className="flex items-center gap-2 rounded-2xl bg-blue-600 hover:bg-blue-700 text-white font-bold shadow-xs h-10 px-5 text-xs active:scale-[0.98]">
             <Plus className="h-4 w-4" />
             <span>Crear Nueva Receta</span>
           </Button>
@@ -215,20 +216,20 @@ export function RecipesClient({ initialRecipes }: RecipesClientProps) {
       </div>
 
       {/* Search & Category Filter Toolbar */}
-      <div className="bg-white rounded-3xl border border-gray-200 p-4 shadow-xs space-y-3">
+      <div className="bg-white rounded-3xl border border-slate-200/80 p-5 shadow-xs space-y-3.5">
         <div className="relative">
-          <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
+          <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
           <Input
             type="text"
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
             placeholder="Buscar por nombre de plato o ingrediente (ej. salmón, lentejas, avena, pollo)..."
-            className="pl-10 h-10 rounded-2xl bg-gray-50/50 border-gray-200 text-xs font-semibold focus:ring-blue-500"
+            className="pl-10 h-10 rounded-2xl bg-slate-50/60 border-slate-200 text-xs font-semibold focus:ring-blue-500 shadow-2xs"
           />
           {searchQuery && (
             <button
               onClick={() => setSearchQuery('')}
-              className="absolute right-3.5 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 text-xs font-bold"
+              className="absolute right-3.5 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 text-xs font-bold"
             >
               Limpiar
             </button>
@@ -236,16 +237,16 @@ export function RecipesClient({ initialRecipes }: RecipesClientProps) {
         </div>
 
         {/* Category Filter Pills */}
-        <div className="flex items-center gap-1.5 overflow-x-auto pb-1 scrollbar-none">
+        <div className="flex items-center gap-1.5 overflow-x-auto pb-1 medical-scrollbar">
           {CATEGORY_CHIPS.map((cat) => (
             <button
               key={cat}
               type="button"
               onClick={() => setSelectedCategory(cat)}
-              className={`px-3.5 py-1.5 rounded-xl text-xs font-bold transition-all shrink-0 cursor-pointer ${
+              className={`px-3.5 py-1.5 rounded-xl text-xs font-bold transition-all shrink-0 cursor-pointer active:scale-[0.97] ${
                 selectedCategory === cat
                   ? 'bg-blue-600 text-white shadow-2xs'
-                  : 'bg-gray-100 text-gray-600 hover:bg-gray-200/80 hover:text-gray-900'
+                  : 'bg-slate-100/80 text-slate-600 hover:bg-slate-200/80 hover:text-slate-900'
               }`}
             >
               {cat}

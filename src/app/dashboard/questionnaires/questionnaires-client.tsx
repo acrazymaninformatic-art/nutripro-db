@@ -322,15 +322,16 @@ export function QuestionnairesClient({
   return (
     <div className="space-y-6">
       {/* Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 bg-white p-6 rounded-3xl border border-gray-200 shadow-xs">
+      <div className="glass-panel p-6 sm:p-7 rounded-3xl border border-slate-200/80 shadow-xs relative overflow-hidden flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+        <div className="absolute top-0 right-0 w-80 h-80 bg-blue-500/5 rounded-full blur-3xl pointer-events-none -mr-20 -mt-20" />
         <div>
           <div className="flex items-center gap-2">
-            <h1 className="text-2xl font-black text-gray-900">Control de Cuestionarios y Firmas</h1>
-            <Badge variant="outline" className="text-3xs font-black uppercase text-blue-700 bg-blue-50 border-blue-200">
+            <h1 className="text-2xl font-black text-slate-900 tracking-tight">Control de Cuestionarios y Firmas</h1>
+            <Badge variant="medical" className="text-3xs font-black uppercase">
               Módulo 5.4
             </Badge>
           </div>
-          <p className="text-xs text-gray-500 mt-1 max-w-2xl leading-relaxed">
+          <p className="text-xs font-semibold text-slate-500 mt-1 max-w-2xl leading-relaxed">
             Gestión independiente del cuestionario clínico y la firma de consentimientos dentro del portal del paciente.
             Revisión lado a lado antes de escribir en la ficha oficial.
           </p>
@@ -344,7 +345,7 @@ export function QuestionnairesClient({
                 setIsTemplateModalOpen(true)
               }
             }}
-            className="rounded-2xl bg-blue-600 hover:bg-blue-700 text-white font-bold text-xs gap-2 py-5 shadow-xs shrink-0"
+            className="rounded-2xl bg-blue-600 hover:bg-blue-700 text-white font-bold text-xs gap-2 h-10 px-5 shadow-xs shrink-0 active:scale-[0.98]"
           >
             <Send className="w-4 h-4" />
             <span>Enviar Cuestionario</span>

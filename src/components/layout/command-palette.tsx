@@ -186,25 +186,25 @@ export function CommandPalette() {
       <button
         type="button"
         onClick={() => setIsOpen(true)}
-        className="flex items-center gap-2 px-3 py-1.5 rounded-2xl bg-gray-100 hover:bg-gray-200/80 text-gray-500 hover:text-gray-900 text-xs font-semibold border border-gray-200 transition-colors shadow-2xs cursor-pointer"
+        className="flex items-center gap-2.5 px-3 py-1.5 rounded-xl bg-slate-100/70 hover:bg-slate-100 text-slate-500 hover:text-slate-900 text-xs font-semibold border border-slate-200/80 transition-all shadow-2xs cursor-pointer active:scale-[0.98]"
         title="Buscar o ejecutar acción (Ctrl + K)"
       >
-        <Search className="h-3.5 w-3.5 text-gray-400" />
+        <Search className="h-3.5 w-3.5 text-slate-400" />
         <span className="hidden sm:inline">Buscar o navegar...</span>
-        <kbd className="hidden sm:inline-flex items-center gap-0.5 px-1.5 py-0.5 text-[10px] font-mono font-bold bg-white text-gray-500 rounded border border-gray-200 shadow-2xs">
+        <kbd className="hidden sm:inline-flex items-center gap-0.5 px-1.5 py-0.5 text-[10px] font-mono font-bold bg-white text-slate-500 rounded-md border border-slate-200 shadow-2xs">
           Ctrl K
         </kbd>
       </button>
 
       {/* Modal Dialog */}
       {isOpen && (
-        <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-xs flex items-start justify-center pt-[12vh] px-4">
+        <div className="fixed inset-0 z-50 bg-slate-950/40 backdrop-blur-md flex items-start justify-center pt-[12vh] px-4">
           <div
-            className="bg-white rounded-3xl max-w-xl w-full shadow-2xl border border-gray-200 overflow-hidden animate-in fade-in zoom-in-95 duration-150"
+            className="bg-white/95 backdrop-blur-xl rounded-3xl max-w-xl w-full shadow-2xl border border-slate-200/90 overflow-hidden animate-in fade-in zoom-in-95 duration-150"
             onClick={(e) => e.stopPropagation()}
           >
             {/* Search Input bar */}
-            <div className="flex items-center gap-3 px-4 py-3.5 border-b border-gray-100 bg-gray-50/50">
+            <div className="flex items-center gap-3 px-5 py-4 border-b border-slate-100 bg-slate-50/50">
               <Search className="h-5 w-5 text-blue-600 shrink-0" />
               <input
                 ref={inputRef}
@@ -216,12 +216,12 @@ export function CommandPalette() {
                 }}
                 onKeyDown={handleKeyNav}
                 placeholder="Escribe para buscar paciente, plan, receta o acción rápida..."
-                className="w-full bg-transparent text-sm font-medium text-gray-900 placeholder-gray-400 focus:outline-none"
+                className="w-full bg-transparent text-sm font-medium text-slate-900 placeholder-slate-400 focus:outline-none"
               />
               <button
                 type="button"
                 onClick={() => setIsOpen(false)}
-                className="text-gray-400 hover:text-gray-700 p-1 rounded-lg"
+                className="text-slate-400 hover:text-slate-700 p-1 rounded-lg"
               >
                 <X className="h-4 w-4" />
               </button>

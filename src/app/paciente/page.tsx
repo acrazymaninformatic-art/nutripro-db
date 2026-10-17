@@ -196,16 +196,18 @@ export default async function PacienteDashboardPage() {
   return (
     <div className="space-y-6 sm:space-y-8">
       {/* Welcome Hero Banner */}
-      <div className="rounded-3xl bg-gradient-to-br from-blue-900 via-blue-800 to-indigo-900 text-white p-6 sm:p-8 shadow-sm relative overflow-hidden">
+      <div className="rounded-3xl bg-gradient-to-br from-slate-900 via-blue-950 to-indigo-950 text-white p-7 sm:p-9 shadow-lg relative overflow-hidden border border-blue-900/40">
+        <div className="absolute -right-20 -top-20 w-80 h-80 bg-blue-500/15 rounded-full blur-3xl pointer-events-none" />
+        <div className="absolute right-10 -bottom-24 w-72 h-72 bg-teal-500/10 rounded-full blur-3xl pointer-events-none" />
         <div className="relative z-10 max-w-2xl">
-          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-white/10 backdrop-blur-xs text-blue-200 text-xs font-semibold mb-4 border border-white/10">
+          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-white/10 backdrop-blur-md text-blue-200 text-xs font-semibold mb-4 border border-white/10 shadow-2xs">
             <Sparkles className="w-3.5 h-3.5 text-blue-300" />
-            <span>EVSoftware · Paciente</span>
+            <span>Eva Vidal Nutrición · Portal del Paciente</span>
           </div>
-          <h1 className="text-2xl sm:text-3xl font-bold tracking-tight">
+          <h1 className="text-2xl sm:text-3.5xl font-extrabold tracking-tight text-white">
             ¡Hola, {firstName}!
           </h1>
-          <p className="mt-2 text-sm sm:text-base text-blue-100 leading-relaxed">
+          <p className="mt-2 text-sm sm:text-base text-blue-100/90 leading-relaxed font-normal">
             Bienvenido/a a tu espacio de salud. Aquí puedes consultar tu plan nutricional activo,
             revisar la evolución de tus medidas corporales, gestionar tus citas y responder a tus cuestionarios.
           </p>
@@ -214,10 +216,10 @@ export default async function PacienteDashboardPage() {
 
       {/* AVISOS PENDIENTES DESTACADOS (PDF pág 2 y 13) */}
       {totalPendingAlerts > 0 && (
-        <Card className="rounded-3xl border-2 border-amber-300 bg-amber-50/80 p-5 shadow-xs">
+        <Card className="rounded-3xl border-2 border-amber-300/80 bg-gradient-to-r from-amber-50/90 via-amber-50/60 to-white p-5 shadow-xs">
           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-            <div className="flex items-start gap-3">
-              <div className="w-10 h-10 rounded-2xl bg-amber-500 text-white flex items-center justify-center shrink-0 shadow-xs">
+            <div className="flex items-start gap-3.5">
+              <div className="w-11 h-11 rounded-2xl bg-amber-500 text-white flex items-center justify-center shrink-0 shadow-xs">
                 <AlertTriangle className="w-5 h-5" />
               </div>
               <div>
@@ -245,116 +247,116 @@ export default async function PacienteDashboardPage() {
       )}
 
       {/* 4 Summary Cards Grid */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-5">
         {/* Card 1: Última Medición */}
-        <Card className="rounded-3xl hover:border-blue-200 transition-all">
+        <Card className="glass-card glass-card-hover rounded-3xl border-slate-200/80">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-xs font-bold uppercase tracking-wider text-gray-500">
+            <CardTitle className="text-xs font-bold uppercase tracking-wider text-slate-500">
               Última Medición
             </CardTitle>
-            <div className="w-8 h-8 rounded-xl bg-blue-50 text-blue-600 flex items-center justify-center">
-              <Scale className="w-4 h-4" />
+            <div className="w-9 h-9 rounded-2xl bg-gradient-to-br from-blue-50 to-blue-100/60 text-blue-700 flex items-center justify-center shadow-2xs">
+              <Scale className="w-4.5 h-4.5" />
             </div>
           </CardHeader>
           <CardContent>
             {lastAnthropometry ? (
               <div>
-                <div className="text-2xl font-bold text-gray-900">
-                  {lastAnthropometry.weightKg} <span className="text-sm font-medium text-gray-500">kg</span>
+                <div className="text-2.5xl font-mono tabular-nums font-extrabold text-slate-900">
+                  {lastAnthropometry.weightKg} <span className="text-sm font-semibold text-slate-500 font-sans">kg</span>
                 </div>
-                <p className="text-xs text-gray-500 mt-1">
+                <p className="text-xs text-slate-500 mt-1">
                   Registrado el {formatDate(lastAnthropometry.date)}
                 </p>
               </div>
             ) : (
               <div>
-                <div className="text-lg font-semibold text-gray-700">Sin registros</div>
-                <p className="text-xs text-gray-400 mt-1">Aún no hay mediciones publicadas</p>
+                <div className="text-base font-bold text-slate-700">Sin registros</div>
+                <p className="text-xs text-slate-400 mt-1">Aún no hay mediciones publicadas</p>
               </div>
             )}
           </CardContent>
         </Card>
 
         {/* Card 2: Plan Activo */}
-        <Card className="rounded-3xl hover:border-blue-200 transition-all">
+        <Card className="glass-card glass-card-hover rounded-3xl border-slate-200/80">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-xs font-bold uppercase tracking-wider text-gray-500">
+            <CardTitle className="text-xs font-bold uppercase tracking-wider text-slate-500">
               Plan Activo
             </CardTitle>
-            <div className="w-8 h-8 rounded-xl bg-emerald-50 text-emerald-600 flex items-center justify-center">
-              <UtensilsCrossed className="w-4 h-4" />
+            <div className="w-9 h-9 rounded-2xl bg-gradient-to-br from-teal-50 to-emerald-100/60 text-teal-700 flex items-center justify-center shadow-2xs">
+              <UtensilsCrossed className="w-4.5 h-4.5" />
             </div>
           </CardHeader>
           <CardContent>
             {activeMealPlan ? (
               <div>
-                <div className="text-base font-bold text-gray-900 truncate" title={activeMealPlan.name}>
+                <div className="text-base font-extrabold text-slate-900 truncate" title={activeMealPlan.name}>
                   {activeMealPlan.name}
                 </div>
                 <div className="mt-1 flex items-center gap-2">
-                  <Badge variant="default" className="bg-emerald-100 text-emerald-800 text-[10px] font-bold">
+                  <Badge variant="teal" className="text-[10px] font-bold">
                     Activo
                   </Badge>
-                  <span className="text-xs text-gray-500 truncate">
+                  <span className="text-xs text-slate-500 truncate font-medium">
                     Desde {new Date(activeMealPlan.startDate).toLocaleDateString('es-ES', { month: 'short', day: 'numeric' })}
                   </span>
                 </div>
               </div>
             ) : (
               <div>
-                <div className="text-lg font-semibold text-gray-700">Sin plan activo</div>
-                <p className="text-xs text-gray-400 mt-1">Pendiente de asignación</p>
+                <div className="text-base font-bold text-slate-700">Sin plan activo</div>
+                <p className="text-xs text-slate-400 mt-1">Pendiente de asignación</p>
               </div>
             )}
           </CardContent>
         </Card>
 
         {/* Card 3: Documentos Compartidos */}
-        <Card className="rounded-3xl hover:border-blue-200 transition-all">
+        <Card className="glass-card glass-card-hover rounded-3xl border-slate-200/80">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-xs font-bold uppercase tracking-wider text-gray-500">
+            <CardTitle className="text-xs font-bold uppercase tracking-wider text-slate-500">
               Documentos
             </CardTitle>
-            <div className="w-8 h-8 rounded-xl bg-purple-50 text-purple-600 flex items-center justify-center">
-              <FileText className="w-4 h-4" />
+            <div className="w-9 h-9 rounded-2xl bg-gradient-to-br from-purple-50 to-indigo-100/60 text-purple-700 flex items-center justify-center shadow-2xs">
+              <FileText className="w-4.5 h-4.5" />
             </div>
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold text-gray-900">
+            <div className="text-2.5xl font-mono tabular-nums font-extrabold text-slate-900">
               {documentCount}
             </div>
-            <p className="text-xs text-gray-500 mt-1">
-              {documentCount === 1 ? 'Archivo disponible' : 'Archivos disponibles'}
+            <p className="text-xs text-slate-500 mt-1">
+              {documentCount === 1 ? 'Archivo clínico disponible' : 'Archivos clínicos disponibles'}
             </p>
           </CardContent>
         </Card>
 
         {/* Card 4: Próxima Cita / Consulta */}
-        <Card className="rounded-3xl hover:border-blue-200 transition-all">
+        <Card className="glass-card glass-card-hover rounded-3xl border-slate-200/80">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-xs font-bold uppercase tracking-wider text-gray-500">
+            <CardTitle className="text-xs font-bold uppercase tracking-wider text-slate-500">
               Próxima Cita
             </CardTitle>
-            <div className="w-8 h-8 rounded-xl bg-amber-50 text-amber-600 flex items-center justify-center">
-              <Calendar className="w-4 h-4" />
+            <div className="w-9 h-9 rounded-2xl bg-gradient-to-br from-amber-50 to-amber-100/60 text-amber-700 flex items-center justify-center shadow-2xs">
+              <Calendar className="w-4.5 h-4.5" />
             </div>
           </CardHeader>
           <CardContent>
             {nextAppointment ? (
               <div>
-                <div className="text-sm font-bold text-gray-900 leading-snug">
+                <div className="text-sm font-bold text-slate-900 leading-snug">
                   {formatDateTime(nextAppointment.date)}
                 </div>
-                <div className="mt-1 flex items-center gap-1.5">
-                  <Badge variant="outline" className="text-[10px] text-amber-700 border-amber-300 bg-amber-50 font-bold">
+                <div className="mt-1.5 flex items-center gap-1.5">
+                  <Badge variant="warning" className="text-[10px] font-bold">
                     {nextAppointment.modality === 'ONLINE' ? 'Videollamada' : 'Presencial'}
                   </Badge>
                 </div>
               </div>
             ) : (
               <div>
-                <div className="text-sm font-semibold text-gray-700">Sin citas agendadas</div>
-                <p className="text-xs text-gray-400 mt-1">Pulsa en Mis Citas para solicitar</p>
+                <div className="text-sm font-bold text-slate-700">Sin citas agendadas</div>
+                <p className="text-xs text-slate-400 mt-1">Pulsa en Mis Citas para solicitar</p>
               </div>
             )}
           </CardContent>
@@ -367,18 +369,18 @@ export default async function PacienteDashboardPage() {
       )}
 
       {/* COMIDAS DE HOY (Requerimiento 3.2 Panel Paciente) */}
-      <Card className="rounded-3xl border border-gray-200/90 bg-white shadow-xs overflow-hidden">
-        <CardHeader className="bg-gradient-to-r from-blue-50/70 via-white to-white pb-3 border-b border-gray-100 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+      <Card className="glass-card rounded-3xl border-slate-200/80 shadow-xs overflow-hidden">
+        <CardHeader className="bg-gradient-to-r from-blue-50/70 via-slate-50/50 to-white pb-3.5 border-b border-slate-100 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
           <div>
             <div className="flex items-center gap-2">
-              <span className="text-xs font-black uppercase tracking-wider text-blue-600 bg-blue-100/70 px-2.5 py-0.5 rounded-full">
+              <span className="text-xs font-black uppercase tracking-wider text-blue-700 bg-blue-100/80 px-2.5 py-0.5 rounded-full border border-blue-200/60 shadow-2xs">
                 {todayDayName}
               </span>
-              <CardTitle className="text-base font-bold text-gray-900">
+              <CardTitle className="text-base font-extrabold text-slate-900">
                 Comidas de Hoy
               </CardTitle>
             </div>
-            <CardDescription className="text-xs mt-0.5">
+            <CardDescription className="text-xs mt-0.5 text-slate-500 font-medium">
               {activeMealPlan
                 ? `Pauta alimentaria activa: ${activeMealPlan.name}`
                 : 'Pauta nutricional personalizada diseñada por Eva Vidal'}
@@ -388,7 +390,7 @@ export default async function PacienteDashboardPage() {
             <Button
               variant="outline"
               size="sm"
-              className="rounded-2xl border-blue-200 text-blue-700 hover:bg-blue-50 font-bold text-xs gap-1.5 shrink-0"
+              className="rounded-xl border-blue-200 text-blue-700 hover:bg-blue-50 font-bold text-xs gap-1.5 shrink-0 shadow-2xs"
             >
               <span>Ver plan semanal completo</span>
               <ArrowRight className="w-3.5 h-3.5" />
@@ -397,29 +399,29 @@ export default async function PacienteDashboardPage() {
         </CardHeader>
         <CardContent className="p-5">
           {todayMeals.length > 0 ? (
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-3">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-3.5">
               {todayMeals.map((meal) => {
                 const label = MEAL_LABELS[meal.mealType] || meal.mealType
                 return (
                   <div
                     key={meal.id}
-                    className="p-3.5 rounded-2xl bg-gray-50/80 border border-gray-200/70 hover:border-blue-200 transition-colors flex flex-col justify-between"
+                    className="p-4 rounded-2xl bg-slate-50/80 border border-slate-200/70 hover:border-blue-200/90 hover:bg-white transition-all duration-150 flex flex-col justify-between shadow-2xs"
                   >
                     <div>
-                      <span className="text-xs font-bold text-blue-900 block border-b border-gray-200/60 pb-1.5 mb-2">
+                      <span className="text-xs font-extrabold text-blue-950 block border-b border-slate-200/80 pb-1.5 mb-2.5">
                         {label}
                       </span>
-                      <ul className="space-y-1.5">
+                      <ul className="space-y-2">
                         {meal.items.map((it) => (
-                          <li key={it.id} className="text-xs text-gray-700 leading-snug">
+                          <li key={it.id} className="text-xs text-slate-700 leading-snug">
                             {it.recipe ? (
-                              <span className="font-semibold text-gray-900">
-                                🍳 {it.recipe.name}
+                              <span className="font-bold text-slate-900 flex items-center gap-1.5">
+                                <span className="text-amber-500">🍳</span> {it.recipe.name}
                               </span>
                             ) : it.food ? (
                               <span>
-                                • {it.food.name}{' '}
-                                <span className="text-gray-400 text-2xs">
+                                <span className="text-slate-400">•</span> <strong className="text-slate-800">{it.food.name}</strong>{' '}
+                                <span className="text-slate-400 font-mono text-[11px]">
                                   ({it.quantityG} {it.food.servingUnit || 'g'})
                                 </span>
                               </span>
@@ -427,7 +429,7 @@ export default async function PacienteDashboardPage() {
                               <span>• Porción pautada</span>
                             )}
                             {it.notes && (
-                              <p className="text-3xs text-gray-500 italic mt-0.5">{it.notes}</p>
+                              <p className="text-[11px] text-slate-500 italic mt-0.5">{it.notes}</p>
                             )}
                           </li>
                         ))}
@@ -438,10 +440,12 @@ export default async function PacienteDashboardPage() {
               })}
             </div>
           ) : (
-            <div className="text-center py-6 text-gray-500 text-xs">
-              <UtensilsCrossed className="w-8 h-8 text-gray-300 mx-auto mb-2" />
-              <p className="font-medium text-gray-700">Sin comidas pautadas específicamente para hoy</p>
-              <p className="text-gray-400 text-2xs mt-0.5">
+            <div className="text-center py-8 text-slate-500 text-xs">
+              <div className="w-12 h-12 rounded-2xl bg-slate-100 flex items-center justify-center mx-auto mb-2.5 text-slate-400 shadow-2xs">
+                <UtensilsCrossed className="w-5 h-5" />
+              </div>
+              <p className="font-bold text-slate-800 text-sm">Sin comidas pautadas específicamente para hoy</p>
+              <p className="text-slate-500 text-xs mt-0.5">
                 {activeMealPlan
                   ? 'Consulta tu plan completo para revisar todas las opciones semanales.'
                   : 'Eva Vidal está preparando tu menú personalizado.'}
@@ -453,20 +457,23 @@ export default async function PacienteDashboardPage() {
 
       {/* Quick Navigation Sections - Todos los accesos del portal */}
       <div>
-        <h2 className="text-base font-bold text-gray-900 mb-4">Módulos del Portal</h2>
+        <div className="flex items-center justify-between mb-4">
+          <h2 className="text-base font-extrabold text-slate-900">Módulos del Portal Clínico</h2>
+          <span className="text-xs text-slate-500 font-medium hidden sm:inline">Todo tu expediente al alcance de un toque</span>
+        </div>
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
           {/* Link to Plan */}
-          <Link href="/paciente/plan" className="group block">
-            <Card className="h-full rounded-3xl group-hover:border-blue-400 group-hover:shadow-md transition-all">
+          <Link href="/paciente/plan" className="group block active:scale-[0.98] transition-transform">
+            <Card className="h-full glass-card glass-card-hover rounded-3xl border-slate-200/80">
               <CardHeader>
-                <div className="w-10 h-10 rounded-2xl bg-blue-50 text-blue-600 flex items-center justify-center mb-2 group-hover:bg-blue-600 group-hover:text-white transition-colors">
+                <div className="w-11 h-11 rounded-2xl bg-gradient-to-br from-blue-50 to-blue-100/70 text-blue-700 flex items-center justify-center mb-2 group-hover:bg-blue-600 group-hover:text-white transition-all shadow-2xs">
                   <UtensilsCrossed className="w-5 h-5" />
                 </div>
-                <CardTitle className="text-sm font-bold text-gray-900 group-hover:text-blue-600 transition-colors flex items-center justify-between">
+                <CardTitle className="text-sm font-bold text-slate-900 group-hover:text-blue-700 transition-colors flex items-center justify-between">
                   <span>Mi Plan Nutricional</span>
-                  <ChevronRight className="w-4 h-4 text-gray-400 group-hover:translate-x-1 group-hover:text-blue-600 transition-all" />
+                  <ChevronRight className="w-4 h-4 text-slate-400 group-hover:translate-x-1 group-hover:text-blue-700 transition-all" />
                 </CardTitle>
-                <CardDescription className="text-xs text-gray-500 leading-relaxed">
+                <CardDescription className="text-xs text-slate-500 leading-relaxed font-normal">
                   Menús del día, recetas interactivas y lista de la compra.
                 </CardDescription>
               </CardHeader>
@@ -474,17 +481,17 @@ export default async function PacienteDashboardPage() {
           </Link>
 
           {/* Link to Citas */}
-          <Link href="/paciente/citas" className="group block">
-            <Card className="h-full rounded-3xl group-hover:border-blue-400 group-hover:shadow-md transition-all">
+          <Link href="/paciente/citas" className="group block active:scale-[0.98] transition-transform">
+            <Card className="h-full glass-card glass-card-hover rounded-3xl border-slate-200/80">
               <CardHeader>
-                <div className="w-10 h-10 rounded-2xl bg-amber-50 text-amber-600 flex items-center justify-center mb-2 group-hover:bg-amber-600 group-hover:text-white transition-colors">
+                <div className="w-11 h-11 rounded-2xl bg-gradient-to-br from-amber-50 to-amber-100/70 text-amber-700 flex items-center justify-center mb-2 group-hover:bg-amber-600 group-hover:text-white transition-all shadow-2xs">
                   <Calendar className="w-5 h-5" />
                 </div>
-                <CardTitle className="text-sm font-bold text-gray-900 group-hover:text-amber-600 transition-colors flex items-center justify-between">
+                <CardTitle className="text-sm font-bold text-slate-900 group-hover:text-amber-700 transition-colors flex items-center justify-between">
                   <span>Mis Citas</span>
-                  <ChevronRight className="w-4 h-4 text-gray-400 group-hover:translate-x-1 group-hover:text-amber-600 transition-all" />
+                  <ChevronRight className="w-4 h-4 text-slate-400 group-hover:translate-x-1 group-hover:text-amber-700 transition-all" />
                 </CardTitle>
-                <CardDescription className="text-xs text-gray-500 leading-relaxed">
+                <CardDescription className="text-xs text-slate-500 leading-relaxed font-normal">
                   Solicita nuevas sesiones, consulta horarios y videollamadas.
                 </CardDescription>
               </CardHeader>
@@ -492,17 +499,17 @@ export default async function PacienteDashboardPage() {
           </Link>
 
           {/* Link to Cuestionarios */}
-          <Link href="/paciente/cuestionarios" className="group block">
-            <Card className="h-full rounded-3xl group-hover:border-blue-400 group-hover:shadow-md transition-all">
+          <Link href="/paciente/cuestionarios" className="group block active:scale-[0.98] transition-transform">
+            <Card className="h-full glass-card glass-card-hover rounded-3xl border-slate-200/80">
               <CardHeader>
-                <div className="w-10 h-10 rounded-2xl bg-emerald-50 text-emerald-600 flex items-center justify-center mb-2 group-hover:bg-emerald-600 group-hover:text-white transition-colors">
+                <div className="w-11 h-11 rounded-2xl bg-gradient-to-br from-emerald-50 to-emerald-100/70 text-emerald-700 flex items-center justify-center mb-2 group-hover:bg-emerald-600 group-hover:text-white transition-all shadow-2xs">
                   <ClipboardCheck className="w-5 h-5" />
                 </div>
-                <CardTitle className="text-sm font-bold text-gray-900 group-hover:text-emerald-600 transition-colors flex items-center justify-between">
+                <CardTitle className="text-sm font-bold text-slate-900 group-hover:text-emerald-700 transition-colors flex items-center justify-between">
                   <span>Cuestionarios & Firmas</span>
-                  <ChevronRight className="w-4 h-4 text-gray-400 group-hover:translate-x-1 group-hover:text-emerald-600 transition-all" />
+                  <ChevronRight className="w-4 h-4 text-slate-400 group-hover:translate-x-1 group-hover:text-emerald-700 transition-all" />
                 </CardTitle>
-                <CardDescription className="text-xs text-gray-500 leading-relaxed">
+                <CardDescription className="text-xs text-slate-500 leading-relaxed font-normal">
                   Anamnesis pre-consulta y consentimientos informados.
                 </CardDescription>
               </CardHeader>
@@ -510,17 +517,17 @@ export default async function PacienteDashboardPage() {
           </Link>
 
           {/* Link to Evolution */}
-          <Link href="/paciente/evolucion" className="group block">
-            <Card className="h-full rounded-3xl group-hover:border-blue-400 group-hover:shadow-md transition-all">
+          <Link href="/paciente/evolucion" className="group block active:scale-[0.98] transition-transform">
+            <Card className="h-full glass-card glass-card-hover rounded-3xl border-slate-200/80">
               <CardHeader>
-                <div className="w-10 h-10 rounded-2xl bg-indigo-50 text-indigo-600 flex items-center justify-center mb-2 group-hover:bg-indigo-600 group-hover:text-white transition-colors">
+                <div className="w-11 h-11 rounded-2xl bg-gradient-to-br from-indigo-50 to-indigo-100/70 text-indigo-700 flex items-center justify-center mb-2 group-hover:bg-indigo-600 group-hover:text-white transition-all shadow-2xs">
                   <TrendingUp className="w-5 h-5" />
                 </div>
-                <CardTitle className="text-sm font-bold text-gray-900 group-hover:text-indigo-600 transition-colors flex items-center justify-between">
+                <CardTitle className="text-sm font-bold text-slate-900 group-hover:text-indigo-700 transition-colors flex items-center justify-between">
                   <span>Mi Evolución</span>
-                  <ChevronRight className="w-4 h-4 text-gray-400 group-hover:translate-x-1 group-hover:text-indigo-600 transition-all" />
+                  <ChevronRight className="w-4 h-4 text-slate-400 group-hover:translate-x-1 group-hover:text-indigo-700 transition-all" />
                 </CardTitle>
-                <CardDescription className="text-xs text-gray-500 leading-relaxed">
+                <CardDescription className="text-xs text-slate-500 leading-relaxed font-normal">
                   Historial antropométrico y composición corporal clínica.
                 </CardDescription>
               </CardHeader>
@@ -528,17 +535,17 @@ export default async function PacienteDashboardPage() {
           </Link>
 
           {/* Link to Documentos */}
-          <Link href="/paciente/documentos" className="group block">
-            <Card className="h-full rounded-3xl group-hover:border-blue-400 group-hover:shadow-md transition-all">
+          <Link href="/paciente/documentos" className="group block active:scale-[0.98] transition-transform">
+            <Card className="h-full glass-card glass-card-hover rounded-3xl border-slate-200/80">
               <CardHeader>
-                <div className="w-10 h-10 rounded-2xl bg-purple-50 text-purple-600 flex items-center justify-center mb-2 group-hover:bg-purple-600 group-hover:text-white transition-colors">
+                <div className="w-11 h-11 rounded-2xl bg-gradient-to-br from-purple-50 to-purple-100/70 text-purple-700 flex items-center justify-center mb-2 group-hover:bg-purple-600 group-hover:text-white transition-all shadow-2xs">
                   <FileText className="w-5 h-5" />
                 </div>
-                <CardTitle className="text-sm font-bold text-gray-900 group-hover:text-purple-600 transition-colors flex items-center justify-between">
+                <CardTitle className="text-sm font-bold text-slate-900 group-hover:text-purple-700 transition-colors flex items-center justify-between">
                   <span>Mis Documentos</span>
-                  <ChevronRight className="w-4 h-4 text-gray-400 group-hover:translate-x-1 group-hover:text-purple-600 transition-all" />
+                  <ChevronRight className="w-4 h-4 text-slate-400 group-hover:translate-x-1 group-hover:text-purple-700 transition-all" />
                 </CardTitle>
-                <CardDescription className="text-xs text-gray-500 leading-relaxed">
+                <CardDescription className="text-xs text-slate-500 leading-relaxed font-normal">
                   Informes clínicos, notas de consulta y analíticas compartidas.
                 </CardDescription>
               </CardHeader>
@@ -546,17 +553,17 @@ export default async function PacienteDashboardPage() {
           </Link>
 
           {/* Link to Perfil */}
-          <Link href="/paciente/perfil" className="group block">
-            <Card className="h-full rounded-3xl group-hover:border-blue-400 group-hover:shadow-md transition-all">
+          <Link href="/paciente/perfil" className="group block active:scale-[0.98] transition-transform">
+            <Card className="h-full glass-card glass-card-hover rounded-3xl border-slate-200/80">
               <CardHeader>
-                <div className="w-10 h-10 rounded-2xl bg-slate-100 text-slate-700 flex items-center justify-center mb-2 group-hover:bg-slate-700 group-hover:text-white transition-colors">
+                <div className="w-11 h-11 rounded-2xl bg-gradient-to-br from-slate-100 to-slate-200/70 text-slate-700 flex items-center justify-center mb-2 group-hover:bg-slate-800 group-hover:text-white transition-all shadow-2xs">
                   <User className="w-5 h-5" />
                 </div>
-                <CardTitle className="text-sm font-bold text-gray-900 group-hover:text-slate-700 transition-colors flex items-center justify-between">
+                <CardTitle className="text-sm font-bold text-slate-900 group-hover:text-slate-800 transition-colors flex items-center justify-between">
                   <span>Mi Perfil</span>
-                  <ChevronRight className="w-4 h-4 text-gray-400 group-hover:translate-x-1 group-hover:text-slate-700 transition-all" />
+                  <ChevronRight className="w-4 h-4 text-slate-400 group-hover:translate-x-1 group-hover:text-slate-800 transition-all" />
                 </CardTitle>
-                <CardDescription className="text-xs text-gray-500 leading-relaxed">
+                <CardDescription className="text-xs text-slate-500 leading-relaxed font-normal">
                   Ficha personal, datos de salud y alergias (modo consulta).
                 </CardDescription>
               </CardHeader>
@@ -564,17 +571,17 @@ export default async function PacienteDashboardPage() {
           </Link>
 
           {/* Link to Configuración */}
-          <Link href="/paciente/configuracion" className="group block">
-            <Card className="h-full rounded-3xl group-hover:border-blue-400 group-hover:shadow-md transition-all">
+          <Link href="/paciente/configuracion" className="group block active:scale-[0.98] transition-transform">
+            <Card className="h-full glass-card glass-card-hover rounded-3xl border-slate-200/80">
               <CardHeader>
-                <div className="w-10 h-10 rounded-2xl bg-zinc-100 text-zinc-700 flex items-center justify-center mb-2 group-hover:bg-zinc-800 group-hover:text-white transition-colors">
+                <div className="w-11 h-11 rounded-2xl bg-gradient-to-br from-zinc-100 to-zinc-200/70 text-zinc-700 flex items-center justify-center mb-2 group-hover:bg-zinc-800 group-hover:text-white transition-all shadow-2xs">
                   <Settings className="w-5 h-5" />
                 </div>
-                <CardTitle className="text-sm font-bold text-gray-900 group-hover:text-zinc-800 transition-colors flex items-center justify-between">
+                <CardTitle className="text-sm font-bold text-slate-900 group-hover:text-zinc-800 transition-colors flex items-center justify-between">
                   <span>Mi Cuenta</span>
-                  <ChevronRight className="w-4 h-4 text-gray-400 group-hover:translate-x-1 group-hover:text-zinc-800 transition-all" />
+                  <ChevronRight className="w-4 h-4 text-slate-400 group-hover:translate-x-1 group-hover:text-zinc-800 transition-all" />
                 </CardTitle>
-                <CardDescription className="text-xs text-gray-500 leading-relaxed">
+                <CardDescription className="text-xs text-slate-500 leading-relaxed font-normal">
                   Cambio de contraseña, descarga de datos y privacidad RGPD.
                 </CardDescription>
               </CardHeader>

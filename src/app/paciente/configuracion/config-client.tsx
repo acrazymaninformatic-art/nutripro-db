@@ -82,70 +82,77 @@ export function ConfigClient({ userEmail, pendingRequests }: Props) {
   return (
     <div className="space-y-6 max-w-4xl">
       {/* Header */}
-      <div className="bg-white p-6 rounded-3xl border border-gray-200 shadow-xs">
-        <h1 className="text-xl sm:text-2xl font-bold text-gray-900 tracking-tight flex items-center gap-2">
-          <KeyRound className="w-6 h-6 text-blue-600" />
-          <span>Configuración de Mi Cuenta</span>
-        </h1>
-        <p className="text-xs text-gray-500 mt-1">
-          Gestiona tu contraseña de acceso, tus preferencias y tus derechos de privacidad y protección de datos.
-        </p>
+      <div className="glass-panel p-6 sm:p-7 rounded-3xl border border-slate-200/80 shadow-xs relative overflow-hidden">
+        <div className="absolute top-0 right-0 w-64 h-64 bg-teal-500/5 rounded-full blur-3xl pointer-events-none -mr-16 -mt-16" />
+        <div className="flex items-center gap-3.5">
+          <div className="w-11 h-11 rounded-2xl bg-teal-50 text-teal-700 flex items-center justify-center shrink-0 border border-teal-100 shadow-2xs">
+            <KeyRound className="w-5 h-5 text-teal-600" />
+          </div>
+          <div>
+            <h1 className="text-xl sm:text-2xl font-bold text-slate-900 tracking-tight">
+              Configuración de Mi Cuenta
+            </h1>
+            <p className="text-xs text-slate-500 mt-1">
+              Gestiona tu contraseña de acceso, tus preferencias y tus derechos de privacidad y protección de datos.
+            </p>
+          </div>
+        </div>
       </div>
 
       {/* 1. Seguridad y Cambio de Contraseña */}
-      <Card className="rounded-3xl border border-gray-200 shadow-xs overflow-hidden">
-        <CardHeader className="bg-gray-50/60 pb-3 border-b border-gray-100">
-          <CardTitle className="text-base font-bold text-gray-900 flex items-center gap-2">
-            <KeyRound className="w-4 h-4 text-blue-600" />
+      <Card className="rounded-3xl border-slate-200/80 shadow-xs overflow-hidden">
+        <CardHeader className="bg-slate-50/60 pb-3.5 border-b border-slate-100">
+          <CardTitle className="text-base font-bold text-slate-900 flex items-center gap-2">
+            <KeyRound className="w-4 h-4 text-teal-600" />
             <span>Seguridad y Contraseña</span>
           </CardTitle>
-          <CardDescription className="text-xs">
-            Cuenta vinculada: <strong>{userEmail}</strong>. Las contraseñas deben tener mínimo 12 caracteres.
+          <CardDescription className="text-xs text-slate-500">
+            Cuenta vinculada: <strong className="text-slate-800">{userEmail}</strong>. Las contraseñas deben tener mínimo 12 caracteres.
           </CardDescription>
         </CardHeader>
         <CardContent className="p-6">
           <form action={formAction} className="space-y-4 max-w-md">
             {passwordState.error && (
-              <div className="p-3 rounded-2xl bg-red-50 border border-red-200 text-xs text-red-800 font-medium">
+              <div className="p-3.5 rounded-2xl bg-rose-50 border border-rose-200 text-xs text-rose-800 font-medium">
                 {passwordState.error}
               </div>
             )}
             {passwordState.success && (
-              <div className="p-3 rounded-2xl bg-emerald-50 border border-emerald-200 text-xs text-emerald-800 font-medium flex items-center gap-1.5">
-                <CheckCircle2 className="w-4 h-4 shrink-0" />
+              <div className="p-3.5 rounded-2xl bg-emerald-50 border border-emerald-200 text-xs text-emerald-800 font-medium flex items-center gap-2">
+                <CheckCircle2 className="w-4 h-4 shrink-0 text-emerald-600" />
                 <span>{passwordState.success}</span>
               </div>
             )}
 
             <div>
-              <Label className="text-xs font-semibold text-gray-700">Contraseña actual</Label>
+              <Label className="text-xs font-semibold text-slate-700">Contraseña actual</Label>
               <Input
                 name="currentPassword"
                 type="password"
                 required
-                className="mt-1 text-xs rounded-xl"
+                className="mt-1.5 text-xs rounded-xl shadow-2xs"
                 placeholder="Introduce tu contraseña actual"
               />
             </div>
 
             <div>
-              <Label className="text-xs font-semibold text-gray-700">Nueva contraseña (mínimo 12 caracteres)</Label>
+              <Label className="text-xs font-semibold text-slate-700">Nueva contraseña (mínimo 12 caracteres)</Label>
               <Input
                 name="newPassword"
                 type="password"
                 required
-                className="mt-1 text-xs rounded-xl"
+                className="mt-1.5 text-xs rounded-xl shadow-2xs"
                 placeholder="Mayúscula, minúscula y número"
               />
             </div>
 
             <div>
-              <Label className="text-xs font-semibold text-gray-700">Confirmar nueva contraseña</Label>
+              <Label className="text-xs font-semibold text-slate-700">Confirmar nueva contraseña</Label>
               <Input
                 name="confirmPassword"
                 type="password"
                 required
-                className="mt-1 text-xs rounded-xl"
+                className="mt-1.5 text-xs rounded-xl shadow-2xs"
                 placeholder="Repite la nueva contraseña"
               />
             </div>
@@ -153,7 +160,7 @@ export function ConfigClient({ userEmail, pendingRequests }: Props) {
             <Button
               type="submit"
               disabled={isPendingPassword}
-              className="rounded-2xl bg-blue-600 hover:bg-blue-700 text-white font-bold text-xs gap-2"
+              className="rounded-2xl bg-teal-600 hover:bg-teal-700 text-white font-bold text-xs gap-2 shadow-xs transition-all active:scale-[0.98] h-10 px-5"
             >
               {isPendingPassword && <Loader2 className="w-3.5 h-3.5 animate-spin" />}
               <span>Actualizar contraseña</span>
@@ -163,22 +170,22 @@ export function ConfigClient({ userEmail, pendingRequests }: Props) {
       </Card>
 
       {/* 2. Descarga de Datos (Portabilidad RGPD Art. 20) */}
-      <Card className="rounded-3xl border border-gray-200 shadow-xs overflow-hidden">
-        <CardHeader className="bg-gray-50/60 pb-3 border-b border-gray-100">
-          <CardTitle className="text-base font-bold text-gray-900 flex items-center gap-2">
+      <Card className="rounded-3xl border-slate-200/80 shadow-xs overflow-hidden">
+        <CardHeader className="bg-slate-50/60 pb-3.5 border-b border-slate-100">
+          <CardTitle className="text-base font-bold text-slate-900 flex items-center gap-2">
             <Download className="w-4 h-4 text-emerald-600" />
             <span>Descarga y Portabilidad de Datos (RGPD Art. 20)</span>
           </CardTitle>
-          <CardDescription className="text-xs">
+          <CardDescription className="text-xs text-slate-500">
             Obtén una copia completa en formato estructurado (JSON) de toda tu información clínica y personal.
           </CardDescription>
         </CardHeader>
         <CardContent className="p-6 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
           <div>
-            <p className="text-xs text-gray-700 font-medium">
+            <p className="text-xs text-slate-700 font-medium">
               Incluye tu ficha personal, objetivos, historial de medidas corporales compartidas, citas y cuestionarios.
             </p>
-            <p className="text-2xs text-gray-500 mt-1">
+            <p className="text-2xs text-slate-500 mt-1">
               Fichero legible por ordenador para que lo conserves o lo compartas con otros profesionales de salud.
             </p>
           </div>
@@ -186,7 +193,7 @@ export function ConfigClient({ userEmail, pendingRequests }: Props) {
             onClick={handleDownloadData}
             disabled={downloading}
             variant="outline"
-            className="rounded-2xl border-emerald-300 text-emerald-800 hover:bg-emerald-50 font-bold text-xs gap-2 shrink-0"
+            className="rounded-2xl border-emerald-200 text-emerald-800 hover:bg-emerald-50 font-bold text-xs gap-2 shrink-0 h-10 px-4 shadow-2xs transition-all active:scale-[0.98]"
           >
             {downloading ? <Loader2 className="w-4 h-4 animate-spin" /> : <FileDown className="w-4 h-4" />}
             <span>Descargar mis datos (.json)</span>
@@ -195,35 +202,35 @@ export function ConfigClient({ userEmail, pendingRequests }: Props) {
       </Card>
 
       {/* 3. Solicitud de Supresión de Datos (RGPD Art. 17) */}
-      <Card className="rounded-3xl border border-gray-200 shadow-xs overflow-hidden">
-        <CardHeader className="bg-gray-50/60 pb-3 border-b border-gray-100">
-          <CardTitle className="text-base font-bold text-gray-900 flex items-center gap-2">
+      <Card className="rounded-3xl border-slate-200/80 shadow-xs overflow-hidden">
+        <CardHeader className="bg-slate-50/60 pb-3.5 border-b border-slate-100">
+          <CardTitle className="text-base font-bold text-slate-900 flex items-center gap-2">
             <Trash2 className="w-4 h-4 text-rose-600" />
             <span>Supresión de Datos y Derecho al Olvido (RGPD Art. 17)</span>
           </CardTitle>
-          <CardDescription className="text-xs">
+          <CardDescription className="text-xs text-slate-500">
             Puedes solicitar la eliminación de tu cuenta y datos personales.
           </CardDescription>
         </CardHeader>
         <CardContent className="p-6 space-y-4">
           {erasureSuccess && (
-            <div className="p-3 rounded-2xl bg-emerald-50 border border-emerald-200 text-xs text-emerald-800 font-medium flex items-center gap-2">
-              <CheckCircle2 className="w-4 h-4 shrink-0" />
+            <div className="p-3.5 rounded-2xl bg-emerald-50 border border-emerald-200 text-xs text-emerald-800 font-medium flex items-center gap-2">
+              <CheckCircle2 className="w-4 h-4 shrink-0 text-emerald-600" />
               <span>{erasureSuccess}</span>
             </div>
           )}
 
-          <p className="text-xs text-gray-600 leading-relaxed">
+          <p className="text-xs text-slate-600 leading-relaxed">
             Conforme a la legislación sanitaria vigente (Ley 41/2002 de Autonomía del Paciente), ciertos datos clínicos
             deben conservarse durante los plazos legalmente estipulados. Tu solicitud será tramitada y revisada por Eva Vidal.
           </p>
 
           {pendingRequests.length > 0 && (
-            <div className="p-3 bg-amber-50 border border-amber-200 rounded-2xl text-xs text-amber-900">
+            <div className="p-3.5 bg-amber-50/80 border border-amber-200 rounded-2xl text-xs text-amber-900">
               <span className="font-bold block">Solicitud en curso:</span>
-              <span>
+              <span className="mt-0.5 block">
                 Existe una petición de {pendingRequests[0].requestType === 'ERASURE' ? 'supresión' : 'exportación'} registrada el{' '}
-                {new Date(pendingRequests[0].createdAt).toLocaleDateString('es-ES')} en estado {pendingRequests[0].status}.
+                {new Date(pendingRequests[0].createdAt).toLocaleDateString('es-ES', { day: 'numeric', month: 'long', year: 'numeric' })} en estado {pendingRequests[0].status}.
               </span>
             </div>
           )}
@@ -233,13 +240,13 @@ export function ConfigClient({ userEmail, pendingRequests }: Props) {
               variant="outline"
               size="sm"
               onClick={() => setShowErasureConfirm(true)}
-              className="rounded-2xl border-rose-200 text-rose-700 hover:bg-rose-50 hover:text-rose-800 font-semibold text-xs gap-1.5"
+              className="rounded-2xl border-rose-200 text-rose-700 hover:bg-rose-50 hover:text-rose-800 font-semibold text-xs gap-2 h-9 px-4 transition-all active:scale-[0.98]"
             >
               <AlertTriangle className="w-3.5 h-3.5" />
               <span>Solicitar supresión de mis datos</span>
             </Button>
           ) : (
-            <div className="p-4 bg-rose-50/70 border border-rose-200 rounded-2xl space-y-3">
+            <div className="p-5 bg-rose-50/60 border border-rose-200 rounded-2xl space-y-3">
               <p className="text-xs font-bold text-rose-950">
                 ¿Confirmas que deseas registrar la solicitud de eliminación de tu expediente y cuenta del portal?
               </p>
@@ -247,14 +254,14 @@ export function ConfigClient({ userEmail, pendingRequests }: Props) {
                 placeholder="Motivo o aclaración adicional (opcional)"
                 value={erasureNotes}
                 onChange={(e) => setErasureNotes(e.target.value)}
-                className="text-xs bg-white"
+                className="text-xs bg-white rounded-xl shadow-2xs"
               />
-              <div className="flex items-center gap-2">
+              <div className="flex items-center gap-2.5 pt-1">
                 <Button
                   size="sm"
                   disabled={erasureLoading}
                   onClick={handleErasureSubmit}
-                  className="rounded-xl bg-rose-600 hover:bg-rose-700 text-white font-bold text-xs"
+                  className="rounded-xl bg-rose-600 hover:bg-rose-700 text-white font-bold text-xs h-9 px-4 shadow-xs transition-all active:scale-[0.98]"
                 >
                   {erasureLoading ? 'Registrando...' : 'Confirmar solicitud formal'}
                 </Button>
@@ -262,7 +269,7 @@ export function ConfigClient({ userEmail, pendingRequests }: Props) {
                   size="sm"
                   variant="ghost"
                   onClick={() => setShowErasureConfirm(false)}
-                  className="rounded-xl text-gray-600 text-xs"
+                  className="rounded-xl text-slate-600 text-xs h-9 px-3"
                 >
                   Cancelar
                 </Button>

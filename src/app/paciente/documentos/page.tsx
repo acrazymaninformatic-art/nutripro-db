@@ -84,13 +84,15 @@ export default async function PacienteDocumentosPage() {
       </div>
 
       {/* Header Info */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 bg-white p-6 rounded-3xl border border-gray-200 shadow-xs">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 bg-white glass-card p-6 sm:p-7 rounded-3xl border-slate-200/80 shadow-xs">
         <div>
-          <h1 className="text-xl sm:text-2xl font-bold text-gray-900 tracking-tight flex items-center gap-2">
-            <FolderOpen className="w-6 h-6 text-blue-600" />
+          <h1 className="text-xl sm:text-2xl font-extrabold text-slate-900 tracking-tight flex items-center gap-2.5">
+            <div className="w-9 h-9 rounded-2xl bg-blue-50 text-blue-700 flex items-center justify-center shadow-2xs">
+              <FolderOpen className="w-5 h-5" />
+            </div>
             <span>Documentos Clínicos y Notas de Eva</span>
           </h1>
-          <p className="text-xs text-gray-500 mt-1">
+          <p className="text-xs text-slate-500 mt-1 font-medium">
             Informes, analíticas y pautas compartidas por tu nutricionista Eva Vidal
           </p>
         </div>
@@ -99,24 +101,24 @@ export default async function PacienteDocumentosPage() {
       {/* NOTAS DE CONSULTA PARA EL PACIENTE (PDF pág 3 y 8) */}
       {consultations.length > 0 && (
         <div className="space-y-3">
-          <h2 className="text-xs font-bold text-gray-700 uppercase tracking-wider flex items-center gap-1.5">
+          <h2 className="text-xs font-extrabold text-slate-700 uppercase tracking-wider flex items-center gap-1.5">
             <MessageSquare className="w-4 h-4 text-blue-600" />
             <span>Notas Clínicas de Consulta para el Paciente ({consultations.length})</span>
           </h2>
 
           <div className="space-y-3">
             {consultations.map((c) => (
-              <Card key={c.id} className="rounded-3xl border border-blue-100 bg-white shadow-2xs p-5">
-                <div className="flex items-center justify-between border-b border-gray-100 pb-2 mb-3">
-                  <span className="text-xs font-bold text-blue-900 flex items-center gap-1.5">
-                    <Calendar className="w-3.5 h-3.5 text-blue-600" />
+              <Card key={c.id} className="glass-card rounded-3xl border-blue-100/90 bg-white shadow-2xs p-5">
+                <div className="flex items-center justify-between border-b border-slate-100 pb-2.5 mb-3">
+                  <span className="text-xs font-extrabold text-blue-950 flex items-center gap-1.5 font-mono">
+                    <Calendar className="w-3.5 h-3.5 text-blue-600 font-sans" />
                     <span>Consulta del {formatDate(c.date)}</span>
                   </span>
-                  <Badge variant="outline" className="text-3xs font-bold text-emerald-800 bg-emerald-50 border-emerald-200 rounded-full">
+                  <Badge variant="teal" className="text-3xs font-bold rounded-full">
                     Compartido por Eva
                   </Badge>
                 </div>
-                <p className="text-xs text-gray-700 leading-relaxed whitespace-pre-wrap">
+                <p className="text-xs text-slate-700 leading-relaxed whitespace-pre-wrap font-normal">
                   {c.planNotes || c.notes}
                 </p>
               </Card>
@@ -127,18 +129,18 @@ export default async function PacienteDocumentosPage() {
 
       {/* DOCUMENTOS / ARCHIVOS ADJUNTOS */}
       <div className="space-y-3">
-        <h2 className="text-xs font-bold text-gray-700 uppercase tracking-wider flex items-center gap-1.5">
+        <h2 className="text-xs font-extrabold text-slate-700 uppercase tracking-wider flex items-center gap-1.5">
           <FileText className="w-4 h-4 text-purple-600" />
           <span>Archivos y Documentos ({documents.length})</span>
         </h2>
 
         {documents.length === 0 ? (
-          <Card className="text-center py-16 px-6 border-dashed border-2 border-gray-200 rounded-3xl bg-white shadow-xs">
-            <div className="w-16 h-16 rounded-3xl bg-blue-50 text-blue-600 flex items-center justify-center mx-auto mb-4">
-              <FolderOpen className="w-8 h-8" />
+          <Card className="text-center py-16 px-6 border-dashed border-2 border-slate-200 rounded-3xl bg-white/70 shadow-xs backdrop-blur-xs">
+            <div className="w-14 h-14 rounded-2xl bg-blue-50 text-blue-600 flex items-center justify-center mx-auto mb-3 shadow-2xs">
+              <FolderOpen className="w-7 h-7" />
             </div>
-            <h3 className="text-lg font-bold text-gray-900">No hay documentos compartidos todavía</h3>
-            <p className="mt-1 text-xs text-gray-500 max-w-md mx-auto leading-relaxed">
+            <h3 className="text-base font-bold text-slate-900">No hay documentos compartidos todavía</h3>
+            <p className="mt-1 text-xs text-slate-500 max-w-md mx-auto leading-relaxed">
               Aquí se mostrarán las analíticas clínicas, informes de evolución o materiales educativos
               que Eva Vidal comparta contigo a lo largo de tus consultas.
             </p>
@@ -149,17 +151,17 @@ export default async function PacienteDocumentosPage() {
               const docName = doc.title || doc.fileName || 'Documento'
               const catInfo = CATEGORY_LABELS[doc.category] || {
                 label: doc.category || 'Documento',
-                badgeClass: 'bg-gray-100 text-gray-800',
+                badgeClass: 'bg-slate-100 text-slate-800',
               }
 
               return (
                 <Card
                   key={doc.id}
-                  className="rounded-3xl border border-gray-200 bg-white hover:border-blue-300 hover:shadow-xs transition-all flex flex-col justify-between"
+                  className="glass-card glass-card-hover rounded-3xl border-slate-200/80 bg-white flex flex-col justify-between"
                 >
                   <CardHeader className="pb-3">
                     <div className="flex items-start justify-between gap-3 mb-2">
-                      <div className="w-9 h-9 rounded-2xl bg-blue-50 text-blue-600 flex items-center justify-center shrink-0">
+                      <div className="w-9 h-9 rounded-2xl bg-blue-50 text-blue-700 flex items-center justify-center shrink-0 shadow-2xs">
                         <FileText className="w-4 h-4" />
                       </div>
                       <Badge

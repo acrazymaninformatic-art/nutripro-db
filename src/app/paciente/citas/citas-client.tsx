@@ -141,40 +141,40 @@ export function CitasClient({ appointments, pendingRequests = [] }: Props) {
             <Clock className="w-3.5 h-3.5 text-amber-600" />
             <span>Solicitudes en Revisión por Eva ({pendingRequests.length})</span>
           </h3>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-3.5">
             {pendingRequests.map((req) => {
               const typeMeta = APPOINTMENT_TYPE_META[req.appointmentType] || APPOINTMENT_TYPE_META.REVISION
               return (
-                <Card key={req.id} className="rounded-3xl border-amber-200 bg-amber-50/40 p-5 space-y-3 shadow-xs">
+                <Card key={req.id} className="glass-card rounded-3xl border-amber-200/80 bg-gradient-to-br from-amber-50/60 to-white p-5 space-y-3 shadow-xs">
                   <div className="flex items-center justify-between">
-                    <Badge className="bg-amber-100 text-amber-900 border-amber-300 font-bold text-2xs rounded-full">
+                    <Badge variant="warning" className="font-bold text-2xs rounded-full">
                       {req.type === 'NEW' ? 'Nueva Cita Solicitada' : req.type === 'RESCHEDULE' ? 'Cambio Solicitado' : 'Cancelación Solicitada'}
                     </Badge>
-                    <span className="text-3xs text-amber-700 font-medium">
+                    <span className="text-3xs text-amber-800 font-bold font-mono">
                       {new Date(req.createdAt).toLocaleDateString('es-ES', { day: 'numeric', month: 'short' })}
                     </span>
                   </div>
                   <div>
-                    <div className="text-sm font-bold text-gray-900 flex items-center gap-2">
+                    <div className="text-sm font-extrabold text-slate-900 flex items-center gap-2">
                       <span className="w-2.5 h-2.5 rounded-full shrink-0" style={{ backgroundColor: typeMeta.color }} />
                       <span>{typeMeta.label} ({typeMeta.duration})</span>
                     </div>
-                    <p className="text-xs text-gray-600 mt-1">
-                      <strong>Modalidad:</strong> {req.modality === 'ONLINE' ? 'Videollamada Google Meet' : 'Presencial en Consulta'}
+                    <p className="text-xs text-slate-600 mt-1.5 font-medium">
+                      <strong className="text-slate-800">Modalidad:</strong> {req.modality === 'ONLINE' ? 'Videollamada Google Meet' : 'Presencial en Consulta'}
                     </p>
                     {req.preferredTimeOfDay && (
-                      <p className="text-xs text-gray-600">
-                        <strong>Preferencia:</strong> {req.preferredTimeOfDay === 'MORNING' ? 'Mañanas' : req.preferredTimeOfDay === 'AFTERNOON' ? 'Tardes' : 'Indiferente'}
+                      <p className="text-xs text-slate-600 font-medium">
+                        <strong className="text-slate-800">Preferencia:</strong> {req.preferredTimeOfDay === 'MORNING' ? 'Mañanas' : req.preferredTimeOfDay === 'AFTERNOON' ? 'Tardes' : 'Indiferente'}
                         {req.preferredDays ? ` (Días: ${req.preferredDays})` : ''}
                       </p>
                     )}
                     {req.patientNotes && (
-                      <p className="text-2xs text-gray-500 italic mt-1 bg-white/70 p-2 rounded-xl border border-amber-200/50">
+                      <p className="text-2xs text-slate-600 italic mt-2 bg-white/80 p-2.5 rounded-xl border border-amber-200/60 shadow-2xs">
                         «{req.patientNotes}»
                       </p>
                     )}
                   </div>
-                  <p className="text-3xs text-amber-800 font-medium">
+                  <p className="text-3xs text-amber-900 font-semibold bg-amber-100/60 px-2.5 py-1 rounded-xl">
                     ⏳ Eva revisará la agenda de la consulta y te confirmará el día y hora exactos por correo.
                   </p>
                 </Card>
@@ -186,15 +186,17 @@ export function CitasClient({ appointments, pendingRequests = [] }: Props) {
 
       {/* Próximas Citas */}
       <div className="space-y-3">
-        <h3 className="text-sm font-bold text-gray-900 uppercase tracking-wider text-xs text-gray-500">
+        <h3 className="text-xs font-extrabold text-slate-500 uppercase tracking-wider">
           Citas Activas y Próximas ({activeAppointments.length})
         </h3>
 
         {activeAppointments.length === 0 ? (
-          <Card className="rounded-3xl border-dashed border-2 border-gray-200 p-8 text-center bg-white">
-            <Calendar className="w-10 h-10 text-gray-300 mx-auto mb-3" />
-            <p className="text-sm font-bold text-gray-800">No tienes citas programadas actualmente</p>
-            <p className="text-xs text-gray-500 mt-1 max-w-sm mx-auto">
+          <Card className="rounded-3xl border-dashed border-2 border-slate-200 p-8 sm:p-12 text-center bg-white/70 backdrop-blur-xs">
+            <div className="w-12 h-12 rounded-2xl bg-slate-100 flex items-center justify-center text-slate-400 mx-auto mb-3 shadow-2xs">
+              <Calendar className="w-6 h-6" />
+            </div>
+            <p className="text-sm font-bold text-slate-800">No tienes citas programadas actualmente</p>
+            <p className="text-xs text-slate-500 mt-1 max-w-sm mx-auto">
               Pulsa en "Solicitar Cita" para pedir tu próxima sesión de revisión o primera consulta.
             </p>
           </Card>
@@ -204,14 +206,14 @@ export function CitasClient({ appointments, pendingRequests = [] }: Props) {
               const d = new Date(app.date)
               const statusInfo = STATUS_LABELS[app.status] || {
                 label: app.status,
-                badgeClass: 'bg-gray-100 text-gray-800',
+                badgeClass: 'bg-slate-100 text-slate-800',
               }
               const isOnline = app.modality === 'ONLINE'
               const typeMeta = app.appointmentType ? APPOINTMENT_TYPE_META[app.appointmentType] : null
 
               return (
-                <Card key={app.id} className="rounded-3xl border-blue-100 overflow-hidden shadow-xs hover:border-blue-200 transition-all">
-                  <CardHeader className="bg-gradient-to-r from-blue-50/60 to-white pb-3 border-b border-gray-100 flex flex-row items-center justify-between">
+                <Card key={app.id} className="glass-card glass-card-hover rounded-3xl border-slate-200/80 overflow-hidden">
+                  <CardHeader className="bg-gradient-to-r from-blue-50/70 via-slate-50/50 to-white pb-3 border-b border-slate-100 flex flex-row items-center justify-between">
                     <div className="flex items-center gap-1.5 flex-wrap">
                       <Badge variant="outline" className={`text-2xs font-bold rounded-full ${statusInfo.badgeClass}`}>
                         {statusInfo.label}

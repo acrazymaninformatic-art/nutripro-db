@@ -54,20 +54,21 @@ export default async function DashboardPage() {
   return (
     <div className="space-y-8 max-w-7xl mx-auto">
       {/* Welcome Banner */}
-      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+      <div className="glass-panel p-6 sm:p-7 rounded-3xl border border-slate-200/80 shadow-xs relative overflow-hidden flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+        <div className="absolute top-0 right-0 w-80 h-80 bg-blue-500/5 rounded-full blur-3xl pointer-events-none -mr-20 -mt-20" />
         <div>
-          <h1 className="text-2xl font-bold text-gray-900 tracking-tight">Panel de Control</h1>
-          <p className="text-sm text-gray-500 capitalize">{todayFormatted}</p>
+          <h1 className="text-2xl font-black text-slate-900 tracking-tight">Panel de Control Clínico</h1>
+          <p className="text-xs font-semibold text-slate-500 capitalize mt-1">{todayFormatted}</p>
         </div>
         <div className="flex items-center gap-3">
           <Link href="/dashboard/plans/new">
-            <Button variant="outline" className="flex items-center gap-2 rounded-2xl">
+            <Button variant="outline" className="flex items-center gap-2 rounded-2xl h-10 px-4 text-xs font-bold active:scale-[0.98]">
               <CalendarPlus className="h-4 w-4 text-blue-600" />
               <span>Nuevo Plan</span>
             </Button>
           </Link>
           <Link href="/dashboard/patients/new">
-            <Button className="flex items-center gap-2 shadow-sm rounded-2xl">
+            <Button className="flex items-center gap-2 shadow-xs rounded-2xl h-10 px-4 text-xs font-bold bg-blue-600 hover:bg-blue-700 text-white active:scale-[0.98]">
               <UserPlus className="h-4 w-4" />
               <span>Nuevo Paciente</span>
             </Button>
@@ -78,93 +79,97 @@ export default async function DashboardPage() {
       {/* 4 Stat Cards Row */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
         {/* Card 1: Pacientes */}
-        <Card className="border-l-4 border-l-green-600 shadow-sm hover:shadow transition-shadow">
-          <CardContent className="p-5 flex items-center justify-between">
+        <Card className="rounded-3xl border border-slate-200/80 shadow-xs hover:shadow-md transition-all group bg-gradient-to-br from-white via-white to-blue-50/20">
+          <CardContent className="p-6 flex items-center justify-between">
             <div>
-              <p className="text-xs font-semibold text-gray-500 uppercase tracking-wider">
+              <p className="text-xs font-bold text-slate-500 uppercase tracking-wider">
                 Pacientes Activos
               </p>
-              <h3 className="text-3xl font-extrabold text-gray-900 mt-1">{patientCount}</h3>
-              <p className="text-xs text-blue-700 mt-1 font-medium flex items-center gap-1">
-                <TrendingUp className="h-3 w-3" /> Fichas en seguimiento
+              <h3 className="text-3xl font-black text-slate-900 mt-1.5 font-mono tabular-nums tracking-tight">{patientCount}</h3>
+              <p className="text-xs text-blue-700 mt-1.5 font-semibold flex items-center gap-1.5">
+                <TrendingUp className="h-3.5 w-3.5 text-blue-600" />
+                <span>Fichas en seguimiento</span>
               </p>
             </div>
-            <div className="h-12 w-12 rounded-xl bg-blue-50 text-blue-700 flex items-center justify-center">
+            <div className="h-12 w-12 rounded-2xl bg-blue-50 text-blue-700 flex items-center justify-center border border-blue-100 shadow-2xs group-hover:scale-105 transition-transform">
               <Users className="h-6 w-6" />
             </div>
           </CardContent>
         </Card>
 
         {/* Card 2: Planes */}
-        <Card className="border-l-4 border-l-blue-600 shadow-sm hover:shadow transition-shadow">
-          <CardContent className="p-5 flex items-center justify-between">
+        <Card className="rounded-3xl border border-slate-200/80 shadow-xs hover:shadow-md transition-all group bg-gradient-to-br from-white via-white to-teal-50/20">
+          <CardContent className="p-6 flex items-center justify-between">
             <div>
-              <p className="text-xs font-semibold text-gray-500 uppercase tracking-wider">
+              <p className="text-xs font-bold text-slate-500 uppercase tracking-wider">
                 Planes Activos
               </p>
-              <h3 className="text-3xl font-extrabold text-gray-900 mt-1">{activePlanCount}</h3>
-              <p className="text-xs text-blue-700 mt-1 font-medium flex items-center gap-1">
-                Pautas nutricionales
+              <h3 className="text-3xl font-black text-slate-900 mt-1.5 font-mono tabular-nums tracking-tight">{activePlanCount}</h3>
+              <p className="text-xs text-teal-700 mt-1.5 font-semibold flex items-center gap-1.5">
+                <CalendarDays className="h-3.5 w-3.5 text-teal-600" />
+                <span>Pautas nutricionales</span>
               </p>
             </div>
-            <div className="h-12 w-12 rounded-xl bg-blue-50 text-blue-700 flex items-center justify-center">
+            <div className="h-12 w-12 rounded-2xl bg-teal-50 text-teal-700 flex items-center justify-center border border-teal-100 shadow-2xs group-hover:scale-105 transition-transform">
               <CalendarDays className="h-6 w-6" />
             </div>
           </CardContent>
         </Card>
 
         {/* Card 3: Consultas */}
-        <Card className="border-l-4 border-l-purple-600 shadow-sm hover:shadow transition-shadow">
-          <CardContent className="p-5 flex items-center justify-between">
+        <Card className="rounded-3xl border border-slate-200/80 shadow-xs hover:shadow-md transition-all group bg-gradient-to-br from-white via-white to-purple-50/20">
+          <CardContent className="p-6 flex items-center justify-between">
             <div>
-              <p className="text-xs font-semibold text-gray-500 uppercase tracking-wider">
+              <p className="text-xs font-bold text-slate-500 uppercase tracking-wider">
                 Consultas del Mes
               </p>
-              <h3 className="text-3xl font-extrabold text-gray-900 mt-1">{consultationCount}</h3>
-              <p className="text-xs text-purple-700 mt-1 font-medium flex items-center gap-1">
-                Revisiones periódicas
+              <h3 className="text-3xl font-black text-slate-900 mt-1.5 font-mono tabular-nums tracking-tight">{consultationCount}</h3>
+              <p className="text-xs text-purple-700 mt-1.5 font-semibold flex items-center gap-1.5">
+                <ClipboardList className="h-3.5 w-3.5 text-purple-600" />
+                <span>Revisiones clínicas</span>
               </p>
             </div>
-            <div className="h-12 w-12 rounded-xl bg-purple-50 text-purple-700 flex items-center justify-center">
+            <div className="h-12 w-12 rounded-2xl bg-purple-50 text-purple-700 flex items-center justify-center border border-purple-100 shadow-2xs group-hover:scale-105 transition-transform">
               <ClipboardList className="h-6 w-6" />
             </div>
           </CardContent>
         </Card>
 
         {/* Card 4: Recetas */}
-        <Card className="border-l-4 border-l-amber-500 shadow-sm hover:shadow transition-shadow">
-          <CardContent className="p-5 flex items-center justify-between">
+        <Card className="rounded-3xl border border-slate-200/80 shadow-xs hover:shadow-md transition-all group bg-gradient-to-br from-white via-white to-amber-50/20">
+          <CardContent className="p-6 flex items-center justify-between">
             <div>
-              <p className="text-xs font-semibold text-gray-500 uppercase tracking-wider">
+              <p className="text-xs font-bold text-slate-500 uppercase tracking-wider">
                 Recetas & Platos
               </p>
-              <h3 className="text-3xl font-extrabold text-gray-900 mt-1">{recipeCount}</h3>
-              <p className="text-xs text-amber-700 mt-1 font-medium flex items-center gap-1">
-                Menús personalizados
+              <h3 className="text-3xl font-black text-slate-900 mt-1.5 font-mono tabular-nums tracking-tight">{recipeCount}</h3>
+              <p className="text-xs text-amber-800 mt-1.5 font-semibold flex items-center gap-1.5">
+                <ChefHat className="h-3.5 w-3.5 text-amber-600" />
+                <span>Menús de consulta</span>
               </p>
             </div>
-            <div className="h-12 w-12 rounded-xl bg-amber-50 text-amber-700 flex items-center justify-center">
+            <div className="h-12 w-12 rounded-2xl bg-amber-50 text-amber-700 flex items-center justify-center border border-amber-100 shadow-2xs group-hover:scale-105 transition-transform">
               <ChefHat className="h-6 w-6" />
             </div>
           </CardContent>
         </Card>
       </div>
 
-      {/* Quick Action Cards (Sin duplicados y con estética redondeada moderna) */}
+      {/* Quick Action Cards */}
       <div className="space-y-3">
-        <h2 className="text-sm font-bold text-gray-900 tracking-wide uppercase">Accesos Directos Clínicos</h2>
+        <h2 className="text-xs font-bold text-slate-500 tracking-wider uppercase">Accesos Directos Clínicos</h2>
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
           <Link href="/dashboard/plans/new">
-            <Card className="p-4.5 rounded-3xl hover:border-blue-500 hover:shadow-md transition-all cursor-pointer group bg-gradient-to-br from-white to-blue-50/20 border-gray-200">
+            <Card className="p-5 rounded-3xl hover:border-blue-500/80 hover:shadow-md transition-all cursor-pointer group bg-gradient-to-br from-white to-blue-50/20 border-slate-200/80">
               <div className="flex items-center gap-3.5">
-                <div className="p-3 bg-blue-100 text-blue-800 rounded-2xl group-hover:scale-105 transition-transform shadow-2xs">
+                <div className="p-3 bg-blue-100 text-blue-800 rounded-2xl group-hover:scale-105 transition-transform shadow-2xs border border-blue-200/60">
                   <CalendarDays className="h-5 w-5" />
                 </div>
                 <div>
-                  <h4 className="font-bold text-gray-900 group-hover:text-blue-700 transition-colors text-sm">
+                  <h4 className="font-bold text-slate-900 group-hover:text-blue-700 transition-colors text-sm">
                     Crear Nuevo Plan Semanal
                   </h4>
-                  <p className="text-xs text-gray-500 mt-0.5">
+                  <p className="text-xs text-slate-500 mt-0.5">
                     Generador automático adaptado y matriz semanal
                   </p>
                 </div>
@@ -173,16 +178,16 @@ export default async function DashboardPage() {
           </Link>
 
           <Link href="/dashboard/foods">
-            <Card className="p-4.5 rounded-3xl hover:border-blue-500 hover:shadow-md transition-all cursor-pointer group bg-gradient-to-br from-white to-blue-50/20 border-gray-200">
+            <Card className="p-5 rounded-3xl hover:border-blue-500/80 hover:shadow-md transition-all cursor-pointer group bg-gradient-to-br from-white to-teal-50/20 border-slate-200/80">
               <div className="flex items-center gap-3.5">
-                <div className="p-3 bg-blue-100 text-blue-800 rounded-2xl group-hover:scale-105 transition-transform shadow-2xs">
+                <div className="p-3 bg-teal-100 text-teal-800 rounded-2xl group-hover:scale-105 transition-transform shadow-2xs border border-teal-200/60">
                   <Sparkles className="h-5 w-5" />
                 </div>
                 <div>
-                  <h4 className="font-bold text-gray-900 group-hover:text-blue-700 transition-colors text-sm">
+                  <h4 className="font-bold text-slate-900 group-hover:text-teal-700 transition-colors text-sm">
                     Alimentos y Macros (1.012 items)
                   </h4>
-                  <p className="text-xs text-gray-500 mt-0.5">
+                  <p className="text-xs text-slate-500 mt-0.5">
                     Base de datos nutricional con fotos HD
                   </p>
                 </div>
@@ -191,16 +196,16 @@ export default async function DashboardPage() {
           </Link>
 
           <Link href="/dashboard/recipes">
-            <Card className="p-4.5 rounded-3xl hover:border-blue-500 hover:shadow-md transition-all cursor-pointer group bg-gradient-to-br from-white to-blue-50/20 border-gray-200">
+            <Card className="p-5 rounded-3xl hover:border-blue-500/80 hover:shadow-md transition-all cursor-pointer group bg-gradient-to-br from-white to-amber-50/20 border-slate-200/80">
               <div className="flex items-center gap-3.5">
-                <div className="p-3 bg-blue-100 text-blue-800 rounded-2xl group-hover:scale-105 transition-transform shadow-2xs">
+                <div className="p-3 bg-amber-100 text-amber-800 rounded-2xl group-hover:scale-105 transition-transform shadow-2xs border border-amber-200/60">
                   <ChefHat className="h-5 w-5" />
                 </div>
                 <div>
-                  <h4 className="font-bold text-gray-900 group-hover:text-blue-700 transition-colors text-sm">
+                  <h4 className="font-bold text-slate-900 group-hover:text-amber-700 transition-colors text-sm">
                     Recetario Culinario Clínico
                   </h4>
-                  <p className="text-xs text-gray-500 mt-0.5">
+                  <p className="text-xs text-slate-500 mt-0.5">
                     Platos saludables con tiempos y elaboración
                   </p>
                 </div>
@@ -211,18 +216,18 @@ export default async function DashboardPage() {
       </div>
 
       {/* Recent Patients Table */}
-      <Card className="shadow-sm">
-        <CardHeader className="flex flex-row items-center justify-between pb-4">
+      <Card className="rounded-3xl border border-slate-200/80 shadow-xs bg-white overflow-hidden">
+        <CardHeader className="flex flex-row items-center justify-between p-6 pb-4 border-b border-slate-100 bg-slate-50/40">
           <div>
-            <CardTitle className="text-lg flex items-center gap-2">
+            <CardTitle className="text-base font-bold text-slate-900 flex items-center gap-2.5">
               <Users className="h-5 w-5 text-blue-600" />
               <span>Pacientes Recientes</span>
             </CardTitle>
-            <CardDescription>Últimos expedientes clínicos atendidos</CardDescription>
+            <CardDescription className="text-xs text-slate-500 mt-0.5">Últimos expedientes clínicos atendidos</CardDescription>
           </div>
           <Link
             href="/dashboard/patients"
-            className="text-xs font-semibold text-blue-700 hover:text-blue-800 hover:underline flex items-center gap-1"
+            className="text-xs font-bold text-blue-700 hover:text-blue-800 flex items-center gap-1.5 transition-colors"
           >
             <span>Ver todos</span>
             <ArrowRight className="h-3.5 w-3.5" />
@@ -231,62 +236,62 @@ export default async function DashboardPage() {
         <CardContent className="p-0">
           {recentPatients.length === 0 ? (
             <div className="text-center py-12 px-4">
-              <Users className="h-10 w-10 text-gray-300 mx-auto mb-2" />
-              <p className="text-sm font-medium text-gray-700">Aún no hay pacientes dados de alta</p>
+              <Users className="h-10 w-10 text-slate-300 mx-auto mb-2" />
+              <p className="text-xs font-semibold text-slate-600">Aún no hay pacientes dados de alta</p>
               <Link href="/dashboard/patients/new" className="mt-3 inline-block">
-                <Button size="sm">Registrar Primer Paciente</Button>
+                <Button size="sm" className="rounded-xl text-xs font-bold">Registrar Primer Paciente</Button>
               </Link>
             </div>
           ) : (
             <div className="overflow-x-auto">
-              <table className="w-full text-left text-sm text-gray-600">
-                <thead className="bg-gray-50 border-y border-gray-200 text-xs font-semibold uppercase text-gray-500">
+              <table className="w-full text-left text-xs text-slate-600">
+                <thead className="bg-slate-50/80 border-b border-slate-100 text-[11px] font-bold uppercase tracking-wider text-slate-500">
                   <tr>
-                    <th className="px-6 py-3">Nombre</th>
-                    <th className="px-6 py-3">Objetivo</th>
-                    <th className="px-6 py-3 text-center">Último Peso</th>
-                    <th className="px-6 py-3 text-center">Estado</th>
-                    <th className="px-6 py-3 text-right">Acción</th>
+                    <th className="px-6 py-3.5">Nombre</th>
+                    <th className="px-6 py-3.5">Objetivo</th>
+                    <th className="px-6 py-3.5 text-center">Último Peso</th>
+                    <th className="px-6 py-3.5 text-center">Estado</th>
+                    <th className="px-6 py-3.5 text-right">Acción</th>
                   </tr>
                 </thead>
-                <tbody className="divide-y divide-gray-100">
+                <tbody className="divide-y divide-slate-100">
                   {recentPatients.map((p) => {
                     const latest = p.anthropometries[0]
                     const objectiveLabel = OBJECTIVE_LABELS[p.objective as Objective] || p.objective
 
                     return (
-                      <tr key={p.id} className="hover:bg-gray-50/80 transition-colors">
-                        <td className="px-6 py-4 font-medium text-gray-900">
+                      <tr key={p.id} className="hover:bg-slate-50/60 transition-colors">
+                        <td className="px-6 py-4 font-semibold text-slate-900">
                           <Link
                             href={`/dashboard/patients/${p.id}`}
                             className="text-blue-700 hover:text-blue-800 hover:underline"
                           >
                             {p.lastName}, {p.firstName}
                           </Link>
-                          <span className="block text-xs text-gray-400">
-                            {p.sex === 'MALE' ? 'Hombre' : 'Mujer'} • {p.heightCm} cm
+                          <span className="block text-[11px] text-slate-400 font-normal mt-0.5">
+                            {p.sex === 'MALE' ? 'Hombre' : 'Mujer'} • <span className="font-mono tabular-nums">{p.heightCm} cm</span>
                           </span>
                         </td>
                         <td className="px-6 py-4">
-                          <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-blue-50 text-blue-700 border border-blue-200">
+                          <Badge variant="medical" className="text-2xs font-bold">
                             {objectiveLabel}
-                          </span>
+                          </Badge>
                         </td>
-                        <td className="px-6 py-4 text-center font-semibold text-gray-900">
+                        <td className="px-6 py-4 text-center font-mono tabular-nums font-bold text-slate-900">
                           {latest ? `${latest.weightKg} kg` : '-'}
                         </td>
                         <td className="px-6 py-4 text-center">
                           {p.isActive ? (
-                            <Badge variant="default" className="bg-blue-100 text-blue-800 hover:bg-blue-100 border-0">
+                            <Badge variant="teal" className="text-2xs font-bold">
                               Activo
                             </Badge>
                           ) : (
-                            <Badge variant="secondary">Inactivo</Badge>
+                            <Badge variant="secondary" className="text-2xs font-semibold">Inactivo</Badge>
                           )}
                         </td>
                         <td className="px-6 py-4 text-right">
                           <Link href={`/dashboard/patients/${p.id}`}>
-                            <Button variant="ghost" size="sm" className="text-blue-700 hover:text-blue-800">
+                            <Button variant="ghost" size="sm" className="text-blue-700 hover:text-blue-800 hover:bg-blue-50/70 rounded-xl font-bold text-xs h-8 px-3">
                               Ver Ficha →
                             </Button>
                           </Link>
