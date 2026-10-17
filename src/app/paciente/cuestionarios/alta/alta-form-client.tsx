@@ -295,23 +295,38 @@ export function AltaFormClient({ patient }: Props) {
               style={{ width: `${((stepIndex + 1) / stepsList.length) * 100}%` }}
             />
           </div>
-          <div className="flex items-center gap-1 mt-3 overflow-x-auto pb-1 scrollbar-none">
-            {stepsList.map((s, idx) => (
-              <button
-                key={s.num}
-                type="button"
-                onClick={() => setStepIndex(idx)}
-                className={`px-3 py-1 rounded-xl text-3xs font-bold transition-all shrink-0 ${
-                  idx === stepIndex
-                    ? 'bg-blue-600 text-white'
-                    : idx < stepIndex
-                    ? 'bg-emerald-100 text-emerald-800'
-                    : 'bg-gray-100 text-gray-500'
-                }`}
-              >
-                {s.num}. {s.title}
-              </button>
-            ))}
+          <div className="flex flex-wrap items-center gap-1.5 mt-3 pt-1">
+            {stepsList.map((s, idx) => {
+              const isCurrent = idx === stepIndex
+              const isCompleted = idx < stepIndex
+              return (
+                <button
+                  key={s.num}
+                  type="button"
+                  onClick={() => setStepIndex(idx)}
+                  className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-all flex items-center gap-1.5 cursor-pointer ${
+                    isCurrent
+                      ? 'bg-blue-600 text-white shadow-xs ring-2 ring-blue-400/40'
+                      : isCompleted
+                      ? 'bg-emerald-100/90 text-emerald-800 hover:bg-emerald-200/80 border border-emerald-200/60'
+                      : 'bg-slate-100 text-slate-600 hover:bg-slate-200/70 border border-slate-200/50'
+                  }`}
+                >
+                  <span
+                    className={`w-4 h-4 rounded-full flex items-center justify-center text-3xs font-extrabold ${
+                      isCurrent
+                        ? 'bg-white text-blue-700'
+                        : isCompleted
+                        ? 'bg-emerald-600 text-white'
+                        : 'bg-slate-200 text-slate-700'
+                    }`}
+                  >
+                    {isCompleted ? '✓' : s.num}
+                  </span>
+                  <span>{s.title}</span>
+                </button>
+              )
+            })}
           </div>
         </div>
       </div>

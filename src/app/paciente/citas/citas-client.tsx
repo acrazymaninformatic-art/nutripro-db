@@ -78,7 +78,7 @@ export function CitasClient({ appointments, pendingRequests = [] }: Props) {
   }
 
   const activeAppointments = appointments.filter(
-    (a) => a.status !== 'COMPLETED' && a.status !== 'CANCELLED'
+    (a) => a.status !== 'COMPLETED' && a.status !== 'CANCELLED' && a.status !== 'REQUESTED'
   )
   const pastAppointments = appointments.filter(
     (a) => a.status === 'COMPLETED' || a.status === 'CANCELLED'

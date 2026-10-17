@@ -20,6 +20,7 @@ import {
 import { Button } from '@/components/ui/button'
 import { HelpWidget } from './help-widget'
 import { PacienteDesktopNav, PacienteMobileNav } from './paciente-nav'
+import { NotificationCenter } from '@/components/notifications/notification-center'
 
 export const dynamic = 'force-dynamic'
 
@@ -197,6 +198,7 @@ export default async function PacienteLayout({
             </div>
 
             <div className="flex items-center gap-2.5">
+              <NotificationCenter role="PATIENT" />
               <div className="flex items-center gap-2 text-xs text-slate-700 bg-white/90 border border-slate-200/80 px-3 py-1.5 rounded-full font-semibold shadow-2xs">
                 <div className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
                 <span>{patientName}</span>

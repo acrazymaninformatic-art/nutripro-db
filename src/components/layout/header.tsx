@@ -2,6 +2,7 @@
 
 import { usePathname } from 'next/navigation'
 import { CommandPalette } from './command-palette'
+import { NotificationCenter } from '@/components/notifications/notification-center'
 
 const routeTitles: Record<string, string> = {
   '/dashboard': 'Panel Principal',
@@ -43,6 +44,7 @@ export function Header() {
       </h1>
 
       <div className="flex items-center gap-3">
+        <NotificationCenter role="ADMIN" />
         <CommandPalette />
       </div>
     </header>

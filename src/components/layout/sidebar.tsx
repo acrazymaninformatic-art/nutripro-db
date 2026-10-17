@@ -16,7 +16,7 @@ import {
   Settings,
   ClipboardCheck,
   LogOut,
-  ReceiptText,
+  Mail,
   Activity,
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
@@ -36,7 +36,7 @@ const navItems: NavItem[] = [
   { name: 'Alimentos', href: '/dashboard/foods', icon: Apple },
   { name: 'Recetas', href: '/dashboard/recipes', icon: ChefHat },
   { name: 'Planes', href: '/dashboard/plans', icon: CalendarDays },
-  { name: 'Cobros', href: '/dashboard/billing', icon: ReceiptText },
+  { name: 'Envío de Correos', href: '/dashboard/emails', icon: Mail },
   { name: 'Control', href: '/dashboard/operations', icon: Activity },
   { name: 'Calculadora', href: '/dashboard/calculator', icon: Calculator },
 ]

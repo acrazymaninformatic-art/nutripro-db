@@ -297,97 +297,137 @@ export function InstantFoodsBrowser({
             </div>
           </div>
 
-          {/* 5.6 Clinical Nutrient Filter Toggles */}
-          <div className="flex items-center gap-1.5 flex-wrap pt-1 border-t border-gray-100 text-2xs">
-            <span className="text-gray-400 font-bold uppercase text-[10px] mr-1">Filtros clínicos:</span>
-            <button
-              type="button"
-              onClick={() => { setFilterProtein20(!filterProtein20); setCurrentPage(1); }}
-              className={`px-2.5 py-1 rounded-xl font-bold transition-all ${
-                filterProtein20 ? 'bg-blue-600 text-white shadow-2xs' : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
-              }`}
-            >
-              ≥ 20g Proteína
-            </button>
-            <button
-              type="button"
-              onClick={() => { setFilterLowSodium(!filterLowSodium); setCurrentPage(1); }}
-              className={`px-2.5 py-1 rounded-xl font-bold transition-all ${
-                filterLowSodium ? 'bg-emerald-600 text-white shadow-2xs' : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
-              }`}
-            >
-              Bajo en sodio (≤ 120mg)
-            </button>
-            <button
-              type="button"
-              onClick={() => { setFilterHighFiber(!filterHighFiber); setCurrentPage(1); }}
-              className={`px-2.5 py-1 rounded-xl font-bold transition-all ${
-                filterHighFiber ? 'bg-purple-600 text-white shadow-2xs' : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
-              }`}
-            >
-              Alto en fibra (≥ 6g)
-            </button>
-            <button
-              type="button"
-              onClick={() => { setFilterLowFodmap(!filterLowFodmap); setCurrentPage(1); }}
-              className={`px-2.5 py-1 rounded-xl font-bold transition-all ${
-                filterLowFodmap ? 'bg-amber-600 text-white shadow-2xs' : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
-              }`}
-            >
-              FODMAP Bajo
-            </button>
-            <button
-              type="button"
-              onClick={() => { setFilterFavoritesOnly(!filterFavoritesOnly); setCurrentPage(1); }}
-              className={`px-2.5 py-1 rounded-xl font-bold transition-all flex items-center gap-1 ${
-                filterFavoritesOnly ? 'bg-amber-500 text-white shadow-2xs' : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
-              }`}
-            >
-              <Star className="w-3 h-3 fill-current" />
-              <span>Favoritos</span>
-            </button>
-            <select
-              value={filterAllergenFree}
-              onChange={(e) => { setFilterAllergenFree(e.target.value); setCurrentPage(1); }}
-              className="px-2.5 py-1 rounded-xl font-bold bg-gray-100 text-gray-700 border-0 focus:ring-1 focus:ring-blue-500 text-2xs cursor-pointer"
-            >
-              <option value="ALL">Sin exclusión de alérgenos</option>
-              <option value="gluten">Sin Gluten</option>
-              <option value="lactosa">Sin Lactosa</option>
-              <option value="huevo">Sin Huevo</option>
-              <option value="frutos">Sin Frutos de cáscara</option>
-              <option value="cacahuete">Sin Cacahuetes</option>
-              <option value="pescado">Sin Pescado</option>
-            </select>
-          </div>
+          {/* 5.6 Clinical Nutrient Filter Toggles (Organizado sin cortes) */}
+          <div className="pt-2 border-t border-slate-100 space-y-2">
+            <div className="flex items-center justify-between">
+              <span className="text-[11px] font-extrabold text-slate-500 uppercase tracking-wider flex items-center gap-1.5">
+                <Sparkles className="w-3.5 h-3.5 text-blue-600" />
+                <span>Filtros Clínicos Directos</span>
+              </span>
+              {(filterProtein20 || filterLowSodium || filterHighFiber || filterLowFodmap || filterFavoritesOnly || filterAllergenFree !== 'ALL') && (
+                <button
+                  type="button"
+                  onClick={() => {
+                    setFilterProtein20(false)
+                    setFilterLowSodium(false)
+                    setFilterHighFiber(false)
+                    setFilterLowFodmap(false)
+                    setFilterFavoritesOnly(false)
+                    setFilterAllergenFree('ALL')
+                    setCurrentPage(1)
+                  }}
+                  className="text-3xs font-bold text-blue-700 hover:underline cursor-pointer"
+                >
+                  Restablecer filtros
+                </button>
+              )}
+            </div>
 
-          {/* Category Chips Bar */}
-          <div className="flex items-center gap-1.5 overflow-x-auto pb-1 pt-1 scrollbar-none text-2xs">
-            <button
-              type="button"
-              onClick={() => handleCategoryChange('ALL')}
-              className={`px-3 py-1.5 rounded-full font-bold transition-all shrink-0 ${
-                selectedCategory === 'ALL'
-                  ? 'bg-blue-600 text-white shadow-2xs'
-                  : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
-              }`}
-            >
-              Todos ({totalCount})
-            </button>
-            {categories.map((cat) => (
+            <div className="flex items-center gap-2 flex-wrap text-xs">
               <button
-                key={cat}
                 type="button"
-                onClick={() => handleCategoryChange(cat)}
-                className={`px-3 py-1.5 rounded-full font-bold transition-all shrink-0 ${
-                  selectedCategory === cat
-                    ? 'bg-blue-600 text-white shadow-2xs'
-                    : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+                onClick={() => { setFilterProtein20(!filterProtein20); setCurrentPage(1); }}
+                className={`px-3 py-1.5 rounded-xl font-bold transition-all cursor-pointer border ${
+                  filterProtein20
+                    ? 'bg-blue-600 text-white border-blue-600 shadow-2xs'
+                    : 'bg-white text-slate-700 border-slate-200/80 hover:bg-slate-50'
                 }`}
               >
-                {cat}
+                🥩 ≥ 20g Proteína
               </button>
-            ))}
+              <button
+                type="button"
+                onClick={() => { setFilterLowSodium(!filterLowSodium); setCurrentPage(1); }}
+                className={`px-3 py-1.5 rounded-xl font-bold transition-all cursor-pointer border ${
+                  filterLowSodium
+                    ? 'bg-emerald-600 text-white border-emerald-600 shadow-2xs'
+                    : 'bg-white text-slate-700 border-slate-200/80 hover:bg-slate-50'
+                }`}
+              >
+                🧂 Bajo sodio (≤ 120mg)
+              </button>
+              <button
+                type="button"
+                onClick={() => { setFilterHighFiber(!filterHighFiber); setCurrentPage(1); }}
+                className={`px-3 py-1.5 rounded-xl font-bold transition-all cursor-pointer border ${
+                  filterHighFiber
+                    ? 'bg-purple-600 text-white border-purple-600 shadow-2xs'
+                    : 'bg-white text-slate-700 border-slate-200/80 hover:bg-slate-50'
+                }`}
+              >
+                🌾 Alto en fibra (≥ 6g)
+              </button>
+              <button
+                type="button"
+                onClick={() => { setFilterLowFodmap(!filterLowFodmap); setCurrentPage(1); }}
+                className={`px-3 py-1.5 rounded-xl font-bold transition-all cursor-pointer border ${
+                  filterLowFodmap
+                    ? 'bg-amber-600 text-white border-amber-600 shadow-2xs'
+                    : 'bg-white text-slate-700 border-slate-200/80 hover:bg-slate-50'
+                }`}
+              >
+                🍃 FODMAP Bajo
+              </button>
+              <button
+                type="button"
+                onClick={() => { setFilterFavoritesOnly(!filterFavoritesOnly); setCurrentPage(1); }}
+                className={`px-3 py-1.5 rounded-xl font-bold transition-all flex items-center gap-1.5 cursor-pointer border ${
+                  filterFavoritesOnly
+                    ? 'bg-amber-500 text-white border-amber-500 shadow-2xs'
+                    : 'bg-white text-slate-700 border-slate-200/80 hover:bg-slate-50'
+                }`}
+              >
+                <Star className="w-3.5 h-3.5 fill-current" />
+                <span>Mis Favoritos</span>
+              </button>
+              <select
+                value={filterAllergenFree}
+                onChange={(e) => { setFilterAllergenFree(e.target.value); setCurrentPage(1); }}
+                className="px-3 py-1.5 rounded-xl font-bold bg-white text-slate-700 border border-slate-200/80 focus:ring-2 focus:ring-blue-500 text-xs cursor-pointer shadow-2xs"
+              >
+                <option value="ALL">🛡️ Sin exclusión de alérgenos</option>
+                <option value="gluten">🌾 Sin Gluten</option>
+                <option value="lactosa">🥛 Sin Lactosa</option>
+                <option value="huevo">🥚 Sin Huevo</option>
+                <option value="frutos">🌰 Sin Frutos secos</option>
+                <option value="cacahuete">🥜 Sin Cacahuetes</option>
+                <option value="pescado">🐟 Sin Pescado</option>
+              </select>
+            </div>
+          </div>
+
+          {/* Category Chips Bar (Multi-row wrapping) */}
+          <div className="pt-2 border-t border-slate-100">
+            <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block mb-1.5">
+              Categorías ({categories.length + 1})
+            </span>
+            <div className="flex items-center gap-1.5 flex-wrap text-2xs">
+              <button
+                type="button"
+                onClick={() => handleCategoryChange('ALL')}
+                className={`px-3 py-1.5 rounded-xl font-bold transition-all cursor-pointer ${
+                  selectedCategory === 'ALL'
+                    ? 'bg-blue-600 text-white shadow-2xs'
+                    : 'bg-slate-100 text-slate-600 hover:bg-slate-200/80'
+                }`}
+              >
+                Todos ({totalCount})
+              </button>
+              {categories.map((cat) => (
+                <button
+                  key={cat}
+                  type="button"
+                  onClick={() => handleCategoryChange(cat)}
+                  className={`px-3 py-1.5 rounded-xl font-bold transition-all cursor-pointer ${
+                    selectedCategory === cat
+                      ? 'bg-blue-600 text-white shadow-2xs'
+                      : 'bg-slate-100 text-slate-600 hover:bg-slate-200/80'
+                  }`}
+                >
+                  {cat}
+                </button>
+              ))}
+            </div>
           </div>
         </CardContent>
       </Card>

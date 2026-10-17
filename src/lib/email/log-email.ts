@@ -5,7 +5,7 @@ export interface LogEmailParams {
   recipientName?: string | null
   patientId?: string | null
   subject: string
-  type: 'APPOINTMENT' | 'REMINDER_24H' | 'PLAN_PUBLISHED' | 'ANAMNESIS' | 'PORTAL_INVITE' | 'SECURITY'
+  type: 'APPOINTMENT' | 'REMINDER_24H' | 'PLAN_PUBLISHED' | 'ANAMNESIS' | 'PORTAL_INVITE' | 'SECURITY' | 'MANUAL'
   status: 'SENT' | 'FAILED'
   errorDetails?: string | null
 }

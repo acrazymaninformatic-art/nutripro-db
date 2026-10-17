@@ -155,68 +155,8 @@ export default async function DashboardPage() {
         </Card>
       </div>
 
-      {/* Quick Action Cards */}
-      <div className="space-y-3 animate-slide-up stagger-5">
-        <h2 className="text-xs font-bold text-slate-500 tracking-wider uppercase">Accesos Directos Clínicos</h2>
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-          <Link href="/dashboard/plans/new">
-            <Card className="p-5 rounded-3xl hover:border-blue-500/80 hover-lift transition-all cursor-pointer group bg-gradient-to-br from-white to-blue-50/20 border-slate-200/80">
-              <div className="flex items-center gap-3.5">
-                <div className="p-3 bg-blue-100 text-blue-800 rounded-2xl group-hover:scale-110 transition-transform shadow-2xs border border-blue-200/60">
-                  <CalendarDays className="h-5 w-5" />
-                </div>
-                <div>
-                  <h4 className="font-bold text-slate-900 group-hover:text-blue-700 transition-colors text-sm">
-                    Crear Nuevo Plan Semanal
-                  </h4>
-                  <p className="text-xs text-slate-500 mt-0.5">
-                    Generador automático adaptado y matriz semanal
-                  </p>
-                </div>
-              </div>
-            </Card>
-          </Link>
-
-          <Link href="/dashboard/foods">
-            <Card className="p-5 rounded-3xl hover:border-teal-500/80 hover-lift transition-all cursor-pointer group bg-gradient-to-br from-white to-teal-50/20 border-slate-200/80">
-              <div className="flex items-center gap-3.5">
-                <div className="p-3 bg-teal-100 text-teal-800 rounded-2xl group-hover:scale-110 transition-transform shadow-2xs border border-teal-200/60">
-                  <Sparkles className="h-5 w-5" />
-                </div>
-                <div>
-                  <h4 className="font-bold text-slate-900 group-hover:text-teal-700 transition-colors text-sm">
-                    Alimentos y Macros (1.012 items)
-                  </h4>
-                  <p className="text-xs text-slate-500 mt-0.5">
-                    Base de datos nutricional con fotos HD
-                  </p>
-                </div>
-              </div>
-            </Card>
-          </Link>
-
-          <Link href="/dashboard/recipes">
-            <Card className="p-5 rounded-3xl hover:border-amber-500/80 hover-lift transition-all cursor-pointer group bg-gradient-to-br from-white to-amber-50/20 border-slate-200/80">
-              <div className="flex items-center gap-3.5">
-                <div className="p-3 bg-amber-100 text-amber-800 rounded-2xl group-hover:scale-110 transition-transform shadow-2xs border border-amber-200/60">
-                  <ChefHat className="h-5 w-5" />
-                </div>
-                <div>
-                  <h4 className="font-bold text-slate-900 group-hover:text-amber-700 transition-colors text-sm">
-                    Recetario Culinario Clínico
-                  </h4>
-                  <p className="text-xs text-slate-500 mt-0.5">
-                    Platos saludables con tiempos y elaboración
-                  </p>
-                </div>
-              </div>
-            </Card>
-          </Link>
-        </div>
-      </div>
-
       {/* Recent Patients Table */}
-      <Card className="rounded-3xl border border-slate-200/80 shadow-xs hover-lift bg-white overflow-hidden animate-slide-up stagger-6">
+      <Card className="rounded-3xl border border-slate-200/80 shadow-xs hover-lift bg-white overflow-hidden animate-slide-up stagger-5">
         <CardHeader className="flex flex-row items-center justify-between p-6 pb-4 border-b border-slate-100 bg-slate-50/40">
           <div>
             <CardTitle className="text-base font-bold text-slate-900 flex items-center gap-2.5">

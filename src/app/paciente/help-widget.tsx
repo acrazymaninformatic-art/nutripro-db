@@ -154,23 +154,32 @@ export function HelpWidget() {
       {/* Guía Interactiva Spotlight (Estilo Roblox Tutorial - 3.10) */}
       {tourIndex !== null && currentStep && (
         <div className="fixed inset-0 z-50 pointer-events-auto">
-          {/* Fondo oscuro general */}
-          <div
-            className="fixed inset-0 bg-black/80 backdrop-blur-xs transition-opacity duration-300"
-            onClick={handleFinishTour}
-          />
-
-          {/* Recuadro brillante alrededor del botón que se explica (Spotlight Roblox) */}
-          {targetRect && (
+          {/* Fondo oscuro: cuando hay targetRect, usamos box-shadow cutout para que el botón destacado NO quede desenfocado */}
+          {targetRect ? (
+            <>
+              {/* Overlay clickable transparente para cerrar o saltar si se pulsa fuera */}
+              <div
+                className="fixed inset-0 z-50 pointer-events-auto bg-transparent"
+                onClick={handleFinishTour}
+              />
+              {/* Recuadro brillante que ilumina el elemento sin taparlo ni desenfocarlo */}
+              <div
+                style={{
+                  position: 'fixed',
+                  top: Math.max(4, targetRect.top - 6),
+                  left: Math.max(4, targetRect.left - 6),
+                  width: targetRect.width + 12,
+                  height: targetRect.height + 12,
+                  boxShadow: '0 0 0 9999px rgba(15, 23, 42, 0.78)',
+                  zIndex: 55,
+                }}
+                className="pointer-events-none rounded-2xl ring-4 ring-amber-400 ring-offset-2 ring-offset-transparent shadow-[0_0_35px_rgba(251,191,36,0.95)] animate-pulse border-2 border-amber-300 transition-all duration-300"
+              />
+            </>
+          ) : (
             <div
-              style={{
-                position: 'fixed',
-                top: Math.max(8, targetRect.top - 6),
-                left: Math.max(8, targetRect.left - 6),
-                width: targetRect.width + 12,
-                height: targetRect.height + 12,
-              }}
-              className="pointer-events-none z-[60] rounded-2xl ring-4 ring-amber-400 ring-offset-2 ring-offset-black shadow-[0_0_35px_rgba(251,191,36,0.95)] animate-pulse border border-amber-300 bg-white/10 transition-all duration-300"
+              className="fixed inset-0 bg-slate-950/80 backdrop-blur-xs transition-opacity duration-300 z-50"
+              onClick={handleFinishTour}
             />
           )}
 
