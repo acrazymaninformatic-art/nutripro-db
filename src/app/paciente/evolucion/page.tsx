@@ -75,12 +75,12 @@ export default async function PacienteEvolucionPage() {
       : null
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-6 animate-fade-in">
       {/* Top Breadcrumb */}
       <div className="flex items-center justify-between">
         <Link
           href="/paciente"
-          className="inline-flex items-center gap-1.5 text-xs font-semibold text-gray-500 hover:text-gray-900 transition-colors"
+          className="inline-flex items-center gap-1.5 text-xs font-semibold text-slate-500 hover:text-slate-900 transition-colors btn-tactile"
         >
           <ArrowLeft className="w-3.5 h-3.5" />
           <span>Volver al inicio</span>
@@ -88,10 +88,10 @@ export default async function PacienteEvolucionPage() {
       </div>
 
       {/* Header Info */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 bg-white glass-card p-6 sm:p-7 rounded-3xl border-slate-200/80 shadow-xs">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 bg-white glass-card hover-lift p-6 sm:p-7 rounded-3xl border-slate-200/80 shadow-xs animate-slide-up">
         <div>
           <h1 className="text-xl sm:text-2xl font-extrabold text-slate-900 tracking-tight flex items-center gap-2.5">
-            <div className="w-9 h-9 rounded-2xl bg-blue-50 text-blue-700 flex items-center justify-center shadow-2xs">
+            <div className="w-9 h-9 rounded-2xl bg-teal-50 text-teal-700 flex items-center justify-center shadow-2xs">
               <TrendingUp className="w-5 h-5" />
             </div>
             <span>Mi Evolución y Composición Corporal</span>
@@ -105,7 +105,7 @@ export default async function PacienteEvolucionPage() {
       {/* Metric Highlight Cards */}
       {measurements.length > 0 && (
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-3.5">
-          <Card className="glass-card glass-card-hover rounded-3xl p-4.5 border-slate-200/80">
+          <Card className="glass-card hover-lift hover-glow-teal rounded-3xl p-4.5 border-slate-200/80 animate-slide-up stagger-1">
             <span className="text-[10px] font-extrabold text-slate-400 uppercase tracking-wider block">
               Último Peso
             </span>
@@ -117,7 +117,7 @@ export default async function PacienteEvolucionPage() {
             </span>
           </Card>
 
-          <Card className="glass-card glass-card-hover rounded-3xl p-4.5 border-slate-200/80">
+          <Card className="glass-card hover-lift hover-glow-teal rounded-3xl p-4.5 border-slate-200/80 animate-slide-up stagger-2">
             <span className="text-[10px] font-extrabold text-slate-400 uppercase tracking-wider block">
               % Grasa Corporal
             </span>
@@ -129,7 +129,7 @@ export default async function PacienteEvolucionPage() {
             </span>
           </Card>
 
-          <Card className="glass-card glass-card-hover rounded-3xl p-4.5 border-slate-200/80">
+          <Card className="glass-card hover-lift hover-glow-teal rounded-3xl p-4.5 border-slate-200/80 animate-slide-up stagger-3">
             <span className="text-[10px] font-extrabold text-amber-700 uppercase tracking-wider block">
               Masa Grasa (kg)
             </span>
@@ -141,7 +141,7 @@ export default async function PacienteEvolucionPage() {
             </span>
           </Card>
 
-          <Card className="glass-card glass-card-hover rounded-3xl p-4.5 border-slate-200/80">
+          <Card className="glass-card hover-lift hover-glow-teal rounded-3xl p-4.5 border-slate-200/80 animate-slide-up stagger-4">
             <span className="text-[10px] font-extrabold text-blue-700 uppercase tracking-wider block">
               Masa Magra (kg)
             </span>
@@ -153,13 +153,13 @@ export default async function PacienteEvolucionPage() {
             </span>
           </Card>
 
-          <Card className="glass-card glass-card-hover rounded-3xl p-4.5 border-slate-200/80">
+          <Card className="glass-card hover-lift hover-glow-teal rounded-3xl p-4.5 border-slate-200/80 animate-slide-up stagger-5">
             <span className="text-[10px] font-extrabold text-slate-400 uppercase tracking-wider block">
               Variación Total
             </span>
             <div className="text-2xl font-mono tabular-nums font-black text-slate-900 mt-1">
               {weightChange !== null ? (
-                <span className={weightChange <= 0 ? 'text-blue-600' : 'text-emerald-600'}>
+                <span className={weightChange <= 0 ? 'text-teal-600' : 'text-emerald-600'}>
                   {weightChange > 0 ? `+${weightChange}` : weightChange} kg
                 </span>
               ) : (

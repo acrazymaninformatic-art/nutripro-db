@@ -124,23 +124,37 @@ export function Sidebar({ professionalName }: { professionalName: string }) {
               prefetch={true}
               title={isCollapsed ? item.name : undefined}
               className={cn(
-                'group flex items-center text-xs font-semibold rounded-2xl transition-all duration-150',
+                'group flex items-center text-xs font-bold rounded-2xl transition-all duration-200',
                 isCollapsed
                   ? 'justify-center p-3'
                   : 'gap-3 px-3.5 py-2.5',
                 isActive
-                  ? 'bg-blue-600 text-white shadow-xs shadow-blue-600/20'
-                  : 'text-slate-600 hover:bg-slate-100/80 hover:text-slate-900'
+                  ? 'bg-gradient-to-r from-blue-600 to-blue-700 text-white shadow-xs shadow-blue-600/25'
+                  : 'text-slate-600 hover:bg-blue-50/70 hover:text-blue-700'
               )}
             >
-              <Icon
+              <div
                 className={cn(
-                  'w-4 h-4 shrink-0 transition-colors',
-                  isActive ? 'text-white' : 'text-slate-400 group-hover:text-slate-700'
+                  'w-7 h-7 rounded-xl flex items-center justify-center transition-all duration-200',
+                  isActive
+                    ? 'bg-white/20 text-white'
+                    : 'text-slate-400 group-hover:text-blue-600 group-hover:bg-blue-100/60'
                 )}
-              />
+              >
+                <Icon
+                  className={cn(
+                    'w-4 h-4 shrink-0 transition-transform group-hover:scale-110',
+                    isActive && 'scale-105'
+                  )}
+                />
+              </div>
               {!isCollapsed && (
-                <span className="truncate">{item.name}</span>
+                <>
+                  <span className="truncate">{item.name}</span>
+                  {isActive && (
+                    <span className="ml-auto w-1.5 h-1.5 rounded-full bg-white animate-pulse" />
+                  )}
+                </>
               )}
             </Link>
           )

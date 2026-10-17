@@ -52,23 +52,23 @@ export default async function DashboardPage() {
   })
 
   return (
-    <div className="space-y-8 max-w-7xl mx-auto">
+    <div className="space-y-8 max-w-7xl mx-auto animate-fade-in">
       {/* Welcome Banner */}
-      <div className="glass-panel p-6 sm:p-7 rounded-3xl border border-slate-200/80 shadow-xs relative overflow-hidden flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-        <div className="absolute top-0 right-0 w-80 h-80 bg-blue-500/5 rounded-full blur-3xl pointer-events-none -mr-20 -mt-20" />
+      <div className="glass-panel p-6 sm:p-7 rounded-3xl border border-slate-200/80 shadow-xs relative overflow-hidden flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 animate-slide-up">
+        <div className="absolute top-0 right-0 w-80 h-80 bg-blue-500/10 rounded-full blur-3xl pointer-events-none -mr-20 -mt-20" />
         <div>
           <h1 className="text-2xl font-black text-slate-900 tracking-tight">Panel de Control Clínico</h1>
           <p className="text-xs font-semibold text-slate-500 capitalize mt-1">{todayFormatted}</p>
         </div>
         <div className="flex items-center gap-3">
           <Link href="/dashboard/plans/new">
-            <Button variant="outline" className="flex items-center gap-2 rounded-2xl h-10 px-4 text-xs font-bold active:scale-[0.98]">
+            <Button variant="outline" className="flex items-center gap-2 rounded-2xl h-10 px-4 text-xs font-bold btn-tactile hover-lift">
               <CalendarPlus className="h-4 w-4 text-blue-600" />
               <span>Nuevo Plan</span>
             </Button>
           </Link>
           <Link href="/dashboard/patients/new">
-            <Button className="flex items-center gap-2 shadow-xs rounded-2xl h-10 px-4 text-xs font-bold bg-blue-600 hover:bg-blue-700 text-white active:scale-[0.98]">
+            <Button className="flex items-center gap-2 shadow-xs rounded-2xl h-10 px-4 text-xs font-bold bg-blue-600 hover:bg-blue-700 text-white btn-tactile hover-lift">
               <UserPlus className="h-4 w-4" />
               <span>Nuevo Paciente</span>
             </Button>
@@ -79,7 +79,7 @@ export default async function DashboardPage() {
       {/* 4 Stat Cards Row */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
         {/* Card 1: Pacientes */}
-        <Card className="rounded-3xl border border-slate-200/80 shadow-xs hover:shadow-md transition-all group bg-gradient-to-br from-white via-white to-blue-50/20">
+        <Card className="rounded-3xl border border-slate-200/80 shadow-xs hover-lift hover-glow-blue transition-all group bg-gradient-to-br from-white via-white to-blue-50/20 animate-slide-up stagger-1">
           <CardContent className="p-6 flex items-center justify-between">
             <div>
               <p className="text-xs font-bold text-slate-500 uppercase tracking-wider">
@@ -91,14 +91,14 @@ export default async function DashboardPage() {
                 <span>Fichas en seguimiento</span>
               </p>
             </div>
-            <div className="h-12 w-12 rounded-2xl bg-blue-50 text-blue-700 flex items-center justify-center border border-blue-100 shadow-2xs group-hover:scale-105 transition-transform">
+            <div className="h-12 w-12 rounded-2xl bg-blue-50 text-blue-700 flex items-center justify-center border border-blue-100 shadow-2xs group-hover:scale-110 transition-transform">
               <Users className="h-6 w-6" />
             </div>
           </CardContent>
         </Card>
 
         {/* Card 2: Planes */}
-        <Card className="rounded-3xl border border-slate-200/80 shadow-xs hover:shadow-md transition-all group bg-gradient-to-br from-white via-white to-teal-50/20">
+        <Card className="rounded-3xl border border-slate-200/80 shadow-xs hover-lift hover-glow-blue transition-all group bg-gradient-to-br from-white via-white to-teal-50/20 animate-slide-up stagger-2">
           <CardContent className="p-6 flex items-center justify-between">
             <div>
               <p className="text-xs font-bold text-slate-500 uppercase tracking-wider">
@@ -110,14 +110,14 @@ export default async function DashboardPage() {
                 <span>Pautas nutricionales</span>
               </p>
             </div>
-            <div className="h-12 w-12 rounded-2xl bg-teal-50 text-teal-700 flex items-center justify-center border border-teal-100 shadow-2xs group-hover:scale-105 transition-transform">
+            <div className="h-12 w-12 rounded-2xl bg-teal-50 text-teal-700 flex items-center justify-center border border-teal-100 shadow-2xs group-hover:scale-110 transition-transform">
               <CalendarDays className="h-6 w-6" />
             </div>
           </CardContent>
         </Card>
 
         {/* Card 3: Consultas */}
-        <Card className="rounded-3xl border border-slate-200/80 shadow-xs hover:shadow-md transition-all group bg-gradient-to-br from-white via-white to-purple-50/20">
+        <Card className="rounded-3xl border border-slate-200/80 shadow-xs hover-lift hover-glow-blue transition-all group bg-gradient-to-br from-white via-white to-purple-50/20 animate-slide-up stagger-3">
           <CardContent className="p-6 flex items-center justify-between">
             <div>
               <p className="text-xs font-bold text-slate-500 uppercase tracking-wider">
@@ -129,14 +129,14 @@ export default async function DashboardPage() {
                 <span>Revisiones clínicas</span>
               </p>
             </div>
-            <div className="h-12 w-12 rounded-2xl bg-purple-50 text-purple-700 flex items-center justify-center border border-purple-100 shadow-2xs group-hover:scale-105 transition-transform">
+            <div className="h-12 w-12 rounded-2xl bg-purple-50 text-purple-700 flex items-center justify-center border border-purple-100 shadow-2xs group-hover:scale-110 transition-transform">
               <ClipboardList className="h-6 w-6" />
             </div>
           </CardContent>
         </Card>
 
         {/* Card 4: Recetas */}
-        <Card className="rounded-3xl border border-slate-200/80 shadow-xs hover:shadow-md transition-all group bg-gradient-to-br from-white via-white to-amber-50/20">
+        <Card className="rounded-3xl border border-slate-200/80 shadow-xs hover-lift hover-glow-blue transition-all group bg-gradient-to-br from-white via-white to-amber-50/20 animate-slide-up stagger-4">
           <CardContent className="p-6 flex items-center justify-between">
             <div>
               <p className="text-xs font-bold text-slate-500 uppercase tracking-wider">
@@ -148,7 +148,7 @@ export default async function DashboardPage() {
                 <span>Menús de consulta</span>
               </p>
             </div>
-            <div className="h-12 w-12 rounded-2xl bg-amber-50 text-amber-700 flex items-center justify-center border border-amber-100 shadow-2xs group-hover:scale-105 transition-transform">
+            <div className="h-12 w-12 rounded-2xl bg-amber-50 text-amber-700 flex items-center justify-center border border-amber-100 shadow-2xs group-hover:scale-110 transition-transform">
               <ChefHat className="h-6 w-6" />
             </div>
           </CardContent>
@@ -156,13 +156,13 @@ export default async function DashboardPage() {
       </div>
 
       {/* Quick Action Cards */}
-      <div className="space-y-3">
+      <div className="space-y-3 animate-slide-up stagger-5">
         <h2 className="text-xs font-bold text-slate-500 tracking-wider uppercase">Accesos Directos Clínicos</h2>
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
           <Link href="/dashboard/plans/new">
-            <Card className="p-5 rounded-3xl hover:border-blue-500/80 hover:shadow-md transition-all cursor-pointer group bg-gradient-to-br from-white to-blue-50/20 border-slate-200/80">
+            <Card className="p-5 rounded-3xl hover:border-blue-500/80 hover-lift transition-all cursor-pointer group bg-gradient-to-br from-white to-blue-50/20 border-slate-200/80">
               <div className="flex items-center gap-3.5">
-                <div className="p-3 bg-blue-100 text-blue-800 rounded-2xl group-hover:scale-105 transition-transform shadow-2xs border border-blue-200/60">
+                <div className="p-3 bg-blue-100 text-blue-800 rounded-2xl group-hover:scale-110 transition-transform shadow-2xs border border-blue-200/60">
                   <CalendarDays className="h-5 w-5" />
                 </div>
                 <div>
@@ -178,9 +178,9 @@ export default async function DashboardPage() {
           </Link>
 
           <Link href="/dashboard/foods">
-            <Card className="p-5 rounded-3xl hover:border-blue-500/80 hover:shadow-md transition-all cursor-pointer group bg-gradient-to-br from-white to-teal-50/20 border-slate-200/80">
+            <Card className="p-5 rounded-3xl hover:border-teal-500/80 hover-lift transition-all cursor-pointer group bg-gradient-to-br from-white to-teal-50/20 border-slate-200/80">
               <div className="flex items-center gap-3.5">
-                <div className="p-3 bg-teal-100 text-teal-800 rounded-2xl group-hover:scale-105 transition-transform shadow-2xs border border-teal-200/60">
+                <div className="p-3 bg-teal-100 text-teal-800 rounded-2xl group-hover:scale-110 transition-transform shadow-2xs border border-teal-200/60">
                   <Sparkles className="h-5 w-5" />
                 </div>
                 <div>
@@ -196,9 +196,9 @@ export default async function DashboardPage() {
           </Link>
 
           <Link href="/dashboard/recipes">
-            <Card className="p-5 rounded-3xl hover:border-blue-500/80 hover:shadow-md transition-all cursor-pointer group bg-gradient-to-br from-white to-amber-50/20 border-slate-200/80">
+            <Card className="p-5 rounded-3xl hover:border-amber-500/80 hover-lift transition-all cursor-pointer group bg-gradient-to-br from-white to-amber-50/20 border-slate-200/80">
               <div className="flex items-center gap-3.5">
-                <div className="p-3 bg-amber-100 text-amber-800 rounded-2xl group-hover:scale-105 transition-transform shadow-2xs border border-amber-200/60">
+                <div className="p-3 bg-amber-100 text-amber-800 rounded-2xl group-hover:scale-110 transition-transform shadow-2xs border border-amber-200/60">
                   <ChefHat className="h-5 w-5" />
                 </div>
                 <div>
@@ -216,7 +216,7 @@ export default async function DashboardPage() {
       </div>
 
       {/* Recent Patients Table */}
-      <Card className="rounded-3xl border border-slate-200/80 shadow-xs bg-white overflow-hidden">
+      <Card className="rounded-3xl border border-slate-200/80 shadow-xs hover-lift bg-white overflow-hidden animate-slide-up stagger-6">
         <CardHeader className="flex flex-row items-center justify-between p-6 pb-4 border-b border-slate-100 bg-slate-50/40">
           <div>
             <CardTitle className="text-base font-bold text-slate-900 flex items-center gap-2.5">

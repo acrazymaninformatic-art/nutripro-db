@@ -194,13 +194,13 @@ export default async function PacienteDashboardPage() {
   }>
 
   return (
-    <div className="space-y-6 sm:space-y-8">
+    <div className="space-y-6 sm:space-y-8 animate-fade-in">
       {/* Welcome Hero Banner */}
-      <div className="rounded-3xl bg-gradient-to-br from-slate-900 via-blue-950 to-indigo-950 text-white p-7 sm:p-9 shadow-lg relative overflow-hidden border border-blue-900/40">
+      <div className="rounded-3xl bg-gradient-to-br from-slate-900 via-blue-950 to-indigo-950 text-white p-7 sm:p-9 shadow-lg relative overflow-hidden border border-blue-900/40 animate-slide-up">
         <div className="absolute -right-20 -top-20 w-80 h-80 bg-blue-500/15 rounded-full blur-3xl pointer-events-none" />
         <div className="absolute right-10 -bottom-24 w-72 h-72 bg-teal-500/10 rounded-full blur-3xl pointer-events-none" />
         <div className="relative z-10 max-w-2xl">
-          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-white/10 backdrop-blur-md text-blue-200 text-xs font-semibold mb-4 border border-white/10 shadow-2xs">
+          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-white/10 backdrop-blur-md text-blue-200 text-xs font-semibold mb-4 border border-white/10 shadow-2xs animate-float">
             <Sparkles className="w-3.5 h-3.5 text-blue-300" />
             <span>Eva Vidal Nutrición · Portal del Paciente</span>
           </div>
@@ -216,10 +216,10 @@ export default async function PacienteDashboardPage() {
 
       {/* AVISOS PENDIENTES DESTACADOS (PDF pág 2 y 13) */}
       {totalPendingAlerts > 0 && (
-        <Card className="rounded-3xl border-2 border-amber-300/80 bg-gradient-to-r from-amber-50/90 via-amber-50/60 to-white p-5 shadow-xs">
+        <Card className="rounded-3xl border-2 border-amber-300/80 bg-gradient-to-r from-amber-50/90 via-amber-50/60 to-white p-5 shadow-xs animate-scale-in">
           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
             <div className="flex items-start gap-3.5">
-              <div className="w-11 h-11 rounded-2xl bg-amber-500 text-white flex items-center justify-center shrink-0 shadow-xs">
+              <div className="w-11 h-11 rounded-2xl bg-amber-500 text-white flex items-center justify-center shrink-0 shadow-xs animate-glow-blue">
                 <AlertTriangle className="w-5 h-5" />
               </div>
               <div>
@@ -237,7 +237,7 @@ export default async function PacienteDashboardPage() {
             </div>
 
             <Link href="/paciente/cuestionarios">
-              <Button className="rounded-2xl bg-amber-600 hover:bg-amber-700 text-white font-bold text-xs gap-1.5 shrink-0 shadow-xs">
+              <Button className="rounded-2xl bg-amber-600 hover:bg-amber-700 text-white font-bold text-xs gap-1.5 shrink-0 shadow-xs btn-tactile">
                 <span>Revisar pendientes</span>
                 <ArrowRight className="w-3.5 h-3.5" />
               </Button>
@@ -249,7 +249,7 @@ export default async function PacienteDashboardPage() {
       {/* 4 Summary Cards Grid */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-5">
         {/* Card 1: Última Medición */}
-        <Card className="glass-card glass-card-hover rounded-3xl border-slate-200/80">
+        <Card className="glass-card hover-lift hover-glow-teal rounded-3xl border-slate-200/80 animate-slide-up stagger-1">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-xs font-bold uppercase tracking-wider text-slate-500">
               Última Medición
@@ -278,7 +278,7 @@ export default async function PacienteDashboardPage() {
         </Card>
 
         {/* Card 2: Plan Activo */}
-        <Card className="glass-card glass-card-hover rounded-3xl border-slate-200/80">
+        <Card className="glass-card hover-lift hover-glow-teal rounded-3xl border-slate-200/80 animate-slide-up stagger-2">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-xs font-bold uppercase tracking-wider text-slate-500">
               Plan Activo
@@ -312,7 +312,7 @@ export default async function PacienteDashboardPage() {
         </Card>
 
         {/* Card 3: Documentos Compartidos */}
-        <Card className="glass-card glass-card-hover rounded-3xl border-slate-200/80">
+        <Card className="glass-card hover-lift hover-glow-teal rounded-3xl border-slate-200/80 animate-slide-up stagger-3">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-xs font-bold uppercase tracking-wider text-slate-500">
               Documentos
@@ -332,7 +332,7 @@ export default async function PacienteDashboardPage() {
         </Card>
 
         {/* Card 4: Próxima Cita / Consulta */}
-        <Card className="glass-card glass-card-hover rounded-3xl border-slate-200/80">
+        <Card className="glass-card hover-lift hover-glow-teal rounded-3xl border-slate-200/80 animate-slide-up stagger-4">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-xs font-bold uppercase tracking-wider text-slate-500">
               Próxima Cita
@@ -365,11 +365,13 @@ export default async function PacienteDashboardPage() {
 
       {/* PROTOCOLO CLÍNICO ACTIVO Y DIARIO DE SÍNTOMAS (5.9) */}
       {activeProtocol && (
-        <PatientProtocolCard protocol={activeProtocol} />
+        <div className="animate-slide-up stagger-5">
+          <PatientProtocolCard protocol={activeProtocol} />
+        </div>
       )}
 
       {/* COMIDAS DE HOY (Requerimiento 3.2 Panel Paciente) */}
-      <Card className="glass-card rounded-3xl border-slate-200/80 shadow-xs overflow-hidden">
+      <Card className="glass-card hover-lift rounded-3xl border-slate-200/80 shadow-xs overflow-hidden animate-slide-up stagger-6">
         <CardHeader className="bg-gradient-to-r from-blue-50/70 via-slate-50/50 to-white pb-3.5 border-b border-slate-100 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
           <div>
             <div className="flex items-center gap-2">

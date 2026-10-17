@@ -19,25 +19,9 @@ import {
 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { HelpWidget } from './help-widget'
+import { PacienteDesktopNav, PacienteMobileNav } from './paciente-nav'
 
 export const dynamic = 'force-dynamic'
-
-interface NavLinkItem {
-  name: string
-  href: string
-  icon: React.ComponentType<{ className?: string }>
-}
-
-const navLinks: NavLinkItem[] = [
-  { name: 'Inicio', href: '/paciente', icon: LayoutDashboard },
-  { name: 'Mi Plan', href: '/paciente/plan', icon: CalendarDays },
-  { name: 'Mis Citas', href: '/paciente/citas', icon: Calendar },
-  { name: 'Mi Evolución', href: '/paciente/evolucion', icon: TrendingUp },
-  { name: 'Cuestionarios y Firmas', href: '/paciente/cuestionarios', icon: ClipboardCheck },
-  { name: 'Mis Documentos', href: '/paciente/documentos', icon: FileText },
-  { name: 'Mi Perfil', href: '/paciente/perfil', icon: User },
-  { name: 'Mi Cuenta', href: '/paciente/configuracion', icon: Settings },
-]
 
 export default async function PacienteLayout({
   children,
@@ -106,7 +90,7 @@ export default async function PacienteLayout({
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 flex flex-col">
+    <div className="min-h-screen bg-ambient-patient flex flex-col">
       {isAdminPreview && (
         <div className="bg-amber-500 text-amber-950 px-4 py-2.5 font-medium text-xs flex flex-wrap items-center justify-between gap-3 shadow-sm border-b border-amber-600 z-50">
           <div className="flex items-center gap-2">
@@ -161,27 +145,8 @@ export default async function PacienteLayout({
             </div>
           )}
 
-          {/* Navigation Links (Desktop) */}
-          <nav className="flex-1 p-4 space-y-1 overflow-y-auto">
-            {navLinks.map((item) => {
-              const Icon = item.icon
-              const navId = item.href === '/paciente' ? 'tour-nav-inicio' : `tour-nav-${item.href.replace('/paciente/', '')}`
-              return (
-                <Link
-                  key={item.href}
-                  id={navId}
-                  data-tour={navId}
-                  href={item.href}
-                  className="flex items-center gap-3 px-3.5 py-2.5 rounded-2xl text-xs font-semibold text-slate-600 hover:text-blue-700 hover:bg-blue-50/80 active:bg-blue-100/70 transition-all duration-150 group"
-                >
-                  <div className="w-8 h-8 rounded-xl bg-slate-100/80 group-hover:bg-blue-100/80 group-hover:text-blue-700 flex items-center justify-center text-slate-500 transition-colors">
-                    <Icon className="w-4 h-4 transition-transform group-hover:scale-110" />
-                  </div>
-                  <span>{item.name}</span>
-                </Link>
-              )
-            })}
-          </nav>
+          {/* Dynamic Navigation Links (Desktop) */}
+          <PacienteDesktopNav />
 
           {/* User Card & Logout Button in Sidebar */}
           <div className="p-4 border-t border-slate-100 bg-slate-50/50 mt-auto space-y-3">
@@ -250,7 +215,7 @@ export default async function PacienteLayout({
 
           {/* Page Content */}
           <main className="flex-1 overflow-y-auto p-4 md:p-8 pb-24 md:pb-8">
-            <div className="max-w-6xl mx-auto">
+            <div className="max-w-6xl mx-auto animate-fade-in">
               {children}
             </div>
           </main>
@@ -258,43 +223,7 @@ export default async function PacienteLayout({
       </div>
 
       {/* Floating Glass Bottom Navigation for Mobile */}
-      <nav className="md:hidden fixed bottom-0 left-0 right-0 z-40 glass-nav px-3 py-2 border-t border-slate-200/90 shadow-lg flex items-center justify-around">
-        <Link
-          href="/paciente"
-          className="flex flex-col items-center gap-1 py-1 px-2.5 rounded-xl text-slate-600 hover:text-blue-700 active:scale-95 transition-transform"
-        >
-          <LayoutDashboard className="w-5 h-5" />
-          <span className="text-[10px] font-bold">Inicio</span>
-        </Link>
-        <Link
-          href="/paciente/plan"
-          className="flex flex-col items-center gap-1 py-1 px-2.5 rounded-xl text-slate-600 hover:text-blue-700 active:scale-95 transition-transform"
-        >
-          <CalendarDays className="w-5 h-5" />
-          <span className="text-[10px] font-bold">Mi Plan</span>
-        </Link>
-        <Link
-          href="/paciente/citas"
-          className="flex flex-col items-center gap-1 py-1 px-2.5 rounded-xl text-slate-600 hover:text-blue-700 active:scale-95 transition-transform"
-        >
-          <Calendar className="w-5 h-5" />
-          <span className="text-[10px] font-bold">Citas</span>
-        </Link>
-        <Link
-          href="/paciente/evolucion"
-          className="flex flex-col items-center gap-1 py-1 px-2.5 rounded-xl text-slate-600 hover:text-blue-700 active:scale-95 transition-transform"
-        >
-          <TrendingUp className="w-5 h-5" />
-          <span className="text-[10px] font-bold">Progreso</span>
-        </Link>
-        <Link
-          href="/paciente/cuestionarios"
-          className="flex flex-col items-center gap-1 py-1 px-2.5 rounded-xl text-slate-600 hover:text-blue-700 active:scale-95 transition-transform"
-        >
-          <ClipboardCheck className="w-5 h-5" />
-          <span className="text-[10px] font-bold">Firmas</span>
-        </Link>
-      </nav>
+      <PacienteMobileNav />
 
       {/* Botón flotante de ayuda y FAQ */}
       <HelpWidget />

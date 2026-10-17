@@ -199,12 +199,12 @@ export function PlanClient({ plan, visibleRecipes }: Props) {
   })
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-6 animate-fade-in">
       {/* Top Breadcrumb & Print */}
       <div className="flex items-center justify-between">
         <Link
           href="/paciente"
-          className="inline-flex items-center gap-1.5 text-xs font-semibold text-gray-500 hover:text-gray-900 transition-colors"
+          className="inline-flex items-center gap-1.5 text-xs font-semibold text-gray-500 hover:text-gray-900 transition-colors btn-tactile"
         >
           <ArrowLeft className="w-3.5 h-3.5" />
           <span>Volver al inicio</span>
@@ -214,7 +214,7 @@ export function PlanClient({ plan, visibleRecipes }: Props) {
           variant="outline"
           size="sm"
           onClick={() => window.print()}
-          className="rounded-2xl text-xs gap-1.5 font-bold print:hidden"
+          className="rounded-2xl text-xs gap-1.5 font-bold print:hidden btn-tactile hover-lift"
         >
           <Printer className="w-3.5 h-3.5" />
           <span>Imprimir / Guardar PDF</span>
@@ -222,7 +222,7 @@ export function PlanClient({ plan, visibleRecipes }: Props) {
       </div>
 
       {/* Plan Header */}
-      <Card className="glass-card rounded-3xl border-slate-200/80 bg-white p-6 sm:p-8 shadow-xs">
+      <Card className="glass-card hover-lift rounded-3xl border-slate-200/80 bg-white p-6 sm:p-8 shadow-xs animate-slide-up">
         <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
           <div className="space-y-1.5">
             <div className="flex items-center gap-2 flex-wrap">

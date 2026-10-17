@@ -112,22 +112,22 @@ export function CitasClient({ appointments, pendingRequests = [] }: Props) {
   }
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-6 animate-fade-in">
       {/* Header & New Request Button */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 bg-white p-6 rounded-3xl border border-gray-200 shadow-xs">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 bg-white/95 backdrop-blur-md p-6 rounded-3xl border border-slate-200/80 shadow-xs hover-lift animate-slide-up">
         <div>
-          <h2 className="text-xl font-bold text-gray-900 flex items-center gap-2">
-            <Calendar className="w-5 h-5 text-blue-600" />
+          <h2 className="text-xl font-black text-slate-900 flex items-center gap-2.5">
+            <Calendar className="w-5 h-5 text-teal-600" />
             <span>Mis Citas y Revisiones</span>
           </h2>
-          <p className="text-xs text-gray-500 mt-1">
+          <p className="text-xs text-slate-500 mt-1">
             Consulta tus citas programadas o solicita una nueva sesión. Eva gestiona la agenda y te confirmará el día y hora exactos.
           </p>
         </div>
 
         <Button
           onClick={() => setShowRequestModal(true)}
-          className="rounded-2xl bg-blue-600 hover:bg-blue-700 text-white font-bold text-xs gap-2 py-5 shadow-xs shrink-0"
+          className="rounded-2xl bg-teal-600 hover:bg-teal-700 text-white font-bold text-xs gap-2 py-5 shadow-xs shrink-0 btn-tactile hover-lift"
         >
           <CalendarPlus className="w-4 h-4" />
           <span>Solicitar Cita</span>
