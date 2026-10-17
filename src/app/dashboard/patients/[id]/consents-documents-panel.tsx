@@ -41,10 +41,10 @@ export function ConsentsDocumentsPanel({ patientId, consents, documents }: Props
   const [loading, setLoading] = useState(false)
 
   const defaultConsentTemplates = [
-    { type: 'RGPD', title: 'Tratamiento de Datos de Salud (Art. 9 RGPD)' },
-    { type: 'INFORMED_CONSENT', title: 'Consentimiento Informado de Dietoterapia' },
-    { type: 'IMAGE_RIGHTS', title: 'Cesión y Uso de Imágenes Clínicas de Evolución' },
-    { type: 'ONLINE_CONSULTATION', title: 'Consentimiento de Teleconsulta Online' },
+    { type: 'RGPD', title: 'Tratamiento de Datos de Salud (Art. 9 RGPD)', label: '+ RGPD Salud' },
+    { type: 'INFORMED_CONSENT', title: 'Consentimiento Informado de Dietoterapia', label: '+ Dietoterapia' },
+    { type: 'IMAGE_RIGHTS', title: 'Cesión y Uso de Imágenes Clínicas de Evolución', label: '+ Fotos y Evolución' },
+    { type: 'ONLINE_CONSULTATION', title: 'Consentimiento de Teleconsulta Online', label: '+ Teleconsulta' },
   ]
 
   const handleCreateDefaultConsent = async (tpl: { type: string; title: string }) => {
@@ -160,10 +160,10 @@ export function ConsentsDocumentsPanel({ patientId, consents, documents }: Props
                     size="sm"
                     disabled={loading}
                     onClick={() => handleCreateDefaultConsent(tpl)}
-                    className="text-2xs font-semibold rounded-xl border-gray-200 hover:bg-blue-50 text-gray-700"
+                    className="text-2xs font-bold rounded-xl border-gray-200 hover:bg-blue-50 text-slate-700 shadow-2xs transition-all active:scale-[0.98]"
                   >
                     <Plus className="w-3 h-3 text-blue-600 mr-1" />
-                    + {tpl.type}
+                    {tpl.label}
                   </Button>
                 ))}
               </div>

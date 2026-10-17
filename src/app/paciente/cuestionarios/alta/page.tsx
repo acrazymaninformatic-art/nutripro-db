@@ -40,6 +40,11 @@ export default async function PacienteAltaPage() {
     redirect('/paciente')
   }
 
+  // Si Eva no ha solicitado o enviado el cuestionario (NOT_SENT) o ya está completado, no permitir acceso
+  if (!isAdminPreview && patient.anamnesisStatus !== 'PENDING' && patient.anamnesisStatus !== 'SENT') {
+    redirect('/paciente/cuestionarios')
+  }
+
   return (
     <div className="py-4">
       <AltaFormClient

@@ -149,7 +149,20 @@ export function CuestionariosClient({
         </div>
       )}
 
-      {/* HISTORIAL / DOCUMENTOS YA COMPLETADOS */}
+      {/* Estado al día cuando no hay tareas requeridas */}
+      {!isAnamnesisPending && pendingConsents.length === 0 && (
+        <div className="glass-panel p-5 sm:p-6 rounded-3xl border border-emerald-100 bg-gradient-to-r from-emerald-50/50 via-white to-white shadow-xs flex items-center gap-4">
+          <div className="w-11 h-11 rounded-2xl bg-emerald-50 text-emerald-700 flex items-center justify-center shrink-0 border border-emerald-200/60 shadow-2xs">
+            <CheckCircle2 className="w-6 h-6 text-emerald-600" />
+          </div>
+          <div>
+            <h3 className="text-sm font-bold text-emerald-950">Todo al día</h3>
+            <p className="text-xs text-slate-500 mt-0.5 leading-relaxed">
+              No tienes ningún cuestionario ni firma pendiente de completar en este momento. Eva te notificará directamente si necesita que rellenes información antes de tu próxima consulta.
+            </p>
+          </div>
+        </div>
+      )}
       <div className="space-y-4 pt-2">
         <h3 className="text-xs font-bold text-slate-500 uppercase tracking-wider">
           Historial de Cuestionarios y Firmas Realizadas

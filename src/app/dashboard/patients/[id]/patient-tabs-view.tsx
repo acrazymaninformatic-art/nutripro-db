@@ -66,8 +66,8 @@ export function PatientTabsView({
 
   return (
     <div className="space-y-6">
-      {/* Sticky Tab Navigation Bar */}
-      <div className="bg-white/95 backdrop-blur-md p-1.5 rounded-2xl border border-slate-200/80 shadow-xs flex items-center gap-1 overflow-x-auto scrollbar-none sticky top-16 z-20">
+      {/* Tab Navigation Bar (Static, fluid and non-anchoring) */}
+      <div className="bg-white p-1.5 rounded-2xl border border-slate-200/80 shadow-xs flex items-center gap-1.5 overflow-x-auto scrollbar-none">
         {tabs.map((tab) => {
           const Icon = tab.icon
           const isActive = activeTab === tab.key
@@ -76,18 +76,18 @@ export function PatientTabsView({
               key={tab.key}
               type="button"
               onClick={() => handleTabChange(tab.key)}
-              className={`px-3.5 py-2.5 rounded-xl text-xs font-bold transition-all flex items-center gap-2 shrink-0 cursor-pointer ${
+              className={`px-4 py-2.5 rounded-xl text-xs font-bold transition-all duration-200 flex items-center gap-2 shrink-0 cursor-pointer active:scale-[0.98] ${
                 isActive
-                  ? 'bg-blue-600 text-white shadow-xs ring-2 ring-blue-400/30'
+                  ? 'bg-blue-600 text-white shadow-sm ring-2 ring-blue-500/20'
                   : 'text-slate-600 hover:text-slate-900 hover:bg-slate-100/80'
               }`}
             >
-              <Icon className={`w-4 h-4 ${isActive ? 'text-white' : 'text-slate-500'}`} />
+              <Icon className={`w-4 h-4 transition-transform duration-200 ${isActive ? 'text-white scale-105' : 'text-slate-400 group-hover:text-slate-600'}`} />
               <span>{tab.label}</span>
               {Boolean(tab.badge && tab.badge > 0) && (
                 <span
-                  className={`text-3xs font-black px-1.5 py-0.5 rounded-full ${
-                    isActive ? 'bg-white text-blue-700' : 'bg-rose-500 text-white'
+                  className={`text-3xs font-black px-1.5 py-0.5 rounded-full transition-all duration-200 ${
+                    isActive ? 'bg-white text-blue-700' : 'bg-rose-500 text-white animate-pulse'
                   }`}
                 >
                   {tab.badge}
@@ -98,8 +98,8 @@ export function PatientTabsView({
         })}
       </div>
 
-      {/* Tab Panes */}
-      <div className="animate-fade-in">
+      {/* Tab Panes with Smooth Slide Transitions */}
+      <div key={activeTab} className="transition-all duration-200">
         {activeTab === 'resumen' && (
           <div className="space-y-6 animate-slide-up">{resumenContent}</div>
         )}
