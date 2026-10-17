@@ -13,6 +13,9 @@ export async function createSoapConsultation(formData: FormData) {
   const objectiveNotes = String(formData.get('objectiveNotes') || '').trim() || null
   const assessmentNotes = String(formData.get('assessmentNotes') || '').trim() || null
   const planNotes = String(formData.get('planNotes') || '').trim() || null
+  const clinicianSignature = String(formData.get('clinicianSignature') || '').trim() || null
+  const patientSummary = String(formData.get('patientSummary') || '').trim() || null
+  const attachments = String(formData.get('attachments') || '').trim() || null
   const isSharedWithPatient = formData.get('isSharedWithPatient') === 'true'
 
   if (!patientId) throw new Error('Paciente no especificado.')
@@ -26,6 +29,9 @@ export async function createSoapConsultation(formData: FormData) {
       objectiveNotes,
       assessmentNotes,
       planNotes,
+      clinicianSignature,
+      patientSummary,
+      attachments,
       isSharedWithPatient,
     },
   })
@@ -43,4 +49,16 @@ export async function deleteConsultation(consultationId: string, patientId: stri
 
   revalidatePath(`/dashboard/patients/${patientId}`)
   return { success: true }
+}
+
+export async function toggleConsultationSharing(consultationId: string, patientId: string, isShared: boolean) {
+  await requireAdmin()
+
+  const updated = await prisma.consultation.update({
+    where: { id: consultationId, patientId },
+    data: { isSharedWithPatient: isShared },
+  })
+
+  revalidatePath(`/dashboard/patients/${patientId}`)
+  return updated
 }

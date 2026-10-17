@@ -927,10 +927,11 @@ export const CLINICAL_RECIPES: ClinicalRecipe[] = [
  */
 export function getRecipeForFood(foodName: string, category?: string | null): ClinicalRecipe | null {
   const n = (foodName || '').toLowerCase()
+  const cat = (category || '').toLowerCase()
 
   // Buscar coincidencia exacta por palabras clave
   for (const recipe of CLINICAL_RECIPES) {
-    if (recipe.keywords.some((kw) => n.includes(kw))) {
+    if (recipe.keywords.some((kw) => n.includes(kw) || (cat && cat.includes(kw)))) {
       return recipe
     }
   }

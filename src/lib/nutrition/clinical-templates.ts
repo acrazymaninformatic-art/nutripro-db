@@ -315,7 +315,7 @@ export function buildPlanFromClinicalTemplate(
   const rawRatio = targetKcal / template.baseCalories
   const scaleRatio = Math.max(0.65, Math.min(2.2, rawRatio))
 
-  const grid: any = {
+  const grid: Record<string, Record<number, Array<{ uid: string; foodId: number; quantityG: number; notes: string }>>> = {
     BREAKFAST: {},
     MID_MORNING: {},
     LUNCH: {},

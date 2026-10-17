@@ -17,7 +17,11 @@ import {
   ClipboardCheck,
   AlertTriangle,
   ArrowRight,
+  Clock,
+  User,
+  Settings,
 } from 'lucide-react'
+import { PatientProtocolCard } from './patient-protocol-card'
 
 export const dynamic = 'force-dynamic'
 
@@ -56,14 +60,15 @@ export default async function PacienteDashboardPage() {
 
   let firstName = user.name || 'Paciente'
   let lastAnthropometry: { date: Date; weightKg: number } | null = null
-  let activeMealPlan: { id: string; name: string; startDate: Date; endDate: Date | null } | null = null
+  let activeMealPlan: any = null
   let documentCount = 0
   let nextAppointment: { date: Date; modality: string; location: string | null } | null = null
   let hasPendingAnamnesis = false
   let pendingConsentsCount = 0
+  let activeProtocol: any = null
 
   if (patientId) {
-    const [patientData, anthropometry, mealPlan, docsCount, appointment, consents] = await Promise.all([
+    const [patientData, anthropometry, mealPlan, docsCount, appointment, consents, protocol] = await Promise.all([
       prisma.patient.findUnique({
         where: { id: patientId },
         select: { firstName: true, lastName: true, anamnesisStatus: true },
@@ -79,8 +84,25 @@ export default async function PacienteDashboardPage() {
           isSharedWithPatient: true,
           status: 'PUBLISHED',
         },
-        orderBy: { publishedAt: 'desc' },
-        select: { id: true, name: true, startDate: true, endDate: true },
+        orderBy: [{ publishedAt: 'desc' }, { createdAt: 'desc' }],
+        include: {
+          days: {
+            orderBy: { dayNumber: 'asc' },
+            include: {
+              meals: {
+                orderBy: { order: 'asc' },
+                include: {
+                  items: {
+                    include: {
+                      food: true,
+                      recipe: true,
+                    },
+                  },
+                },
+              },
+            },
+          },
+        },
       }),
       prisma.patientDocument.count({
         where: { patientId, isSharedWithPatient: true },
@@ -97,6 +119,10 @@ export default async function PacienteDashboardPage() {
       prisma.patientConsent.count({
         where: { patientId, accepted: false },
       }),
+      prisma.clinicalProtocolRecord.findFirst({
+        where: { patientId, status: 'ACTIVE' },
+        orderBy: { createdAt: 'desc' },
+      }),
     ])
 
     if (patientData?.firstName) {
@@ -108,6 +134,7 @@ export default async function PacienteDashboardPage() {
     activeMealPlan = mealPlan
     documentCount = docsCount
     nextAppointment = appointment
+    activeProtocol = protocol
 
     // Fallback: If no appointment, check future consultation
     if (!nextAppointment) {
@@ -132,6 +159,35 @@ export default async function PacienteDashboardPage() {
 
   const totalPendingAlerts = Number(hasPendingAnamnesis) + pendingConsentsCount
 
+  const MEAL_LABELS: Record<string, string> = {
+    BREAKFAST: 'Desayuno',
+    MID_MORNING: 'Media Mañana',
+    LUNCH: 'Comida',
+    SNACK: 'Merienda',
+    DINNER: 'Cena',
+    LATE_SNACK: 'Recena',
+  }
+
+  const DAY_NAMES = ['Lunes', 'Martes', 'Miércoles', 'Jueves', 'Viernes', 'Sábado', 'Domingo']
+  const currentJsDay = new Date().getDay()
+  const todayDayNumber = currentJsDay === 0 ? 7 : currentJsDay
+  const todayDayName = DAY_NAMES[todayDayNumber - 1]
+
+  const todayDayPlan = activeMealPlan?.days?.find((d: any) => d.dayNumber === todayDayNumber) || activeMealPlan?.days?.[0]
+  const todayMeals = (todayDayPlan?.meals || []) as Array<{
+    id: string
+    mealType: string
+    order: number
+    items: Array<{
+      id: string
+      quantityG: number
+      servings: number
+      notes?: string | null
+      food?: { name: string; servingUnit?: string } | null
+      recipe?: { name: string } | null
+    }>
+  }>
+
   return (
     <div className="space-y-6 sm:space-y-8">
       {/* Welcome Hero Banner */}
@@ -139,7 +195,7 @@ export default async function PacienteDashboardPage() {
         <div className="relative z-10 max-w-2xl">
           <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-white/10 backdrop-blur-xs text-blue-200 text-xs font-semibold mb-4 border border-white/10">
             <Sparkles className="w-3.5 h-3.5 text-blue-300" />
-            <span>Eva Vidal Nutrición · Portal Personal</span>
+            <span>EVSoftware · Paciente</span>
           </div>
           <h1 className="text-2xl sm:text-3xl font-bold tracking-tight">
             ¡Hola, {firstName}!
@@ -300,10 +356,100 @@ export default async function PacienteDashboardPage() {
         </Card>
       </div>
 
+      {/* PROTOCOLO CLÍNICO ACTIVO Y DIARIO DE SÍNTOMAS (5.9) */}
+      {activeProtocol && (
+        <PatientProtocolCard protocol={activeProtocol} />
+      )}
+
+      {/* COMIDAS DE HOY (Requerimiento 3.2 Panel Paciente) */}
+      <Card className="rounded-3xl border border-gray-200/90 bg-white shadow-xs overflow-hidden">
+        <CardHeader className="bg-gradient-to-r from-blue-50/70 via-white to-white pb-3 border-b border-gray-100 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+          <div>
+            <div className="flex items-center gap-2">
+              <span className="text-xs font-black uppercase tracking-wider text-blue-600 bg-blue-100/70 px-2.5 py-0.5 rounded-full">
+                {todayDayName}
+              </span>
+              <CardTitle className="text-base font-bold text-gray-900">
+                Comidas de Hoy
+              </CardTitle>
+            </div>
+            <CardDescription className="text-xs mt-0.5">
+              {activeMealPlan
+                ? `Pauta alimentaria activa: ${activeMealPlan.name}`
+                : 'Pauta nutricional personalizada diseñada por Eva Vidal'}
+            </CardDescription>
+          </div>
+          <Link href="/paciente/plan">
+            <Button
+              variant="outline"
+              size="sm"
+              className="rounded-2xl border-blue-200 text-blue-700 hover:bg-blue-50 font-bold text-xs gap-1.5 shrink-0"
+            >
+              <span>Ver plan semanal completo</span>
+              <ArrowRight className="w-3.5 h-3.5" />
+            </Button>
+          </Link>
+        </CardHeader>
+        <CardContent className="p-5">
+          {todayMeals.length > 0 ? (
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-3">
+              {todayMeals.map((meal) => {
+                const label = MEAL_LABELS[meal.mealType] || meal.mealType
+                return (
+                  <div
+                    key={meal.id}
+                    className="p-3.5 rounded-2xl bg-gray-50/80 border border-gray-200/70 hover:border-blue-200 transition-colors flex flex-col justify-between"
+                  >
+                    <div>
+                      <span className="text-xs font-bold text-blue-900 block border-b border-gray-200/60 pb-1.5 mb-2">
+                        {label}
+                      </span>
+                      <ul className="space-y-1.5">
+                        {meal.items.map((it) => (
+                          <li key={it.id} className="text-xs text-gray-700 leading-snug">
+                            {it.recipe ? (
+                              <span className="font-semibold text-gray-900">
+                                🍳 {it.recipe.name}
+                              </span>
+                            ) : it.food ? (
+                              <span>
+                                • {it.food.name}{' '}
+                                <span className="text-gray-400 text-2xs">
+                                  ({it.quantityG} {it.food.servingUnit || 'g'})
+                                </span>
+                              </span>
+                            ) : (
+                              <span>• Porción pautada</span>
+                            )}
+                            {it.notes && (
+                              <p className="text-3xs text-gray-500 italic mt-0.5">{it.notes}</p>
+                            )}
+                          </li>
+                        ))}
+                      </ul>
+                    </div>
+                  </div>
+                )
+              })}
+            </div>
+          ) : (
+            <div className="text-center py-6 text-gray-500 text-xs">
+              <UtensilsCrossed className="w-8 h-8 text-gray-300 mx-auto mb-2" />
+              <p className="font-medium text-gray-700">Sin comidas pautadas específicamente para hoy</p>
+              <p className="text-gray-400 text-2xs mt-0.5">
+                {activeMealPlan
+                  ? 'Consulta tu plan completo para revisar todas las opciones semanales.'
+                  : 'Eva Vidal está preparando tu menú personalizado.'}
+              </p>
+            </div>
+          )}
+        </CardContent>
+      </Card>
+
       {/* Quick Navigation Sections - Todos los accesos del portal */}
       <div>
         <h2 className="text-base font-bold text-gray-900 mb-4">Módulos del Portal</h2>
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
           {/* Link to Plan */}
           <Link href="/paciente/plan" className="group block">
             <Card className="h-full rounded-3xl group-hover:border-blue-400 group-hover:shadow-md transition-all">
@@ -371,6 +517,60 @@ export default async function PacienteDashboardPage() {
                 </CardTitle>
                 <CardDescription className="text-xs text-gray-500 leading-relaxed">
                   Historial antropométrico y composición corporal clínica.
+                </CardDescription>
+              </CardHeader>
+            </Card>
+          </Link>
+
+          {/* Link to Documentos */}
+          <Link href="/paciente/documentos" className="group block">
+            <Card className="h-full rounded-3xl group-hover:border-blue-400 group-hover:shadow-md transition-all">
+              <CardHeader>
+                <div className="w-10 h-10 rounded-2xl bg-purple-50 text-purple-600 flex items-center justify-center mb-2 group-hover:bg-purple-600 group-hover:text-white transition-colors">
+                  <FileText className="w-5 h-5" />
+                </div>
+                <CardTitle className="text-sm font-bold text-gray-900 group-hover:text-purple-600 transition-colors flex items-center justify-between">
+                  <span>Mis Documentos</span>
+                  <ChevronRight className="w-4 h-4 text-gray-400 group-hover:translate-x-1 group-hover:text-purple-600 transition-all" />
+                </CardTitle>
+                <CardDescription className="text-xs text-gray-500 leading-relaxed">
+                  Informes clínicos, notas de consulta y analíticas compartidas.
+                </CardDescription>
+              </CardHeader>
+            </Card>
+          </Link>
+
+          {/* Link to Perfil */}
+          <Link href="/paciente/perfil" className="group block">
+            <Card className="h-full rounded-3xl group-hover:border-blue-400 group-hover:shadow-md transition-all">
+              <CardHeader>
+                <div className="w-10 h-10 rounded-2xl bg-slate-100 text-slate-700 flex items-center justify-center mb-2 group-hover:bg-slate-700 group-hover:text-white transition-colors">
+                  <User className="w-5 h-5" />
+                </div>
+                <CardTitle className="text-sm font-bold text-gray-900 group-hover:text-slate-700 transition-colors flex items-center justify-between">
+                  <span>Mi Perfil</span>
+                  <ChevronRight className="w-4 h-4 text-gray-400 group-hover:translate-x-1 group-hover:text-slate-700 transition-all" />
+                </CardTitle>
+                <CardDescription className="text-xs text-gray-500 leading-relaxed">
+                  Ficha personal, datos de salud y alergias (modo consulta).
+                </CardDescription>
+              </CardHeader>
+            </Card>
+          </Link>
+
+          {/* Link to Configuración */}
+          <Link href="/paciente/configuracion" className="group block">
+            <Card className="h-full rounded-3xl group-hover:border-blue-400 group-hover:shadow-md transition-all">
+              <CardHeader>
+                <div className="w-10 h-10 rounded-2xl bg-zinc-100 text-zinc-700 flex items-center justify-center mb-2 group-hover:bg-zinc-800 group-hover:text-white transition-colors">
+                  <Settings className="w-5 h-5" />
+                </div>
+                <CardTitle className="text-sm font-bold text-gray-900 group-hover:text-zinc-800 transition-colors flex items-center justify-between">
+                  <span>Mi Cuenta</span>
+                  <ChevronRight className="w-4 h-4 text-gray-400 group-hover:translate-x-1 group-hover:text-zinc-800 transition-all" />
+                </CardTitle>
+                <CardDescription className="text-xs text-gray-500 leading-relaxed">
+                  Cambio de contraseña, descarga de datos y privacidad RGPD.
                 </CardDescription>
               </CardHeader>
             </Card>

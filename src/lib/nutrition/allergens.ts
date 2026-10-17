@@ -47,6 +47,7 @@ export const OFFICIAL_ALLERGENS: AllergenDefinition[] = [
       'couscous',
       'sémola',
       'semola',
+      'avena',
       'avena integral',
       'copos de avena',
       'salvado de trigo',

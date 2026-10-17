@@ -15,12 +15,12 @@ import {
   TrendingUp,
 } from 'lucide-react'
 import { OBJECTIVE_LABELS, type Objective } from '@/types'
-import { requireUser } from '@/lib/auth'
+import { requireAdmin } from '@/lib/auth'
 
 export const dynamic = 'force-dynamic'
 
 export default async function DashboardPage() {
-  const user = await requireUser()
+  const user = await requireAdmin()
   const startOfMonth = new Date(new Date().getFullYear(), new Date().getMonth(), 1)
 
   // Fetch real data from SQLite

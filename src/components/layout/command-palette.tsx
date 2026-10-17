@@ -129,7 +129,13 @@ export function CommandPalette() {
     const handleKeyDown = (e: KeyboardEvent) => {
       if ((e.metaKey || e.ctrlKey) && e.key === 'k') {
         e.preventDefault()
-        setIsOpen((prev) => !prev)
+        setIsOpen((prev) => {
+          if (!prev) {
+            setQuery('')
+            setSelectedIndex(0)
+          }
+          return !prev
+        })
       } else if (e.key === 'Escape' && isOpen) {
         setIsOpen(false)
       }
@@ -143,8 +149,6 @@ export function CommandPalette() {
   useEffect(() => {
     if (isOpen) {
       setTimeout(() => inputRef.current?.focus(), 50)
-      setQuery('')
-      setSelectedIndex(0)
     }
   }, [isOpen])
 
@@ -227,7 +231,7 @@ export function CommandPalette() {
             <div className="max-h-[380px] overflow-y-auto p-2 space-y-1">
               {filteredCommands.length === 0 ? (
                 <div className="text-center py-10 text-gray-400 text-xs">
-                  No se encontraron comandos o secciones para "{query}"
+                  No se encontraron comandos o secciones para &ldquo;{query}&rdquo;
                 </div>
               ) : (
                 filteredCommands.map((item, idx) => {

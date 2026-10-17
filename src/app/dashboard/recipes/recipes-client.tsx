@@ -33,6 +33,12 @@ export interface RecipeWithIngredients {
   cookTimeMin: number | null
   instructions: string
   imageUrl?: string | null
+  dietaryTagsJson?: string | null
+  difficulty?: string | null
+  estimatedCost?: number | null
+  equipmentJson?: string | null
+  isBatchCooking?: boolean | null
+  isFreezable?: boolean | null
   ingredients: {
     id: string
     quantityG: number
@@ -67,6 +73,10 @@ export function RecipesClient({ initialRecipes }: RecipesClientProps) {
   const [recipes] = useState<RecipeWithIngredients[]>(initialRecipes)
   const [searchQuery, setSearchQuery] = useState('')
   const [selectedCategory, setSelectedCategory] = useState('Todas')
+  const [selectedTag, setSelectedTag] = useState('ALL')
+  const [selectedEquipment, setSelectedEquipment] = useState('ALL')
+  const [onlyBatchCooking, setOnlyBatchCooking] = useState(false)
+  const [onlyFreezable, setOnlyFreezable] = useState(false)
   const [selectedRecipe, setSelectedRecipe] = useState<RecipeWithIngredients | null>(null)
   const [modalServings, setModalServings] = useState<number>(1)
 
@@ -79,6 +89,40 @@ export function RecipesClient({ initialRecipes }: RecipesClientProps) {
         if (!cat.includes(selectedCategory.toLowerCase())) {
           return false
         }
+      }
+
+      // Dietary tag filter
+      if (selectedTag !== 'ALL') {
+        try {
+          const tags: string[] = r.dietaryTagsJson ? JSON.parse(r.dietaryTagsJson) : []
+          if (!tags.some((t) => t.toLowerCase() === selectedTag.toLowerCase())) {
+            return false
+          }
+        } catch {
+          return false
+        }
+      }
+
+      // Equipment filter
+      if (selectedEquipment !== 'ALL') {
+        try {
+          const equip: string[] = r.equipmentJson ? JSON.parse(r.equipmentJson) : []
+          if (!equip.some((e) => e.toLowerCase() === selectedEquipment.toLowerCase())) {
+            return false
+          }
+        } catch {
+          return false
+        }
+      }
+
+      // Batch cooking filter
+      if (onlyBatchCooking && !r.isBatchCooking) {
+        return false
+      }
+
+      // Freezable filter
+      if (onlyFreezable && !r.isFreezable) {
+        return false
       }
 
       // Search query
@@ -94,7 +138,7 @@ export function RecipesClient({ initialRecipes }: RecipesClientProps) {
 
       return true
     })
-  }, [recipes, searchQuery, selectedCategory])
+  }, [recipes, searchQuery, selectedCategory, selectedTag, selectedEquipment, onlyBatchCooking, onlyFreezable])
 
   // Open modal handler
   const handleOpenRecipeModal = (recipe: RecipeWithIngredients) => {
@@ -208,6 +252,58 @@ export function RecipesClient({ initialRecipes }: RecipesClientProps) {
             </button>
           ))}
         </div>
+
+        {/* 5.7 Dietary Tags & Equipment Filters */}
+        <div className="flex items-center gap-2 flex-wrap pt-2 border-t border-gray-100 text-2xs">
+          <span className="text-gray-400 font-bold uppercase text-[10px] mr-1">Filtros 5.7:</span>
+          
+          <select
+            value={selectedTag}
+            onChange={(e) => setSelectedTag(e.target.value)}
+            className="px-2.5 py-1 rounded-xl font-bold bg-gray-100 text-gray-700 border-0 focus:ring-1 focus:ring-blue-500 text-2xs cursor-pointer"
+          >
+            <option value="ALL">Todas las etiquetas dietéticas</option>
+            <option value="VEGANO">Vegano</option>
+            <option value="SIN_GLUTEN">Sin Gluten</option>
+            <option value="SIN_LACTOSA">Sin Lactosa</option>
+            <option value="FODMAP">FODMAP / Digestivo</option>
+            <option value="BAJO_SODIO">Bajo en Sodio</option>
+            <option value="APTO_DIABETICO">Apto Diabético</option>
+          </select>
+
+          <select
+            value={selectedEquipment}
+            onChange={(e) => setSelectedEquipment(e.target.value)}
+            className="px-2.5 py-1 rounded-xl font-bold bg-gray-100 text-gray-700 border-0 focus:ring-1 focus:ring-blue-500 text-2xs cursor-pointer"
+          >
+            <option value="ALL">Todo el equipamiento</option>
+            <option value="AIRFRYER">Airfryer / Freidora de aire</option>
+            <option value="THERMOMIX">Thermomix / Robot</option>
+            <option value="HORNO">Horno</option>
+            <option value="SARTEN">Sartén / Plancha</option>
+            <option value="OLLA_RAPIDA">Olla Rápida / Exprés</option>
+          </select>
+
+          <button
+            type="button"
+            onClick={() => setOnlyBatchCooking(!onlyBatchCooking)}
+            className={`px-2.5 py-1 rounded-xl font-bold transition-all ${
+              onlyBatchCooking ? 'bg-purple-600 text-white shadow-2xs' : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+            }`}
+          >
+            Batch Cooking
+          </button>
+
+          <button
+            type="button"
+            onClick={() => setOnlyFreezable(!onlyFreezable)}
+            className={`px-2.5 py-1 rounded-xl font-bold transition-all ${
+              onlyFreezable ? 'bg-sky-600 text-white shadow-2xs' : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+            }`}
+          >
+            Congelable
+          </button>
+        </div>
       </div>
 
       {/* Recipes Cards Grid */}
@@ -316,18 +412,56 @@ export function RecipesClient({ initialRecipes }: RecipesClientProps) {
                 </CardHeader>
 
                 <CardContent className="p-4 pt-1 flex-1 flex flex-col justify-between space-y-3">
-                  {/* Servings and Time */}
-                  <div className="flex items-center gap-3 text-2xs text-gray-500 font-medium">
-                    <span className="flex items-center gap-1 bg-gray-100 px-2.5 py-0.5 rounded-full">
-                      <Users className="h-3 w-3 text-gray-400" />
-                      {servings} {servings === 1 ? 'ración' : 'raciones'}
-                    </span>
-                    {(recipe.prepTimeMin || recipe.cookTimeMin) && (
-                      <span className="flex items-center gap-1 bg-gray-100 px-2.5 py-0.5 rounded-full">
-                        <Clock className="h-3 w-3 text-gray-400" />
-                        {(recipe.prepTimeMin || 0) + (recipe.cookTimeMin || 0)} min
+                  {/* Servings, Time, Equipment and 5.7 Badges */}
+                  <div className="space-y-1.5">
+                    <div className="flex items-center gap-2 text-2xs text-gray-500 font-medium flex-wrap">
+                      <span className="flex items-center gap-1 bg-gray-100 px-2 py-0.5 rounded-full">
+                        <Users className="h-3 w-3 text-gray-400" />
+                        {servings} {servings === 1 ? 'ración' : 'raciones'}
                       </span>
-                    )}
+                      {(recipe.prepTimeMin || recipe.cookTimeMin) && (
+                        <span className="flex items-center gap-1 bg-gray-100 px-2 py-0.5 rounded-full">
+                          <Clock className="h-3 w-3 text-gray-400" />
+                          {(recipe.prepTimeMin || 0) + (recipe.cookTimeMin || 0)} min
+                        </span>
+                      )}
+                      {recipe.difficulty && (
+                        <span className="px-2 py-0.5 rounded-full bg-slate-100 text-slate-700 font-bold text-[10px]">
+                          {recipe.difficulty}
+                        </span>
+                      )}
+                      {recipe.estimatedCost && (
+                        <span className="px-2 py-0.5 rounded-full bg-emerald-50 text-emerald-800 font-bold text-[10px] border border-emerald-200">
+                          {recipe.estimatedCost} €/rac
+                        </span>
+                      )}
+                    </div>
+
+                    {/* Equipment & Batch Tags */}
+                    <div className="flex items-center gap-1 flex-wrap">
+                      {recipe.isBatchCooking && (
+                        <Badge className="bg-purple-100 text-purple-900 border-0 text-[9px] font-bold py-0 px-1.5 rounded-md">
+                          Batch Cooking
+                        </Badge>
+                      )}
+                      {recipe.isFreezable && (
+                        <Badge className="bg-sky-100 text-sky-900 border-0 text-[9px] font-bold py-0 px-1.5 rounded-md">
+                          ❄️ Congelable
+                        </Badge>
+                      )}
+                      {(() => {
+                        try {
+                          const eq: string[] = recipe.equipmentJson ? JSON.parse(recipe.equipmentJson) : []
+                          return eq.map((item) => (
+                            <span key={item} className="px-1.5 py-0.5 bg-gray-100 text-gray-600 rounded text-[9px] font-bold uppercase">
+                              {item}
+                            </span>
+                          ))
+                        } catch {
+                          return null
+                        }
+                      })()}
+                    </div>
                   </div>
 
                   {/* Macros Per Serving */}

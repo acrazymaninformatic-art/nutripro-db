@@ -4,6 +4,7 @@ import { headers } from 'next/headers'
 import { requirePatient } from '@/lib/auth'
 import { prisma } from '@/lib/prisma'
 import { logoutAction } from './actions'
+import { exitPatientPreview } from '@/app/dashboard/patients/preview-actions'
 import {
   LayoutDashboard,
   CalendarDays,
@@ -14,6 +15,7 @@ import {
   LogOut,
   User,
   ShieldAlert,
+  Settings,
 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { HelpWidget } from './help-widget'
@@ -33,6 +35,8 @@ const navLinks: NavLinkItem[] = [
   { name: 'Mi Evolución', href: '/paciente/evolucion', icon: TrendingUp },
   { name: 'Cuestionarios y Firmas', href: '/paciente/cuestionarios', icon: ClipboardCheck },
   { name: 'Mis Documentos', href: '/paciente/documentos', icon: FileText },
+  { name: 'Mi Perfil', href: '/paciente/perfil', icon: User },
+  { name: 'Mi Cuenta', href: '/paciente/configuracion', icon: Settings },
 ]
 
 export default async function PacienteLayout({
@@ -72,9 +76,29 @@ export default async function PacienteLayout({
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 flex flex-col md:flex-row">
-      {/* Sidebar for Desktop */}
-      <aside className="w-full md:w-72 bg-white border-b md:border-b-0 md:border-r border-gray-200/80 shrink-0 flex flex-col md:min-h-screen">
+    <div className="min-h-screen bg-gray-50 flex flex-col">
+      {isAdminPreview && (
+        <div className="bg-amber-500 text-amber-950 px-4 py-2.5 font-medium text-xs flex flex-wrap items-center justify-between gap-3 shadow-sm border-b border-amber-600 z-50">
+          <div className="flex items-center gap-2">
+            <ShieldAlert className="w-4 h-4 text-amber-950 shrink-0" />
+            <span>
+              <strong>Modo Vista Previa de Consulta (Solo Lectura):</strong> Viendo el portal del paciente <strong>{patientName}</strong>. Acciones de modificación deshabilitadas.
+            </span>
+          </div>
+          <form action={exitPatientPreview}>
+            <Button
+              type="submit"
+              size="sm"
+              className="rounded-xl bg-amber-950 hover:bg-black text-amber-50 text-xs font-bold shadow-xs py-1 px-3 h-auto"
+            >
+              Volver al expediente de consulta →
+            </Button>
+          </form>
+        </div>
+      )}
+      <div className="flex-1 flex flex-col md:flex-row">
+        {/* Sidebar for Desktop */}
+        <aside className="w-full md:w-72 bg-white border-b md:border-b-0 md:border-r border-gray-200/80 shrink-0 flex flex-col md:min-h-screen">
         {/* Brand Header */}
         <div className="flex items-center justify-between p-5 md:p-6 border-b border-gray-100">
           <Link href="/paciente" className="flex items-center gap-3">
@@ -86,11 +110,11 @@ export default async function PacienteLayout({
               />
             </div>
             <div className="flex flex-col">
-              <span className="text-sm font-bold text-gray-900 tracking-tight leading-tight">
-                Eva Vidal Nutrición
+              <span className="text-sm font-black text-gray-900 tracking-tight leading-tight">
+                EVSoftware
               </span>
-              <span className="text-[11px] font-semibold text-blue-600 uppercase tracking-wider">
-                Portal Paciente
+              <span className="text-[11px] font-bold text-blue-600 uppercase tracking-wider">
+                Paciente
               </span>
             </div>
           </Link>
@@ -111,12 +135,15 @@ export default async function PacienteLayout({
         <nav className="flex-1 p-4 md:p-5 space-y-1.5 overflow-x-auto md:overflow-visible flex md:flex-col">
           {navLinks.map((item) => {
             const Icon = item.icon
-            return (
-              <Link
-                key={item.href}
-                href={item.href}
-                className="flex items-center gap-3 px-3.5 py-2.5 rounded-2xl text-sm font-medium text-gray-700 hover:text-blue-700 hover:bg-blue-50/70 transition-colors shrink-0"
-              >
+              const navId = item.href === '/paciente' ? 'tour-nav-inicio' : `tour-nav-${item.href.replace('/paciente/', '')}`
+              return (
+                <Link
+                  key={item.href}
+                  id={navId}
+                  data-tour={navId}
+                  href={item.href}
+                  className="flex items-center gap-3 px-3.5 py-2.5 rounded-2xl text-sm font-medium text-gray-700 hover:text-blue-700 hover:bg-blue-50/70 transition-colors shrink-0"
+                >
                 <Icon className="w-4 h-4 text-gray-500 group-hover:text-blue-600" />
                 <span>{item.name}</span>
               </Link>
@@ -155,7 +182,7 @@ export default async function PacienteLayout({
         {/* Top Header Bar */}
         <header className="h-16 bg-white border-b border-gray-200/80 px-4 md:px-8 flex items-center justify-between shrink-0 shadow-2xs">
           <div className="flex items-center gap-2">
-            <span className="text-xs text-gray-500 font-medium">Eva Vidal Nutrición · Portal Paciente</span>
+            <span className="text-xs text-gray-500 font-medium">EVSoftware · Paciente</span>
           </div>
           <div className="flex items-center gap-3">
             <div className="hidden sm:flex items-center gap-2 text-xs text-gray-600 bg-gray-100 px-3 py-1.5 rounded-full font-medium">
@@ -171,6 +198,7 @@ export default async function PacienteLayout({
             {children}
           </div>
         </main>
+      </div>
       </div>
 
       {/* Botón flotante de ayuda y FAQ */}

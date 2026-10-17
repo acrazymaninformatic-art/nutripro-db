@@ -14,6 +14,12 @@ export const metadata = {
 export default async function EmailsLogPage() {
   await requireAdmin()
 
+  // Borrado automático de registros de correo con más de 12 meses (Art. 5.1.e RGPD)
+  const twelveMonthsAgo = new Date(Date.now() - 365 * 24 * 60 * 60 * 1000)
+  await prisma.emailLog.deleteMany({
+    where: { sentAt: { lt: twelveMonthsAgo } },
+  })
+
   const logs = await prisma.emailLog.findMany({
     orderBy: { sentAt: 'desc' },
     take: 100,

@@ -71,3 +71,15 @@ export function parseCommaSeparated(value: string): string[] {
 export function toCommaSeparated(values: string[]): string {
   return values.filter(Boolean).join(',')
 }
+
+export const APPOINTMENT_TYPE_CONFIG: Record<
+  string,
+  { label: string; durationMin: number; color: string }
+> = {
+  PRIMERA: { label: 'Primera Consulta', durationMin: 60, color: '#2563eb' },
+  REVISION: { label: 'Revisión y Seguimiento', durationMin: 45, color: '#16a34a' },
+  ONLINE: { label: 'Consulta Online (Meet)', durationMin: 45, color: '#9333ea' },
+  DOMICILIO: { label: 'Consulta a Domicilio', durationMin: 60, color: '#d97706' },
+  GRUPAL: { label: 'Sesión Grupal / Taller', durationMin: 90, color: '#4f46e5' },
+}
+

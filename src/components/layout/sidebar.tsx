@@ -11,7 +11,6 @@ import {
   CalendarDays,
   Calendar,
   Calculator,
-  Leaf,
   ChevronLeft,
   ChevronRight,
   Settings,
@@ -76,10 +75,10 @@ export function Sidebar({ professionalName }: { professionalName: string }) {
           {!isCollapsed && (
             <div className="flex flex-col min-w-0">
               <span className="text-sm font-black text-gray-900 tracking-tight leading-none">
-                Eva Vidal
+                EVSoftware
               </span>
               <span className="text-[10px] text-blue-600 font-bold leading-tight mt-0.5">
-                Consulta Nutricional
+                Consulta · Eva Vidal
               </span>
             </div>
           )}

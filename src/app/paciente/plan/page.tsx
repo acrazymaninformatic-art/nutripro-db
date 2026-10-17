@@ -83,6 +83,25 @@ export default async function PacientePlanPage() {
     )
   }
 
+  if (plan && !plan.firstOpenedByPatientAt && !isAdminPreview) {
+    await prisma.mealPlan.update({
+      where: { id: plan.id },
+      data: { firstOpenedByPatientAt: new Date() },
+    })
+  }
+
+  const clinicRecipes = await prisma.recipe.findMany({
+    orderBy: { name: 'asc' },
+    take: 40,
+    include: {
+      ingredients: {
+        include: {
+          food: true,
+        },
+      },
+    },
+  })
+
   return (
     <PlanClient
       plan={{
@@ -93,6 +112,10 @@ export default async function PacientePlanPage() {
         targetKcal: plan.targetKcal,
         hideCaloriesTCA: plan.hideCaloriesTCA,
         notes: plan.notes,
+        planningModel: plan.planningModel,
+        currentPhase: plan.currentPhase,
+        eatingOutGuide: plan.eatingOutGuide,
+        hydrationTargetLiters: plan.hydrationTargetLiters,
         days: plan.days.map((d) => ({
           id: d.id,
           dayNumber: d.dayNumber,
@@ -101,10 +124,19 @@ export default async function PacientePlanPage() {
             id: m.id,
             mealType: m.mealType,
             order: m.order,
+            isOptionB: m.isOptionB,
+            optionGroup: m.optionGroup,
+            isCheatMeal: m.isCheatMeal,
+            timingType: m.timingType,
             items: m.items.map((it) => ({
               id: it.id,
               quantityG: it.quantityG,
               servings: it.servings,
+              exchangeServings: it.exchangeServings,
+              exchangeGroup: it.exchangeGroup,
+              portionMeasureName: it.portionMeasureName,
+              portionMeasureGrams: it.portionMeasureGrams,
+              isAlternative: it.isAlternative,
               notes: it.notes,
               food: it.food
                 ? {
@@ -127,12 +159,48 @@ export default async function PacientePlanPage() {
                     servings: it.recipe.servings,
                     prepTimeMin: it.recipe.prepTimeMin,
                     cookTimeMin: it.recipe.cookTimeMin,
+                    difficulty: it.recipe.difficulty,
+                    equipmentJson: it.recipe.equipmentJson,
+                    dietaryTagsJson: it.recipe.dietaryTagsJson,
+                    isBatchCooking: it.recipe.isBatchCooking,
+                    isFreezable: it.recipe.isFreezable,
                   }
                 : null,
             })),
           })),
         })),
       }}
+      visibleRecipes={clinicRecipes.map((r) => ({
+        id: r.id,
+        name: r.name,
+        instructions: r.instructions,
+        servings: r.servings,
+        prepTimeMin: r.prepTimeMin,
+        cookTimeMin: r.cookTimeMin,
+        difficulty: r.difficulty,
+        equipmentJson: r.equipmentJson,
+        dietaryTagsJson: r.dietaryTagsJson,
+        isBatchCooking: r.isBatchCooking,
+        isFreezable: r.isFreezable,
+        ingredients: r.ingredients.map((ing) => ({
+          id: ing.id,
+          quantityG: ing.quantityG,
+          notes: ing.notes,
+          food: ing.food
+            ? {
+                id: ing.food.id,
+                name: ing.food.name,
+                category: ing.food.category,
+                calories: ing.food.calories,
+                proteinG: ing.food.proteinG,
+                carbsG: ing.food.carbsG,
+                fatG: ing.food.fatG,
+                servingSize: ing.food.servingSize,
+                servingUnit: ing.food.servingUnit,
+              }
+            : null,
+        })),
+      }))}
     />
   )
 }

@@ -11,7 +11,7 @@ export function DeletePlanButton({ planId, planName }: { planId: string; planNam
   const [loading, setLoading] = useState(false)
 
   async function handleDelete() {
-    const confirmed = window.confirm(`¿Deseas eliminar el plan "${planName}"?`)
+    const confirmed = window.confirm(`¿Deseas mover el plan "${planName}" a la papelera / archivo? Podrás recuperarlo en cualquier momento.`)
     if (!confirmed) return
 
     setLoading(true)
@@ -21,7 +21,7 @@ export function DeletePlanButton({ planId, planName }: { planId: string; planNam
       router.refresh()
     } catch (err) {
       console.error(err)
-      alert('Error al eliminar el plan nutricional')
+      alert('Error al mover el plan a la papelera')
       setLoading(false)
     }
   }
@@ -35,7 +35,7 @@ export function DeletePlanButton({ planId, planName }: { planId: string; planNam
       className="flex items-center gap-1.5"
     >
       {loading ? <Loader2 className="h-4 w-4 animate-spin" /> : <Trash2 className="h-4 w-4" />}
-      <span>Eliminar Plan</span>
+      <span>Mover a Papelera</span>
     </Button>
   )
 }

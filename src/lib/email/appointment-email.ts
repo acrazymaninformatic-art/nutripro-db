@@ -150,6 +150,13 @@ export function generateAppointmentEmailHtml({
               <p style="font-size: 14px; color: #64748b; margin: 0; line-height: 1.5;">
                 Si necesitas reprogramar tu cita, por favor responde a este correo con al menos 24 horas de antelación.
               </p>
+              ${rescheduleUrl ? `
+              <p style="font-size: 13px; margin: 16px 0 0 0; text-align: center;">
+                <a href="${rescheduleUrl}" style="display: inline-block; background-color: #f1f5f9; color: #0284c7; font-weight: 600; text-decoration: none; padding: 10px 20px; border-radius: 20px; border: 1px solid #cbd5e1;">
+                  ¿Gestionar o reprogramar tu cita online? Haz clic aquí
+                </a>
+              </p>
+              ` : ''}
             </td>
           </tr>
 
@@ -267,7 +274,8 @@ export async function sendAppointmentEmail({
       message: `Cita enviada por email a ${patientEmail} desde ${smtpFrom}`,
       googleCalendarUrl,
     }
-  } catch (error: any) {
+  } catch (error: unknown) {
+    const errMessage = error instanceof Error ? error.message : String(error)
     console.error('Error al enviar email de cita:', error)
     try {
       const { logEmailSent } = await import('./log-email')
@@ -277,13 +285,13 @@ export async function sendAppointmentEmail({
         subject: emailSubject,
         type: 'APPOINTMENT',
         status: 'FAILED',
-        errorDetails: error?.message,
+        errorDetails: errMessage,
       })
     } catch {}
 
     return {
       success: false,
-      message: `Error al enviar correo: ${error?.message || 'Error desconocido'}`,
+      message: `Error al enviar correo: ${errMessage}`,
       googleCalendarUrl,
     }
   }
@@ -533,7 +541,8 @@ export async function sendAppointmentReminderEmail({
       message: `Recordatorio enviado por email a ${patientEmail} desde ${smtpFrom}`,
       googleCalendarUrl,
     }
-  } catch (error: any) {
+  } catch (error: unknown) {
+    const errMessage = error instanceof Error ? error.message : String(error)
     console.error('Error al enviar recordatorio de cita:', error)
     try {
       const { logEmailSent } = await import('./log-email')
@@ -543,13 +552,13 @@ export async function sendAppointmentReminderEmail({
         subject: emailSubject,
         type: 'REMINDER_24H',
         status: 'FAILED',
-        errorDetails: error?.message,
+        errorDetails: errMessage,
       })
     } catch {}
 
     return {
       success: false,
-      message: `Error al enviar recordatorio: ${error?.message || 'Error desconocido'}`,
+      message: `Error al enviar recordatorio: ${errMessage}`,
       googleCalendarUrl,
     }
   }

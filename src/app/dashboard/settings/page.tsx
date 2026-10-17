@@ -4,6 +4,8 @@ import { requireAdmin } from '@/lib/auth'
 import { prisma } from '@/lib/prisma'
 import { SettingsProfileForm } from './settings-profile-form'
 import { EmergencyLockdownPanel } from './emergency-lockdown-panel'
+import { FaqEditor } from './faq-editor'
+import { getPortalFaqs } from '@/lib/faq-service'
 
 export const dynamic = 'force-dynamic'
 
@@ -13,6 +15,7 @@ export default async function SettingsPage() {
     where: { isActive: true },
     orderBy: { createdAt: 'desc' },
   })
+  const faqs = await getPortalFaqs()
 
   return (
     <div className="mx-auto max-w-4xl space-y-6 pb-12">
@@ -22,6 +25,9 @@ export default async function SettingsPage() {
       </div>
       <SettingsProfileForm user={user} />
       
+      {/* Editor de Preguntas Frecuentes y Textos del Portal (3.10) */}
+      <FaqEditor initialFaqs={faqs} />
+
       {/* Protocolo de Aislamiento de Emergencia */}
       <EmergencyLockdownPanel
         initialIsActive={!!activeLockdown}

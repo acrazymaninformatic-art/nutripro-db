@@ -1,109 +1,76 @@
 'use client'
 
-import { useState, useEffect } from 'react'
-import { HelpCircle, X, Search, Sparkles, ChevronRight, CheckCircle2, BookOpen } from 'lucide-react'
+import { useState, useEffect, useCallback } from 'react'
+import {
+  HelpCircle,
+  X,
+  Search,
+  Sparkles,
+  ChevronRight,
+  CheckCircle2,
+  BookOpen,
+  ArrowRight,
+  ClipboardList,
+} from 'lucide-react'
 import { Button } from '@/components/ui/button'
+import { DEFAULT_FAQS, type FAQItem } from '@/lib/faq-data'
 
-interface FAQItem {
-  id: string
-  category: string
-  question: string
-  answer: string
+interface TourStep {
+  targetId: string | null
+  title: string
+  subtitle: string
+  content: string
 }
 
-const FAQ_LIST: FAQItem[] = [
+const TOUR_STEPS: TourStep[] = [
   {
-    id: 'citas-1',
-    category: 'Citas',
-    question: '¿Cómo pido, cambio o cancelo una cita?',
-    answer: 'En la sección "Mis Citas", pulsa el botón "Solicitar Cita" indicando tu modalidad preferida (Online o Presencial) y tus notas. Como Eva organiza la agenda manualmente para dar el mejor servicio, ella fijará el día y hora exactos y recibirás una notificación de confirmación.',
+    targetId: 'tour-nav-inicio',
+    title: '1. Inicio del Portal',
+    subtitle: 'Tu panel personal',
+    content:
+      'Aquí tienes un resumen inmediato de tu próxima cita asignada, las comidas pautadas para hoy, el estado de tu plan y tus avisos pendientes.',
   },
   {
-    id: 'citas-2',
-    category: 'Citas',
-    question: '¿Dónde veo el enlace de mi videollamada?',
-    answer: 'Si tu cita es de modalidad Online, el enlace de Google Meet aparecerá directamente en la tarjeta de tu cita dentro de la sección "Mis Citas" una vez que Eva haya confirmado el día y la hora.',
+    targetId: 'tour-nav-plan',
+    title: '2. Mi Plan Nutricional',
+    subtitle: 'Pautas y Recetario',
+    content:
+      'Consulta tu plan de comidas interactivo, pulsa en cada receta para ver sus ingredientes y pasos, y descarga tu dossier en PDF o lista de la compra.',
   },
   {
-    id: 'plan-1',
-    category: 'Mi Plan',
-    question: '¿Dónde veo las recetas?',
-    answer: 'En "Mi Plan", al consultar los días de la semana y pulsar sobre cualquier plato o preparación marcada, se abrirá el detalle completo de la receta con sus ingredientes en gramos, pasos e información nutricional.',
+    targetId: 'tour-nav-citas',
+    title: '3. Mis Citas y Revisiones',
+    subtitle: 'Gestión sin complicaciones',
+    content:
+      'Solicita nuevas revisiones (online o presencial), consulta las fechas que te asigne Eva y accede a tu enlace de Google Meet sin salir del portal.',
   },
   {
-    id: 'plan-2',
-    category: 'Mi Plan',
-    question: '¿Cómo descargo el plan en PDF o imprimo la lista de la compra?',
-    answer: 'En la cabecera de "Mi Plan" encontrarás el botón para descargar el Dossier Clínico en PDF de alta calidad con marcas de agua oficiales de Eva Vidal Nutrición y la lista de la compra organizada por pasillos.',
+    targetId: 'tour-nav-evolucion',
+    title: '4. Mi Evolución Clínica',
+    subtitle: 'Progreso y métricas',
+    content:
+      'Observa tus gráficas de peso, composición corporal y referencias clínicas cuando Eva las revise y comparta contigo tras cada control.',
   },
   {
-    id: 'plan-3',
-    category: 'Mi Plan',
-    question: '¿Puedo cambiar un alimento por otro?',
-    answer: 'Sí, el dossier en PDF y tu plan incluyen una Guía de Intercambios equivalente dentro del mismo grupo de alimentos (proteínas por proteínas, hidratos por hidratos) respetando tus posibles alergias.',
+    targetId: 'tour-nav-cuestionarios',
+    title: '5. Cuestionarios y Firmas',
+    subtitle: 'Digital y seguro',
+    content:
+      'Rellena tu anamnesis de salud previa a la consulta y firma tus consentimientos informados de forma 100% digital en pantalla.',
   },
   {
-    id: 'plan-4',
-    category: 'Mi Plan',
-    question: '¿Cada cuánto se renueva mi plan?',
-    answer: 'Eva renueva o ajusta tu plan tras cada consulta de revisión y seguimiento según tu progreso, sensaciones digestivas y evolución antropométrica.',
+    targetId: 'tour-nav-documentos',
+    title: '6. Mis Documentos',
+    subtitle: 'Custodia médica',
+    content:
+      'Consulta y descarga tus informes clínicos, analíticas y documentos que Eva publique para ti en tu historial médico privado.',
   },
   {
-    id: 'cuest-1',
-    category: 'Cuestionarios y Firmas',
-    question: '¿Cómo relleno un cuestionario o firmo un documento?',
-    answer: 'Accede a la sección "Cuestionarios". Cuando Eva te asigne un cuestionario de alta o consentimiento informado, verás un aviso de color ámbar destacado. Podrás responderlo o firmarlo en pantalla directamente en tu dispositivo.',
-  },
-  {
-    id: 'cuest-2',
-    category: 'Cuestionarios y Firmas',
-    question: '¿Por qué no puedo apuntar mi peso ni mis comidas?',
-    answer: 'Este portal es estrictamente clínico e informativo, no una red social ni un diario de conteo. Para garantizar el rigor clínico y evitar obsesiones con la báscula (especialmente en protocolos TCA o de salud integral), los datos antropométricos válidos son los medidos por Eva en consulta.',
-  },
-  {
-    id: 'cuenta-1',
-    category: 'Mi Cuenta y RGPD',
-    question: '¿Quién puede ver mis datos de salud?',
-    answer: 'Únicamente tu nutricionista responsable (Eva Vidal). Este sistema cuenta con aislamiento estricto de datos en servidores de la Unión Europea bajo el Reglamento General de Protección de Datos (RGPD).',
-  },
-  {
-    id: 'dudas-1',
-    category: 'Dudas entre consultas',
-    question: 'Tengo una duda sobre mi plan, ¿qué hago?',
-    answer: 'Te recomendamos anotar todas tus dudas cotidianas para tratarlas con detalle y tiempo en tu próxima sesión de revisión programada.',
-  },
-]
-
-const TOUR_STEPS = [
-  {
-    target: 'inicio',
-    title: '¡Te damos la bienvenida a tu portal!',
-    content: 'Desde aquí tienes el control de tu tratamiento nutricional con Eva Vidal. Vamos a recorrer brevemente las opciones clave.',
-  },
-  {
-    target: 'plan',
-    title: 'Mi Plan Nutricional',
-    content: 'Aquí tienes tu plan semanal activo, con las recetas detalladas y la opción de descargar tu dossier en PDF.',
-  },
-  {
-    target: 'citas',
-    title: 'Mis Citas',
-    content: 'Solicita nuevas revisiones, consulta los horarios asignados y accede a tu enlace de videollamada de Google Meet.',
-  },
-  {
-    target: 'evolucion',
-    title: 'Mi Evolución',
-    content: 'Revisa tus registros de peso, composición corporal y referencias clínicas publicadas por Eva.',
-  },
-  {
-    target: 'cuestionarios',
-    title: 'Cuestionarios y Firmas',
-    content: 'Rellena tu anamnesis previa y firma tus consentimientos informados de forma 100% digital y segura.',
-  },
-  {
-    target: 'documentos',
-    title: 'Documentos',
-    content: 'Consulta y descarga tus informes clínicos y analíticas compartidas.',
+    targetId: null,
+    title: '📋 Preparación para tu primera consulta',
+    subtitle: 'Qué tener a mano con Eva Vidal',
+    content:
+      'Para aprovechar al máximo tu sesión de valoración:\n• Analíticas de sangre recientes o informes médicos relevantes.\n• Lista de medicación habitual y suplementos que tomes.\n• Cuestionario de anamnesis completado (en la pestaña Cuestionarios).\n• Tus objetivos principales y dudas anotadas para tratarlas con calma.',
   },
 ]
 
@@ -112,12 +79,51 @@ export function HelpWidget() {
   const [search, setSearch] = useState('')
   const [selectedCategory, setSelectedCategory] = useState<string>('Todas')
   const [tourIndex, setTourIndex] = useState<number | null>(null)
+  const [targetRect, setTargetRect] = useState<DOMRect | null>(null)
+  const [faqs] = useState<FAQItem[]>(DEFAULT_FAQS)
+
+  // Medir posición del botón iluminado (estilo Roblox)
+  const updateTargetPosition = useCallback(() => {
+    if (tourIndex === null) {
+      setTargetRect(null)
+      return
+    }
+
+    const step = TOUR_STEPS[tourIndex]
+    if (!step || !step.targetId) {
+      setTargetRect(null)
+      return
+    }
+
+    const el = document.getElementById(step.targetId)
+    if (el) {
+      el.scrollIntoView({ behavior: 'smooth', block: 'nearest' })
+      const rect = el.getBoundingClientRect()
+      setTargetRect(rect)
+    } else {
+      setTargetRect(null)
+    }
+  }, [tourIndex])
 
   useEffect(() => {
-    // Si es la primera visita, abrir el tutorial automáticamente
+    updateTargetPosition()
+    window.addEventListener('resize', updateTargetPosition)
+    window.addEventListener('scroll', updateTargetPosition, true)
+    return () => {
+      window.removeEventListener('resize', updateTargetPosition)
+      window.removeEventListener('scroll', updateTargetPosition, true)
+    }
+  }, [updateTargetPosition])
+
+  useEffect(() => {
+    // Si es la primera visita al portal, abrir el tutorial automáticamente estilo Roblox
     const hasSeenTour = localStorage.getItem('ev_portal_tour_seen')
     if (!hasSeenTour) {
-      setTourIndex(0)
+      // Pequeño retardo para dar tiempo a renderizar la navegación
+      const timer = setTimeout(() => {
+        setTourIndex(0)
+      }, 500)
+      return () => clearTimeout(timer)
     }
   }, [])
 
@@ -131,7 +137,7 @@ export function HelpWidget() {
     setTourIndex(0)
   }
 
-  const filteredFaqs = FAQ_LIST.filter((faq) => {
+  const filteredFaqs = faqs.filter((faq) => {
     const matchesCategory = selectedCategory === 'Todas' || faq.category === selectedCategory
     const matchesSearch =
       faq.question.toLowerCase().includes(search.toLowerCase()) ||
@@ -141,85 +147,156 @@ export function HelpWidget() {
 
   const categories = ['Todas', 'Citas', 'Mi Plan', 'Cuestionarios y Firmas', 'Mi Cuenta y RGPD', 'Dudas entre consultas']
 
+  const currentStep = tourIndex !== null ? TOUR_STEPS[tourIndex] : null
+
   return (
     <>
-      {/* Guía Interactiva Tutorial (Estilo Spotlight) */}
-      {tourIndex !== null && (
-        <div className="fixed inset-0 z-50 bg-black/70 backdrop-blur-xs flex items-center justify-center p-4">
-          <div className="bg-white rounded-3xl p-6 sm:p-8 max-w-md w-full shadow-2xl border border-blue-200 animate-in fade-in zoom-in-95 duration-200">
-            <div className="flex items-center gap-2 mb-3 text-blue-600">
-              <Sparkles className="w-5 h-5" />
-              <span className="text-xs font-bold uppercase tracking-wider">
-                Guía de Bienvenida ({tourIndex + 1}/{TOUR_STEPS.length})
-              </span>
-            </div>
-            <h3 className="text-xl font-bold text-gray-900 mb-2">
-              {TOUR_STEPS[tourIndex].title}
-            </h3>
-            <p className="text-sm text-gray-600 leading-relaxed mb-6">
-              {TOUR_STEPS[tourIndex].content}
-            </p>
+      {/* Guía Interactiva Spotlight (Estilo Roblox Tutorial - 3.10) */}
+      {tourIndex !== null && currentStep && (
+        <div className="fixed inset-0 z-50 pointer-events-auto">
+          {/* Fondo oscuro general */}
+          <div
+            className="fixed inset-0 bg-black/80 backdrop-blur-xs transition-opacity duration-300"
+            onClick={handleFinishTour}
+          />
 
-            <div className="flex items-center justify-between gap-3 pt-3 border-t border-gray-100">
-              <button
-                type="button"
-                onClick={handleFinishTour}
-                className="text-xs text-gray-400 hover:text-gray-700 font-semibold"
-              >
-                Saltar guía
-              </button>
-              <div className="flex items-center gap-2">
-                {tourIndex < TOUR_STEPS.length - 1 ? (
-                  <Button
-                    onClick={() => setTourIndex(tourIndex + 1)}
-                    size="sm"
-                    className="rounded-2xl bg-blue-600 hover:bg-blue-700 text-white font-bold"
-                  >
-                    <span>Siguiente</span>
-                    <ChevronRight className="w-4 h-4 ml-1" />
-                  </Button>
-                ) : (
-                  <Button
-                    onClick={handleFinishTour}
-                    size="sm"
-                    className="rounded-2xl bg-emerald-600 hover:bg-emerald-700 text-white font-bold"
-                  >
-                    <CheckCircle2 className="w-4 h-4 mr-1" />
-                    <span>¡Empezar!</span>
-                  </Button>
-                )}
+          {/* Recuadro brillante alrededor del botón que se explica (Spotlight Roblox) */}
+          {targetRect && (
+            <div
+              style={{
+                position: 'fixed',
+                top: Math.max(8, targetRect.top - 6),
+                left: Math.max(8, targetRect.left - 6),
+                width: targetRect.width + 12,
+                height: targetRect.height + 12,
+              }}
+              className="pointer-events-none z-[60] rounded-2xl ring-4 ring-amber-400 ring-offset-2 ring-offset-black shadow-[0_0_35px_rgba(251,191,36,0.95)] animate-pulse border border-amber-300 bg-white/10 transition-all duration-300"
+            />
+          )}
+
+          {/* Tarjeta explicativa con botón Siguiente */}
+          <div className="fixed inset-0 pointer-events-none flex items-center justify-center p-4 z-[70]">
+            <div
+              className={`pointer-events-auto bg-white rounded-3xl p-6 sm:p-8 w-full shadow-2xl border-2 border-amber-300 animate-in fade-in zoom-in-95 duration-200 ${
+                currentStep.targetId ? 'max-w-md' : 'max-w-lg'
+              }`}
+            >
+              <div className="flex items-center justify-between gap-2 mb-3">
+                <div className="flex items-center gap-2 text-amber-600">
+                  <Sparkles className="w-5 h-5 text-amber-500 fill-amber-400 animate-spin" />
+                  <span className="text-xs font-black uppercase tracking-wider text-amber-900">
+                    Guía del Portal ({tourIndex + 1}/{TOUR_STEPS.length})
+                  </span>
+                </div>
+                <button
+                  type="button"
+                  onClick={handleFinishTour}
+                  className="text-2xs font-semibold text-gray-400 hover:text-gray-700 uppercase"
+                >
+                  Saltar
+                </button>
+              </div>
+
+              <span className="text-2xs font-bold uppercase tracking-wider text-blue-600 block mb-0.5">
+                {currentStep.subtitle}
+              </span>
+              <h3 className="text-lg sm:text-xl font-bold text-gray-900 mb-2">
+                {currentStep.title}
+              </h3>
+
+              {currentStep.targetId ? (
+                <p className="text-xs sm:text-sm text-gray-600 leading-relaxed mb-6">
+                  {currentStep.content}
+                </p>
+              ) : (
+                <div className="mb-6 p-4 rounded-2xl bg-amber-50/80 border border-amber-200 text-xs sm:text-sm text-amber-950 space-y-2">
+                  <div className="flex items-center gap-2 font-bold text-amber-900 pb-1 border-b border-amber-200">
+                    <ClipboardList className="w-4 h-4 text-amber-700" />
+                    <span>Recomendaciones para tu primera consulta:</span>
+                  </div>
+                  <ul className="space-y-1.5 text-xs text-amber-900/90 list-disc list-inside">
+                    <li>Analíticas de sangre recientes o informes médicos relevantes.</li>
+                    <li>Lista de medicación habitual y suplementos que tomes.</li>
+                    <li>Cuestionario de anamnesis completado (en 'Cuestionarios').</li>
+                    <li>Tus objetivos prioritarios y dudas cotidianas anotadas.</li>
+                  </ul>
+                </div>
+              )}
+
+              <div className="flex items-center justify-between gap-3 pt-3 border-t border-gray-100">
+                <button
+                  type="button"
+                  onClick={handleFinishTour}
+                  className="text-xs text-gray-400 hover:text-gray-700 font-semibold"
+                >
+                  Saltar guía
+                </button>
+                <div className="flex items-center gap-2">
+                  {tourIndex > 0 && (
+                    <Button
+                      type="button"
+                      variant="outline"
+                      size="sm"
+                      onClick={() => setTourIndex(tourIndex - 1)}
+                      className="rounded-2xl text-xs font-semibold"
+                    >
+                      Anterior
+                    </Button>
+                  )}
+                  {tourIndex < TOUR_STEPS.length - 1 ? (
+                    <Button
+                      type="button"
+                      onClick={() => setTourIndex(tourIndex + 1)}
+                      size="sm"
+                      className="rounded-2xl bg-amber-500 hover:bg-amber-600 text-amber-950 font-bold text-xs gap-1 shadow-sm"
+                    >
+                      <span>Siguiente</span>
+                      <ChevronRight className="w-4 h-4" />
+                    </Button>
+                  ) : (
+                    <Button
+                      type="button"
+                      onClick={handleFinishTour}
+                      size="sm"
+                      className="rounded-2xl bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs gap-1 shadow-sm"
+                    >
+                      <CheckCircle2 className="w-4 h-4" />
+                      <span>¡Empezar a usar mi portal!</span>
+                    </Button>
+                  )}
+                </div>
               </div>
             </div>
           </div>
         </div>
       )}
 
-      {/* Botón flotante de ayuda */}
+      {/* Botón flotante de ayuda (Abajo a la derecha, visible en todo el portal - 3.10) */}
       <div className="fixed bottom-6 right-6 z-40 print:hidden">
         <button
           type="button"
           onClick={() => setIsOpen(!isOpen)}
-          className="flex items-center gap-2 px-4 py-3 rounded-full bg-blue-600 text-white hover:bg-blue-700 shadow-lg hover:shadow-xl transition-all duration-200 font-bold text-xs"
+          className="flex items-center gap-2 px-4 py-3 rounded-full bg-blue-600 text-white hover:bg-blue-700 shadow-lg hover:shadow-xl transition-all duration-200 font-bold text-xs border-2 border-white"
           aria-label="Ayuda y preguntas frecuentes"
         >
           <HelpCircle className="w-5 h-5" />
-          <span className="hidden sm:inline">Ayuda & FAQ</span>
+          <span className="hidden sm:inline">Ayuda & Preguntas frecuentes</span>
         </button>
       </div>
 
-      {/* Modal / Panel de Preguntas Frecuentes */}
+      {/* Modal / Panel de Preguntas Frecuentes con buscador (3.10) */}
       {isOpen && (
-        <div className="fixed inset-0 z-50 bg-black/40 backdrop-blur-2xs flex items-end sm:items-center justify-center p-0 sm:p-4 print:hidden">
+        <div className="fixed inset-0 z-50 bg-black/50 backdrop-blur-2xs flex items-end sm:items-center justify-center p-0 sm:p-4 print:hidden animate-in fade-in duration-150">
           <div className="bg-white rounded-t-3xl sm:rounded-3xl w-full max-w-2xl max-h-[85vh] flex flex-col shadow-2xl border border-gray-200 overflow-hidden animate-in slide-in-from-bottom duration-200">
             {/* Header */}
             <div className="p-5 border-b border-gray-100 flex items-center justify-between bg-gradient-to-r from-blue-50 to-white">
               <div className="flex items-center gap-3">
-                <div className="w-9 h-9 rounded-2xl bg-blue-100 text-blue-700 flex items-center justify-center">
+                <div className="w-9 h-9 rounded-2xl bg-blue-100 text-blue-700 flex items-center justify-center shadow-xs">
                   <BookOpen className="w-5 h-5" />
                 </div>
                 <div>
                   <h3 className="text-base font-bold text-gray-900">Centro de Ayuda al Paciente</h3>
-                  <p className="text-xs text-gray-500">Preguntas frecuentes sobre tu portal y tu plan</p>
+                  <p className="text-xs text-gray-500">Preguntas frecuentes sobre citas, tu plan y tus datos</p>
                 </div>
               </div>
               <button
@@ -232,15 +309,15 @@ export function HelpWidget() {
             </div>
 
             {/* Search & Categories */}
-            <div className="p-4 border-b border-gray-100 bg-gray-50/60 space-y-3">
+            <div className="p-4 border-b border-gray-100 bg-gray-50/70 space-y-3">
               <div className="relative">
                 <Search className="w-4 h-4 text-gray-400 absolute left-3.5 top-1/2 -translate-y-1/2" />
                 <input
                   type="text"
-                  placeholder="Buscar dudas (ej: recetas, citas, videollamada, RGPD)..."
+                  placeholder="Buscar dudas (ej: recetas, citas, videollamada, RGPD, contraseñas)..."
                   value={search}
                   onChange={(e) => setSearch(e.target.value)}
-                  className="w-full pl-10 pr-4 py-2 text-xs rounded-xl border border-gray-200 bg-white focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  className="w-full pl-10 pr-4 py-2.5 text-xs rounded-xl border border-gray-200 bg-white focus:outline-none focus:ring-2 focus:ring-blue-500 shadow-2xs"
                 />
               </div>
 
@@ -252,7 +329,7 @@ export function HelpWidget() {
                     onClick={() => setSelectedCategory(cat)}
                     className={`px-3 py-1 rounded-full whitespace-nowrap font-medium transition-colors ${
                       selectedCategory === cat
-                        ? 'bg-blue-600 text-white'
+                        ? 'bg-blue-600 text-white shadow-2xs'
                         : 'bg-white text-gray-600 border border-gray-200 hover:bg-gray-100'
                     }`}
                   >
@@ -270,12 +347,12 @@ export function HelpWidget() {
                 </div>
               ) : (
                 filteredFaqs.map((faq) => (
-                  <div key={faq.id} className="p-4 rounded-2xl bg-gray-50/80 border border-gray-200/80 space-y-1.5">
+                  <div key={faq.id} className="p-4 rounded-2xl bg-gray-50/80 border border-gray-200/80 space-y-1.5 hover:border-blue-200 transition-colors">
                     <span className="text-[10px] font-bold text-blue-600 uppercase tracking-wider block">
                       {faq.category}
                     </span>
                     <h4 className="text-xs font-bold text-gray-900">{faq.question}</h4>
-                    <p className="text-xs text-gray-600 leading-relaxed">{faq.answer}</p>
+                    <p className="text-xs text-gray-600 leading-relaxed whitespace-pre-wrap">{faq.answer}</p>
                   </div>
                 ))
               )}
@@ -286,16 +363,16 @@ export function HelpWidget() {
               <button
                 type="button"
                 onClick={handleStartTourManual}
-                className="inline-flex items-center gap-1.5 text-xs font-bold text-blue-600 hover:text-blue-800"
+                className="inline-flex items-center gap-1.5 text-xs font-bold text-blue-700 hover:text-blue-900"
               >
-                <Sparkles className="w-3.5 h-3.5" />
-                <span>Volver a ver la guía de bienvenida</span>
+                <Sparkles className="w-4 h-4 text-amber-500 fill-amber-400" />
+                <span>Volver a ver la guía de bienvenida interactiva</span>
               </button>
               <Button
                 variant="outline"
                 size="sm"
                 onClick={() => setIsOpen(false)}
-                className="rounded-xl text-xs"
+                className="rounded-xl text-xs font-semibold"
               >
                 Cerrar
               </Button>

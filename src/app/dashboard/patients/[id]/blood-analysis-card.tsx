@@ -8,6 +8,7 @@ import { Label } from '@/components/ui/label'
 import { Badge } from '@/components/ui/badge'
 import { Activity, Plus, Trash2, Calendar, CheckCircle2, AlertTriangle, XCircle, ChevronDown, ChevronUp } from 'lucide-react'
 import { createBloodAnalysis, deleteBloodAnalysis } from '../blood-actions'
+import { calculateBloodIndices } from '@/lib/nutrition/anthropometry'
 
 interface BloodRecord {
   id: string
@@ -26,12 +27,15 @@ interface BloodRecord {
   uricAcidMgDl: number | null
   gotAstUL: number | null
   gptAltUL: number | null
+  insulinUiuMl?: number | null
+  plateletsKUl?: number | null
   notes: string | null
 }
 
 interface Props {
   patientId: string
   records: BloodRecord[]
+  patientAge?: number
 }
 
 interface BiomarkerDef {
@@ -134,9 +138,23 @@ const BIOMARKERS: BiomarkerDef[] = [
     normalRange: '< 45',
     checkStatus: (v) => (v > 55 ? 'danger' : v > 45 ? 'warning' : 'normal'),
   },
+  {
+    key: 'insulinUiuMl',
+    name: 'Insulina Basal',
+    unit: 'µIU/mL',
+    normalRange: '2.6 - 24.9',
+    checkStatus: (v) => (v > 25 ? 'danger' : v > 15 ? 'warning' : 'normal'),
+  },
+  {
+    key: 'plateletsKUl',
+    name: 'Plaquetas',
+    unit: '10³/µL',
+    normalRange: '150 - 450',
+    checkStatus: (v) => (v < 150 || v > 450 ? 'warning' : 'normal'),
+  },
 ]
 
-export function BloodAnalysisCard({ patientId, records }: Props) {
+export function BloodAnalysisCard({ patientId, records, patientAge }: Props) {
   const [showAddForm, setShowAddForm] = useState(false)
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [selectedRecordIndex, setSelectedRecordIndex] = useState(0)
@@ -165,6 +183,8 @@ export function BloodAnalysisCard({ patientId, records }: Props) {
         uricAcidMgDl: formData.get('uricAcid') ? Number(formData.get('uricAcid')) : undefined,
         gotAstUL: formData.get('gotAst') ? Number(formData.get('gotAst')) : undefined,
         gptAltUL: formData.get('gptAlt') ? Number(formData.get('gptAlt')) : undefined,
+        insulinUiuMl: formData.get('insulin') ? Number(formData.get('insulin')) : undefined,
+        plateletsKUl: formData.get('platelets') ? Number(formData.get('platelets')) : undefined,
         notes: (formData.get('notes') as string) || undefined,
       })
       setShowAddForm(false)
@@ -280,6 +300,14 @@ export function BloodAnalysisCard({ patientId, records }: Props) {
                 <Label className="text-xs">GPT / ALT (U/L)</Label>
                 <Input type="number" step="any" name="gptAlt" placeholder="Ej. 25" className="h-9 text-xs" />
               </div>
+              <div className="space-y-1">
+                <Label className="text-xs">Insulina Basal (µIU/mL)</Label>
+                <Input type="number" step="any" name="insulin" placeholder="Ej. 8.5" className="h-9 text-xs" />
+              </div>
+              <div className="space-y-1">
+                <Label className="text-xs">Plaquetas (10³/µL)</Label>
+                <Input type="number" step="any" name="platelets" placeholder="Ej. 240" className="h-9 text-xs" />
+              </div>
               <div className="col-span-2 space-y-1">
                 <Label className="text-xs">Notas Clínicas del Laboratorio</Label>
                 <Input type="text" name="notes" placeholder="Ej. Muestra en ayunas de 12 horas, analítica previa a inicio de dieta" className="h-9 text-xs" />
@@ -356,6 +384,106 @@ export function BloodAnalysisCard({ patientId, records }: Props) {
                     Eliminar
                   </Button>
                 </div>
+
+                {/* Índices Clínicos y Metabólicos Avanzados (5.3) */}
+                {(() => {
+                  const indices = calculateBloodIndices({
+                    cholesterolTotalMgDl: activeRecord.cholesterolMgDl,
+                    hdlMgDl: activeRecord.hdlMgDl,
+                    triglyceridesMgDl: activeRecord.triglyceridesMgDl,
+                    glucoseMgDl: activeRecord.glucoseMgDl,
+                    insulinUiuMl: activeRecord.insulinUiuMl,
+                    ageYears: patientAge || 35,
+                    astUL: activeRecord.gotAstUL,
+                    altUL: activeRecord.gptAltUL,
+                    plateletsKUl: activeRecord.plateletsKUl,
+                  })
+
+                  const hasAnyIndex = indices.tgHdlRatio || indices.friedewaldLdl || indices.homaIr || indices.fib4
+                  if (!hasAnyIndex) return null
+
+                  return (
+                    <div className="p-4 rounded-2xl bg-gradient-to-r from-red-50/50 via-slate-50 to-blue-50/40 border border-red-200/80 space-y-3">
+                      <div className="flex items-center justify-between">
+                        <span className="text-2xs font-black uppercase tracking-wider text-red-950 flex items-center gap-1.5">
+                          <Activity className="h-3.5 w-3.5 text-red-600" />
+                          <span>Índices Metabólicos y Clínicos Calculados (5.3)</span>
+                        </span>
+                        <Badge variant="outline" className="bg-white text-3xs font-bold text-gray-700">
+                          Algoritmos Clínicos Estandarizados
+                        </Badge>
+                      </div>
+
+                      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-2.5">
+                        {indices.homaIr && (
+                          <div className={`p-3 rounded-xl border bg-white shadow-2xs space-y-1 ${
+                            indices.homaIr.status === 'danger' ? 'border-rose-300' : indices.homaIr.status === 'warning' ? 'border-amber-300' : 'border-blue-200'
+                          }`}>
+                            <div className="flex items-center justify-between">
+                              <span className="text-2xs font-bold text-gray-700">HOMA-IR</span>
+                              <Badge className={`text-3xs font-black rounded-full ${
+                                indices.homaIr.status === 'danger' ? 'bg-rose-600' : indices.homaIr.status === 'warning' ? 'bg-amber-500' : 'bg-blue-600'
+                              }`}>
+                                {indices.homaIr.value}
+                              </Badge>
+                            </div>
+                            <p className="text-3xs text-gray-500 leading-tight">{indices.homaIr.interpretation}</p>
+                          </div>
+                        )}
+
+                        {indices.tgHdlRatio && (
+                          <div className={`p-3 rounded-xl border bg-white shadow-2xs space-y-1 ${
+                            indices.tgHdlRatio.status === 'danger' ? 'border-rose-300' : indices.tgHdlRatio.status === 'warning' ? 'border-amber-300' : 'border-blue-200'
+                          }`}>
+                            <div className="flex items-center justify-between">
+                              <span className="text-2xs font-bold text-gray-700">Ratio TG / HDL</span>
+                              <Badge className={`text-3xs font-black rounded-full ${
+                                indices.tgHdlRatio.status === 'danger' ? 'bg-rose-600' : indices.tgHdlRatio.status === 'warning' ? 'bg-amber-500' : 'bg-blue-600'
+                              }`}>
+                                {indices.tgHdlRatio.value}
+                              </Badge>
+                            </div>
+                            <p className="text-3xs text-gray-500 leading-tight">{indices.tgHdlRatio.interpretation}</p>
+                          </div>
+                        )}
+
+                        {indices.friedewaldLdl && (
+                          <div className={`p-3 rounded-xl border bg-white shadow-2xs space-y-1 ${
+                            indices.friedewaldLdl.status === 'danger' ? 'border-rose-300' : indices.friedewaldLdl.status === 'warning' ? 'border-amber-300' : 'border-blue-200'
+                          }`}>
+                            <div className="flex items-center justify-between">
+                              <span className="text-2xs font-bold text-gray-700">LDL Friedewald</span>
+                              <Badge className={`text-3xs font-black rounded-full ${
+                                indices.friedewaldLdl.status === 'danger' ? 'bg-rose-600' : indices.friedewaldLdl.status === 'warning' ? 'bg-amber-500' : 'bg-blue-600'
+                              }`}>
+                                {indices.friedewaldLdl.value} mg/dL
+                              </Badge>
+                            </div>
+                            <p className="text-3xs text-gray-500 leading-tight">
+                              {indices.friedewaldLdl.valid ? 'Cálculo válido (TG < 400 mg/dL)' : 'Advertencia: TG ≥ 400 mg/dL'}
+                            </p>
+                          </div>
+                        )}
+
+                        {indices.fib4 && (
+                          <div className={`p-3 rounded-xl border bg-white shadow-2xs space-y-1 ${
+                            indices.fib4.status === 'danger' ? 'border-rose-300' : indices.fib4.status === 'warning' ? 'border-amber-300' : 'border-blue-200'
+                          }`}>
+                            <div className="flex items-center justify-between">
+                              <span className="text-2xs font-bold text-gray-700">Índice FIB-4</span>
+                              <Badge className={`text-3xs font-black rounded-full ${
+                                indices.fib4.status === 'danger' ? 'bg-rose-600' : indices.fib4.status === 'warning' ? 'bg-amber-500' : 'bg-blue-600'
+                              }`}>
+                                {indices.fib4.value}
+                              </Badge>
+                            </div>
+                            <p className="text-3xs text-gray-500 leading-tight">{indices.fib4.interpretation}</p>
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  )
+                })()}
 
                 {/* Grid de biomarcadores con semáforo */}
                 <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3">

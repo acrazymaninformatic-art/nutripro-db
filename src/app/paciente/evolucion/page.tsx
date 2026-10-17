@@ -12,7 +12,9 @@ import {
   Calendar,
   FileSpreadsheet,
   PieChart,
+  Sparkles,
 } from 'lucide-react'
+import { EvolutionChart } from '@/app/dashboard/patients/[id]/evolution-chart'
 
 export const dynamic = 'force-dynamic'
 
@@ -42,6 +44,17 @@ export default async function PacienteEvolucionPage() {
         orderBy: { date: 'desc' },
       })
     : []
+
+  const patient = patientId
+    ? await prisma.patient.findUnique({
+        where: { id: patientId },
+        select: {
+          targetWeightKg: true,
+          weeklyChangeTargetKg: true,
+          milestonesMessage: true,
+        },
+      })
+    : null
 
   const latest = measurements[0]
   const oldest = measurements[measurements.length - 1]
@@ -156,6 +169,28 @@ export default async function PacienteEvolucionPage() {
             </span>
           </Card>
         </div>
+      )}
+
+      {/* Cartel de Felicitación / Mensaje de Hito Personalizado (5.2) */}
+      {patient?.milestonesMessage && (
+        <div className="p-4 rounded-3xl bg-gradient-to-r from-amber-50 to-purple-50 border border-amber-200 text-amber-950 flex items-center gap-3 shadow-2xs">
+          <div className="p-2.5 bg-amber-200 text-amber-900 rounded-2xl shrink-0">
+            <Sparkles className="h-5 w-5" />
+          </div>
+          <div>
+            <p className="font-bold text-xs uppercase tracking-wide text-amber-900">Mensaje de Eva Vidal</p>
+            <p className="text-xs text-amber-950 font-medium mt-0.5">{patient.milestonesMessage}</p>
+          </div>
+        </div>
+      )}
+
+      {/* Gráfica de Evolución y Composición en Kilos Interactiva (5.2) */}
+      {measurements.length > 0 && (
+        <EvolutionChart
+          measurements={measurements}
+          targetWeightKg={patient?.targetWeightKg}
+          weeklyChangeTargetKg={patient?.weeklyChangeTargetKg}
+        />
       )}
 
       {/* Main Table or Empty State */}

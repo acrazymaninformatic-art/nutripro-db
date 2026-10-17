@@ -7,10 +7,13 @@ const inter = Inter({
 })
 
 export const metadata: Metadata = {
-  title: 'EVSoftware · Eva Vidal Nutrición',
+  title: {
+    default: 'EVSoftware · Eva Vidal Nutrición',
+    template: '%s | EVSoftware · Eva Vidal Nutrición',
+  },
   robots: { index: false, follow: false, noarchive: true },
   description:
-    'EVSoftware - Plataforma clínica de nutrición y dietética · Consulta Nutricional Eva Vidal',
+    'EVSoftware · Plataforma clínica de nutrición y dietética · Eva Vidal Nutrición',
 }
 
 export default function RootLayout({

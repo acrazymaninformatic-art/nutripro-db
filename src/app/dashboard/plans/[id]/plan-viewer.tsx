@@ -350,7 +350,7 @@ export function PlanViewer({ plan }: PlanViewerProps) {
                   </div>
                   <div>
                     <h1 className="text-2xl font-black text-gray-900 tracking-tight">
-                      Consulta Nutricional Eva Vidal <span className="text-blue-600 font-light">• EVSoftware</span>
+                      Eva Vidal Nutrición <span className="text-blue-600 font-light">• EVSoftware</span>
                     </h1>
                     <p className="text-xs text-gray-500 font-semibold tracking-wide uppercase">
                       Dossier de Prescripción Dietética y Recetario Clínico
@@ -359,7 +359,7 @@ export function PlanViewer({ plan }: PlanViewerProps) {
                 </div>
 
                 <div className="text-right text-xs text-gray-600 space-y-0.5">
-                  <p className="font-black text-gray-900 text-sm">Eva Vidal - Consulta Nutricional</p>
+                  <p className="font-black text-gray-900 text-sm">Eva Vidal Nutrición</p>
                   <p className="text-gray-500 font-medium">Nº Colegiado: MAD-4892 • Especialidad Médica</p>
                   <p className="text-gray-400">
                     Fecha de Emisión: {new Date(plan.startDate).toLocaleDateString('es-ES', { day: 'numeric', month: 'long', year: 'numeric' })}
@@ -766,7 +766,7 @@ export function PlanViewer({ plan }: PlanViewerProps) {
                 <div className="dossier-footer relative z-10 pt-2.5 border-t border-gray-200 flex items-center justify-between text-[10px] text-gray-500">
                   <div className="flex items-center gap-1.5">
                     <img src="/logo.png" alt="" className="h-4 w-4 object-contain inline-block" />
-                    <span>Consulta Nutricional Eva Vidal • Paciente: {plan.patient.firstName} {plan.patient.lastName}</span>
+                    <span>Eva Vidal Nutrición • Paciente: {plan.patient.firstName} {plan.patient.lastName}</span>
                   </div>
                   <span className="font-bold text-gray-500">Hoja {pageNumber} de 10 • {day.customName || DAY_NAMES[dIdx]}</span>
                 </div>
@@ -850,7 +850,7 @@ export function PlanViewer({ plan }: PlanViewerProps) {
             <div className="dossier-footer relative z-10 pt-3 border-t border-gray-200 flex items-center justify-between text-[10px] text-gray-500">
               <div className="flex items-center gap-1.5">
                 <img src="/logo.png" alt="" className="h-3.5 w-3.5 object-contain" />
-                <span>Consulta Nutricional Eva Vidal • Guía de Intercambios Clínicos</span>
+                <span>Eva Vidal Nutrición • Guía de Intercambios Clínicos</span>
               </div>
               <span className="font-bold text-gray-500">Hoja 9 de 10 • Flexibilidad Dietética</span>
             </div>
@@ -947,7 +947,7 @@ export function PlanViewer({ plan }: PlanViewerProps) {
             <div className="dossier-footer relative z-10 pt-3 border-t border-gray-200 flex items-center justify-between text-[10px] text-gray-500">
               <div className="flex items-center gap-1.5">
                 <img src="/logo.png" alt="" className="h-3.5 w-3.5 object-contain" />
-                <span>Consulta Nutricional Eva Vidal • Consolidado Semanal</span>
+                <span>Eva Vidal Nutrición • Consolidado Semanal</span>
               </div>
               <span className="font-bold text-gray-500">Hoja 10 de 10 • Plan Nutricional</span>
             </div>

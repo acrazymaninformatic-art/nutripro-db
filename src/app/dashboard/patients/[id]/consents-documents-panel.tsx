@@ -290,11 +290,11 @@ export function ConsentsDocumentsPanel({ patientId, consents, documents }: Props
                     id="isSharedWithPatient"
                     name="isSharedWithPatient"
                     value="true"
-                    defaultChecked
-                    className="h-4 w-4 rounded border-gray-300 text-blue-600"
+                    defaultChecked={false}
+                    className="h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500"
                   />
                   <label htmlFor="isSharedWithPatient" className="font-semibold text-gray-700 cursor-pointer">
-                    Compartir con el paciente en su portal web (descargable)
+                    Compartir con el paciente en su portal web (apagado por defecto)
                   </label>
                 </div>
 

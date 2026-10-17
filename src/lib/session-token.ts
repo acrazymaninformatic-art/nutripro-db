@@ -13,7 +13,19 @@ export function signSessionPayload(payload: string) {
   return createHmac('sha256', getSecret()).update(payload).digest('base64url')
 }
 
-export function verifySessionToken(token: string | undefined): { userId: string } | null {
+export interface SessionPayload {
+  userId: string
+  role?: string
+  email?: string
+  patientId?: string | null
+}
+
+export function createSessionTokenPayload(data: SessionPayload, ttlSeconds = SESSION_TTL_SECONDS): string {
+  const expiresAt = Date.now() + ttlSeconds * 1000
+  return Buffer.from(JSON.stringify({ ...data, expiresAt }), 'utf8').toString('base64url')
+}
+
+export function verifySessionToken(token: string | undefined): (SessionPayload & { expiresAt: number }) | null {
   if (!token) return null
   const [payload, signature] = token.split('.')
   if (!payload || !signature) return null
@@ -21,10 +33,17 @@ export function verifySessionToken(token: string | undefined): { userId: string 
   const received = Buffer.from(signature)
   if (expected.length !== received.length || !timingSafeEqual(expected, received)) return null
   try {
-    const parsed = JSON.parse(Buffer.from(payload, 'base64url').toString('utf8')) as { userId?: string; expiresAt?: number }
+    const parsed = JSON.parse(Buffer.from(payload, 'base64url').toString('utf8')) as SessionPayload & { expiresAt?: number }
     if (!parsed.userId || !parsed.expiresAt || parsed.expiresAt <= Date.now()) return null
-    return { userId: parsed.userId }
+    return {
+      userId: parsed.userId,
+      role: parsed.role,
+      email: parsed.email,
+      patientId: parsed.patientId,
+      expiresAt: parsed.expiresAt,
+    }
   } catch {
     return null
   }
 }
+

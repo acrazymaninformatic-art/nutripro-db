@@ -22,19 +22,21 @@ export function EmergencyLockdownPanel({
   const [isActive, setIsActive] = useState(initialIsActive)
   const [loading, setLoading] = useState(false)
   const [customReason, setCustomReason] = useState('')
+  const [durationOption, setDurationOption] = useState<'1' | '24' | '72' | 'manual'>('72')
   const [showConfirm, setShowConfirm] = useState(false)
 
-  const calculateHoursLeft = () => {
-    if (!expiresAt) return 72
+  const [hoursLeft, setHoursLeft] = useState<number | null>(() => {
+    if (!expiresAt) return null
     const diff = new Date(expiresAt).getTime() - Date.now()
     if (diff <= 0) return 0
     return Math.round(diff / (1000 * 60 * 60))
-  }
+  })
 
   const handleToggle = async (targetActive: boolean) => {
     setLoading(true)
     try {
-      const res = await toggleEmergencyLockdown(targetActive, customReason || undefined)
+      const hours = durationOption === 'manual' ? null : parseInt(durationOption, 10)
+      const res = await toggleEmergencyLockdown(targetActive, customReason || undefined, hours)
       if (res.success) {
         setIsActive(targetActive)
         setShowConfirm(false)
@@ -82,7 +84,11 @@ export function EmergencyLockdownPanel({
           <div className="p-4 bg-red-100/70 border border-red-200 rounded-2xl text-red-950 space-y-3">
             <div className="flex items-center gap-2 font-semibold text-sm">
               <Clock className="w-4 h-4 text-red-700" />
-              <span>Tiempo de aislamiento restante: ~{calculateHoursLeft()} horas</span>
+              <span>
+                {hoursLeft !== null
+                  ? `Tiempo de aislamiento restante: ~${hoursLeft} horas`
+                  : 'Aislamiento manual indefinido (activo hasta desactivación)'}
+              </span>
             </div>
             <p className="text-xs text-red-900 leading-relaxed">
               Todos los accesos al portal de pacientes (`/paciente`) y cuestionarios públicos están bloqueados de forma inmediata.
@@ -106,7 +112,7 @@ export function EmergencyLockdownPanel({
         ) : (
           <div className="space-y-3">
             <p className="text-xs text-gray-600 leading-relaxed">
-              En caso de pérdida de un dispositivo, sospecha de acceso no autorizado o incidencia técnica, pulsa el botón para cortar de inmediato todos los accesos públicos y de pacientes durante 72 horas.
+              En caso de pérdida de un dispositivo, sospecha de acceso no autorizado o incidencia técnica, pulsa el botón para cortar de inmediato todos los accesos públicos y de pacientes durante el periodo configurado.
             </p>
             {!showConfirm ? (
               <Button
@@ -121,16 +127,34 @@ export function EmergencyLockdownPanel({
             ) : (
               <div className="p-4 bg-amber-50 border border-amber-200 rounded-2xl space-y-3">
                 <p className="text-xs font-semibold text-amber-900">
-                  ¿Confirmas que deseas aislar el sistema? Los pacientes no podrán iniciar sesión hasta que lo desactives.
+                  ¿Confirmas que deseas aislar el sistema? Los pacientes no podrán iniciar sesión hasta que venza el plazo o lo desactives.
                 </p>
-                <input
-                  type="text"
-                  placeholder="Motivo (opcional, ej. revisión técnica)"
-                  value={customReason}
-                  onChange={(e) => setCustomReason(e.target.value)}
-                  className="w-full text-xs px-3 py-2 rounded-xl border border-amber-300 bg-white"
-                />
-                <div className="flex items-center gap-2">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                  <div>
+                    <label className="text-[11px] font-bold text-gray-700 block mb-1">Duración del aislamiento:</label>
+                    <select
+                      value={durationOption}
+                      onChange={(e) => setDurationOption(e.target.value as any)}
+                      className="w-full text-xs px-3 py-2 rounded-xl border border-amber-300 bg-white font-medium"
+                    >
+                      <option value="1">1 hora (Pruebas / Verificación)</option>
+                      <option value="24">24 horas (Incidencia menor)</option>
+                      <option value="72">72 horas (Plazo legal AEPD Art. 33)</option>
+                      <option value="manual">Manual / Indefinido (Hasta desactivar)</option>
+                    </select>
+                  </div>
+                  <div>
+                    <label className="text-[11px] font-bold text-gray-700 block mb-1">Motivo registrado (auditoría):</label>
+                    <input
+                      type="text"
+                      placeholder="Ej. Revisión técnica / sospecha de brecha"
+                      value={customReason}
+                      onChange={(e) => setCustomReason(e.target.value)}
+                      className="w-full text-xs px-3 py-2 rounded-xl border border-amber-300 bg-white"
+                    />
+                  </div>
+                </div>
+                <div className="flex items-center gap-2 pt-1">
                   <Button
                     size="sm"
                     disabled={loading}

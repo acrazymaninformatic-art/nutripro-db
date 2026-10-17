@@ -20,6 +20,8 @@ export interface CreateBloodAnalysisInput {
   uricAcidMgDl?: number
   gotAstUL?: number
   gptAltUL?: number
+  insulinUiuMl?: number
+  plateletsKUl?: number
   notes?: string
 }
 
@@ -52,6 +54,8 @@ export async function createBloodAnalysis(input: CreateBloodAnalysisInput) {
       uricAcidMgDl: input.uricAcidMgDl || null,
       gotAstUL: input.gotAstUL || null,
       gptAltUL: input.gptAltUL || null,
+      insulinUiuMl: input.insulinUiuMl || null,
+      plateletsKUl: input.plateletsKUl || null,
       notes: input.notes || null,
     },
   })

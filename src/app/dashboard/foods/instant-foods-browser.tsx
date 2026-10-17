@@ -15,22 +15,23 @@ import {
   ArrowUpDown,
   Sparkles,
   X,
+  Star,
+  Barcode,
+  GitMerge,
+  ShieldAlert,
+  Check,
+  CheckSquare,
+  Square,
+  Info,
 } from 'lucide-react'
 import { FoodImage } from '@/components/nutrition/food-image'
 import { getFoodImage } from '@/lib/nutrition'
+import { FoodDetailsModal, FoodDetailData } from './food-details-modal'
+import { DuplicateMergerModal } from './duplicate-merger-modal'
+import { BarcodeScannerModal } from './barcode-scanner-modal'
+import { toggleFoodFavorite, bulkUpdateFoods } from './actions'
 
-export interface FoodItem {
-  id: number
-  name: string
-  category: string | null
-  calories: number
-  proteinG: number
-  carbsG: number
-  fatG: number
-  fiberG: number
-  source?: string
-  imageUrl?: string | null
-}
+export type FoodItem = FoodDetailData
 
 export function InstantFoodsBrowser({
   initialFoods,
@@ -41,6 +42,7 @@ export function InstantFoodsBrowser({
   categories: string[]
   totalCount: number
 }) {
+  const [foods, setFoods] = useState<FoodItem[]>(initialFoods)
   const [searchTerm, setSearchTerm] = useState('')
   const [selectedCategory, setSelectedCategory] = useState<string>('ALL')
   const [sortBy, setSortBy] = useState<'name' | 'calories' | 'protein' | 'carbs' | 'fat'>('name')
@@ -48,20 +50,61 @@ export function InstantFoodsBrowser({
   const [currentPage, setCurrentPage] = useState(1)
   const PAGE_SIZE = 30
 
+  // 5.6 Filters
+  const [filterProtein20, setFilterProtein20] = useState(false)
+  const [filterLowSodium, setFilterLowSodium] = useState(false)
+  const [filterHighFiber, setFilterHighFiber] = useState(false)
+  const [filterLowFodmap, setFilterLowFodmap] = useState(false)
+  const [filterFavoritesOnly, setFilterFavoritesOnly] = useState(false)
+  const [filterAllergenFree, setFilterAllergenFree] = useState<string>('ALL')
+
+  // Modals & Selection
+  const [inspectedFood, setInspectedFood] = useState<FoodDetailData | null>(null)
+  const [isDuplicateModalOpen, setIsDuplicateModalOpen] = useState(false)
+  const [isBarcodeModalOpen, setIsBarcodeModalOpen] = useState(false)
+  const [selectedIds, setSelectedIds] = useState<number[]>([])
+
   // Instant in-memory filter
   const filteredAndSortedFoods = useMemo(() => {
-    let result = initialFoods
+    let result = foods
 
     // Category filter
     if (selectedCategory !== 'ALL') {
       result = result.filter((f) => f.category === selectedCategory)
     }
 
+    // Nutrient Filters
+    if (filterProtein20) {
+      result = result.filter((f) => f.proteinG >= 20)
+    }
+    if (filterLowSodium) {
+      result = result.filter((f) => (f.sodiumMg || 0) <= 120)
+    }
+    if (filterHighFiber) {
+      result = result.filter((f) => (f.fiberG || 0) >= 6)
+    }
+    if (filterLowFodmap) {
+      result = result.filter((f) => !f.fodmapCategory || f.fodmapCategory === 'BAJO')
+    }
+    if (filterFavoritesOnly) {
+      result = result.filter((f) => f.isFavorite)
+    }
+    if (filterAllergenFree !== 'ALL') {
+      result = result.filter((f) => {
+        try {
+          const allergens: string[] = f.allergensJson ? JSON.parse(f.allergensJson) : []
+          return !allergens.some((a) => a.toLowerCase().includes(filterAllergenFree.toLowerCase()))
+        } catch {
+          return true
+        }
+      })
+    }
+
     // Search query filter (instant, case-insensitive, multiple tokens)
     if (searchTerm.trim()) {
       const tokens = searchTerm.toLowerCase().trim().split(/\s+/)
       result = result.filter((f) => {
-        const text = `${f.name} ${f.category || ''}`.toLowerCase()
+        const text = `${f.name} ${f.category || ''} ${f.brandName || ''} ${f.barcode || ''}`.toLowerCase()
         return tokens.every((token) => text.includes(token))
       })
     }
@@ -92,7 +135,19 @@ export function InstantFoodsBrowser({
     })
 
     return result
-  }, [initialFoods, searchTerm, selectedCategory, sortBy, sortOrder])
+  }, [
+    foods,
+    searchTerm,
+    selectedCategory,
+    filterProtein20,
+    filterLowSodium,
+    filterHighFiber,
+    filterLowFodmap,
+    filterFavoritesOnly,
+    filterAllergenFree,
+    sortBy,
+    sortOrder,
+  ])
 
   // Pagination on filtered result
   const totalFiltered = filteredAndSortedFoods.length
@@ -102,7 +157,7 @@ export function InstantFoodsBrowser({
     return filteredAndSortedFoods.slice(start, start + PAGE_SIZE)
   }, [filteredAndSortedFoods, currentPage])
 
-  // Reset to page 1 on filter change
+  // Handlers
   const handleSearchChange = (val: string) => {
     setSearchTerm(val)
     setCurrentPage(1)
@@ -123,6 +178,44 @@ export function InstantFoodsBrowser({
     setCurrentPage(1)
   }
 
+  const handleToggleFavorite = async (e: React.MouseEvent, foodId: number) => {
+    e.stopPropagation()
+    try {
+      const updated = await toggleFoodFavorite(foodId)
+      setFoods((prev) =>
+        prev.map((f) => (f.id === foodId ? { ...f, isFavorite: updated.isFavorite } : f))
+      )
+    } catch (err) {
+      console.error(err)
+    }
+  }
+
+  const handleSelectAllOnPage = () => {
+    const pageIds = paginatedFoods.map((f) => f.id)
+    const allSelected = pageIds.every((id) => selectedIds.includes(id))
+    if (allSelected) {
+      setSelectedIds((prev) => prev.filter((id) => !pageIds.includes(id)))
+    } else {
+      setSelectedIds((prev) => Array.from(new Set([...prev, ...pageIds])))
+    }
+  }
+
+  const handleToggleSelectRow = (e: React.MouseEvent, id: number) => {
+    e.stopPropagation()
+    setSelectedIds((prev) =>
+      prev.includes(id) ? prev.filter((x) => x !== id) : [...prev, id]
+    )
+  }
+
+  const handleBulkFavorite = async () => {
+    if (selectedIds.length === 0) return
+    await bulkUpdateFoods(selectedIds, { isFavorite: true })
+    setFoods((prev) =>
+      prev.map((f) => (selectedIds.includes(f.id) ? { ...f, isFavorite: true } : f))
+    )
+    setSelectedIds([])
+  }
+
   return (
     <div className="space-y-5">
       {/* Search & Fast Filters Bar */}
@@ -136,7 +229,7 @@ export function InstantFoodsBrowser({
                 type="text"
                 value={searchTerm}
                 onChange={(e) => handleSearchChange(e.target.value)}
-                placeholder="Escribe para buscar al instante (ej. pechuga, avena, salmón, nuez, skyr, whey)..."
+                placeholder="Escribe para buscar al instante (ej. pechuga, avena, salmón, nuez, skyr, EAN)..."
                 className="w-full pl-10 pr-9 py-2.5 border border-gray-200 rounded-2xl text-xs font-semibold focus:outline-none focus:ring-2 focus:ring-blue-500 bg-gray-50/50"
               />
               {searchTerm && (
@@ -150,11 +243,29 @@ export function InstantFoodsBrowser({
               )}
             </div>
 
-            {/* Quick Sort Dropdown */}
+            {/* Quick Actions (Barcode + Duplicates) */}
             <div className="flex items-center gap-2 w-full sm:w-auto shrink-0">
-              <span className="text-2xs text-gray-500 font-bold uppercase hidden md:inline">
-                Ordenar por:
-              </span>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => setIsBarcodeModalOpen(true)}
+                className="rounded-2xl text-xs font-bold gap-1.5 border-gray-300 hover:bg-blue-50 hover:text-blue-700"
+              >
+                <Barcode className="w-4 h-4 text-blue-600" />
+                <span className="hidden md:inline">Escanear</span> EAN
+              </Button>
+
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => setIsDuplicateModalOpen(true)}
+                className="rounded-2xl text-xs font-bold gap-1.5 border-gray-300 hover:bg-amber-50 hover:text-amber-800"
+              >
+                <GitMerge className="w-4 h-4 text-amber-600" />
+                <span>Duplicados</span>
+              </Button>
+
+              {/* Quick Sort Dropdown */}
               <button
                 type="button"
                 onClick={() => toggleSort('calories')}
@@ -164,7 +275,7 @@ export function InstantFoodsBrowser({
                     : 'bg-white text-gray-600 border-gray-200 hover:bg-gray-50'
                 }`}
               >
-                <span>Calorías</span>
+                <span>Kcal</span>
                 {sortBy === 'calories' && (
                   <span className="text-[10px]">{sortOrder === 'asc' ? '↑' : '↓'}</span>
                 )}
@@ -178,26 +289,76 @@ export function InstantFoodsBrowser({
                     : 'bg-white text-gray-600 border-gray-200 hover:bg-gray-50'
                 }`}
               >
-                <span>Proteína</span>
+                <span>Prot</span>
                 {sortBy === 'protein' && (
                   <span className="text-[10px]">{sortOrder === 'asc' ? '↑' : '↓'}</span>
                 )}
               </button>
-              <button
-                type="button"
-                onClick={() => toggleSort('name')}
-                className={`px-3 py-2 rounded-2xl text-xs font-bold border transition-colors flex items-center gap-1 ${
-                  sortBy === 'name'
-                    ? 'bg-blue-50 text-blue-800 border-blue-300'
-                    : 'bg-white text-gray-600 border-gray-200 hover:bg-gray-50'
-                }`}
-              >
-                <span>A-Z</span>
-                {sortBy === 'name' && (
-                  <span className="text-[10px]">{sortOrder === 'asc' ? '↑' : '↓'}</span>
-                )}
-              </button>
             </div>
+          </div>
+
+          {/* 5.6 Clinical Nutrient Filter Toggles */}
+          <div className="flex items-center gap-1.5 flex-wrap pt-1 border-t border-gray-100 text-2xs">
+            <span className="text-gray-400 font-bold uppercase text-[10px] mr-1">Filtros clínicos:</span>
+            <button
+              type="button"
+              onClick={() => { setFilterProtein20(!filterProtein20); setCurrentPage(1); }}
+              className={`px-2.5 py-1 rounded-xl font-bold transition-all ${
+                filterProtein20 ? 'bg-blue-600 text-white shadow-2xs' : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+              }`}
+            >
+              ≥ 20g Proteína
+            </button>
+            <button
+              type="button"
+              onClick={() => { setFilterLowSodium(!filterLowSodium); setCurrentPage(1); }}
+              className={`px-2.5 py-1 rounded-xl font-bold transition-all ${
+                filterLowSodium ? 'bg-emerald-600 text-white shadow-2xs' : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+              }`}
+            >
+              Bajo en sodio (≤ 120mg)
+            </button>
+            <button
+              type="button"
+              onClick={() => { setFilterHighFiber(!filterHighFiber); setCurrentPage(1); }}
+              className={`px-2.5 py-1 rounded-xl font-bold transition-all ${
+                filterHighFiber ? 'bg-purple-600 text-white shadow-2xs' : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+              }`}
+            >
+              Alto en fibra (≥ 6g)
+            </button>
+            <button
+              type="button"
+              onClick={() => { setFilterLowFodmap(!filterLowFodmap); setCurrentPage(1); }}
+              className={`px-2.5 py-1 rounded-xl font-bold transition-all ${
+                filterLowFodmap ? 'bg-amber-600 text-white shadow-2xs' : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+              }`}
+            >
+              FODMAP Bajo
+            </button>
+            <button
+              type="button"
+              onClick={() => { setFilterFavoritesOnly(!filterFavoritesOnly); setCurrentPage(1); }}
+              className={`px-2.5 py-1 rounded-xl font-bold transition-all flex items-center gap-1 ${
+                filterFavoritesOnly ? 'bg-amber-500 text-white shadow-2xs' : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+              }`}
+            >
+              <Star className="w-3 h-3 fill-current" />
+              <span>Favoritos</span>
+            </button>
+            <select
+              value={filterAllergenFree}
+              onChange={(e) => { setFilterAllergenFree(e.target.value); setCurrentPage(1); }}
+              className="px-2.5 py-1 rounded-xl font-bold bg-gray-100 text-gray-700 border-0 focus:ring-1 focus:ring-blue-500 text-2xs cursor-pointer"
+            >
+              <option value="ALL">Sin exclusión de alérgenos</option>
+              <option value="gluten">Sin Gluten</option>
+              <option value="lactosa">Sin Lactosa</option>
+              <option value="huevo">Sin Huevo</option>
+              <option value="frutos">Sin Frutos de cáscara</option>
+              <option value="cacahuete">Sin Cacahuetes</option>
+              <option value="pescado">Sin Pescado</option>
+            </select>
           </div>
 
           {/* Category Chips Bar */}
@@ -231,6 +392,34 @@ export function InstantFoodsBrowser({
         </CardContent>
       </Card>
 
+      {/* Bulk Action Bar */}
+      {selectedIds.length > 0 && (
+        <div className="p-3 bg-blue-900 text-white rounded-2xl flex items-center justify-between text-xs animate-in slide-in-from-top-2">
+          <div className="flex items-center gap-2">
+            <span className="font-bold">{selectedIds.length} alimentos seleccionados</span>
+          </div>
+          <div className="flex items-center gap-2">
+            <Button
+              size="sm"
+              variant="secondary"
+              onClick={handleBulkFavorite}
+              className="rounded-xl text-2xs font-bold h-7 gap-1"
+            >
+              <Star className="w-3 h-3 fill-amber-500 text-amber-500" />
+              <span>Marcar como Favoritos</span>
+            </Button>
+            <Button
+              size="sm"
+              variant="ghost"
+              onClick={() => setSelectedIds([])}
+              className="rounded-xl text-2xs font-bold h-7 text-white/80 hover:text-white hover:bg-white/10"
+            >
+              Deseleccionar
+            </Button>
+          </div>
+        </div>
+      )}
+
       {/* Foods Table */}
       <Card className="rounded-3xl border-gray-200 overflow-hidden shadow-xs">
         <CardHeader className="pb-3 bg-gradient-to-r from-gray-50 to-blue-50/30 border-b border-gray-100 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
@@ -242,7 +431,7 @@ export function InstantFoodsBrowser({
               </span>
             </CardTitle>
             <CardDescription className="text-xs">
-              Valores nutricionales netos por 100g de alimento • Búsqueda instantánea en navegador (0 ms de espera)
+              Valores nutricionales netos por 100g • Pulsa en cualquier alimento para abrir su perfil clínico completo
             </CardDescription>
           </div>
           <div className="flex items-center gap-2">
@@ -256,18 +445,24 @@ export function InstantFoodsBrowser({
           {paginatedFoods.length === 0 ? (
             <div className="text-center py-16 text-gray-500">
               <Apple className="h-12 w-12 text-gray-300 mx-auto mb-3" />
-              <p className="text-sm font-semibold text-gray-700">No se encontraron alimentos para "{searchTerm}".</p>
-              <p className="text-xs text-gray-400 mt-1">Prueba con otra palabra clave o restablece la categoría.</p>
+              <p className="text-sm font-semibold text-gray-700">No se encontraron alimentos con los filtros actuales.</p>
+              <p className="text-xs text-gray-400 mt-1">Prueba a desactivar filtros clínicos o buscar otra palabra clave.</p>
               <Button
                 variant="outline"
                 size="sm"
                 onClick={() => {
                   setSearchTerm('')
                   setSelectedCategory('ALL')
+                  setFilterProtein20(false)
+                  setFilterLowSodium(false)
+                  setFilterHighFiber(false)
+                  setFilterLowFodmap(false)
+                  setFilterFavoritesOnly(false)
+                  setFilterAllergenFree('ALL')
                 }}
                 className="mt-4 rounded-2xl text-xs font-bold"
               >
-                Restablecer búsqueda
+                Restablecer todos los filtros
               </Button>
             </div>
           ) : (
@@ -276,29 +471,59 @@ export function InstantFoodsBrowser({
                 <table className="w-full text-left text-sm text-gray-600">
                   <thead className="bg-gray-50 border-b border-gray-200 text-xs font-semibold uppercase text-gray-500">
                     <tr>
-                      <th className="px-6 py-3.5">Alimento</th>
-                      <th className="px-6 py-3.5">Categoría</th>
-                      <th className="px-6 py-3.5 text-right cursor-pointer hover:text-blue-600" onClick={() => toggleSort('calories')}>
+                      <th className="w-10 px-4 py-3.5 text-center">
+                        <button
+                          type="button"
+                          onClick={handleSelectAllOnPage}
+                          className="text-gray-400 hover:text-gray-700"
+                        >
+                          {paginatedFoods.every((f) => selectedIds.includes(f.id)) ? (
+                            <CheckSquare className="w-4 h-4 text-blue-600" />
+                          ) : (
+                            <Square className="w-4 h-4" />
+                          )}
+                        </button>
+                      </th>
+                      <th className="px-4 py-3.5">Alimento</th>
+                      <th className="px-4 py-3.5">Categoría / Calidad</th>
+                      <th className="px-4 py-3.5 text-right cursor-pointer hover:text-blue-600" onClick={() => toggleSort('calories')}>
                         Energía {sortBy === 'calories' && (sortOrder === 'asc' ? '↑' : '↓')}
                       </th>
-                      <th className="px-6 py-3.5 text-right text-blue-700 cursor-pointer hover:underline" onClick={() => toggleSort('protein')}>
+                      <th className="px-4 py-3.5 text-right text-blue-700 cursor-pointer hover:underline" onClick={() => toggleSort('protein')}>
                         Proteína {sortBy === 'protein' && (sortOrder === 'asc' ? '↑' : '↓')}
                       </th>
-                      <th className="px-6 py-3.5 text-right text-amber-700 cursor-pointer hover:underline" onClick={() => toggleSort('carbs')}>
+                      <th className="px-4 py-3.5 text-right text-amber-700 cursor-pointer hover:underline" onClick={() => toggleSort('carbs')}>
                         Carbos {sortBy === 'carbs' && (sortOrder === 'asc' ? '↑' : '↓')}
                       </th>
-                      <th className="px-6 py-3.5 text-right text-rose-700 cursor-pointer hover:underline" onClick={() => toggleSort('fat')}>
+                      <th className="px-4 py-3.5 text-right text-rose-700 cursor-pointer hover:underline" onClick={() => toggleSort('fat')}>
                         Grasas {sortBy === 'fat' && (sortOrder === 'asc' ? '↑' : '↓')}
                       </th>
-                      <th className="px-6 py-3.5 text-right text-sky-700">Fibra</th>
+                      <th className="px-4 py-3.5 text-right text-sky-700">Fibra</th>
+                      <th className="w-12 px-3 py-3.5 text-center">Fav</th>
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-gray-100">
                     {paginatedFoods.map((food) => {
                       const imageUrl = food.imageUrl || getFoodImage(food as any)
+                      const isSelected = selectedIds.includes(food.id)
                       return (
-                        <tr key={food.id} className="hover:bg-gray-50/80 transition-colors">
-                          <td className="px-6 py-3 font-medium text-gray-900">
+                        <tr
+                          key={food.id}
+                          onClick={() => setInspectedFood(food)}
+                          className={`hover:bg-blue-50/40 cursor-pointer transition-colors ${
+                            isSelected ? 'bg-blue-50/70' : ''
+                          }`}
+                        >
+                          <td className="px-4 py-3 text-center" onClick={(e) => handleToggleSelectRow(e, food.id)}>
+                            <button type="button" className="text-gray-400 hover:text-gray-700">
+                              {isSelected ? (
+                                <CheckSquare className="w-4 h-4 text-blue-600" />
+                              ) : (
+                                <Square className="w-4 h-4" />
+                              )}
+                            </button>
+                          </td>
+                          <td className="px-4 py-3 font-medium text-gray-900">
                             <div className="flex items-center gap-3">
                               <div className="h-10 w-10 rounded-xl overflow-hidden shrink-0 bg-blue-50 border border-gray-200 shadow-2xs">
                                 <FoodImage
@@ -311,29 +536,63 @@ export function InstantFoodsBrowser({
                                 />
                               </div>
                               <div>
-                                <span className="font-semibold text-gray-900">{food.name}</span>
+                                <span className="font-semibold text-gray-900 block hover:text-blue-600">
+                                  {food.name}
+                                </span>
+                                {food.brandName && (
+                                  <span className="text-2xs text-gray-400 block font-normal">
+                                    {food.brandName}
+                                  </span>
+                                )}
                               </div>
                             </div>
                           </td>
-                          <td className="px-6 py-4">
-                            <span className="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-semibold bg-gray-100 text-gray-700 border border-gray-200">
-                              {food.category || 'General'}
-                            </span>
+                          <td className="px-4 py-3">
+                            <div className="flex items-center gap-1.5 flex-wrap">
+                              <span className="inline-flex items-center px-2 py-0.5 rounded-full text-2xs font-semibold bg-gray-100 text-gray-700 border border-gray-200">
+                                {food.category || 'General'}
+                              </span>
+                              {food.nutriScore && (
+                                <span className="px-1.5 py-0.5 rounded text-[10px] font-extrabold bg-emerald-100 text-emerald-800">
+                                  NS {food.nutriScore}
+                                </span>
+                              )}
+                              {food.novaGroup && (
+                                <span className="px-1.5 py-0.5 rounded text-[10px] font-extrabold bg-blue-100 text-blue-800">
+                                  N{food.novaGroup}
+                                </span>
+                              )}
+                            </div>
                           </td>
-                          <td className="px-6 py-4 text-right font-bold text-gray-900">
+                          <td className="px-4 py-3 text-right font-bold text-gray-900">
                             {food.calories} kcal
                           </td>
-                          <td className="px-6 py-4 text-right font-semibold text-blue-700">
+                          <td className="px-4 py-3 text-right font-semibold text-blue-700">
                             {food.proteinG} g
                           </td>
-                          <td className="px-6 py-4 text-right font-semibold text-amber-700">
+                          <td className="px-4 py-3 text-right font-semibold text-amber-700">
                             {food.carbsG} g
                           </td>
-                          <td className="px-6 py-4 text-right font-semibold text-rose-700">
+                          <td className="px-4 py-3 text-right font-semibold text-rose-700">
                             {food.fatG} g
                           </td>
-                          <td className="px-6 py-4 text-right font-semibold text-sky-700">
+                          <td className="px-4 py-3 text-right font-semibold text-sky-700">
                             {food.fiberG} g
+                          </td>
+                          <td className="px-3 py-3 text-center">
+                            <button
+                              type="button"
+                              onClick={(e) => handleToggleFavorite(e, food.id)}
+                              className="p-1 rounded-full hover:bg-amber-50 transition-colors"
+                            >
+                              <Star
+                                className={`w-4 h-4 ${
+                                  food.isFavorite
+                                    ? 'fill-amber-400 text-amber-400'
+                                    : 'text-gray-300 hover:text-amber-400'
+                                }`}
+                              />
+                            </button>
                           </td>
                         </tr>
                       )
@@ -390,6 +649,36 @@ export function InstantFoodsBrowser({
           )}
         </CardContent>
       </Card>
+
+      {/* Clinical Food Details Modal */}
+      {inspectedFood && (
+        <FoodDetailsModal
+          food={inspectedFood}
+          onClose={() => setInspectedFood(null)}
+        />
+      )}
+
+      {/* Duplicate Merger Modal */}
+      {isDuplicateModalOpen && (
+        <DuplicateMergerModal
+          foods={foods}
+          onClose={() => setIsDuplicateModalOpen(false)}
+          onMerged={() => {
+            setIsDuplicateModalOpen(false)
+          }}
+        />
+      )}
+
+      {/* Barcode Scanner Modal */}
+      {isBarcodeModalOpen && (
+        <BarcodeScannerModal
+          onClose={() => setIsBarcodeModalOpen(false)}
+          onFoodFound={(found) => {
+            setIsBarcodeModalOpen(false)
+            setInspectedFood(found)
+          }}
+        />
+      )}
     </div>
   )
 }

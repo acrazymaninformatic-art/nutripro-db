@@ -12,7 +12,7 @@ export default async function AppointmentsPage() {
   // Automatically process any due reminders for tomorrow in the background (100% automated)
   await autoProcessDueReminders().catch((e) => console.error('Auto reminder check:', e))
 
-  const [appointments, patients, waitlist] = await Promise.all([
+  const [appointments, patients, waitlist, requests, blocks] = await Promise.all([
     prisma.appointment.findMany({
       where: { patient: { userId } },
       orderBy: { date: 'asc' },
@@ -42,7 +42,36 @@ export default async function AppointmentsPage() {
     prisma.waitlistEntry.findMany({
       where: { userId, status: { in: ['WAITING', 'CONTACTED'] } },
       orderBy: { createdAt: 'asc' },
-      include: { patient: { select: { id: true, firstName: true, lastName: true } } },
+      include: { patient: { select: { id: true, firstName: true, lastName: true, email: true, phone: true } } },
+    }),
+    prisma.appointmentRequest.findMany({
+      where: { patient: { userId } },
+      orderBy: { createdAt: 'desc' },
+      include: {
+        patient: {
+          select: {
+            id: true,
+            firstName: true,
+            lastName: true,
+            email: true,
+            phone: true,
+          },
+        },
+        appointment: {
+          select: {
+            id: true,
+            date: true,
+            modality: true,
+            appointmentType: true,
+            status: true,
+            notes: true,
+          },
+        },
+      },
+    }),
+    prisma.agendaBlock.findMany({
+      where: { userId },
+      orderBy: { startDateTime: 'asc' },
     }),
   ])
 
@@ -56,7 +85,7 @@ export default async function AppointmentsPage() {
             <span>Agenda & Citas Clínicas</span>
           </h1>
           <p className="text-sm text-gray-500 mt-0.5">
-            Gestión de citas presenciales y online con sincronización de Google Calendar y avisos automáticos por correo.
+            Gestión de citas presenciales y online con sincronización de Google Calendar, bloqueos de agenda y solicitudes del portal.
           </p>
         </div>
       </div>
@@ -64,8 +93,11 @@ export default async function AppointmentsPage() {
       <AppointmentManager
         initialAppointments={appointments as any}
         patients={patients}
+        initialRequests={requests as any}
+        initialBlocks={blocks as any}
+        waitlistEntries={waitlist as any}
       />
-      <WaitlistPanel patients={patients} entries={waitlist} />
+      <WaitlistPanel patients={patients} entries={waitlist as any} />
     </div>
   )
 }

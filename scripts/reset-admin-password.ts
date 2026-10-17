@@ -1,11 +1,11 @@
 import bcrypt from 'bcryptjs'
 import { PrismaClient } from '@prisma/client'
 
-const email = (process.env.EVSOFTWARE_ADMIN_EMAIL || process.env.ADMIN_EMAIL)?.trim().toLowerCase()
+const email = (process.env.EVSOFTWARE_ADMIN_EMAIL || process.env.ADMIN_EMAIL || 'evavidalinfo@gmail.com').trim().toLowerCase()
 const password = process.env.EVSOFTWARE_ADMIN_PASSWORD || process.env.ADMIN_PASSWORD
 
-if (!email || !password || password.length < 14) {
-  throw new Error('Define EVSOFTWARE_ADMIN_EMAIL y EVSOFTWARE_ADMIN_PASSWORD (mínimo 14 caracteres).')
+if (!password || password.length < 12) {
+  throw new Error('Define EVSOFTWARE_ADMIN_PASSWORD o ADMIN_PASSWORD con al menos 12 caracteres.')
 }
 
 const prisma = new PrismaClient()

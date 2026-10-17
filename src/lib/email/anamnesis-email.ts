@@ -204,7 +204,8 @@ export async function sendAnamnesisEmail({
       anamnesisUrl,
       mailtoUrl,
     }
-  } catch (error: any) {
+  } catch (error: unknown) {
+    const errMessage = error instanceof Error ? error.message : String(error)
     console.error('Error al enviar correo vía SMTP:', error)
     try {
       const { logEmailSent } = await import('./log-email')
@@ -214,13 +215,13 @@ export async function sendAnamnesisEmail({
         subject: emailSubject,
         type: 'ANAMNESIS',
         status: 'FAILED',
-        errorDetails: error?.message,
+        errorDetails: errMessage,
       })
     } catch {}
 
     return {
       success: false,
-      message: `Error de conexión con el servidor de correo: ${error?.message || 'Error desconocido'}. Puedes usar el botón de cliente de correo o compartir el enlace.`,
+      message: `Error de conexión con el servidor de correo: ${errMessage}. Puedes usar el botón de cliente de correo o compartir el enlace.`,
       anamnesisUrl,
       mailtoUrl,
     }

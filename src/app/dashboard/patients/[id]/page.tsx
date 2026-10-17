@@ -30,6 +30,9 @@ import {
   ShieldAlert,
   Pill,
   Sparkles,
+  Eye,
+  Mail,
+  CheckCircle2,
 } from 'lucide-react'
 import {
   OBJECTIVE_LABELS,
@@ -41,6 +44,14 @@ import {
 import { calculateBMI, calculateIdealWeight } from '@/lib/nutrition'
 
 import { EditPatientModal } from './edit-patient-modal'
+import { PortalAccessCard } from './portal-access-card'
+import { AnthropometryTable } from './anthropometry-table'
+import { startPatientPreview } from '../preview-actions'
+import { PatientHeaderAlerts } from './patient-header-alerts'
+import { ClinicalScreeningsCard } from './clinical-screenings-card'
+import { ProgressPhotosCard } from './progress-photos-card'
+import { ClinicalTimeline, type TimelineEvent } from './clinical-timeline'
+import { PatientClinicalProtocolsCard } from './patient-clinical-protocols-card'
 
 export const dynamic = 'force-dynamic'
 
@@ -86,6 +97,91 @@ export default async function PatientDetailPage({ params }: PatientDetailPagePro
   // Check clinical drug-nutrient interactions
   const drugAlerts = checkDrugInteractions(patient.currentMedications, patient.medicalHistory)
 
+  // Unified Clinical Timeline events (5.2)
+  const timelineEvents: TimelineEvent[] = [
+    ...(patient.consultations || []).map((c) => ({
+      id: `cons-${c.id}`,
+      date: c.date,
+      type: 'CONSULTATION' as const,
+      title: 'Consulta Clínica SOAP',
+      description: (c as any).patientSummary || (c as any).assessmentNotes || c.notes,
+      badge: (c as any).clinicianSignature ? 'Firmada' : undefined,
+      isShared: c.isSharedWithPatient,
+    })),
+    ...(patient.anthropometries || []).map((a) => ({
+      id: `anthro-${a.id}`,
+      date: a.date,
+      type: 'ANTHROPOMETRY' as const,
+      title: `Control Antropométrico: ${a.weightKg} kg`,
+      description: `${a.bodyFatPct ? `Grasa: ${a.bodyFatPct}% ` : ''}${a.muscleMassKg ? `Masa Muscular: ${a.muscleMassKg} kg ` : ''}${a.notes ? `(${a.notes})` : ''}`,
+      badge: a.bodyFatPct ? `${a.bodyFatPct}% Grasa` : undefined,
+      isShared: a.isPublishedToPatient,
+    })),
+    ...(patient.mealPlans || []).map((mp) => ({
+      id: `plan-${mp.id}`,
+      date: mp.createdAt,
+      type: 'MEAL_PLAN' as const,
+      title: `Plan Nutricional: ${mp.name}`,
+      description: `${mp.targetKcal} kcal · P: ${mp.targetProteinG}g C: ${mp.targetCarbsG}g G: ${mp.targetFatG}g`,
+      badge: `${mp.targetKcal} kcal`,
+      isShared: mp.isSharedWithPatient,
+    })),
+    ...(patient.bloodAnalyses || []).map((ba) => ({
+      id: `blood-${ba.id}`,
+      date: ba.date,
+      type: 'BLOOD_ANALYSIS' as const,
+      title: 'Analítica Bioquímica y Biomarcadores',
+      description: `Glucosa: ${ba.glucoseMgDl || 'N/D'} mg/dL · Colesterol: ${ba.cholesterolMgDl || 'N/D'} mg/dL · TG: ${ba.triglyceridesMgDl || 'N/D'} mg/dL`,
+      badge: 'Analítica',
+      isShared: true,
+    })),
+    ...((patient as any).documents || []).map((d: any) => ({
+      id: `doc-${d.id}`,
+      date: d.uploadedAt,
+      type: 'DOCUMENT' as const,
+      title: `Documento: ${d.title}`,
+      description: d.notes,
+      badge: d.category,
+      isShared: d.isSharedWithPatient,
+    })),
+    ...((patient as any).consents || []).map((cs: any) => ({
+      id: `consent-${cs.id}`,
+      date: cs.createdAt,
+      type: 'CONSENT' as const,
+      title: cs.title || 'Consentimiento Informado',
+      description: cs.accepted ? `Aceptado el ${new Date(cs.acceptedAt || cs.createdAt).toLocaleDateString('es-ES')}` : 'Pendiente de aceptación',
+      badge: cs.accepted ? 'Firmado' : 'Pendiente',
+      isShared: true,
+    })),
+    ...((patient as any).screenings || []).map((sc: any) => ({
+      id: `screen-${sc.id}`,
+      date: sc.date,
+      type: 'SCREENING' as const,
+      title: `Test ${sc.type}: ${sc.resultCategory.replace(/_/g, ' ')}`,
+      description: sc.notes,
+      badge: `${sc.score} pts`,
+      isShared: true,
+    })),
+    ...((patient as any).clinicalProtocols || []).map((cp: any) => ({
+      id: `proto-${cp.id}`,
+      date: cp.createdAt,
+      type: 'PROTOCOL' as const,
+      title: `Protocolo Clínico: ${cp.title}`,
+      description: cp.notes || (cp.currentPhase ? `Fase activa: ${cp.currentPhase}` : undefined),
+      badge: cp.status === 'ACTIVE' ? 'Activo' : cp.status,
+      isShared: true,
+    })),
+    ...((patient as any).calculatorResults || []).map((cr: any) => ({
+      id: `calc-${cr.id}`,
+      date: cr.createdAt,
+      type: 'CALCULATOR' as const,
+      title: `Evaluación Energética (${cr.formula})`,
+      description: `TMB: ${Math.round(cr.bmrKcal)} kcal · Gasto Total: ${Math.round(cr.tdeeKcal)} kcal (Factor x${cr.activityFactor})`,
+      badge: `${Math.round(cr.tdeeKcal)} kcal`,
+      isShared: true,
+    })),
+  ]
+
   return (
     <div className="space-y-6 max-w-6xl mx-auto">
       {/* Top bar */}
@@ -111,10 +207,46 @@ export default async function PatientDetailPage({ params }: PatientDetailPagePro
               <span>Crear Plan Nutricional</span>
             </Button>
           </Link>
-          <DeletePatientButton patientId={patient.id} patientName={`${patient.firstName} ${patient.lastName}`} />
+          <form action={startPatientPreview.bind(null, patient.id)}>
+            <Button
+              type="submit"
+              variant="outline"
+              size="sm"
+              className="flex items-center gap-1.5 rounded-2xl border-purple-300 bg-purple-50 text-purple-900 hover:bg-purple-100 font-bold shadow-2xs"
+            >
+              <Eye className="h-4 w-4 text-purple-600" />
+              <span>Vista previa como paciente</span>
+            </Button>
+          </form>
+          <DeletePatientButton
+            patientId={patient.id}
+            patientName={`${patient.firstName} ${patient.lastName}`}
+            isActive={patient.isActive}
+          />
           <HardDeleteModal patientId={patient.id} patientName={`${patient.firstName} ${patient.lastName}`} />
         </div>
       </div>
+
+      {!patient.isActive && (
+        <div className="p-4 rounded-3xl bg-amber-50 border-2 border-amber-300 text-amber-950 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 shadow-xs">
+          <div className="flex items-center gap-3">
+            <div className="p-2.5 bg-amber-200 text-amber-900 rounded-2xl">
+              <AlertTriangle className="h-5 w-5" />
+            </div>
+            <div>
+              <p className="font-bold text-sm">Expediente en la Papelera</p>
+              <p className="text-xs text-amber-800">
+                Esta ficha está archivada. No aparece en el directorio activo de pacientes, pero toda su información se conserva íntegra.
+              </p>
+            </div>
+          </div>
+          <DeletePatientButton
+            patientId={patient.id}
+            patientName={`${patient.firstName} ${patient.lastName}`}
+            isActive={false}
+          />
+        </div>
+      )}
 
       {/* Header Profile Hero */}
       <div className="bg-white rounded-3xl border border-gray-200 p-6 shadow-sm flex flex-col md:flex-row md:items-center justify-between gap-6">
@@ -167,6 +299,18 @@ export default async function PatientDetailPage({ params }: PatientDetailPagePro
           </Badge>
         </div>
       </div>
+
+      {/* Cabecera Clínica: Avisos, Objetivos con Ritmo Semanal, Hitos, Etiquetas Privadas y Estados Cuestionario/Firma (5.2 y 5.4) */}
+      <PatientHeaderAlerts
+        patient={{
+          ...patient,
+          latestQuestionnaireId: patient.patientQuestionnaires?.[0]?.id || null,
+          questionnaireStatus: patient.patientQuestionnaires?.[0]?.status || patient.questionnaireDeliveryStatus || 'NOT_SENT',
+          consentStatus: patient.consents?.[0]?.accepted ? 'COMPLETED' : (patient.consents?.[0]?.status || patient.consentDeliveryStatus || 'NOT_SENT'),
+          pendingReviewFieldsCount: patient.pendingReviewFieldsCount || patient.patientQuestionnaires?.[0]?.pendingFieldsCount || 0,
+        } as any}
+        drugAlertsCount={drugAlerts.length}
+      />
 
       {/* Alertas Clínicas Fármaco-Nutriente (Estilo Gajuz / DietoPRO) */}
       {drugAlerts.length > 0 && (
@@ -227,6 +371,15 @@ export default async function PatientDetailPage({ params }: PatientDetailPagePro
           </CardContent>
         </Card>
       )}
+
+      {/* Control de Acceso al Portal del Paciente (EVSoftware · Paciente) */}
+      <PortalAccessCard
+        patientId={patient.id}
+        patientEmail={patient.email}
+        portalAccessEnabled={patient.portalAccessEnabled}
+        portalLastLoginAt={patient.portalLastLoginAt}
+        portalUser={(patient as any).portalUser}
+      />
 
       {/* Envío de Cuestionario Anamnesis por Correo Electrónico y Revisión de Respuestas */}
       <PatientContactTools
@@ -358,15 +511,16 @@ export default async function PatientDetailPage({ params }: PatientDetailPagePro
           </CardContent>
         </Card>
 
-        {/* Card 3: Contacto y Alertas Alimentarias */}
+        {/* Card 3: Contacto y Alertas Clínicas */}
         <Card className="rounded-3xl border-t-4 border-t-amber-500 shadow-sm">
           <CardHeader className="pb-2">
             <CardTitle className="text-sm font-semibold uppercase tracking-wider text-gray-500 flex items-center gap-2">
               <AlertTriangle className="h-4 w-4 text-amber-500" />
-              <span>Seguridad Alimentaria</span>
+              <span>Seguridad Alimentaria y Clínica</span>
             </CardTitle>
           </CardHeader>
           <CardContent className="space-y-3 text-sm">
+            {/* 1. Alergias */}
             <div>
               <span className="text-xs font-semibold text-gray-400 uppercase">Alergias</span>
               {allergiesList.length > 0 ? (
@@ -377,11 +531,19 @@ export default async function PatientDetailPage({ params }: PatientDetailPagePro
                     </span>
                   ))}
                 </div>
+              ) : patient.allergiesStatus === 'NINGUNA_CONOCIDA' ? (
+                <p className="text-xs text-emerald-800 font-semibold mt-1 flex items-center gap-1.5">
+                  <span className="inline-block w-2 h-2 rounded-full bg-emerald-500"></span>
+                  <span>✓ Ninguna conocida (confirmado)</span>
+                </p>
               ) : (
-                <p className="text-xs text-gray-500 mt-0.5">Ninguna declarada</p>
+                <p className="text-xs text-amber-800 font-semibold mt-1 flex items-center gap-1.5 bg-amber-50 p-1.5 rounded-lg border border-amber-200">
+                  <span>⚠️ No consta (pendiente de preguntar)</span>
+                </p>
               )}
             </div>
 
+            {/* 2. Intolerancias */}
             <div>
               <span className="text-xs font-semibold text-gray-400 uppercase">Intolerancias</span>
               {intolerancesList.length > 0 ? (
@@ -392,28 +554,114 @@ export default async function PatientDetailPage({ params }: PatientDetailPagePro
                     </span>
                   ))}
                 </div>
+              ) : patient.intolerancesStatus === 'NINGUNA_CONOCIDA' ? (
+                <p className="text-xs text-emerald-800 font-semibold mt-1 flex items-center gap-1.5">
+                  <span className="inline-block w-2 h-2 rounded-full bg-emerald-500"></span>
+                  <span>✓ Ninguna conocida (confirmado)</span>
+                </p>
               ) : (
-                <p className="text-xs text-gray-500 mt-0.5">Ninguna declarada</p>
+                <p className="text-xs text-amber-800 font-semibold mt-1 flex items-center gap-1.5 bg-amber-50 p-1.5 rounded-lg border border-amber-200">
+                  <span>⚠️ No consta (pendiente de preguntar)</span>
+                </p>
               )}
             </div>
 
+            {/* 3. Medicación Habitual */}
             <div>
-              <span className="text-xs font-semibold text-gray-400 uppercase">Preferencia</span>
+              <span className="text-xs font-semibold text-gray-400 uppercase">Medicación Habitual</span>
+              {patient.currentMedications && patient.currentMedications.trim().length > 0 ? (
+                <p className="text-xs text-gray-900 font-bold mt-1 bg-gray-50 p-1.5 rounded-lg border border-gray-200">
+                  {patient.currentMedications}
+                </p>
+              ) : patient.medicationsStatus === 'NINGUNA_CONOCIDA' ? (
+                <p className="text-xs text-emerald-800 font-semibold mt-1 flex items-center gap-1.5">
+                  <span className="inline-block w-2 h-2 rounded-full bg-emerald-500"></span>
+                  <span>✓ Ninguna conocida (confirmado)</span>
+                </p>
+              ) : (
+                <p className="text-xs text-amber-800 font-semibold mt-1 flex items-center gap-1.5 bg-amber-50 p-1.5 rounded-lg border border-amber-200">
+                  <span>⚠️ No consta (pendiente de preguntar)</span>
+                </p>
+              )}
+            </div>
+
+            {/* 4. Patologías y Antecedentes */}
+            <div>
+              <span className="text-xs font-semibold text-gray-400 uppercase">Antecedentes Médicos</span>
+              {patient.medicalHistory && patient.medicalHistory.trim().length > 0 ? (
+                <p className="text-xs text-gray-900 font-medium mt-1 bg-gray-50 p-1.5 rounded-lg border border-gray-200">
+                  {patient.medicalHistory}
+                </p>
+              ) : patient.pathologiesStatus === 'NINGUNA_CONOCIDA' ? (
+                <p className="text-xs text-emerald-800 font-semibold mt-1 flex items-center gap-1.5">
+                  <span className="inline-block w-2 h-2 rounded-full bg-emerald-500"></span>
+                  <span>✓ Ninguno conocido (confirmado)</span>
+                </p>
+              ) : (
+                <p className="text-xs text-amber-800 font-semibold mt-1 flex items-center gap-1.5 bg-amber-50 p-1.5 rounded-lg border border-amber-200">
+                  <span>⚠️ No consta (pendiente de preguntar)</span>
+                </p>
+              )}
+            </div>
+
+            {/* 5. Preferencia Dietética */}
+            <div>
+              <span className="text-xs font-semibold text-gray-400 uppercase">Preferencia Dietética</span>
               <p className="text-xs text-gray-700 mt-0.5 font-medium">
                 {preferencesList.length > 0 ? preferencesList.join(', ') : 'Omnívora'}
               </p>
             </div>
+
+            {/* 6. Salud Femenina */}
+            {patient.sex === 'FEMALE' && (
+              <div className="pt-2 border-t border-gray-100 flex items-center justify-between text-xs text-gray-600">
+                <span>Embarazo: <strong>{patient.pregnant ? 'Sí' : 'No'}</strong></span>
+                <span>Lactancia: <strong>{patient.breastfeeding ? 'Sí' : 'No'}</strong></span>
+              </div>
+            )}
           </CardContent>
         </Card>
       </div>
 
-      {/* Ficha de Analíticas Sanguíneas y Biomarcadores (Semáforo Clínico) */}
+      {/* Ficha de Analíticas Sanguíneas y Biomarcadores (Semáforo Clínico e Índices 5.3) */}
       <BloodAnalysisCard
         patientId={patient.id}
         records={(patient as any).bloodAnalyses || []}
+        patientAge={age}
       />
 
-      <EvolutionChart measurements={patient.anthropometries} />
+      {/* Gráfica de Evolución y Composición en Kilos (5.2) */}
+      <EvolutionChart
+        measurements={patient.anthropometries}
+        targetWeightKg={patient.targetWeightKg}
+        weeklyChangeTargetKg={patient.weeklyChangeTargetKg}
+      />
+
+      {/* Cuestionarios y Cribados Clínicos Estandarizados (5.3) */}
+      <ClinicalScreeningsCard
+        patientId={patient.id}
+        isPregnant={patient.pregnant}
+        pregestationalBmi={bmiData?.bmi}
+        latestWeight={latestMeasurement?.weightKg}
+        screenings={(patient as any).screenings || []}
+      />
+
+      {/* Protocolos Clínicos Especializados y Evaluación Energética (5.9 / 5.10) */}
+      <PatientClinicalProtocolsCard
+        patientId={patient.id}
+        patientName={`${patient.firstName} ${patient.lastName}`}
+        protocols={(patient as any).clinicalProtocols || []}
+        calculatorResults={(patient as any).calculatorResults || []}
+      />
+
+      {/* Fotografías de Evolución Antes y Después (5.2) */}
+      <ProgressPhotosCard
+        patientId={patient.id}
+        photos={(patient as any).photos || []}
+      />
+
+      {/* Línea de Tiempo Clínica Unificada (5.2) */}
+      <ClinicalTimeline events={timelineEvents} />
 
       <ClinicalProgressCard patientId={patient.id} checkIns={patient.clinicalCheckIns} />
 
@@ -445,7 +693,7 @@ export default async function PatientDetailPage({ params }: PatientDetailPagePro
         }))}
       />
 
-      {/* Historial Antropométrico y Botón Nueva Medición */}
+      {/* Historial Antropométrico y Botón Nueva Medición con Formulario de Seguimiento */}
       <div className="space-y-4">
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
           <div>
@@ -457,53 +705,16 @@ export default async function PatientDetailPage({ params }: PatientDetailPagePro
               Registro histórico de pesos, pliegues cutáneos y perímetros corporales
             </p>
           </div>
-          <AddMeasurementForm patientId={patient.id} />
+          <AddMeasurementForm
+            patientId={patient.id}
+            previousMeasurement={patient.anthropometries[0]}
+            firstMeasurement={patient.anthropometries[patient.anthropometries.length - 1]}
+            patientObjective={patient.objective}
+            patientHeightCm={patient.heightCm}
+          />
         </div>
 
-        <Card className="rounded-3xl overflow-hidden shadow-sm">
-          <CardContent className="p-0">
-            {patient.anthropometries.length === 0 ? (
-              <p className="text-center py-8 text-sm text-gray-400">
-                Aún no hay mediciones registradas para este paciente.
-              </p>
-            ) : (
-              <div className="overflow-x-auto">
-                <table className="w-full text-left text-sm text-gray-600">
-                  <thead className="bg-gray-50 border-b border-gray-200 text-xs uppercase font-semibold text-gray-500">
-                    <tr>
-                      <th className="px-5 py-3">Fecha</th>
-                      <th className="px-5 py-3 text-right">Peso</th>
-                      <th className="px-5 py-3 text-right">% Grasa</th>
-                      <th className="px-5 py-3 text-right">Masa Muscular</th>
-                      <th className="px-5 py-3 text-right">Cintura</th>
-                      <th className="px-5 py-3 text-right">Cadera</th>
-                      <th className="px-5 py-3">Notas</th>
-                    </tr>
-                  </thead>
-                  <tbody className="divide-y divide-gray-100">
-                    {patient.anthropometries.map((m) => (
-                      <tr key={m.id} className="hover:bg-gray-50/70">
-                        <td className="px-5 py-3.5 font-medium text-gray-900">
-                          {new Date(m.date).toLocaleDateString('es-ES', {
-                            year: 'numeric',
-                            month: 'short',
-                            day: 'numeric',
-                          })}
-                        </td>
-                        <td className="px-5 py-3.5 text-right font-semibold text-gray-900">{m.weightKg} kg</td>
-                        <td className="px-5 py-3.5 text-right">{m.bodyFatPct ? `${m.bodyFatPct}%` : '-'}</td>
-                        <td className="px-5 py-3.5 text-right">{m.muscleMassKg ? `${m.muscleMassKg} kg` : '-'}</td>
-                        <td className="px-5 py-3.5 text-right">{m.waistCm ? `${m.waistCm} cm` : '-'}</td>
-                        <td className="px-5 py-3.5 text-right">{m.hipCm ? `${m.hipCm} cm` : '-'}</td>
-                        <td className="px-5 py-3.5 text-xs text-gray-500 max-w-xs truncate">{m.notes || '-'}</td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
-            )}
-          </CardContent>
-        </Card>
+        <AnthropometryTable patientId={patient.id} measurements={patient.anthropometries} />
       </div>
 
       {/* Importación y Exportación de Datos de Báscula (SECA, Tanita, InBody) */}
@@ -511,6 +722,56 @@ export default async function PatientDetailPage({ params }: PatientDetailPagePro
         patientId={patient.id}
         patientName={`${patient.firstName} ${patient.lastName}`}
       />
+
+      {/* Registro de Comunicaciones y Correos Transaccionales al Paciente */}
+      <Card className="rounded-3xl border-gray-200 overflow-hidden shadow-xs">
+        <CardHeader className="pb-3 bg-gradient-to-r from-blue-50/40 to-white border-b border-gray-100 flex flex-row items-center justify-between">
+          <div className="flex items-center gap-2.5">
+            <div className="p-2 bg-blue-100 text-blue-700 rounded-xl">
+              <Mail className="h-4 w-4" />
+            </div>
+            <div>
+              <CardTitle className="text-base font-bold text-gray-900">
+                Comunicaciones y Correos Enviados ({((patient as any).emailLogs || []).length})
+              </CardTitle>
+              <CardDescription className="text-xs">
+                Historial de avisos transaccionales, citas y cuestionarios entregados a {patient.email || 'este paciente'}
+              </CardDescription>
+            </div>
+          </div>
+          <Link href="/dashboard/operations/emails">
+            <Button size="sm" variant="outline" className="rounded-2xl text-xs font-bold hover:bg-blue-50 hover:text-blue-800">
+              Ver Auditoría Global →
+            </Button>
+          </Link>
+        </CardHeader>
+        <CardContent className="p-4">
+          {((patient as any).emailLogs || []).length === 0 ? (
+            <p className="text-xs text-gray-400 italic py-3 text-center">
+              No se han registrado correos transaccionales directos para este paciente aún.
+            </p>
+          ) : (
+            <div className="space-y-2">
+              {((patient as any).emailLogs || []).map((log: any) => (
+                <div key={log.id} className="p-3 rounded-2xl bg-gray-50/80 border border-gray-200 flex flex-col sm:flex-row sm:items-center justify-between gap-2 text-xs">
+                  <div className="flex items-center gap-2.5 flex-wrap">
+                    <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-2xs font-bold ${
+                      log.status === 'SENT' ? 'bg-emerald-100 text-emerald-800' : 'bg-red-100 text-red-800'
+                    }`}>
+                      {log.status === 'SENT' ? '✓ Enviado' : '✗ Fallido'}
+                    </span>
+                    <span className="font-bold text-gray-900">{log.subject}</span>
+                    <span className="text-2xs text-gray-500 font-mono">({log.type})</span>
+                  </div>
+                  <span className="text-2xs text-gray-500 whitespace-nowrap">
+                    {new Date(log.sentAt).toLocaleString('es-ES', { dateStyle: 'short', timeStyle: 'short' })}
+                  </span>
+                </div>
+              ))}
+            </div>
+          )}
+        </CardContent>
+      </Card>
 
       <PrivacyPanel
         patientId={patient.id}

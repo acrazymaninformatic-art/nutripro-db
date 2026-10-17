@@ -3,6 +3,8 @@
 import { prisma } from '@/lib/prisma'
 import { revalidatePath } from 'next/cache'
 import { requireUserId } from '@/lib/auth'
+import { calculateBMI, calculateWaistToHeightRatio, calculateCUNBAE, calculateHeathCarterSomatotype } from '@/lib/nutrition/anthropometry'
+import { getScreeningDefinition } from '@/lib/clinical/screenings'
 
 // Helper to get or fallback to demo nutritionist user
 async function getDefaultUserId(): Promise<string> {
@@ -61,6 +63,35 @@ export async function getPatient(id: string) {
       },
       documents: {
         orderBy: { uploadedAt: 'desc' },
+      },
+      emailLogs: {
+        orderBy: { sentAt: 'desc' },
+      },
+      screenings: {
+        orderBy: { date: 'desc' },
+      },
+      photos: {
+        orderBy: { date: 'desc' },
+      },
+      patientQuestionnaires: {
+        orderBy: { createdAt: 'desc' },
+      },
+      appointmentRequests: {
+        orderBy: { createdAt: 'desc' },
+      },
+      clinicalProtocols: {
+        orderBy: { createdAt: 'desc' },
+      },
+      calculatorResults: {
+        orderBy: { createdAt: 'desc' },
+      },
+      portalUser: {
+        select: {
+          id: true,
+          email: true,
+          passwordChangeRequired: true,
+          role: true,
+        },
       },
       user: { select: { id: true, name: true, email: true, licenseNumber: true, clinicName: true, phone: true, address: true } },
     },
@@ -307,8 +338,20 @@ export async function updatePatient(id: string, formData: FormData) {
 
 export async function deletePatient(id: string) {
   const userId = await requireUserId()
-  await prisma.patient.delete({
+  await prisma.patient.update({
     where: { id, userId },
+    data: { isActive: false },
+  })
+
+  revalidatePath('/dashboard')
+  revalidatePath('/dashboard/patients')
+}
+
+export async function restorePatient(id: string) {
+  const userId = await requireUserId()
+  await prisma.patient.update({
+    where: { id, userId },
+    data: { isActive: true },
   })
 
   revalidatePath('/dashboard')
@@ -344,21 +387,99 @@ export async function hardDeletePatient(patientId: string) {
 
 export async function createAnthropometry(patientId: string, formData: FormData) {
   const userId = await requireUserId()
-  if (!await prisma.patient.findFirst({ where: { id: patientId, userId }, select: { id: true } })) throw new Error('Paciente no encontrado.')
+  const patient = await prisma.patient.findFirst({
+    where: { id: patientId, userId },
+    select: { id: true, heightCm: true, birthDate: true, sex: true },
+  })
+  if (!patient) throw new Error('Paciente no encontrado.')
+
   const dateStr = (formData.get('date') as string) || new Date().toISOString()
   const weightKg = parseFloat(formData.get('weightKg') as string)
-  const bodyFatPct = formData.get('bodyFatPct') ? parseFloat(formData.get('bodyFatPct') as string) : null
+  let bodyFatPct = formData.get('bodyFatPct') ? parseFloat(formData.get('bodyFatPct') as string) : null
   const muscleMassKg = formData.get('muscleMassKg') ? parseFloat(formData.get('muscleMassKg') as string) : null
   const waistCm = formData.get('waistCm') ? parseFloat(formData.get('waistCm') as string) : null
   const hipCm = formData.get('hipCm') ? parseFloat(formData.get('hipCm') as string) : null
   const chestCm = formData.get('chestCm') ? parseFloat(formData.get('chestCm') as string) : null
   const armCm = formData.get('armCm') ? parseFloat(formData.get('armCm') as string) : null
   const thighCm = formData.get('thighCm') ? parseFloat(formData.get('thighCm') as string) : null
+
+  // Extended ISAK skinfolds & bone diameters
   const skinfoldTriceps = formData.get('skinfoldTriceps') ? parseFloat(formData.get('skinfoldTriceps') as string) : null
   const skinfoldSubscapular = formData.get('skinfoldSubscapular') ? parseFloat(formData.get('skinfoldSubscapular') as string) : null
   const skinfoldSuprailiac = formData.get('skinfoldSuprailiac') ? parseFloat(formData.get('skinfoldSuprailiac') as string) : null
   const skinfoldAbdominal = formData.get('skinfoldAbdominal') ? parseFloat(formData.get('skinfoldAbdominal') as string) : null
+  const skinfoldBiceps = formData.get('skinfoldBiceps') ? parseFloat(formData.get('skinfoldBiceps') as string) : null
+  const skinfoldCalf = formData.get('skinfoldCalf') ? parseFloat(formData.get('skinfoldCalf') as string) : null
+
+  const boneDiameterWrist = formData.get('boneDiameterWrist') ? parseFloat(formData.get('boneDiameterWrist') as string) : null
+  const boneDiameterFemur = formData.get('boneDiameterFemur') ? parseFloat(formData.get('boneDiameterFemur') as string) : null
+  const boneDiameterHumerus = formData.get('boneDiameterHumerus') ? parseFloat(formData.get('boneDiameterHumerus') as string) : null
+  const phaseAngle = formData.get('phaseAngle') ? parseFloat(formData.get('phaseAngle') as string) : null
+
   const notes = (formData.get('notes') as string) || null
+  const isPublishedToPatient = formData.get('isPublishedToPatient') === 'true' || formData.get('isPublishedToPatient') === 'on'
+
+  // Calculated: Waist-to-Height Ratio (ICT)
+  let waistToHeightRatio: number | null = null
+  if (waistCm && patient.heightCm) {
+    try {
+      const whtrRes = calculateWaistToHeightRatio(waistCm, patient.heightCm)
+      waistToHeightRatio = whtrRes.ratio
+    } catch {}
+  }
+
+  // Calculated: CUN-BAE body fat equation
+  let cunBaeFatPct: number | null = null
+  if (weightKg && patient.heightCm && patient.birthDate) {
+    try {
+      const birth = new Date(patient.birthDate)
+      const today = new Date()
+      let age = today.getFullYear() - birth.getFullYear()
+      const m = today.getMonth() - birth.getMonth()
+      if (m < 0 || (m === 0 && today.getDate() < birth.getDate())) {
+        age--
+      }
+      const bmiRes = calculateBMI(weightKg, patient.heightCm)
+      const sexParam = patient.sex?.toLowerCase() === 'male' ? 'male' : 'female'
+      cunBaeFatPct = calculateCUNBAE(bmiRes.bmi, age, sexParam)
+      if (bodyFatPct === null && cunBaeFatPct) {
+        bodyFatPct = cunBaeFatPct
+      }
+    } catch {}
+  }
+
+  // Calculated: Heath-Carter Somatotype
+  let somatotypeEndo: number | null = null
+  let somatotypeMeso: number | null = null
+  let somatotypeEcto: number | null = null
+  if (
+    skinfoldTriceps &&
+    skinfoldSubscapular &&
+    skinfoldSuprailiac &&
+    boneDiameterHumerus &&
+    boneDiameterFemur &&
+    armCm &&
+    thighCm &&
+    weightKg &&
+    patient.heightCm
+  ) {
+    try {
+      const soma = calculateHeathCarterSomatotype({
+        heightCm: patient.heightCm,
+        weightKg,
+        tricepsMm: skinfoldTriceps,
+        subscapularMm: skinfoldSubscapular,
+        suprailiacMm: skinfoldSuprailiac,
+        humerusDiamCm: boneDiameterHumerus,
+        femurDiamCm: boneDiameterFemur,
+        armCircCm: armCm,
+        calfCircCm: thighCm,
+      })
+      somatotypeEndo = soma.endomorphy
+      somatotypeMeso = soma.mesomorphy
+      somatotypeEcto = soma.ectomorphy
+    } catch {}
+  }
 
   const anthropometry = await prisma.anthropometry.create({
     data: {
@@ -376,14 +497,44 @@ export async function createAnthropometry(patientId: string, formData: FormData)
       skinfoldSubscapular,
       skinfoldSuprailiac,
       skinfoldAbdominal,
+      skinfoldBiceps,
+      skinfoldCalf,
+      boneDiameterWrist,
+      boneDiameterFemur,
+      boneDiameterHumerus,
+      somatotypeEndo,
+      somatotypeMeso,
+      somatotypeEcto,
+      waistToHeightRatio,
+      cunBaeFatPct,
+      phaseAngle,
       notes,
+      isPublishedToPatient,
     },
   })
 
   revalidatePath('/dashboard')
   revalidatePath('/dashboard/patients')
   revalidatePath(`/dashboard/patients/${patientId}`)
+  revalidatePath('/paciente/evolucion')
   return anthropometry
+}
+
+export async function toggleAnthropometryPublish(id: string, patientId: string, isPublished: boolean) {
+  const userId = await requireUserId()
+  const patient = await prisma.patient.findFirst({ where: { id: patientId, userId }, select: { id: true } })
+  if (!patient) throw new Error('Paciente no encontrado.')
+
+  const updated = await prisma.anthropometry.update({
+    where: { id },
+    data: { isPublishedToPatient: isPublished },
+  })
+
+  revalidatePath('/dashboard')
+  revalidatePath('/dashboard/patients')
+  revalidatePath(`/dashboard/patients/${patientId}`)
+  revalidatePath('/paciente/evolucion')
+  return updated
 }
 
 export async function createClinicalCheckIn(patientId: string, formData: FormData) {
@@ -717,3 +868,174 @@ export async function importAnthropometryBatch(patientId: string, measurements: 
   revalidatePath(`/dashboard/patients/${patientId}`)
   return measurements.length
 }
+
+export async function saveClinicalScreening(patientId: string, type: string, answers: Record<string, any>, notes?: string) {
+  const userId = await requireUserId()
+  const patient = await prisma.patient.findFirst({ where: { id: patientId, userId }, select: { id: true } })
+  if (!patient) throw new Error('Paciente no encontrado.')
+
+  const def = getScreeningDefinition(type)
+  if (!def) throw new Error(`Tipo de cribado desconocido: ${type}`)
+
+  const result = def.evaluate(answers)
+
+  const screening = await prisma.clinicalScreening.create({
+    data: {
+      patientId,
+      date: new Date(),
+      type,
+      score: result.score,
+      maxScore: result.maxScore,
+      resultCategory: result.resultCategory,
+      answersJson: JSON.stringify(answers),
+      notes: notes || result.interpretation,
+    },
+  })
+
+  revalidatePath(`/dashboard/patients/${patientId}`)
+  return screening
+}
+
+export async function deleteClinicalScreening(screeningId: string, patientId: string) {
+  const userId = await requireUserId()
+  const patient = await prisma.patient.findFirst({ where: { id: patientId, userId }, select: { id: true } })
+  if (!patient) throw new Error('Paciente no encontrado.')
+
+  await prisma.clinicalScreening.delete({ where: { id: screeningId, patientId } })
+  revalidatePath(`/dashboard/patients/${patientId}`)
+  return { success: true }
+}
+
+export async function updatePatientGoalsAndTags(
+  patientId: string,
+  data: {
+    targetWeightKg?: number | null
+    targetWeightDate?: string | null
+    weeklyChangeTargetKg?: number | null
+    tags?: string
+    medicationSchedule?: string
+    milestonesMessage?: string | null
+  }
+) {
+  const userId = await requireUserId()
+  const patient = await prisma.patient.findFirst({ where: { id: patientId, userId }, select: { id: true } })
+  if (!patient) throw new Error('Paciente no encontrado.')
+
+  const updated = await prisma.patient.update({
+    where: { id: patientId },
+    data: {
+      targetWeightKg: data.targetWeightKg !== undefined ? data.targetWeightKg : undefined,
+      targetWeightDate: data.targetWeightDate ? new Date(data.targetWeightDate) : data.targetWeightDate === null ? null : undefined,
+      weeklyChangeTargetKg: data.weeklyChangeTargetKg !== undefined ? data.weeklyChangeTargetKg : undefined,
+      tags: data.tags !== undefined ? data.tags : undefined,
+      medicationSchedule: data.medicationSchedule !== undefined ? data.medicationSchedule : undefined,
+      milestonesMessage: data.milestonesMessage !== undefined ? data.milestonesMessage : undefined,
+    },
+  })
+
+  revalidatePath('/dashboard/patients')
+  revalidatePath(`/dashboard/patients/${patientId}`)
+  return updated
+}
+
+export async function dischargePatient(patientId: string, summary: string) {
+  const userId = await requireUserId()
+  const patient = await prisma.patient.findFirst({ where: { id: patientId, userId }, select: { id: true } })
+  if (!patient) throw new Error('Paciente no encontrado.')
+
+  const updated = await prisma.patient.update({
+    where: { id: patientId },
+    data: {
+      isDischarged: true,
+      dischargedAt: new Date(),
+      dischargeSummary: summary,
+      portalAccessEnabled: false, // Sección 5.2: desactivación automática del portal al archivar / alta
+    },
+  })
+
+  await prisma.auditLog.create({
+    data: {
+      userId,
+      patientId,
+      action: 'PATIENT_DISCHARGED',
+      entityType: 'PATIENT',
+      entityId: patientId,
+      details: 'Alta clínica y cierre de seguimiento. Acceso al portal de paciente desactivado.',
+    },
+  })
+
+  revalidatePath('/dashboard/patients')
+  revalidatePath(`/dashboard/patients/${patientId}`)
+  return updated
+}
+
+export async function reopenPatient(patientId: string) {
+  const userId = await requireUserId()
+  const patient = await prisma.patient.findFirst({ where: { id: patientId, userId }, select: { id: true } })
+  if (!patient) throw new Error('Paciente no encontrado.')
+
+  const updated = await prisma.patient.update({
+    where: { id: patientId },
+    data: {
+      isDischarged: false,
+      dischargedAt: null,
+      dischargeSummary: null,
+      portalAccessEnabled: true,
+    },
+  })
+
+  await prisma.auditLog.create({
+    data: {
+      userId,
+      patientId,
+      action: 'PATIENT_REOPENED',
+      entityType: 'PATIENT',
+      entityId: patientId,
+      details: 'Reapertura de seguimiento clínico y reactivación de acceso al portal.',
+    },
+  })
+
+  revalidatePath('/dashboard/patients')
+  revalidatePath(`/dashboard/patients/${patientId}`)
+  return updated
+}
+
+export async function saveProgressPhoto(
+  patientId: string,
+  data: {
+    photoUrl: string
+    label?: string
+    notes?: string
+    consentGiven: boolean
+  }
+) {
+  const userId = await requireUserId()
+  const patient = await prisma.patient.findFirst({ where: { id: patientId, userId }, select: { id: true } })
+  if (!patient) throw new Error('Paciente no encontrado.')
+  if (!data.consentGiven) throw new Error('Es obligatorio contar con el consentimiento explícito del paciente para registrar fotografías corporales.')
+
+  const photo = await prisma.progressPhoto.create({
+    data: {
+      patientId,
+      date: new Date(),
+      photoUrl: data.photoUrl,
+      label: data.label || 'Frontal',
+      notes: data.notes || null,
+      consentGiven: true,
+    },
+  })
+
+  revalidatePath(`/dashboard/patients/${patientId}`)
+  return photo
+}
+
+export async function deleteProgressPhoto(photoId: string, patientId: string) {
+  const userId = await requireUserId()
+  const patient = await prisma.patient.findFirst({ where: { id: patientId, userId }, select: { id: true } })
+  if (!patient) throw new Error('Paciente no encontrado.')
+
+  await prisma.progressPhoto.delete({ where: { id: photoId, patientId } })
+  revalidatePath(`/dashboard/patients/${patientId}`)
+  return { success: true }
+}
+

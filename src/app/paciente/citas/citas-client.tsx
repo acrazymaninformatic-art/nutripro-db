@@ -23,14 +23,37 @@ interface AppointmentItem {
   date: string | Date
   durationMin: number
   modality: string
+  appointmentType?: string | null
+  typeColor?: string | null
   status: string
   location?: string | null
   notes?: string | null
   meetUrl?: string | null
 }
 
+export interface PendingRequestItem {
+  id: string
+  type: string // "NEW" | "RESCHEDULE" | "CANCEL"
+  status: string
+  appointmentType: string
+  modality: string
+  preferredTimeOfDay: string | null
+  preferredDays: string | null
+  patientNotes: string | null
+  createdAt: string
+}
+
 interface Props {
   appointments: AppointmentItem[]
+  pendingRequests?: PendingRequestItem[]
+}
+
+const APPOINTMENT_TYPE_META: Record<string, { label: string; color: string; duration: string }> = {
+  PRIMERA: { label: 'Primera Consulta', color: '#2563eb', duration: '60 min' },
+  REVISION: { label: 'Revisión y Seguimiento', color: '#16a34a', duration: '45 min' },
+  ONLINE: { label: 'Consulta Online (Meet)', color: '#9333ea', duration: '45 min' },
+  DOMICILIO: { label: 'Consulta a Domicilio', color: '#d97706', duration: '60 min' },
+  GRUPAL: { label: 'Sesión Grupal / Taller', color: '#4f46e5', duration: '90 min' },
 }
 
 const STATUS_LABELS: Record<string, { label: string; badgeClass: string }> = {
@@ -42,10 +65,17 @@ const STATUS_LABELS: Record<string, { label: string; badgeClass: string }> = {
   CANCELLED: { label: 'Cancelada', badgeClass: 'bg-gray-100 text-gray-400 border-gray-200' },
 }
 
-export function CitasClient({ appointments }: Props) {
+export function CitasClient({ appointments, pendingRequests = [] }: Props) {
   const [showRequestModal, setShowRequestModal] = useState(false)
   const [actionModal, setActionModal] = useState<{ id: string; type: 'CHANGE' | 'CANCEL' } | null>(null)
   const [loading, setLoading] = useState(false)
+  const [copiedMeetId, setCopiedMeetId] = useState<string | null>(null)
+
+  const handleCopyMeet = (id: string, url: string) => {
+    navigator.clipboard.writeText(url)
+    setCopiedMeetId(id)
+    setTimeout(() => setCopiedMeetId(null), 2500)
+  }
 
   const activeAppointments = appointments.filter(
     (a) => a.status !== 'COMPLETED' && a.status !== 'CANCELLED'
@@ -104,6 +134,56 @@ export function CitasClient({ appointments }: Props) {
         </Button>
       </div>
 
+      {/* Solicitudes de Cita en Revisión por Eva */}
+      {pendingRequests.length > 0 && (
+        <div className="space-y-3">
+          <h3 className="text-xs font-bold text-amber-900 uppercase tracking-wider flex items-center gap-1.5">
+            <Clock className="w-3.5 h-3.5 text-amber-600" />
+            <span>Solicitudes en Revisión por Eva ({pendingRequests.length})</span>
+          </h3>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+            {pendingRequests.map((req) => {
+              const typeMeta = APPOINTMENT_TYPE_META[req.appointmentType] || APPOINTMENT_TYPE_META.REVISION
+              return (
+                <Card key={req.id} className="rounded-3xl border-amber-200 bg-amber-50/40 p-5 space-y-3 shadow-xs">
+                  <div className="flex items-center justify-between">
+                    <Badge className="bg-amber-100 text-amber-900 border-amber-300 font-bold text-2xs rounded-full">
+                      {req.type === 'NEW' ? 'Nueva Cita Solicitada' : req.type === 'RESCHEDULE' ? 'Cambio Solicitado' : 'Cancelación Solicitada'}
+                    </Badge>
+                    <span className="text-3xs text-amber-700 font-medium">
+                      {new Date(req.createdAt).toLocaleDateString('es-ES', { day: 'numeric', month: 'short' })}
+                    </span>
+                  </div>
+                  <div>
+                    <div className="text-sm font-bold text-gray-900 flex items-center gap-2">
+                      <span className="w-2.5 h-2.5 rounded-full shrink-0" style={{ backgroundColor: typeMeta.color }} />
+                      <span>{typeMeta.label} ({typeMeta.duration})</span>
+                    </div>
+                    <p className="text-xs text-gray-600 mt-1">
+                      <strong>Modalidad:</strong> {req.modality === 'ONLINE' ? 'Videollamada Google Meet' : 'Presencial en Consulta'}
+                    </p>
+                    {req.preferredTimeOfDay && (
+                      <p className="text-xs text-gray-600">
+                        <strong>Preferencia:</strong> {req.preferredTimeOfDay === 'MORNING' ? 'Mañanas' : req.preferredTimeOfDay === 'AFTERNOON' ? 'Tardes' : 'Indiferente'}
+                        {req.preferredDays ? ` (Días: ${req.preferredDays})` : ''}
+                      </p>
+                    )}
+                    {req.patientNotes && (
+                      <p className="text-2xs text-gray-500 italic mt-1 bg-white/70 p-2 rounded-xl border border-amber-200/50">
+                        «{req.patientNotes}»
+                      </p>
+                    )}
+                  </div>
+                  <p className="text-3xs text-amber-800 font-medium">
+                    ⏳ Eva revisará la agenda de la consulta y te confirmará el día y hora exactos por correo.
+                  </p>
+                </Card>
+              )
+            })}
+          </div>
+        </div>
+      )}
+
       {/* Próximas Citas */}
       <div className="space-y-3">
         <h3 className="text-sm font-bold text-gray-900 uppercase tracking-wider text-xs text-gray-500">
@@ -127,13 +207,24 @@ export function CitasClient({ appointments }: Props) {
                 badgeClass: 'bg-gray-100 text-gray-800',
               }
               const isOnline = app.modality === 'ONLINE'
+              const typeMeta = app.appointmentType ? APPOINTMENT_TYPE_META[app.appointmentType] : null
 
               return (
                 <Card key={app.id} className="rounded-3xl border-blue-100 overflow-hidden shadow-xs hover:border-blue-200 transition-all">
                   <CardHeader className="bg-gradient-to-r from-blue-50/60 to-white pb-3 border-b border-gray-100 flex flex-row items-center justify-between">
-                    <Badge variant="outline" className={`text-2xs font-bold rounded-full ${statusInfo.badgeClass}`}>
-                      {statusInfo.label}
-                    </Badge>
+                    <div className="flex items-center gap-1.5 flex-wrap">
+                      <Badge variant="outline" className={`text-2xs font-bold rounded-full ${statusInfo.badgeClass}`}>
+                        {statusInfo.label}
+                      </Badge>
+                      {typeMeta && (
+                        <span
+                          className="px-2 py-0.5 rounded-full text-3xs font-extrabold text-white"
+                          style={{ backgroundColor: app.typeColor || typeMeta.color }}
+                        >
+                          {typeMeta.label}
+                        </span>
+                      )}
+                    </div>
                     <span className="text-xs font-semibold text-gray-500 flex items-center gap-1">
                       <Clock className="w-3.5 h-3.5" />
                       {app.durationMin} min
@@ -170,15 +261,24 @@ export function CitasClient({ appointments }: Props) {
 
                     {/* Enlace Google Meet si es Online y confirmada */}
                     {isOnline && app.status === 'CONFIRMED' && app.meetUrl && (
-                      <a
-                        href={app.meetUrl}
-                        target="_blank"
-                        rel="noreferrer"
-                        className="inline-flex items-center justify-center gap-2 w-full py-2.5 px-4 rounded-xl bg-blue-600 hover:bg-blue-700 text-white font-bold text-xs shadow-xs transition-colors"
-                      >
-                        <Video className="w-4 h-4" />
-                        <span>Entrar a la Videollamada (Google Meet)</span>
-                      </a>
+                      <div className="space-y-1.5">
+                        <a
+                          href={app.meetUrl}
+                          target="_blank"
+                          rel="noreferrer"
+                          className="inline-flex items-center justify-center gap-2 w-full py-2.5 px-4 rounded-xl bg-blue-600 hover:bg-blue-700 text-white font-bold text-xs shadow-xs transition-colors"
+                        >
+                          <Video className="w-4 h-4" />
+                          <span>Entrar a la Videollamada (Google Meet)</span>
+                        </a>
+                        <button
+                          type="button"
+                          onClick={() => handleCopyMeet(app.id, app.meetUrl!)}
+                          className="w-full text-center text-3xs font-semibold text-blue-600 hover:text-blue-800 transition-colors"
+                        >
+                          {copiedMeetId === app.id ? '✓ ¡Enlace copiado al portapapeles!' : 'Copiar enlace de Google Meet'}
+                        </button>
+                      </div>
                     )}
 
                     {app.notes && (
@@ -262,6 +362,21 @@ export function CitasClient({ appointments }: Props) {
 
             <form onSubmit={handleRequestSubmit} className="space-y-4">
               <div>
+                <label className="block text-xs font-bold text-gray-700 mb-1">Tipo de Consulta *</label>
+                <select
+                  name="appointmentType"
+                  defaultValue="REVISION"
+                  className="w-full text-xs rounded-xl border border-gray-200 p-2.5 bg-white font-medium focus:ring-2 focus:ring-blue-500"
+                >
+                  <option value="REVISION">🟢 Revisión y Seguimiento (45 min)</option>
+                  <option value="PRIMERA">🔵 Primera Consulta de Valoración (60 min)</option>
+                  <option value="ONLINE">🟣 Consulta Online (Videollamada, 45 min)</option>
+                  <option value="DOMICILIO">🟠 Consulta a Domicilio (60 min)</option>
+                  <option value="GRUPAL">🟣 Sesión Grupal / Taller (90 min)</option>
+                </select>
+              </div>
+
+              <div>
                 <label className="block text-xs font-bold text-gray-700 mb-1">Modalidad</label>
                 <select
                   name="modality"
@@ -272,16 +387,27 @@ export function CitasClient({ appointments }: Props) {
                 </select>
               </div>
 
-              <div>
-                <label className="block text-xs font-bold text-gray-700 mb-1">Preferencia horaria aproximada</label>
-                <select
-                  name="preferredTime"
-                  className="w-full text-xs rounded-xl border border-gray-200 p-2.5 bg-white font-medium focus:ring-2 focus:ring-blue-500"
-                >
-                  <option value="Mañanas (09:00 - 14:00)">Mañanas (09:00 - 14:00)</option>
-                  <option value="Tardes (16:00 - 20:00)">Tardes (16:00 - 20:00)</option>
-                  <option value="Indiferente / Lo antes posible">Indiferente / Lo antes posible</option>
-                </select>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                <div>
+                  <label className="block text-xs font-bold text-gray-700 mb-1">Preferencia Horaria</label>
+                  <select
+                    name="preferredTime"
+                    className="w-full text-xs rounded-xl border border-gray-200 p-2.5 bg-white font-medium focus:ring-2 focus:ring-blue-500"
+                  >
+                    <option value="Mañanas (09:00 - 14:00)">Mañanas (09:00 - 14:00)</option>
+                    <option value="Tardes (16:00 - 20:00)">Tardes (16:00 - 20:00)</option>
+                    <option value="Indiferente / Lo antes posible">Indiferente / Lo antes posible</option>
+                  </select>
+                </div>
+                <div>
+                  <label className="block text-xs font-bold text-gray-700 mb-1">Días preferentes (opcional)</label>
+                  <input
+                    type="text"
+                    name="preferredDays"
+                    placeholder="Ej: Lunes o Jueves"
+                    className="w-full text-xs rounded-xl border border-gray-200 p-2.5 bg-white focus:ring-2 focus:ring-blue-500"
+                  />
+                </div>
               </div>
 
               <div>

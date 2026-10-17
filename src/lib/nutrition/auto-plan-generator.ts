@@ -8,7 +8,6 @@
 
 import {
   checkPatientAllergenConflict,
-  detectAllergensInFood,
 } from './allergens'
 
 export interface PatientPlanProfile {

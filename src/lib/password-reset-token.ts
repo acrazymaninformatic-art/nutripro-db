@@ -13,6 +13,15 @@ export function createPasswordResetToken() {
   }
 }
 
+export function createPortalInviteToken(hours = 24) {
+  const token = randomBytes(32).toString('base64url')
+  return {
+    token,
+    hash: hashPasswordResetToken(token),
+    expiresAt: new Date(Date.now() + hours * 60 * 60 * 1000),
+  }
+}
+
 export function hashPasswordResetToken(token: string) {
   return createHash('sha256').update(token).digest('hex')
 }

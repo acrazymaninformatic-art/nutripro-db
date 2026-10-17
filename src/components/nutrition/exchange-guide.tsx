@@ -2,10 +2,10 @@
 
 import { useState } from 'react'
 import { FOOD_EXCHANGE_GROUPS } from '@/lib/nutrition/exchange-system'
-import { Card, CardHeader, CardTitle, CardDescription, CardContent } from '@/components/ui/card'
+import { Card, CardHeader, CardContent } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { Input } from '@/components/ui/input'
-import { Layers, Search, Info, CheckCircle2 } from 'lucide-react'
+import { Layers, Search } from 'lucide-react'
 
 export function ExchangeGuide() {
   const [search, setSearch] = useState('')

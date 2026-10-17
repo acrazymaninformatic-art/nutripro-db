@@ -143,6 +143,7 @@ export function PlanBuilderForm({
   const [calcDeficit, setCalcDeficit] = useState<number>(-500)
   const [proteinGPerKg, setProteinGPerKg] = useState<number>(2.0)
   const [fatGPerKg, setFatGPerKg] = useState<number>(0.9)
+  const [minCaloricSafetyKcal, setMinCaloricSafetyKcal] = useState<number>(1200)
 
   // 3. EDITABLE DAY NAMES (Column Headers)
   const [dayNames, setDayNames] = useState<string[]>([...DEFAULT_DAYS])
@@ -247,7 +248,7 @@ export function PlanBuilderForm({
     }
 
     const tdee = Math.round(bmr * calcPal)
-    const targetKcal = Math.max(1200, Math.round(tdee + calcDeficit))
+    const targetKcal = Math.max(minCaloricSafetyKcal, Math.round(tdee + calcDeficit))
 
     const targetProteinG = Math.round(effectiveWeight * proteinGPerKg)
     const targetFatG = Math.round(effectiveWeight * fatGPerKg)
@@ -281,6 +282,7 @@ export function PlanBuilderForm({
     calcDeficit,
     proteinGPerKg,
     fatGPerKg,
+    minCaloricSafetyKcal,
   ])
 
   // FUNCTION: Trigger automatic plan generation
@@ -470,6 +472,48 @@ export function PlanBuilderForm({
 
     return totals
   }, [gridSchedule, foodMap])
+
+  // Validador de planes: Ajustar proporcionalmente los gramos de un día al objetivo calórico
+  const adjustDayGramsToTarget = (dayIdx: number) => {
+    const tot = dayTotals[dayIdx]
+    if (!tot || tot.kcal <= 0 || precisionResults.targetKcal <= 0) return
+    const ratio = precisionResults.targetKcal / tot.kcal
+    setGridSchedule((prev) => {
+      const next: any = {}
+      MEAL_TYPES.forEach((m) => {
+        next[m.type] = { ...prev[m.type] }
+        const items = next[m.type][dayIdx] || []
+        next[m.type][dayIdx] = items.map((it: any) => ({
+          ...it,
+          quantityG: Math.max(5, Math.round((it.quantityG * ratio) / 5) * 5),
+        }))
+      })
+      return next
+    })
+  }
+
+  const adjustAllDaysGramsToTarget = () => {
+    if (precisionResults.targetKcal <= 0) return
+    setGridSchedule((prev) => {
+      const next: any = {}
+      MEAL_TYPES.forEach((m) => {
+        next[m.type] = { ...prev[m.type] }
+      })
+      for (let dayIdx = 0; dayIdx < 7; dayIdx++) {
+        const tot = dayTotals[dayIdx]
+        if (!tot || tot.kcal <= 0) continue
+        const ratio = precisionResults.targetKcal / tot.kcal
+        MEAL_TYPES.forEach((m) => {
+          const items = next[m.type][dayIdx] || []
+          next[m.type][dayIdx] = items.map((it: any) => ({
+            ...it,
+            quantityG: Math.max(5, Math.round((it.quantityG * ratio) / 5) * 5),
+          }))
+        })
+      }
+      return next
+    })
+  }
 
   // --- ACTIONS: RENAME DAY ---
   function handleRenameDay(index: number, newName: string) {
@@ -879,6 +923,20 @@ export function PlanBuilderForm({
               />
             </div>
 
+            <div>
+              <span className="text-[10px] font-semibold text-amber-800 block">Suelo Kcal</span>
+              <Input
+                type="number"
+                step="50"
+                min="800"
+                max="2500"
+                value={minCaloricSafetyKcal}
+                onChange={(e) => setMinCaloricSafetyKcal(parseInt(e.target.value) || 1200)}
+                className="h-7 text-xs font-bold text-amber-700 bg-amber-50/50"
+                title="Mínimo de seguridad calórica clínica"
+              />
+            </div>
+
             {/* Target Output Badge */}
             <div className="bg-blue-100/70 p-1 rounded border border-blue-200 text-center flex flex-col justify-center">
               <span className="text-[9px] font-bold text-blue-800 uppercase block">Meta Diaria</span>
@@ -1240,7 +1298,17 @@ export function PlanBuilderForm({
               <tfoot>
                 <tr className="bg-gray-100 border-t-2 border-gray-300 text-xs">
                   <td className="py-2 px-1.5 uppercase font-black text-gray-900 text-center bg-gray-200 text-[10px]">
-                    Total Día
+                    <div className="flex flex-col items-center gap-1">
+                      <span>Total Día</span>
+                      <button
+                        type="button"
+                        onClick={adjustAllDaysGramsToTarget}
+                        title={`Ajustar proporcionalmente todos los días a ${precisionResults.targetKcal} kcal`}
+                        className="text-[8px] bg-blue-600 hover:bg-blue-700 text-white font-bold px-1.5 py-0.5 rounded shadow-2xs whitespace-nowrap transition-colors"
+                      >
+                        Ajustar Todos
+                      </button>
+                    </div>
                   </td>
 
                   {dayTotals.map((tot, dayIdx) => {
@@ -1275,6 +1343,17 @@ export function PlanBuilderForm({
                           >
                             {diff === 0 ? 'Meta' : diff > 0 ? `+${diff}` : diff}k
                           </Badge>
+
+                          <div>
+                            <button
+                              type="button"
+                              onClick={() => adjustDayGramsToTarget(dayIdx)}
+                              title={`Ajustar gramos de este día al objetivo (${precisionResults.targetKcal} kcal)`}
+                              className="mt-0.5 text-[8px] font-bold text-blue-700 hover:text-blue-900 bg-white hover:bg-blue-50 border border-blue-200 px-1 py-0.5 rounded whitespace-nowrap transition-colors"
+                            >
+                              🎯 Ajustar
+                            </button>
+                          </div>
                         </div>
                       </td>
                     )

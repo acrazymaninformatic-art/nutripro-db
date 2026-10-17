@@ -35,7 +35,7 @@ export default async function PoliticasPage() {
           Bienvenido/a a EVSoftware
         </h2>
         <p className="mt-2 text-center text-sm text-gray-600">
-          Consulta Nutricional Eva Vidal · Portal Clínico Seguro
+          Eva Vidal Nutrición · Portal Clínico Seguro
         </p>
       </div>
 

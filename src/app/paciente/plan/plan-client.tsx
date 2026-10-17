@@ -40,6 +40,11 @@ interface RecipeItem {
   servings: number
   prepTimeMin?: number | null
   cookTimeMin?: number | null
+  difficulty?: string | null
+  equipmentJson?: string | null
+  dietaryTagsJson?: string | null
+  isBatchCooking?: boolean | null
+  isFreezable?: boolean | null
   ingredients?: Array<{
     id: string
     quantityG: number
@@ -52,6 +57,11 @@ interface MealItemData {
   id: string
   quantityG: number
   servings: number
+  exchangeServings?: number | null
+  exchangeGroup?: string | null
+  portionMeasureName?: string | null
+  portionMeasureGrams?: number | null
+  isAlternative?: boolean
   notes?: string | null
   food?: FoodItem | null
   recipe?: RecipeItem | null
@@ -61,6 +71,10 @@ interface MealData {
   id: string
   mealType: string
   order: number
+  isOptionB?: boolean
+  optionGroup?: string | null
+  isCheatMeal?: boolean
+  timingType?: string
   items: MealItemData[]
 }
 
@@ -79,11 +93,16 @@ interface PlanData {
   targetKcal: number
   hideCaloriesTCA: boolean
   notes?: string | null
+  planningModel?: string | null
+  currentPhase?: string | null
+  eatingOutGuide?: string | null
+  hydrationTargetLiters?: number | null
   days: DayData[]
 }
 
 interface Props {
   plan: PlanData
+  visibleRecipes?: RecipeItem[]
 }
 
 const MEAL_LABELS: Record<string, string> = {
@@ -97,39 +116,83 @@ const MEAL_LABELS: Record<string, string> = {
 
 const DAY_NAMES = ['Lunes', 'Martes', 'Miércoles', 'Jueves', 'Viernes', 'Sábado', 'Domingo']
 
-export function PlanClient({ plan }: Props) {
+export function PlanClient({ plan, visibleRecipes }: Props) {
   // Determine current day of week (1=Monday, 7=Sunday)
   const currentJsDay = new Date().getDay()
   const todayDayNumber = currentJsDay === 0 ? 7 : currentJsDay
 
-  const [activeTab, setActiveTab] = useState<'today' | 'week' | 'shopping'>('today')
+  function getSupermarketAisle(category?: string | null): string {
+    const c = (category || '').toLowerCase()
+    if (c.includes('fruta') || c.includes('verdura') || c.includes('hortaliza')) {
+      return '🥦 Frutas y Verduras Frescas'
+    }
+    if (c.includes('carne') || c.includes('pollo') || c.includes('pescado') || c.includes('marisco') || c.includes('huevo')) {
+      return '🥩 Carnes, Pescados y Huevos'
+    }
+    if (c.includes('lacteo') || c.includes('lácteo') || c.includes('leche') || c.includes('queso') || c.includes('yogur')) {
+      return '🧀 Lácteos y Refrigerados'
+    }
+    if (c.includes('legumbre') || c.includes('cereal') || c.includes('arroz') || c.includes('pasta') || c.includes('pan') || c.includes('avena')) {
+      return '🌾 Legumbres, Cereales y Pastas'
+    }
+    if (c.includes('fruto seco') || c.includes('semilla') || c.includes('aceite') || c.includes('grasa')) {
+      return '🥜 Aceites, Frutos Secos y Semillas'
+    }
+    return '🥫 Despensa, Conservas y Condimentos'
+  }
+
+  const [activeTab, setActiveTab] = useState<'today' | 'week' | 'recipes' | 'shopping' | 'guide'>('today')
   const [selectedRecipe, setSelectedRecipe] = useState<{
     name: string
     instructions?: string
     prepTimeMin?: number | null
     cookTimeMin?: number | null
     servings?: number
+    difficulty?: string | null
+    equipmentJson?: string | null
+    isBatchCooking?: boolean | null
+    isFreezable?: boolean | null
     ingredients?: Array<{ name: string; quantityG: number }>
   } | null>(null)
+
+  // Collect all unique recipes from plan and visible catalog
+  const recipeMap = new Map<string, RecipeItem>()
+  plan.days.forEach((d) => {
+    d.meals.forEach((m) => {
+      m.items.forEach((it) => {
+        if (it.recipe) {
+          recipeMap.set(it.recipe.id, it.recipe)
+        }
+      })
+    })
+  })
+  if (visibleRecipes) {
+    visibleRecipes.forEach((r) => {
+      if (!recipeMap.has(r.id)) {
+        recipeMap.set(r.id, r)
+      }
+    })
+  }
+  const allRecipeCards = Array.from(recipeMap.values())
 
   // Find today's day plan
   const todayDay = plan.days.find((d) => d.dayNumber === todayDayNumber) || plan.days[0]
 
-  // Compute shopping list grouped by food category (clean list without checkmarks as requested in PDF)
+  // Compute shopping list grouped by supermarket aisles (EVSoftware 5.8: lista normal sin casillas de verificación)
   const shoppingItemsByCategory: Record<string, Array<{ name: string; totalG: number }>> = {}
   plan.days.forEach((day) => {
     day.meals.forEach((meal) => {
       meal.items.forEach((item) => {
         const name = item.food?.name || item.recipe?.name || 'Alimento'
-        const category = item.food?.category || 'Otros productos frescos y despensa'
-        if (!shoppingItemsByCategory[category]) {
-          shoppingItemsByCategory[category] = []
+        const aisle = getSupermarketAisle(item.food?.category)
+        if (!shoppingItemsByCategory[aisle]) {
+          shoppingItemsByCategory[aisle] = []
         }
-        const existing = shoppingItemsByCategory[category].find((x) => x.name === name)
+        const existing = shoppingItemsByCategory[aisle].find((x) => x.name === name)
         if (existing) {
           existing.totalG += Math.round(item.quantityG)
         } else {
-          shoppingItemsByCategory[category].push({ name, totalG: Math.round(item.quantityG) })
+          shoppingItemsByCategory[aisle].push({ name, totalG: Math.round(item.quantityG) })
         }
       })
     })
@@ -222,6 +285,19 @@ export function PlanClient({ plan }: Props) {
 
           <button
             type="button"
+            onClick={() => setActiveTab('recipes')}
+            className={`px-4 py-2 rounded-2xl text-xs font-bold transition-all flex items-center gap-2 shrink-0 ${
+              activeTab === 'recipes'
+                ? 'bg-blue-600 text-white shadow-xs'
+                : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+            }`}
+          >
+            <ChefHat className="w-4 h-4" />
+            <span>Recetario ({allRecipeCards.length})</span>
+          </button>
+
+          <button
+            type="button"
             onClick={() => setActiveTab('shopping')}
             className={`px-4 py-2 rounded-2xl text-xs font-bold transition-all flex items-center gap-2 shrink-0 ${
               activeTab === 'shopping'
@@ -232,6 +308,21 @@ export function PlanClient({ plan }: Props) {
             <ShoppingCart className="w-4 h-4" />
             <span>Lista de la Compra</span>
           </button>
+
+          {plan.eatingOutGuide && (
+            <button
+              type="button"
+              onClick={() => setActiveTab('guide')}
+              className={`px-4 py-2 rounded-2xl text-xs font-bold transition-all flex items-center gap-2 shrink-0 ${
+                activeTab === 'guide'
+                  ? 'bg-blue-600 text-white shadow-xs'
+                  : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+              }`}
+            >
+              <Sparkles className="w-4 h-4" />
+              <span>Comer Fuera & Viajes</span>
+            </button>
+          )}
         </div>
       </Card>
 
@@ -244,7 +335,7 @@ export function PlanClient({ plan }: Props) {
                 <span>Comidas de Hoy: {DAY_NAMES[todayDayNumber - 1]}</span>
               </h2>
               <p className="text-xs text-gray-500">
-                Toca cualquier plato marcado para abrir la receta con ingredientes y preparación
+                Toca cualquier plato marcado para abrir la receta con ingredientes y modo de preparación
               </p>
             </div>
           </div>
@@ -261,7 +352,29 @@ export function PlanClient({ plan }: Props) {
                   <Card key={meal.id} className="rounded-3xl border-gray-200 shadow-2xs overflow-hidden bg-white">
                     <CardHeader className="bg-gray-50/70 p-4 border-b border-gray-100">
                       <CardTitle className="text-sm font-bold text-blue-950 flex items-center justify-between">
-                        <span>{label}</span>
+                        <div className="flex items-center gap-2 flex-wrap">
+                          <span>{label}</span>
+                          {meal.isOptionB && (
+                            <Badge className="bg-amber-100 text-amber-900 border-0 text-[10px] font-bold">
+                              Opción B
+                            </Badge>
+                          )}
+                          {meal.timingType === 'PRE_WORKOUT' && (
+                            <Badge className="bg-blue-100 text-blue-900 border-0 text-[10px] font-bold">
+                              ⚡ Pre-Entreno
+                            </Badge>
+                          )}
+                          {meal.timingType === 'POST_WORKOUT' && (
+                            <Badge className="bg-emerald-100 text-emerald-900 border-0 text-[10px] font-bold">
+                              🏋️ Post-Entreno
+                            </Badge>
+                          )}
+                          {meal.isCheatMeal && (
+                            <Badge className="bg-purple-100 text-purple-900 border-0 text-[10px] font-bold">
+                              🍽️ Comida Libre
+                            </Badge>
+                          )}
+                        </div>
                         <UtensilsCrossed className="w-3.5 h-3.5 text-blue-600" />
                       </CardTitle>
                     </CardHeader>
@@ -284,6 +397,10 @@ export function PlanClient({ plan }: Props) {
                                     prepTimeMin: item.recipe.prepTimeMin,
                                     cookTimeMin: item.recipe.cookTimeMin,
                                     servings: item.recipe.servings,
+                                    difficulty: item.recipe.difficulty,
+                                    equipmentJson: item.recipe.equipmentJson,
+                                    isBatchCooking: item.recipe.isBatchCooking,
+                                    isFreezable: item.recipe.isFreezable,
                                   })
                                 }
                               }}
@@ -303,7 +420,19 @@ export function PlanClient({ plan }: Props) {
                               </div>
 
                               <div className="flex items-center justify-between text-2xs text-gray-500 mt-1">
-                                <span className="font-semibold text-gray-700">{Math.round(item.quantityG)}g</span>
+                                <div className="flex items-center gap-1.5 flex-wrap">
+                                  <span className="font-semibold text-gray-700">{Math.round(item.quantityG)}g</span>
+                                  {item.portionMeasureName && (
+                                    <span className="text-[10px] text-gray-400">
+                                      ({item.portionMeasureName})
+                                    </span>
+                                  )}
+                                  {item.exchangeServings && (
+                                    <span className="text-[10px] font-bold text-blue-700 bg-blue-50 px-1 py-0.5 rounded">
+                                      {item.exchangeServings} rac.
+                                    </span>
+                                  )}
+                                </div>
                                 {item.food && !plan.hideCaloriesTCA && (
                                   <span className="text-blue-700 font-bold">
                                     {Math.round((item.food.calories * item.quantityG) / (item.food.servingSize || 100))} kcal
@@ -409,6 +538,129 @@ export function PlanClient({ plan }: Props) {
         </Card>
       )}
 
+      {/* VISTA 4: RECETAS DEL PLAN Y RECETARIO VISIBLE (Requerimiento 3.2 Recetas Paciente) */}
+      {activeTab === 'recipes' && (
+        <div className="space-y-4">
+          <div>
+            <h2 className="text-lg font-bold text-gray-900 flex items-center gap-2">
+              <ChefHat className="w-5 h-5 text-blue-600" />
+              <span>Recetas de tu Plan y Recetario Clínico ({allRecipeCards.length})</span>
+            </h2>
+            <p className="text-xs text-gray-500">
+              Recetas pautadas y elaboradas por Eva Vidal con ingredientes y modo de preparación interactivo.
+            </p>
+          </div>
+
+          {allRecipeCards.length === 0 ? (
+            <Card className="p-8 text-center text-xs text-gray-400 bg-white rounded-3xl">
+              No hay recetas catalogadas en este plan.
+            </Card>
+          ) : (
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+              {allRecipeCards.map((rcp) => (
+                <Card
+                  key={rcp.id}
+                  className="rounded-3xl border-gray-200 bg-white p-5 hover:border-blue-300 hover:shadow-xs transition-all flex flex-col justify-between"
+                >
+                  <div className="space-y-2">
+                    <div className="flex items-center justify-between">
+                      <span className="text-2xs font-bold uppercase tracking-wider text-blue-700 bg-blue-50 px-2.5 py-0.5 rounded-full">
+                        {rcp.servings} {rcp.servings === 1 ? 'ración' : 'raciones'}
+                      </span>
+                      {rcp.prepTimeMin && (
+                        <span className="text-2xs text-gray-500 flex items-center gap-1 font-medium">
+                          <Clock className="w-3 h-3 text-gray-400" />
+                          {rcp.prepTimeMin} min
+                        </span>
+                      )}
+                      {rcp.difficulty && (
+                        <span className="text-[10px] font-bold text-slate-700 bg-slate-100 px-2 py-0.5 rounded-full">
+                          {rcp.difficulty}
+                        </span>
+                      )}
+                    </div>
+                    <h3 className="text-base font-bold text-gray-900">{rcp.name}</h3>
+                    
+                    <div className="flex items-center gap-1 flex-wrap">
+                      {rcp.isBatchCooking && (
+                        <span className="text-[9px] font-bold px-1.5 py-0.5 rounded bg-purple-100 text-purple-900">
+                          Batch Cooking
+                        </span>
+                      )}
+                      {rcp.isFreezable && (
+                        <span className="text-[9px] font-bold px-1.5 py-0.5 rounded bg-sky-100 text-sky-900">
+                          ❄️ Congelable
+                        </span>
+                      )}
+                      {(() => {
+                        try {
+                          const eq: string[] = rcp.equipmentJson ? JSON.parse(rcp.equipmentJson) : []
+                          return eq.map((item) => (
+                            <span key={item} className="text-[9px] font-bold px-1.5 py-0.5 rounded bg-gray-100 text-gray-700 uppercase">
+                              {item}
+                            </span>
+                          ))
+                        } catch {
+                          return null
+                        }
+                      })()}
+                    </div>
+
+                    {rcp.ingredients && rcp.ingredients.length > 0 && (
+                      <p className="text-xs text-gray-500 line-clamp-2">
+                        {rcp.ingredients.map((i) => i.food?.name || 'Ingrediente').join(', ')}
+                      </p>
+                    )}
+                  </div>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() =>
+                      setSelectedRecipe({
+                        name: rcp.name,
+                        instructions: rcp.instructions,
+                        servings: rcp.servings,
+                        prepTimeMin: rcp.prepTimeMin,
+                        cookTimeMin: rcp.cookTimeMin,
+                        difficulty: rcp.difficulty,
+                        equipmentJson: rcp.equipmentJson,
+                        isBatchCooking: rcp.isBatchCooking,
+                        isFreezable: rcp.isFreezable,
+                        ingredients: rcp.ingredients?.map((i) => ({
+                          name: i.food?.name || 'Ingrediente',
+                          quantityG: i.quantityG,
+                        })),
+                      })
+                    }
+                    className="mt-4 w-full rounded-2xl border-blue-200 text-blue-700 hover:bg-blue-50 font-bold text-xs"
+                  >
+                    Ver preparación e ingredientes
+                  </Button>
+                </Card>
+              ))}
+            </div>
+          )}
+        </div>
+      )}
+
+      {/* VISTA 5: GUÍA PARA COMER FUERA, VIAJES Y CELEBRACIONES */}
+      {activeTab === 'guide' && plan.eatingOutGuide && (
+        <Card className="rounded-3xl border border-blue-200 bg-white p-6 sm:p-8 shadow-xs space-y-4">
+          <div className="flex items-center gap-3">
+            <div className="p-2.5 rounded-2xl bg-blue-50 text-blue-600">
+              <Sparkles className="w-6 h-6" />
+            </div>
+            <div>
+              <h2 className="text-xl font-bold text-gray-900">Guía para Comer Fuera, Viajes y Celebraciones</h2>
+              <p className="text-xs text-gray-500">Pautas flexibles elaboradas por Eva Vidal para tus comidas sociales</p>
+            </div>
+          </div>
+          <div className="p-5 rounded-2xl bg-blue-50/50 border border-blue-100 text-sm text-gray-800 leading-relaxed whitespace-pre-wrap font-sans">
+            {plan.eatingOutGuide}
+          </div>
+        </Card>
+      )}
+
       {/* Modal Ficha de Receta Interactiva */}
       {selectedRecipe && (
         <div className="fixed inset-0 z-50 bg-black/50 backdrop-blur-xs flex items-center justify-center p-4">
@@ -428,7 +680,7 @@ export function PlanClient({ plan }: Props) {
             </div>
 
             <div className="flex-1 overflow-y-auto space-y-4 text-xs text-gray-700 pr-1">
-              <div className="flex items-center gap-4 bg-amber-50/70 p-3 rounded-2xl border border-amber-200/60">
+              <div className="flex items-center gap-3 bg-amber-50/70 p-3 rounded-2xl border border-amber-200/60 flex-wrap">
                 {selectedRecipe.prepTimeMin && (
                   <span className="flex items-center gap-1 font-semibold text-amber-900">
                     <Clock className="w-3.5 h-3.5" /> Prep: {selectedRecipe.prepTimeMin} min
@@ -444,6 +696,37 @@ export function PlanClient({ plan }: Props) {
                     Raciones: {selectedRecipe.servings}
                   </span>
                 )}
+                {selectedRecipe.difficulty && (
+                  <span className="font-bold text-slate-800 bg-white px-2 py-0.5 rounded-full text-[10px]">
+                    {selectedRecipe.difficulty}
+                  </span>
+                )}
+              </div>
+
+              {/* Equipment & Batch badges */}
+              <div className="flex items-center gap-1.5 flex-wrap">
+                {selectedRecipe.isBatchCooking && (
+                  <Badge className="bg-purple-100 text-purple-900 border-0 text-[10px] font-bold">
+                    Batch Cooking
+                  </Badge>
+                )}
+                {selectedRecipe.isFreezable && (
+                  <Badge className="bg-sky-100 text-sky-900 border-0 text-[10px] font-bold">
+                    ❄️ Congelable
+                  </Badge>
+                )}
+                {(() => {
+                  try {
+                    const eq: string[] = selectedRecipe.equipmentJson ? JSON.parse(selectedRecipe.equipmentJson) : []
+                    return eq.map((item) => (
+                      <span key={item} className="text-[10px] font-bold px-2 py-0.5 rounded bg-gray-100 text-gray-800 uppercase">
+                        {item}
+                      </span>
+                    ))
+                  } catch {
+                    return null
+                  }
+                })()}
               </div>
 
               <div>

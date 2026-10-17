@@ -23,8 +23,6 @@ import {
   Clock,
   Search,
   ExternalLink,
-  Copy,
-  Check,
   Eye,
   User,
   Phone,
@@ -33,12 +31,23 @@ import {
   Loader2,
   X,
   Sparkles,
-  MessageSquare,
   FileText,
   Filter,
+  FileSignature,
+  Dumbbell,
+  Baby,
+  HeartHandshake,
+  ShieldAlert,
+  CalendarCheck,
+  Star,
+  Check,
 } from 'lucide-react'
-import { markAnamnesisSentAction, sendAnamnesisEmailAction } from '@/app/dashboard/patients/email-actions'
-import { AnamnesisViewerModal, type AnamnesisSubmissionItem } from '@/app/dashboard/patients/[id]/anamnesis-viewer-modal'
+import {
+  sendQuestionnaireToPortalAction,
+  sendConsentToPortalAction,
+} from './actions'
+import { QuestionnaireReviewModal } from './review-modal'
+import { BUILT_IN_TEMPLATES } from '@/lib/clinical/questionnaire-templates'
 
 export interface QuestionnairePatient {
   id: string
@@ -46,10 +55,40 @@ export interface QuestionnairePatient {
   lastName: string
   email: string | null
   phone: string | null
-  anamnesisStatus: 'NOT_SENT' | 'PENDING' | 'COMPLETED' | string
-  anamnesisSentAt: Date | string | null
-  anamnesisCompletedAt: Date | string | null
-  anamnesisSubmissions?: AnamnesisSubmissionItem[]
+  sex?: string | null
+  birthDate?: string | null
+  // 5.4 Estados independientes de 4 fases
+  questionnaireStatus: 'NOT_SENT' | 'SENT' | 'IN_PROGRESS' | 'COMPLETED'
+  consentStatus: 'NOT_SENT' | 'SENT' | 'IN_PROGRESS' | 'COMPLETED'
+  pendingReviewFieldsCount: number
+  anamnesisStatus?: string
+  anamnesisSentAt?: string | null
+  anamnesisCompletedAt?: string | null
+  patientQuestionnaires?: Array<{
+    id: string
+    type: string
+    title: string
+    status: string
+    sentAt: string | null
+    openedAt: string | null
+    completedAt: string | null
+    pendingFieldsCount: number
+    reviewedFieldsCount: number
+    isReopened: boolean
+    redFlagsJson?: string | null
+    answersJson?: string | null
+  }>
+  consents?: Array<{
+    id: string
+    type: string
+    title: string
+    version: string
+    status: string
+    accepted: boolean
+    acceptedAt: string | null
+    sentAt: string | null
+    viewedAt: string | null
+  }>
 }
 
 interface QuestionnairesClientProps {
@@ -65,58 +104,62 @@ export function QuestionnairesClient({
 }: QuestionnairesClientProps) {
   const [patients, setPatients] = useState<QuestionnairePatient[]>(initialPatients)
   const [searchQuery, setSearchQuery] = useState('')
-  const [statusFilter, setStatusFilter] = useState<'ALL' | 'NOT_SENT' | 'PENDING' | 'COMPLETED'>('ALL')
-  
-  // Send modal state
-  const [isSendModalOpen, setIsSendModalOpen] = useState(false)
-  const [selectedPatientId, setSelectedPatientId] = useState<string>('')
-  const [modalEmail, setModalEmail] = useState<string>('')
-  const [sendingId, setSendingId] = useState<string | null>(null)
-  const [copiedId, setCopiedId] = useState<string | null>(null)
+  const [statusFilter, setStatusFilter] = useState<'ALL' | 'NOT_SENT' | 'SENT' | 'IN_PROGRESS' | 'COMPLETED' | 'PENDING_REVIEW'>('ALL')
 
-  // Viewer modal state
-  const [viewingPatient, setViewingPatient] = useState<QuestionnairePatient | null>(null)
+  // Send questionnaire template modal
+  const [selectedPatient, setSelectedPatient] = useState<QuestionnairePatient | null>(null)
+  const [isTemplateModalOpen, setIsTemplateModalOpen] = useState(false)
+  const [selectedTemplateType, setSelectedTemplateType] = useState<string>('ALTA')
+  const [sendingLoading, setSendingLoading] = useState(false)
 
-  // Feedback message
+  // Review modal state
+  const [reviewingItem, setReviewingItem] = useState<{
+    patientId: string
+    questionnaireId: string
+    patientName: string
+  } | null>(null)
+
+  // Feedback banner
   const [feedback, setFeedback] = useState<{ type: 'success' | 'error' | 'info'; message: string } | null>(null)
-
-  const origin = typeof window !== 'undefined' ? window.location.origin : (process.env.NEXT_PUBLIC_APP_URL || '')
 
   // Counters
   const counts = useMemo(() => {
     let notSent = 0
-    let pending = 0
+    let sent = 0
+    let inProgress = 0
     let completed = 0
+    let pendingReview = 0
 
     patients.forEach((p) => {
-      const status = p.anamnesisStatus || 'NOT_SENT'
-      if (status === 'COMPLETED' || (p.anamnesisSubmissions && p.anamnesisSubmissions.length > 0)) {
-        completed++
-      } else if (status === 'PENDING') {
-        pending++
-      } else {
-        notSent++
-      }
+      const qStatus = p.questionnaireStatus || 'NOT_SENT'
+      if (qStatus === 'NOT_SENT') notSent++
+      else if (qStatus === 'SENT') sent++
+      else if (qStatus === 'IN_PROGRESS') inProgress++
+      else if (qStatus === 'COMPLETED') completed++
+
+      if (p.pendingReviewFieldsCount > 0) pendingReview++
     })
 
     return {
       total: patients.length,
       notSent,
-      pending,
+      sent,
+      inProgress,
       completed,
+      pendingReview,
     }
   }, [patients])
 
   // Filtered patients
   const filteredPatients = useMemo(() => {
     return patients.filter((p) => {
-      const isCompleted = p.anamnesisStatus === 'COMPLETED' || (p.anamnesisSubmissions && p.anamnesisSubmissions.length > 0)
-      const isPending = p.anamnesisStatus === 'PENDING' && !isCompleted
-      const isNotSent = !isCompleted && !isPending
+      const qStatus = p.questionnaireStatus || 'NOT_SENT'
 
-      if (statusFilter === 'NOT_SENT' && !isNotSent) return false
-      if (statusFilter === 'PENDING' && !isPending) return false
-      if (statusFilter === 'COMPLETED' && !isCompleted) return false
+      if (statusFilter === 'NOT_SENT' && qStatus !== 'NOT_SENT') return false
+      if (statusFilter === 'SENT' && qStatus !== 'SENT') return false
+      if (statusFilter === 'IN_PROGRESS' && qStatus !== 'IN_PROGRESS') return false
+      if (statusFilter === 'COMPLETED' && qStatus !== 'COMPLETED') return false
+      if (statusFilter === 'PENDING_REVIEW' && (p.pendingReviewFieldsCount || 0) <= 0) return false
 
       if (searchQuery.trim()) {
         const q = searchQuery.toLowerCase().trim()
@@ -132,172 +175,180 @@ export function QuestionnairesClient({
     })
   }, [patients, statusFilter, searchQuery])
 
-  // Open send modal for a specific patient or general
-  const handleOpenSendModal = (patient?: QuestionnairePatient) => {
-    if (patient) {
-      setSelectedPatientId(patient.id)
-      setModalEmail(patient.email || '')
-    } else {
-      // Pick first patient who hasn't been sent the form, or first patient
-      const firstNotSent = patients.find((p) => p.anamnesisStatus === 'NOT_SENT')
-      const target = firstNotSent || patients[0]
-      if (target) {
-        setSelectedPatientId(target.id)
-        setModalEmail(target.email || '')
-      } else {
-        setSelectedPatientId('')
-        setModalEmail('')
-      }
-    }
-    setIsSendModalOpen(true)
-  }
-
-  // Handle patient select in modal
-  const handleSelectPatientInModal = (id: string) => {
-    setSelectedPatientId(id)
-    const p = patients.find((x) => x.id === id)
-    if (p) {
-      setModalEmail(p.email || '')
-    }
-  }
-
-  // Send action execution
-  const executeSendEmail = async (patientId: string, emailToSend: string) => {
-    if (!emailToSend || !emailToSend.includes('@')) {
-      setFeedback({
-        type: 'error',
-        message: 'Por favor, introduce un correo electrónico válido para enviar el cuestionario.',
-      })
-      return
-    }
-
-    setSendingId(patientId)
-    setFeedback(null)
-
+  // Enviar Cuestionario al portal del paciente (5.4)
+  const handleSendQuestionnaire = async () => {
+    if (!selectedPatient) return
+    setSendingLoading(true)
     try {
-      const res = await sendAnamnesisEmailAction({
-        patientId,
-        patientEmail: emailToSend,
-        professionalEmail,
-        professionalName,
-      })
-
+      const res = await sendQuestionnaireToPortalAction(selectedPatient.id, selectedTemplateType)
       if (res.success) {
         setFeedback({
           type: 'success',
-          message: `¡Cuestionario enviado correctamente a ${emailToSend}!`,
+          message: `¡Cuestionario enviado directamente al portal de ${selectedPatient.firstName}! El paciente verá el aviso al iniciar sesión.`,
         })
-
-        // Update local state
         setPatients((prev) =>
-          prev.map((p) => {
-            if (p.id === patientId) {
-              return {
-                ...p,
-                email: emailToSend,
-                anamnesisStatus: 'PENDING',
-                anamnesisSentAt: new Date(),
-              }
-            }
-            return p
-          })
+          prev.map((p) =>
+            p.id === selectedPatient.id
+              ? {
+                  ...p,
+                  questionnaireStatus: 'SENT',
+                  patientQuestionnaires: [
+                    {
+                      id: res.id,
+                      type: selectedTemplateType,
+                      title: BUILT_IN_TEMPLATES.find((t) => t.type === selectedTemplateType)?.title || 'Cuestionario',
+                      status: 'SENT',
+                      sentAt: new Date().toISOString(),
+                      openedAt: null,
+                      completedAt: null,
+                      pendingFieldsCount: 0,
+                      reviewedFieldsCount: 0,
+                      isReopened: false,
+                    },
+                    ...(p.patientQuestionnaires || []),
+                  ],
+                }
+              : p
+          )
         )
-        setIsSendModalOpen(false)
-      } else {
-        setFeedback({
-          type: 'error',
-          message: res.message || 'No se pudo enviar el correo.',
-        })
+        setIsTemplateModalOpen(false)
       }
     } catch (err: any) {
-      setFeedback({
-        type: 'error',
-        message: `Error al enviar: ${err?.message || 'Error del servidor'}`,
-      })
+      setFeedback({ type: 'error', message: err?.message || 'Error al enviar cuestionario al portal' })
     } finally {
-      setSendingId(null)
+      setSendingLoading(false)
     }
   }
 
-  // Quick send directly from row
-  const handleDirectSend = (patient: QuestionnairePatient) => {
-    if (!patient.email) {
-      handleOpenSendModal(patient)
-      return
-    }
-    executeSendEmail(patient.id, patient.email)
-  }
-
-  // Copy WhatsApp invitation message
-  const handleCopyWhatsAppLink = async (patient: QuestionnairePatient) => {
-    const access = await markAnamnesisSentAction(patient.id)
-    if (!access.success || !access.anamnesisUrl) return
-    const url = new URL(access.anamnesisUrl, origin).toString()
-    const msg = `Hola ${patient.firstName},\n\nPara preparar tu consulta nutricional con ${professionalName} y diseñar tu menú a medida, por favor completa tu cuestionario de salud previo en este enlace:\n\n${url}\n\nSolo te llevará 3 minutos y nos permitirá preparar tu pauta antes de la cita.`
-
-    navigator.clipboard.writeText(msg)
-    setCopiedId(patient.id)
-    setTimeout(() => setCopiedId(null), 2500)
-  }
-
-  const formatDate = (d: Date | string | null | undefined) => {
-    if (!d) return ''
+  // Enviar Consentimiento para Firma digital en el portal (5.4)
+  const handleSendConsent = async (patient: QuestionnairePatient) => {
     try {
-      return new Date(d).toLocaleDateString('es-ES', {
-        day: '2-digit',
-        month: 'short',
-        year: 'numeric',
-        hour: '2-digit',
-        minute: '2-digit',
-      })
-    } catch {
-      return ''
+      const res = await sendConsentToPortalAction(patient.id)
+      if (res.success) {
+        setFeedback({
+          type: 'success',
+          message: `Consentimiento informado enviado al portal de ${patient.firstName}. Verá el aviso de «Documento pendiente de firma».`,
+        })
+        setPatients((prev) =>
+          prev.map((p) => (p.id === patient.id ? { ...p, consentStatus: 'SENT' } : p))
+        )
+      }
+    } catch (err: any) {
+      setFeedback({ type: 'error', message: err?.message || 'Error al enviar consentimiento' })
+    }
+  }
+
+  // Abrir modal de revisión para el cuestionario activo de un paciente
+  const handleOpenReview = (patient: QuestionnairePatient) => {
+    const activeQ = patient.patientQuestionnaires?.[0]
+    if (!activeQ) return
+    setReviewingItem({
+      patientId: patient.id,
+      questionnaireId: activeQ.id,
+      patientName: `${patient.firstName} ${patient.lastName}`,
+    })
+  }
+
+  // Render badge de estado de 4 fases para Cuestionario (5.4)
+  const renderQuestionnaireStatusBadge = (status: string) => {
+    switch (status) {
+      case 'COMPLETED':
+        return (
+          <Badge className="bg-emerald-100 text-emerald-900 border border-emerald-300 font-bold px-2.5 py-0.5 rounded-full text-2xs inline-flex items-center gap-1">
+            <CheckCircle2 className="w-3 h-3 text-emerald-600" />
+            <span>HECHO (COMPLETADO)</span>
+          </Badge>
+        )
+      case 'IN_PROGRESS':
+        return (
+          <Badge className="bg-amber-100 text-amber-900 border border-amber-300 font-bold px-2.5 py-0.5 rounded-full text-2xs inline-flex items-center gap-1">
+            <Clock className="w-3 h-3 text-amber-600" />
+            <span>PENDIENTE DE HACER</span>
+          </Badge>
+        )
+      case 'SENT':
+        return (
+          <Badge className="bg-blue-100 text-blue-900 border border-blue-300 font-bold px-2.5 py-0.5 rounded-full text-2xs inline-flex items-center gap-1">
+            <Send className="w-3 h-3 text-blue-600" />
+            <span>ENVIADO AL PORTAL</span>
+          </Badge>
+        )
+      case 'NOT_SENT':
+      default:
+        return (
+          <Badge className="bg-gray-100 text-gray-700 border border-gray-300 font-medium px-2.5 py-0.5 rounded-full text-2xs inline-flex items-center gap-1">
+            <span className="w-1.5 h-1.5 rounded-full bg-gray-400" />
+            <span>NO ENVIADO</span>
+          </Badge>
+        )
+    }
+  }
+
+  // Render badge de estado de 4 fases para Firma (5.4)
+  const renderConsentStatusBadge = (status: string) => {
+    switch (status) {
+      case 'COMPLETED':
+        return (
+          <Badge className="bg-emerald-100 text-emerald-900 border border-emerald-300 font-bold px-2.5 py-0.5 rounded-full text-2xs inline-flex items-center gap-1">
+            <CheckCircle2 className="w-3 h-3 text-emerald-600" />
+            <span>FIRMADO</span>
+          </Badge>
+        )
+      case 'IN_PROGRESS':
+        return (
+          <Badge className="bg-amber-100 text-amber-900 border border-amber-300 font-bold px-2.5 py-0.5 rounded-full text-2xs inline-flex items-center gap-1">
+            <Clock className="w-3 h-3 text-amber-600" />
+            <span>PENDIENTE DE FIRMA</span>
+          </Badge>
+        )
+      case 'SENT':
+        return (
+          <Badge className="bg-blue-100 text-blue-900 border border-blue-300 font-bold px-2.5 py-0.5 rounded-full text-2xs inline-flex items-center gap-1">
+            <Send className="w-3 h-3 text-blue-600" />
+            <span>ENVIADO AL PORTAL</span>
+          </Badge>
+        )
+      case 'NOT_SENT':
+      default:
+        return (
+          <Badge className="bg-gray-100 text-gray-700 border border-gray-300 font-medium px-2.5 py-0.5 rounded-full text-2xs inline-flex items-center gap-1">
+            <span className="w-1.5 h-1.5 rounded-full bg-gray-400" />
+            <span>NO ENVIADO</span>
+          </Badge>
+        )
     }
   }
 
   return (
-    <div className="space-y-6 max-w-7xl mx-auto pb-32">
-      {/* Top Banner / Header */}
-      <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+    <div className="space-y-6">
+      {/* Header */}
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 bg-white p-6 rounded-3xl border border-gray-200 shadow-xs">
         <div>
-          <div className="flex items-center gap-2 mb-1">
-            <Badge className="bg-blue-600 text-white rounded-full px-3 text-xs font-bold shadow-2xs">
-              Módulo Pre-Consulta
+          <div className="flex items-center gap-2">
+            <h1 className="text-2xl font-black text-gray-900">Control de Cuestionarios y Firmas</h1>
+            <Badge variant="outline" className="text-3xs font-black uppercase text-blue-700 bg-blue-50 border-blue-200">
+              Módulo 5.4
             </Badge>
-            <span className="text-xs text-gray-500 font-semibold flex items-center gap-1">
-              <Sparkles className="h-3.5 w-3.5 text-blue-600" />
-              Remisión directa desde {professionalEmail}
-            </span>
           </div>
-          <h1 className="text-2xl sm:text-3xl font-black text-gray-900 tracking-tight">
-            Control de Cuestionarios Pre-Consulta (Anamnesis)
-          </h1>
-          <p className="text-sm text-gray-500 max-w-3xl mt-1 leading-relaxed">
-            Envía y supervisa el cuestionario clínico antes de la primera cita de cada paciente.
-            <strong className="text-rose-600 font-bold ml-1">
-              Los pacientes sin cuestionario enviado aparecen destacados en rojo
-            </strong> para un control visual inmediato.
+          <p className="text-xs text-gray-500 mt-1 max-w-2xl leading-relaxed">
+            Gestión independiente del cuestionario clínico y la firma de consentimientos dentro del portal del paciente.
+            Revisión lado a lado antes de escribir en la ficha oficial.
           </p>
         </div>
 
-        <div className="flex items-center gap-2.5 shrink-0">
+        <div className="flex items-center gap-2">
           <Button
-            onClick={() => handleOpenSendModal()}
-            className="rounded-2xl font-bold text-xs bg-blue-600 hover:bg-blue-700 text-white shadow-xs flex items-center gap-2 px-4 py-2.5 cursor-pointer"
+            onClick={() => {
+              if (patients.length > 0) {
+                setSelectedPatient(patients[0])
+                setIsTemplateModalOpen(true)
+              }
+            }}
+            className="rounded-2xl bg-blue-600 hover:bg-blue-700 text-white font-bold text-xs gap-2 py-5 shadow-xs shrink-0"
           >
-            <Send className="h-4 w-4" />
-            <span>Enviar Cuestionario a un Paciente</span>
+            <Send className="w-4 h-4" />
+            <span>Enviar Cuestionario</span>
           </Button>
-
-          <Link href="/dashboard/patients/new">
-            <Button
-              variant="outline"
-              className="rounded-2xl font-bold text-xs border-gray-200 hover:bg-gray-50 flex items-center gap-1.5"
-            >
-              <Plus className="h-4 w-4" />
-              <span>Nuevo Paciente</span>
-            </Button>
-          </Link>
         </div>
       </div>
 
@@ -329,8 +380,8 @@ export function QuestionnairesClient({
         </div>
       )}
 
-      {/* Metric Cards Grid */}
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+      {/* Metric Cards Grid: 4 Fases + N Campos por Revisar */}
+      <div className="grid grid-cols-2 lg:grid-cols-5 gap-3.5">
         {/* Total Pacientes */}
         <Card
           onClick={() => setStatusFilter('ALL')}
@@ -338,141 +389,130 @@ export function QuestionnairesClient({
             statusFilter === 'ALL' ? 'ring-2 ring-blue-500 bg-blue-50/20' : 'bg-white'
           }`}
         >
-          <CardContent className="p-5">
-            <div className="flex items-center justify-between mb-2">
-              <span className="text-xs font-bold text-gray-500 uppercase tracking-wider">Total Pacientes</span>
-              <div className="w-8 h-8 rounded-xl bg-gray-100 flex items-center justify-center text-gray-600">
-                <User className="h-4 w-4" />
-              </div>
-            </div>
-            <span className="text-3xl font-black text-gray-900">{counts.total}</span>
-            <span className="text-xs text-gray-400 block mt-1 font-semibold">En expediente activo</span>
+          <CardContent className="p-4">
+            <span className="text-3xs font-bold text-gray-400 uppercase tracking-wider block">Total Pacientes</span>
+            <span className="text-2xl font-black text-gray-900 mt-1 block">{counts.total}</span>
+            <span className="text-3xs text-gray-400 font-semibold block mt-1">En seguimiento</span>
           </CardContent>
         </Card>
 
-        {/* Sin Enviar (ROJO) */}
+        {/* No Enviado */}
         <Card
           onClick={() => setStatusFilter('NOT_SENT')}
-          className={`rounded-3xl border-rose-200 transition-all cursor-pointer hover:shadow-md ${
-            statusFilter === 'NOT_SENT' ? 'ring-2 ring-rose-500 bg-rose-50/40' : 'bg-rose-50/15'
+          className={`rounded-3xl border-gray-200 transition-all cursor-pointer hover:shadow-md ${
+            statusFilter === 'NOT_SENT' ? 'ring-2 ring-gray-500 bg-gray-50' : 'bg-white'
           }`}
         >
-          <CardContent className="p-5">
-            <div className="flex items-center justify-between mb-2">
-              <span className="text-xs font-black text-rose-700 uppercase tracking-wider flex items-center gap-1.5">
-                <span className="w-2 h-2 rounded-full bg-rose-600 animate-pulse" />
-                Sin Enviar (En Rojo)
-              </span>
-              <div className="w-8 h-8 rounded-xl bg-rose-100 flex items-center justify-center text-rose-700">
-                <AlertCircle className="h-4 w-4" />
-              </div>
-            </div>
-            <span className="text-3xl font-black text-rose-950">{counts.notSent}</span>
-            <span className="text-xs text-rose-700 font-bold block mt-1">
-              {counts.notSent === 1 ? 'Requiere envío previo' : 'Requieren envío previo'}
-            </span>
+          <CardContent className="p-4">
+            <span className="text-3xs font-bold text-gray-500 uppercase tracking-wider block">1. No Enviado</span>
+            <span className="text-2xl font-black text-gray-800 mt-1 block">{counts.notSent}</span>
+            <span className="text-3xs text-gray-400 font-semibold block mt-1">Pendiente de mandar</span>
           </CardContent>
         </Card>
 
-        {/* Enviados (En espera) */}
+        {/* Enviado al Portal */}
         <Card
-          onClick={() => setStatusFilter('PENDING')}
+          onClick={() => setStatusFilter('SENT')}
+          className={`rounded-3xl border-blue-200 transition-all cursor-pointer hover:shadow-md ${
+            statusFilter === 'SENT' ? 'ring-2 ring-blue-500 bg-blue-50/40' : 'bg-white'
+          }`}
+        >
+          <CardContent className="p-4">
+            <span className="text-3xs font-bold text-blue-700 uppercase tracking-wider block">2. Enviado (Portal)</span>
+            <span className="text-2xl font-black text-blue-900 mt-1 block">{counts.sent}</span>
+            <span className="text-3xs text-blue-600 font-semibold block mt-1">Aún no abierto</span>
+          </CardContent>
+        </Card>
+
+        {/* Pendiente de Hacer (Visto) */}
+        <Card
+          onClick={() => setStatusFilter('IN_PROGRESS')}
           className={`rounded-3xl border-amber-200 transition-all cursor-pointer hover:shadow-md ${
-            statusFilter === 'PENDING' ? 'ring-2 ring-amber-500 bg-amber-50/30' : 'bg-amber-50/15'
+            statusFilter === 'IN_PROGRESS' ? 'ring-2 ring-amber-500 bg-amber-50/40' : 'bg-white'
           }`}
         >
-          <CardContent className="p-5">
-            <div className="flex items-center justify-between mb-2">
-              <span className="text-xs font-bold text-amber-800 uppercase tracking-wider">En Espera</span>
-              <div className="w-8 h-8 rounded-xl bg-amber-100 flex items-center justify-center text-amber-700">
-                <Clock className="h-4 w-4" />
-              </div>
-            </div>
-            <span className="text-3xl font-black text-amber-950">{counts.pending}</span>
-            <span className="text-xs text-amber-700 font-semibold block mt-1">Enviado al paciente</span>
+          <CardContent className="p-4">
+            <span className="text-3xs font-bold text-amber-800 uppercase tracking-wider block">3. Pendiente</span>
+            <span className="text-2xl font-black text-amber-950 mt-1 block">{counts.inProgress}</span>
+            <span className="text-3xs text-amber-700 font-semibold block mt-1">Visto en el portal</span>
           </CardContent>
         </Card>
 
-        {/* Respondidos / Completados */}
+        {/* Hecho / Campos por Revisar */}
         <Card
-          onClick={() => setStatusFilter('COMPLETED')}
-          className={`rounded-3xl border-emerald-200 transition-all cursor-pointer hover:shadow-md ${
-            statusFilter === 'COMPLETED' ? 'ring-2 ring-emerald-500 bg-emerald-50/30' : 'bg-emerald-50/15'
+          onClick={() => setStatusFilter('PENDING_REVIEW')}
+          className={`rounded-3xl border-rose-300 transition-all cursor-pointer hover:shadow-md ${
+            statusFilter === 'PENDING_REVIEW' ? 'ring-2 ring-rose-500 bg-rose-50/50' : 'bg-rose-50/20'
           }`}
         >
-          <CardContent className="p-5">
-            <div className="flex items-center justify-between mb-2">
-              <span className="text-xs font-bold text-emerald-800 uppercase tracking-wider">Completados</span>
-              <div className="w-8 h-8 rounded-xl bg-emerald-100 flex items-center justify-center text-emerald-700">
-                <CheckCircle2 className="h-4 w-4" />
-              </div>
+          <CardContent className="p-4">
+            <div className="flex items-center justify-between">
+              <span className="text-3xs font-bold text-rose-800 uppercase tracking-wider block">Por Revisar</span>
+              <span className="w-2 h-2 rounded-full bg-rose-600 animate-pulse" />
             </div>
-            <span className="text-3xl font-black text-emerald-950">{counts.completed}</span>
-            <span className="text-xs text-emerald-700 font-semibold block mt-1">Respuestas disponibles</span>
+            <span className="text-2xl font-black text-rose-950 mt-1 block">{counts.pendingReview}</span>
+            <span className="text-3xs text-rose-700 font-bold block mt-1">Pacientes con campos nuevos</span>
           </CardContent>
         </Card>
       </div>
 
       {/* Filter and Search Bar */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 bg-white p-3.5 rounded-3xl border border-gray-200 shadow-2xs">
-        <div className="flex items-center gap-2 overflow-x-auto pb-1 sm:pb-0">
+        <div className="flex items-center gap-1.5 overflow-x-auto pb-1 sm:pb-0 scrollbar-none">
           <button
             type="button"
             onClick={() => setStatusFilter('ALL')}
-            className={`px-3.5 py-2 rounded-xl text-xs font-bold transition-all shrink-0 cursor-pointer ${
+            className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-all shrink-0 cursor-pointer ${
               statusFilter === 'ALL'
                 ? 'bg-blue-600 text-white shadow-2xs'
-                : 'bg-gray-100 text-gray-600 hover:bg-gray-200/80 hover:text-gray-900'
+                : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
             }`}
           >
             Todos ({counts.total})
           </button>
-
           <button
             type="button"
-            onClick={() => setStatusFilter('NOT_SENT')}
-            className={`px-3.5 py-2 rounded-xl text-xs font-black transition-all shrink-0 cursor-pointer flex items-center gap-1.5 ${
-              statusFilter === 'NOT_SENT'
+            onClick={() => setStatusFilter('PENDING_REVIEW')}
+            className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-all shrink-0 cursor-pointer flex items-center gap-1 ${
+              statusFilter === 'PENDING_REVIEW'
                 ? 'bg-rose-600 text-white shadow-2xs'
-                : 'bg-rose-100/70 text-rose-800 hover:bg-rose-200/80'
+                : 'bg-rose-50 text-rose-800 hover:bg-rose-100'
             }`}
           >
-            <span className="w-2 h-2 rounded-full bg-rose-500" />
-            No enviados ({counts.notSent})
+            <span className="w-1.5 h-1.5 rounded-full bg-rose-600" />
+            Campos por revisar ({counts.pendingReview})
           </button>
-
           <button
             type="button"
-            onClick={() => setStatusFilter('PENDING')}
-            className={`px-3.5 py-2 rounded-xl text-xs font-bold transition-all shrink-0 cursor-pointer ${
-              statusFilter === 'PENDING'
+            onClick={() => setStatusFilter('IN_PROGRESS')}
+            className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-all shrink-0 cursor-pointer ${
+              statusFilter === 'IN_PROGRESS'
                 ? 'bg-amber-500 text-white shadow-2xs'
-                : 'bg-amber-100/70 text-amber-900 hover:bg-amber-200/80'
+                : 'bg-amber-50 text-amber-900 hover:bg-amber-100'
             }`}
           >
-            Enviados / En espera ({counts.pending})
+            Pendiente de hacer ({counts.inProgress})
           </button>
-
           <button
             type="button"
             onClick={() => setStatusFilter('COMPLETED')}
-            className={`px-3.5 py-2 rounded-xl text-xs font-bold transition-all shrink-0 cursor-pointer ${
+            className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-all shrink-0 cursor-pointer ${
               statusFilter === 'COMPLETED'
                 ? 'bg-emerald-600 text-white shadow-2xs'
-                : 'bg-emerald-100/70 text-emerald-900 hover:bg-emerald-200/80'
+                : 'bg-emerald-50 text-emerald-900 hover:bg-emerald-100'
             }`}
           >
-            Respondidos ({counts.completed})
+            Completados ({counts.completed})
           </button>
         </div>
 
         {/* Search */}
-        <div className="relative w-full sm:w-72">
+        <div className="relative w-full sm:w-64">
           <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
           <Input
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            placeholder="Buscar por paciente, email..."
+            placeholder="Buscar paciente..."
             className="pl-9.5 pr-8 rounded-2xl text-xs h-9 bg-gray-50 border-gray-200 focus:bg-white"
           />
           {searchQuery && (
@@ -494,7 +534,7 @@ export function QuestionnairesClient({
               <ClipboardCheck className="h-12 w-12 text-gray-300 mx-auto mb-3" />
               <h3 className="text-base font-bold text-gray-900">No se encontraron pacientes</h3>
               <p className="text-xs text-gray-500 max-w-sm mx-auto mt-1 mb-4">
-                No hay pacientes con el filtro actual o la búsqueda indicada.
+                No hay registros que coincidan con el filtro seleccionado.
               </p>
               <Button
                 variant="outline"
@@ -514,43 +554,31 @@ export function QuestionnairesClient({
                 <thead className="bg-gray-50/80 border-b border-gray-200 text-xs font-black uppercase text-gray-500">
                   <tr>
                     <th className="px-6 py-3.5">Paciente</th>
-                    <th className="px-6 py-3.5">Contacto</th>
-                    <th className="px-6 py-3.5">Estado del Cuestionario</th>
-                    <th className="px-6 py-3.5 text-right">Acciones Directas</th>
+                    <th className="px-6 py-3.5">Estado Cuestionario</th>
+                    <th className="px-6 py-3.5">Estado Firma (Consentimiento)</th>
+                    <th className="px-6 py-3.5">Revisión Ficha</th>
+                    <th className="px-6 py-3.5 text-right">Acciones Eva</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-gray-100">
                   {filteredPatients.map((patient) => {
-                    const isCompleted =
-                      patient.anamnesisStatus === 'COMPLETED' ||
-                      (patient.anamnesisSubmissions && patient.anamnesisSubmissions.length > 0)
-                    const isPending = patient.anamnesisStatus === 'PENDING' && !isCompleted
-                    const isNotSent = !isCompleted && !isPending
-                    const isSending = sendingId === patient.id
+                    const hasPendingFields = (patient.pendingReviewFieldsCount || 0) > 0
+                    const latestQ = patient.patientQuestionnaires?.[0]
+                    const canReview = latestQ && (latestQ.status === 'COMPLETED' || hasPendingFields)
 
                     return (
                       <tr
                         key={patient.id}
                         className={`transition-colors ${
-                          isNotSent
-                            ? 'bg-rose-50/30 hover:bg-rose-50/60 border-l-4 border-l-rose-500'
-                            : isPending
-                            ? 'bg-amber-50/15 hover:bg-amber-50/40 border-l-4 border-l-amber-400'
-                            : 'hover:bg-gray-50/80 border-l-4 border-l-emerald-500'
+                          hasPendingFields
+                            ? 'bg-amber-50/30 hover:bg-amber-50/60 border-l-4 border-l-amber-500'
+                            : 'hover:bg-gray-50/80'
                         }`}
                       >
                         {/* Paciente */}
                         <td className="px-6 py-4">
                           <div className="flex items-center gap-3">
-                            <div
-                              className={`w-10 h-10 rounded-2xl flex items-center justify-center font-black text-sm shrink-0 shadow-2xs ${
-                                isNotSent
-                                  ? 'bg-rose-100 text-rose-800 border border-rose-200'
-                                  : isPending
-                                  ? 'bg-amber-100 text-amber-900 border border-amber-200'
-                                  : 'bg-emerald-100 text-emerald-900 border border-emerald-200'
-                              }`}
-                            >
+                            <div className="w-10 h-10 rounded-2xl bg-gray-100 flex items-center justify-center font-black text-sm text-gray-700 shrink-0 shadow-2xs">
                               {patient.firstName.charAt(0)}
                               {patient.lastName.charAt(0)}
                             </div>
@@ -565,183 +593,101 @@ export function QuestionnairesClient({
                                 <ExternalLink className="h-3 w-3 opacity-0 group-hover:opacity-100 transition-opacity text-blue-500" />
                               </Link>
                               <span className="text-[11px] text-gray-400 block font-medium">
-                                ID: {patient.id.slice(-8)}
+                                {patient.email || patient.phone || 'Sin datos de contacto'}
                               </span>
                             </div>
                           </div>
                         </td>
 
-                        {/* Contacto */}
+                        {/* Estado Cuestionario (4 fases independientes) */}
                         <td className="px-6 py-4">
-                          <div className="space-y-0.5">
-                            {patient.email ? (
-                              <span className="text-xs text-gray-800 font-semibold flex items-center gap-1.5">
-                                <Mail className="h-3.5 w-3.5 text-gray-400 shrink-0" />
-                                {patient.email}
-                              </span>
-                            ) : (
-                              <span className="text-xs text-rose-600 italic font-medium flex items-center gap-1">
-                                <AlertCircle className="h-3 w-3" />
-                                Sin correo registrado
-                              </span>
-                            )}
-                            {patient.phone && (
-                              <span className="text-[11px] text-gray-500 font-medium flex items-center gap-1.5">
-                                <Phone className="h-3 w-3 text-gray-400 shrink-0" />
-                                {patient.phone}
-                              </span>
-                            )}
-                          </div>
-                        </td>
-
-                        {/* Estado con colores estrictos */}
-                        <td className="px-6 py-4">
-                          {isNotSent && (
-                            <div className="space-y-1">
-                              <Badge className="bg-rose-100 text-rose-800 border border-rose-300 font-black px-3 py-1 rounded-full text-xs shadow-2xs inline-flex items-center gap-1.5">
-                                <AlertCircle className="h-3.5 w-3.5 text-rose-600" />
-                                <span>NO ENVIADO</span>
-                              </Badge>
-                              <p className="text-[11px] text-rose-700 font-bold block">
-                                Requiere envío antes de la cita
+                          <div className="space-y-1">
+                            {renderQuestionnaireStatusBadge(patient.questionnaireStatus)}
+                            {latestQ && (
+                              <p className="text-3xs text-gray-400 block">
+                                {latestQ.title}
                               </p>
-                            </div>
-                          )}
+                            )}
+                          </div>
+                        </td>
 
-                          {isPending && (
-                            <div className="space-y-1">
-                              <Badge className="bg-amber-100 text-amber-900 border border-amber-300 font-black px-3 py-1 rounded-full text-xs shadow-2xs inline-flex items-center gap-1.5">
-                                <Clock className="h-3.5 w-3.5 text-amber-600" />
-                                <span>ENVIADO (EN ESPERA)</span>
-                              </Badge>
-                              {patient.anamnesisSentAt && (
-                                <p className="text-[11px] text-gray-500 font-medium block">
-                                  Enviado el {formatDate(patient.anamnesisSentAt)}
-                                </p>
-                              )}
-                            </div>
-                          )}
+                        {/* Estado Firma (4 fases independientes) */}
+                        <td className="px-6 py-4">
+                          <div className="space-y-1">
+                            {renderConsentStatusBadge(patient.consentStatus)}
+                            <p className="text-3xs text-gray-400 block">
+                              Consentimiento Informado RGPD
+                            </p>
+                          </div>
+                        </td>
 
-                          {isCompleted && (
+                        {/* N Campos por Revisar (5.4) */}
+                        <td className="px-6 py-4">
+                          {hasPendingFields ? (
                             <div className="space-y-1">
-                              <Badge className="bg-emerald-100 text-emerald-900 border border-emerald-300 font-black px-3 py-1 rounded-full text-xs shadow-2xs inline-flex items-center gap-1.5">
-                                <CheckCircle2 className="h-3.5 w-3.5 text-emerald-600" />
-                                <span>COMPLETADO / RESPONDIDO</span>
+                              <Badge className="bg-amber-500 text-white font-black text-3xs px-2.5 py-0.5 rounded-full shadow-2xs animate-pulse">
+                                {patient.pendingReviewFieldsCount} campos por revisar
                               </Badge>
-                              {patient.anamnesisCompletedAt && (
-                                <p className="text-[11px] text-gray-500 font-medium block">
-                                  Recibido el {formatDate(patient.anamnesisCompletedAt)}
-                                </p>
-                              )}
+                              <span className="text-3xs text-gray-400 block">Esperando confirmación</span>
                             </div>
+                          ) : (
+                            <span className="text-2xs text-gray-400 font-medium">Al día</span>
                           )}
                         </td>
 
                         {/* Acciones */}
                         <td className="px-6 py-4 text-right">
                           <div className="flex items-center justify-end gap-2">
-                            {/* Actions for NOT_SENT (Red) */}
-                            {isNotSent && (
-                              <>
-                                <Button
-                                  size="sm"
-                                  onClick={() => handleDirectSend(patient)}
-                                  disabled={isSending}
-                                  className="rounded-xl font-black text-xs bg-rose-600 hover:bg-rose-700 text-white shadow-xs flex items-center gap-1.5 px-3 py-1.5 cursor-pointer"
-                                >
-                                  {isSending ? (
-                                    <Loader2 className="h-3.5 w-3.5 animate-spin" />
-                                  ) : (
-                                    <Send className="h-3.5 w-3.5" />
-                                  )}
-                                  <span>Enviar Cuestionario</span>
-                                </Button>
-
-                                <Button
-                                  variant="outline"
-                                  size="sm"
-                                  onClick={() => handleCopyWhatsAppLink(patient)}
-                                  className="rounded-xl font-bold text-xs border-gray-200 hover:bg-gray-50 flex items-center gap-1"
-                                  title="Copiar texto para WhatsApp"
-                                >
-                                  {copiedId === patient.id ? (
-                                    <>
-                                      <Check className="h-3.5 w-3.5 text-emerald-600" />
-                                      <span className="text-emerald-700 text-[11px]">Copiado</span>
-                                    </>
-                                  ) : (
-                                    <>
-                                      <Copy className="h-3.5 w-3.5 text-gray-500" />
-                                      <span className="text-[11px]">WhatsApp</span>
-                                    </>
-                                  )}
-                                </Button>
-                              </>
+                            {/* Botón de revisión lado a lado */}
+                            {canReview && (
+                              <Button
+                                size="sm"
+                                onClick={() => handleOpenReview(patient)}
+                                className="rounded-xl font-bold text-xs bg-emerald-600 hover:bg-emerald-700 text-white shadow-2xs flex items-center gap-1.5 px-3"
+                              >
+                                <Eye className="h-3.5 w-3.5" />
+                                <span>Revisar ({patient.pendingReviewFieldsCount || 'Ver'})</span>
+                              </Button>
                             )}
 
-                            {/* Actions for PENDING */}
-                            {isPending && (
-                              <>
-                                <Button
-                                  variant="outline"
-                                  size="sm"
-                                  onClick={() => handleDirectSend(patient)}
-                                  disabled={isSending}
-                                  className="rounded-xl font-bold text-xs border-amber-300 bg-amber-50 text-amber-900 hover:bg-amber-100 flex items-center gap-1.5"
-                                >
-                                  {isSending ? (
-                                    <Loader2 className="h-3.5 w-3.5 animate-spin" />
-                                  ) : (
-                                    <RefreshCw className="h-3.5 w-3.5" />
-                                  )}
-                                  <span>Reenviar</span>
-                                </Button>
+                            {/* Enviar Cuestionario (abre selector de plantillas) */}
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              onClick={() => {
+                                setSelectedPatient(patient)
+                                setIsTemplateModalOpen(true)
+                              }}
+                              className="rounded-xl font-bold text-xs border-blue-200 text-blue-700 hover:bg-blue-50 flex items-center gap-1"
+                            >
+                              <Send className="h-3.5 w-3.5" />
+                              <span>Enviar Cuestionario</span>
+                            </Button>
 
-                                <Button
-                                  variant="outline"
-                                  size="sm"
-                                  onClick={() => handleCopyWhatsAppLink(patient)}
-                                  className="rounded-xl font-bold text-xs border-gray-200 hover:bg-gray-50 flex items-center gap-1"
-                                  title="Copiar texto para WhatsApp"
-                                >
-                                  {copiedId === patient.id ? (
-                                    <>
-                                      <Check className="h-3.5 w-3.5 text-emerald-600" />
-                                      <span className="text-emerald-700 text-[11px]">Copiado</span>
-                                    </>
-                                  ) : (
-                                    <>
-                                      <Copy className="h-3.5 w-3.5 text-gray-500" />
-                                      <span className="text-[11px]">WhatsApp</span>
-                                    </>
-                                  )}
-                                </Button>
-                              </>
+                            {/* Enviar Consentimiento */}
+                            {patient.consentStatus !== 'COMPLETED' && (
+                              <Button
+                                variant="outline"
+                                size="sm"
+                                onClick={() => handleSendConsent(patient)}
+                                className="rounded-xl font-bold text-xs border-purple-200 text-purple-700 hover:bg-purple-50 flex items-center gap-1"
+                                title="Enviar consentimiento al portal para firma"
+                              >
+                                <FileSignature className="h-3.5 w-3.5" />
+                                <span>Firma</span>
+                              </Button>
                             )}
 
-                            {/* Actions for COMPLETED */}
-                            {isCompleted && (
-                              <>
-                                <Button
-                                  size="sm"
-                                  onClick={() => setViewingPatient(patient)}
-                                  className="rounded-xl font-bold text-xs bg-emerald-600 hover:bg-emerald-700 text-white shadow-xs flex items-center gap-1.5 px-3"
-                                >
-                                  <Eye className="h-3.5 w-3.5" />
-                                  <span>Ver Respuestas</span>
-                                </Button>
-
-                                <Link href={`/dashboard/patients/${patient.id}`}>
-                                  <Button
-                                    variant="outline"
-                                    size="sm"
-                                    className="rounded-xl font-bold text-xs border-gray-200 hover:bg-gray-50"
-                                  >
-                                    Ficha
-                                  </Button>
-                                </Link>
-                              </>
-                            )}
+                            {/* Enlace Ficha */}
+                            <Link href={`/dashboard/patients/${patient.id}`}>
+                              <Button
+                                variant="ghost"
+                                size="sm"
+                                className="rounded-xl font-bold text-xs text-gray-500 hover:text-gray-900"
+                              >
+                                Ficha
+                              </Button>
+                            </Link>
                           </div>
                         </td>
                       </tr>
@@ -754,101 +700,220 @@ export function QuestionnairesClient({
         </CardContent>
       </Card>
 
-      {/* =========================================================================
-          MODAL: ENVIAR CUESTIONARIO A UN PACIENTE ESPECÍFICO
-          ========================================================================= */}
-      <Dialog open={isSendModalOpen} onOpenChange={setIsSendModalOpen}>
-        <DialogContent className="sm:max-w-md rounded-3xl p-6">
-          <DialogHeader>
-            <DialogTitle className="text-lg font-black text-gray-900 flex items-center gap-2">
-              <Mail className="h-5 w-5 text-blue-600" />
-              <span>Enviar Cuestionario Pre-Consulta</span>
+      {/* MODAL: SELECTOR DE PLANTILLAS DE CUESTIONARIO (5.4) */}
+      <Dialog open={isTemplateModalOpen} onOpenChange={setIsTemplateModalOpen}>
+        <DialogContent className="max-w-2xl rounded-3xl p-6">
+          <DialogHeader className="border-b border-gray-100 pb-3">
+            <DialogTitle className="text-lg font-bold text-gray-900">
+              Enviar Cuestionario al Portal: {selectedPatient?.firstName} {selectedPatient?.lastName}
             </DialogTitle>
             <DialogDescription className="text-xs text-gray-500">
-              Selecciona el paciente y confirma el correo electrónico para enviarle el formulario médico.
+              Selecciona la plantilla clínica adecuada. El paciente recibirá el aviso en su portal para completarlo.
             </DialogDescription>
           </DialogHeader>
 
-          <div className="space-y-4 py-3">
-            {/* Paciente Selector */}
-            <div className="space-y-1.5">
-              <label className="text-xs font-bold text-gray-700">Seleccionar Paciente:</label>
-              <select
-                value={selectedPatientId}
-                onChange={(e) => handleSelectPatientInModal(e.target.value)}
-                className="w-full text-xs font-semibold p-2.5 rounded-2xl border border-gray-200 bg-white focus:outline-none focus:ring-2 focus:ring-blue-500"
-              >
-                {patients.map((p) => {
-                  const isNotSent = p.anamnesisStatus === 'NOT_SENT' || !p.anamnesisStatus
-                  return (
-                    <option key={p.id} value={p.id}>
-                      {isNotSent ? '🔴 ' : p.anamnesisStatus === 'COMPLETED' ? '🟢 ' : '🟡 '}
-                      {p.firstName} {p.lastName} {isNotSent ? '(Sin enviar)' : `(${p.anamnesisStatus})`}
-                    </option>
-                  )
-                })}
-              </select>
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 py-3">
+            {/* 1. Alta Clínica (Espejo de la Ficha) */}
+            <div
+              onClick={() => setSelectedTemplateType('ALTA')}
+              className={`p-3.5 rounded-2xl border cursor-pointer transition-all ${
+                selectedTemplateType === 'ALTA'
+                  ? 'border-blue-600 bg-blue-50/70 ring-2 ring-blue-500'
+                  : 'border-gray-200 hover:bg-gray-50'
+              }`}
+            >
+              <div className="flex items-center gap-2">
+                <div className="w-8 h-8 rounded-xl bg-blue-100 text-blue-700 flex items-center justify-center font-bold">
+                  <ClipboardCheck className="w-4 h-4" />
+                </div>
+                <div>
+                  <h4 className="text-xs font-bold text-gray-900">Cuestionario de Alta (7 Pasos)</h4>
+                  <span className="text-3xs text-gray-400">Espejo completo de la ficha</span>
+                </div>
+              </div>
+              <p className="text-2xs text-gray-600 mt-2 leading-relaxed">
+                Datos personales, historial clínico, digestivo, estilo de vida, ejercicio, salud femenina y objetivos.
+              </p>
             </div>
 
-            {/* Email Input */}
-            <div className="space-y-1.5">
-              <label className="text-xs font-bold text-gray-700">Correo Electrónico del Paciente:</label>
-              <Input
-                type="email"
-                value={modalEmail}
-                onChange={(e) => setModalEmail(e.target.value)}
-                placeholder="ejemplo@correo.com"
-                className="text-xs rounded-xl"
-              />
-              <p className="text-[11px] text-gray-400">
-                Se enviará automáticamente desde <strong className="text-gray-700">{professionalEmail}</strong> con enlace personal seguro.
+            {/* 2. Deportiva */}
+            <div
+              onClick={() => setSelectedTemplateType('DEPORTIVA')}
+              className={`p-3.5 rounded-2xl border cursor-pointer transition-all ${
+                selectedTemplateType === 'DEPORTIVA'
+                  ? 'border-blue-600 bg-blue-50/70 ring-2 ring-blue-500'
+                  : 'border-gray-200 hover:bg-gray-50'
+              }`}
+            >
+              <div className="flex items-center gap-2">
+                <div className="w-8 h-8 rounded-xl bg-orange-100 text-orange-700 flex items-center justify-center font-bold">
+                  <Dumbbell className="w-4 h-4" />
+                </div>
+                <div>
+                  <h4 className="text-xs font-bold text-gray-900">Nutrición Deportiva</h4>
+                  <span className="text-3xs text-gray-400">Rendimiento y competición</span>
+                </div>
+              </div>
+              <p className="text-2xs text-gray-600 mt-2 leading-relaxed">
+                Cargas de entreno, peri-entreno, suplementos, timing y próximos eventos deportivos.
+              </p>
+            </div>
+
+            {/* 3. Pediátrica */}
+            <div
+              onClick={() => setSelectedTemplateType('PEDIATRICA')}
+              className={`p-3.5 rounded-2xl border cursor-pointer transition-all ${
+                selectedTemplateType === 'PEDIATRICA'
+                  ? 'border-blue-600 bg-blue-50/70 ring-2 ring-blue-500'
+                  : 'border-gray-200 hover:bg-gray-50'
+              }`}
+            >
+              <div className="flex items-center gap-2">
+                <div className="w-8 h-8 rounded-xl bg-pink-100 text-pink-700 flex items-center justify-center font-bold">
+                  <Baby className="w-4 h-4" />
+                </div>
+                <div>
+                  <h4 className="text-xs font-bold text-gray-900">Nutrición Pediátrica</h4>
+                  <span className="text-3xs text-gray-400">Familias y menores</span>
+                </div>
+              </div>
+              <p className="text-2xs text-gray-600 mt-2 leading-relaxed">
+                Comedores escolares, texturas, percentiles de crecimiento y entorno de las comidas.
+              </p>
+            </div>
+
+            {/* 4. Embarazo */}
+            <div
+              onClick={() => setSelectedTemplateType('EMBARAZO')}
+              className={`p-3.5 rounded-2xl border cursor-pointer transition-all ${
+                selectedTemplateType === 'EMBARAZO'
+                  ? 'border-blue-600 bg-blue-50/70 ring-2 ring-blue-500'
+                  : 'border-gray-200 hover:bg-gray-50'
+              }`}
+            >
+              <div className="flex items-center gap-2">
+                <div className="w-8 h-8 rounded-xl bg-emerald-100 text-emerald-700 flex items-center justify-center font-bold">
+                  <HeartHandshake className="w-4 h-4" />
+                </div>
+                <div>
+                  <h4 className="text-xs font-bold text-gray-900">Embarazo y Lactancia</h4>
+                  <span className="text-3xs text-gray-400">Control gestacional</span>
+                </div>
+              </div>
+              <p className="text-2xs text-gray-600 mt-2 leading-relaxed">
+                Semana de gestación, ácido fólico/yodo, curvas de glucosa y náuseas.
+              </p>
+            </div>
+
+            {/* 5. TCA */}
+            <div
+              onClick={() => setSelectedTemplateType('TCA')}
+              className={`p-3.5 rounded-2xl border cursor-pointer transition-all ${
+                selectedTemplateType === 'TCA'
+                  ? 'border-blue-600 bg-blue-50/70 ring-2 ring-blue-500'
+                  : 'border-gray-200 hover:bg-gray-50'
+              }`}
+            >
+              <div className="flex items-center gap-2">
+                <div className="w-8 h-8 rounded-xl bg-purple-100 text-purple-700 flex items-center justify-center font-bold">
+                  <ShieldAlert className="w-4 h-4" />
+                </div>
+                <div>
+                  <h4 className="text-xs font-bold text-gray-900">Protocolo TCA</h4>
+                  <span className="text-3xs text-gray-400">Conducta y relación emocional</span>
+                </div>
+              </div>
+              <p className="text-2xs text-gray-600 mt-2 leading-relaxed">
+                Sin números de calorías: miedos, culpa, conductas compensatorias y hábitos amables.
+              </p>
+            </div>
+
+            {/* 6. Seguimiento Semanal */}
+            <div
+              onClick={() => setSelectedTemplateType('SEGUIMIENTO')}
+              className={`p-3.5 rounded-2xl border cursor-pointer transition-all ${
+                selectedTemplateType === 'SEGUIMIENTO'
+                  ? 'border-blue-600 bg-blue-50/70 ring-2 ring-blue-500'
+                  : 'border-gray-200 hover:bg-gray-50'
+              }`}
+            >
+              <div className="flex items-center gap-2">
+                <div className="w-8 h-8 rounded-xl bg-amber-100 text-amber-700 flex items-center justify-center font-bold">
+                  <CalendarCheck className="w-4 h-4" />
+                </div>
+                <div>
+                  <h4 className="text-xs font-bold text-gray-900">Seguimiento Semanal</h4>
+                  <span className="text-3xs text-gray-400">Revisión previa a consulta</span>
+                </div>
+              </div>
+              <p className="text-2xs text-gray-600 mt-2 leading-relaxed">
+                Adherencia 1-10, digestión, saciedad, dudas para la cita y cambios en medicación.
+              </p>
+            </div>
+
+            {/* 7. Satisfacción */}
+            <div
+              onClick={() => setSelectedTemplateType('SATISFACCION')}
+              className={`p-3.5 rounded-2xl border cursor-pointer transition-all ${
+                selectedTemplateType === 'SATISFACCION'
+                  ? 'border-blue-600 bg-blue-50/70 ring-2 ring-blue-500'
+                  : 'border-gray-200 hover:bg-gray-50'
+              }`}
+            >
+              <div className="flex items-center gap-2">
+                <div className="w-8 h-8 rounded-xl bg-yellow-100 text-yellow-700 flex items-center justify-center font-bold">
+                  <Star className="w-4 h-4" />
+                </div>
+                <div>
+                  <h4 className="text-xs font-bold text-gray-900">Satisfacción y Calidad</h4>
+                  <span className="text-3xs text-gray-400">Valoración del paciente</span>
+                </div>
+              </div>
+              <p className="text-2xs text-gray-600 mt-2 leading-relaxed">
+                Estrellas, facilidad del portal, recetas, claridad y sugerencias de mejora.
               </p>
             </div>
           </div>
 
-          <DialogFooter className="gap-2">
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={() => setIsSendModalOpen(false)}
-              className="rounded-xl text-xs font-bold"
-            >
+          <DialogFooter className="border-t border-gray-100 pt-3">
+            <Button variant="ghost" onClick={() => setIsTemplateModalOpen(false)} className="rounded-2xl text-xs">
               Cancelar
             </Button>
             <Button
-              size="sm"
-              onClick={() => executeSendEmail(selectedPatientId, modalEmail)}
-              disabled={!selectedPatientId || !modalEmail || sendingId !== null}
-              className="rounded-xl text-xs font-bold bg-blue-600 hover:bg-blue-700 text-white flex items-center gap-1.5"
+              onClick={handleSendQuestionnaire}
+              disabled={sendingLoading}
+              className="rounded-2xl bg-blue-600 hover:bg-blue-700 text-white font-bold text-xs gap-1.5"
             >
-              {sendingId ? (
-                <>
-                  <Loader2 className="h-3.5 w-3.5 animate-spin" />
-                  <span>Enviando...</span>
-                </>
-              ) : (
-                <>
-                  <Send className="h-3.5 w-3.5" />
-                  <span>Enviar Correo Ahora</span>
-                </>
-              )}
+              {sendingLoading ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Send className="w-3.5 h-3.5" />}
+              <span>Confirmar Envío al Portal</span>
             </Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
 
-      {/* =========================================================================
-          MODAL: VISOR DETALLADO DE RESPUESTAS DE ANAMNESIS (PARA PACIENTE COMPLETADO)
-          ========================================================================= */}
-      {viewingPatient && (
-        <AnamnesisViewerModal
-          open={Boolean(viewingPatient)}
-          onOpenChange={(isOpen) => {
-            if (!isOpen) setViewingPatient(null)
+      {/* MODAL: PANTALLA DE REVISIÓN LADO A LADO (5.4) */}
+      {reviewingItem && (
+        <QuestionnaireReviewModal
+          patientId={reviewingItem.patientId}
+          questionnaireId={reviewingItem.questionnaireId}
+          patientName={reviewingItem.patientName}
+          open={Boolean(reviewingItem)}
+          onOpenChange={(open) => {
+            if (!open) setReviewingItem(null)
           }}
-          showTriggerButton={false}
-          patientName={`${viewingPatient.firstName} ${viewingPatient.lastName}`}
-          submissions={viewingPatient.anamnesisSubmissions || []}
+          onComplete={() => {
+            // Refrescar pacientes
+            setPatients((prev) =>
+              prev.map((p) =>
+                p.id === reviewingItem.patientId
+                  ? {
+                      ...p,
+                      pendingReviewFieldsCount: Math.max(0, p.pendingReviewFieldsCount - 1),
+                    }
+                  : p
+              )
+            )
+          }}
         />
       )}
     </div>

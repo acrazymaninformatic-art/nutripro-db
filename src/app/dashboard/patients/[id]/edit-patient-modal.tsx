@@ -34,7 +34,11 @@ interface Props {
     isGLP1Treatment?: boolean | null
     isTCAProtocol?: boolean | null
     allergies?: string | null
+    allergiesStatus?: string | null
     intolerances?: string | null
+    intolerancesStatus?: string | null
+    medicationsStatus?: string | null
+    pathologiesStatus?: string | null
     dietaryPreferences?: string | null
   }
 }
@@ -204,26 +208,96 @@ export function EditPatientModal({ patient }: Props) {
                 </div>
               </div>
 
-              {/* Medicación e Historial */}
-              <div className="space-y-2 pt-1">
-                <div className="space-y-1">
-                  <Label className="text-xs font-semibold">Medicación Habitual (Fármacos)</Label>
-                  <Input
-                    name="currentMedications"
-                    defaultValue={patient.currentMedications || ''}
-                    placeholder="Ej. Sintrom, Eutirox 50mcg, Metformina, Omeprazol..."
-                    className="rounded-xl h-9 text-xs"
-                  />
+              {/* Seguridad Clínica: Alergias e Intolerancias (3 Estados) */}
+              <div className="space-y-3 pt-1 border-t border-gray-100">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                  <div className="space-y-1">
+                    <div className="flex items-center justify-between">
+                      <Label className="text-xs font-semibold">Alergias</Label>
+                      <select
+                        name="allergiesStatus"
+                        defaultValue={patient.allergiesStatus || (patient.allergies ? 'CONFIRMED' : 'NO_CONSTA')}
+                        className="text-[10px] bg-gray-50 border border-gray-200 rounded-lg px-1.5 py-0.5 font-medium"
+                      >
+                        <option value="NO_CONSTA">⚠️ No consta</option>
+                        <option value="NINGUNA_CONOCIDA">✓ Ninguna conocida</option>
+                        <option value="CONFIRMED">✓ Confirmadas (valores)</option>
+                      </select>
+                    </div>
+                    <Input
+                      name="allergies"
+                      defaultValue={patient.allergies || ''}
+                      placeholder="Ej. Frutos secos, marisco..."
+                      className="rounded-xl h-9 text-xs"
+                    />
+                  </div>
+
+                  <div className="space-y-1">
+                    <div className="flex items-center justify-between">
+                      <Label className="text-xs font-semibold">Intolerancias</Label>
+                      <select
+                        name="intolerancesStatus"
+                        defaultValue={patient.intolerancesStatus || (patient.intolerances ? 'CONFIRMED' : 'NO_CONSTA')}
+                        className="text-[10px] bg-gray-50 border border-gray-200 rounded-lg px-1.5 py-0.5 font-medium"
+                      >
+                        <option value="NO_CONSTA">⚠️ No consta</option>
+                        <option value="NINGUNA_CONOCIDA">✓ Ninguna conocida</option>
+                        <option value="CONFIRMED">✓ Confirmadas (valores)</option>
+                      </select>
+                    </div>
+                    <Input
+                      name="intolerances"
+                      defaultValue={patient.intolerances || ''}
+                      placeholder="Ej. Lactosa, fructosa, gluten..."
+                      className="rounded-xl h-9 text-xs"
+                    />
+                  </div>
                 </div>
-                <div className="space-y-1">
-                  <Label className="text-xs font-semibold">Patologías y Antecedentes Médicos</Label>
-                  <Input
-                    name="medicalHistory"
-                    defaultValue={patient.medicalHistory || ''}
-                    placeholder="Ej. Hipotiroidismo, hipertensión, SOP..."
-                    className="rounded-xl h-9 text-xs"
-                  />
+
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                  <div className="space-y-1">
+                    <div className="flex items-center justify-between">
+                      <Label className="text-xs font-semibold">Medicación Habitual</Label>
+                      <select
+                        name="medicationsStatus"
+                        defaultValue={patient.medicationsStatus || (patient.currentMedications ? 'CONFIRMED' : 'NO_CONSTA')}
+                        className="text-[10px] bg-gray-50 border border-gray-200 rounded-lg px-1.5 py-0.5 font-medium"
+                      >
+                        <option value="NO_CONSTA">⚠️ No consta</option>
+                        <option value="NINGUNA_CONOCIDA">✓ Ninguna conocida</option>
+                        <option value="CONFIRMED">✓ Confirmadas (valores)</option>
+                      </select>
+                    </div>
+                    <Input
+                      name="currentMedications"
+                      defaultValue={patient.currentMedications || ''}
+                      placeholder="Ej. Sintrom, Eutirox 50mcg, Metformina..."
+                      className="rounded-xl h-9 text-xs"
+                    />
+                  </div>
+
+                  <div className="space-y-1">
+                    <div className="flex items-center justify-between">
+                      <Label className="text-xs font-semibold">Patologías / Antecedentes</Label>
+                      <select
+                        name="pathologiesStatus"
+                        defaultValue={patient.pathologiesStatus || (patient.medicalHistory ? 'CONFIRMED' : 'NO_CONSTA')}
+                        className="text-[10px] bg-gray-50 border border-gray-200 rounded-lg px-1.5 py-0.5 font-medium"
+                      >
+                        <option value="NO_CONSTA">⚠️ No consta</option>
+                        <option value="NINGUNA_CONOCIDA">✓ Ninguna conocida</option>
+                        <option value="CONFIRMED">✓ Confirmadas (valores)</option>
+                      </select>
+                    </div>
+                    <Input
+                      name="medicalHistory"
+                      defaultValue={patient.medicalHistory || ''}
+                      placeholder="Ej. Hipotiroidismo, hipertensión..."
+                      className="rounded-xl h-9 text-xs"
+                    />
+                  </div>
                 </div>
+
                 <div className="space-y-1">
                   <Label className="text-xs font-semibold">Notas Clínicas Privadas</Label>
                   <Textarea

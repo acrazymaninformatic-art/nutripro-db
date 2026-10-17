@@ -71,7 +71,7 @@ export default async function AnamnesisPage({ searchParams }: Props) {
           <div className="w-16 h-16 rounded-2xl bg-white border border-blue-200 p-1 flex items-center justify-center mx-auto mb-4 shadow-sm overflow-hidden">
             <img
               src="/logo.png"
-              alt="Consulta Nutricional Eva Vidal"
+              alt="Eva Vidal Nutrición"
               className="w-full h-full object-contain"
             />
           </div>
@@ -102,7 +102,7 @@ export default async function AnamnesisPage({ searchParams }: Props) {
           </div>
 
           <div className="text-2xs text-gray-400 font-medium">
-            EVSoftware • Consulta Nutricional Eva Vidal
+            EVSoftware • Eva Vidal Nutrición
           </div>
         </Card>
       </div>
@@ -116,12 +116,12 @@ export default async function AnamnesisPage({ searchParams }: Props) {
           <div className="inline-flex items-center justify-center w-16 h-16 rounded-2xl bg-white border border-blue-200 p-1.5 shadow-md mb-3 overflow-hidden">
             <img
               src="/logo.png"
-              alt="Consulta Nutricional Eva Vidal"
+              alt="Eva Vidal Nutrición"
               className="w-full h-full object-contain"
             />
           </div>
           <div className="text-xs font-bold text-blue-800 uppercase tracking-widest mb-1">
-            Consulta Nutricional Eva Vidal
+            Eva Vidal Nutrición
           </div>
           <h1 className="text-2xl sm:text-3xl font-black text-gray-900 tracking-tight">
             Anamnesis Nutricional Pre-Consulta

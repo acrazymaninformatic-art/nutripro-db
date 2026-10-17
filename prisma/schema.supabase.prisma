@@ -42,6 +42,11 @@ model User {
   invoices      Invoice[]
   dataRequests  DataSubjectRequest[]
   auditLogs     AuditLog[]
+  agendaBlocks  AgendaBlock[]
+  questionnaireTemplates QuestionnaireTemplate[]
+  customFoods   Food[]
+  absorptionRules AbsorptionInteractionRule[]
+  foodMergeLogs FoodDuplicateMergeLog[]
 }
 
 model Patient {
@@ -120,6 +125,17 @@ model Patient {
   budgetLevel           String?  // low, medium, high
   additionalNotes       String?  // Extra notes from intake
 
+  // === CLINICAL GOALS & TRACKING (5.2) ===
+  targetWeightKg        Float?   // Peso objetivo acordado con Eva
+  targetWeightDate      DateTime? // Fecha meta para el objetivo
+  weeklyChangeTargetKg  Float?   // Ritmo semanal de cambio objetivo (ej: -0.5 kg/sem)
+  tags                  String   @default("") // Etiquetas clínicas privadas con color: [{"name":"SOP","color":"#ec4899"}]
+  medicationSchedule    String   @default("") // Medicación y suplementos con dosis y horario estructurado
+  milestonesMessage     String?  // Mensaje personalizado de Eva para hitos y enhorabuenas
+  isDischarged          Boolean  @default(false) // Alta clínica / Cierre de seguimiento
+  dischargedAt          DateTime?
+  dischargeSummary      String?  // Resumen del alta clínica
+
   // === ADVANCED CLINICAL PROTOCOLS ===
   isGLP1Treatment       Boolean  @default(false) // Paciente en tratamiento con análogos GLP-1 (Ozempic/Wegovy)
   isTCAProtocol         Boolean  @default(false) // Protocolo TCA (ocultar números y centrarse en hábitos)
@@ -140,6 +156,14 @@ model Patient {
   portalLastLoginAt   DateTime?
   isHardDeleted       Boolean         @default(false)
 
+  // === ESTADOS DE ENTREGA 5.4 & PROCEDENCIA ===
+  questionnaireDeliveryStatus String  @default("NOT_SENT") // "NOT_SENT" | "SENT" | "IN_PROGRESS" | "COMPLETED"
+  consentDeliveryStatus       String  @default("NOT_SENT") // "NOT_SENT" | "SENT" | "IN_PROGRESS" | "COMPLETED"
+  declaredWeightKg            Float?  // Peso declarado por paciente (no medido; fuera de gráficas de evolución)
+  declaredHeightCm            Float?  // Altura declarada por paciente
+  fieldProvenanceJson         String? // Trazabilidad de origen por campo: quién, cuándo, valor previo
+  pendingReviewFieldsCount    Int     @default(0) // Contador de campos pendientes de revisión por Eva
+
   isActive           Boolean         @default(true)
   createdAt          DateTime        @default(now())
   updatedAt          DateTime        @updatedAt
@@ -158,6 +182,12 @@ model Patient {
   consents             PatientConsent[]
   documents            PatientDocument[]
   emailLogs            EmailLog[]
+  screenings           ClinicalScreening[]
+  photos               ProgressPhoto[]
+  patientQuestionnaires PatientQuestionnaire[]
+  appointmentRequests  AppointmentRequest[]
+  clinicalProtocols    ClinicalProtocolRecord[]
+  calculatorResults    CalculatorResultRecord[]
 
   @@index([userId])
 }
@@ -222,6 +252,8 @@ model BloodAnalysis {
   uricAcidMgDl      Float?   // Ácido Úrico (mg/dL) - ref: 3.5-7.2
   gotAstUL          Float?   // GOT/AST (U/L) - ref: <35
   gptAltUL          Float?   // GPT/ALT (U/L) - ref: <45
+  insulinUiuMl      Float?   // Insulina basal (µIU/mL) - para cálculo HOMA-IR
+  plateletsKUl      Float?   // Plaquetas (10^3/µL) - para cálculo FIB-4
   notes             String?
   createdAt         DateTime @default(now())
 
@@ -246,6 +278,17 @@ model Anthropometry {
   skinfoldSubscapular Float?
   skinfoldSuprailiac  Float?
   skinfoldAbdominal   Float?
+  skinfoldBiceps      Float?
+  skinfoldCalf        Float?
+  boneDiameterWrist   Float?   // Diámetro biestiloideo muñeca (cm)
+  boneDiameterFemur   Float?   // Diámetro bicondíleo fémur (cm)
+  boneDiameterHumerus Float?   // Diámetro biepicondilar húmero (cm)
+  somatotypeEndo      Float?   // Endomorfia Heath-Carter
+  somatotypeMeso      Float?   // Mesomorfia Heath-Carter
+  somatotypeEcto      Float?   // Ectomorfia Heath-Carter
+  waistToHeightRatio  Float?   // ICT: cintura / altura (<0.5 óptimo)
+  cunBaeFatPct        Float?   // Estimación CUN-BAE
+  phaseAngle          Float?   // Ángulo de fase BIA (grados)
   notes               String?
   isPublishedToPatient Boolean @default(true)
   createdAt           DateTime @default(now())
@@ -264,6 +307,9 @@ model Consultation {
   objectiveNotes      String?  // O: Datos medidos y observaciones de consulta
   assessmentNotes     String?  // A: Juicio clínico y diagnóstico de evolución
   planNotes           String?  // P: Pautas acordadas y próximos pasos
+  attachments         String?  // Adjuntos de consulta (JSON)
+  clinicianSignature  String?  // Firma clínica digital
+  patientSummary      String?  // Resumen automático generado para el paciente
   isSharedWithPatient Boolean  @default(false)
   createdAt           DateTime @default(now())
 
@@ -292,6 +338,8 @@ model Appointment {
   durationMin    Int       @default(45)
   modality       String    @default("ONLINE") // "ONLINE" | "PRESENCIAL"
   status         String    @default("CONFIRMED") // "CONFIRMED" | "COMPLETED" | "CANCELLED"
+  appointmentType String   @default("REVISION")  // "PRIMERA" | "REVISION" | "ONLINE" | "DOMICILIO" | "GRUPAL"
+  typeColor      String    @default("#16a34a")   // Color de la cita en agenda
   location       String?   @default("Consulta Nutricional Eva Vidal")
   notes          String?
   meetUrl        String?
@@ -304,6 +352,7 @@ model Appointment {
   createdAt      DateTime  @default(now())
   updatedAt      DateTime  @updatedAt
 
+  requests       AppointmentRequest[]
 
   @@index([patientId])
   @@index([date])
@@ -437,11 +486,47 @@ model Food {
   zincMg               Float              @default(0)
   phosphorusMg         Float              @default(0)
   seleniumUg           Float              @default(0)
+
+  // === 5.6 ALIMENTOS: PERFIL COMPLETO Y CONTROL DE CATÁLOGO ===
+  iodineUg             Float              @default(0) // Yodo (I)
+  omega3G              Float              @default(0) // Omega-3
+  addedSugarsG         Float              @default(0) // Azúcares añadidos
+  solubleFiberG        Float              @default(0) // Fibra soluble
+  insolubleFiberG      Float              @default(0) // Fibra insoluble
+  glycemicIndex        Float?             // Índice glucémico
+  glycemicLoad         Float?             // Carga glucémica
+  fodmapCategory       String?            // "BAJO" | "MEDIO" | "ALTO"
+  purinesMg            Float              @default(0) // Purinas mg/100g
+  oxalatesMg           Float              @default(0) // Oxalatos mg/100g
+  nutriScore           String?            // "A" | "B" | "C" | "D" | "E"
+  novaGroup            Int?               // 1 | 2 | 3 | 4
+  householdMeasuresJson String            @default("[]") // Medidas caseras: [{"name": "cucharada sopera", "grams": 15}]
+  cookedConversionFactor Float?           // Factor peso crudo frente a cocinado (ej. 2.8 arroz, 0.8 pollo)
+  ediblePartPercentage Float?             @default(100) // Parte comestible %
+  allergensJson        String             @default("[]") // 14 alérgenos de declaración obligatoria
+  dietaryTagsJson      String             @default("[]") // "VEGANO", "SIN_GLUTEN", "BAJO_SODIO", etc.
+  barcode              String?            @unique // Código de barras EAN-13 para escáner
+  brandName            String?            // Marca de supermercado
+  dataSource           String             @default("BEDCA") // "BEDCA" | "USDA" | "CIQUAL" | "OPEN_FOOD_FACTS" | "PROPIO"
+  isFavorite           Boolean            @default(false)
+  isPrivate            Boolean            @default(false)
+  userId               String?
+  user                 User?              @relation(fields: [userId], references: [id], onDelete: Cascade)
+  isSupplement         Boolean            @default(false)
+  supplementDose       String?            // Dosis recomendada para suplementos
+  seasonMonthsJson     String             @default("[]") // Meses de temporada [1..12]
+  pricePerKg           Float?             // Precio €/kg
+  carbonFootprintKgCo2 Float?             // Huella ambiental kg CO2 eq/kg
+  waterFootprintLiters Float?             // Huella hídrica L/kg
+
   createdAt            DateTime           @default(now())
   updatedAt            DateTime           @updatedAt
 
   recipeIngredients    RecipeIngredient[]
   mealItems            MealItem[]
+
+  @@index([userId])
+  @@index([name])
 }
 
 model Recipe {
@@ -456,6 +541,15 @@ model Recipe {
   instructions String
   category     String?
   imageUrl     String?
+
+  // === 5.7 RECETAS: ETIQUETAS Y EQUIPO ===
+  dietaryTagsJson String           @default("[]") // "VEGANO", "SIN_GLUTEN", "SIN_LACTOSA", "FODMAP", "BAJO_SODIO", "APTO_DIABETICO"
+  difficulty      String           @default("FACIL") // "FACIL" | "MEDIA" | "DIFICIL"
+  estimatedCost   Float?           // Coste estimado €/ración
+  equipmentJson   String           @default("[]") // "AIRFRYER", "THERMOMIX", "HORNO", "SARTEN", "OLLA_RAPIDA"
+  isBatchCooking  Boolean          @default(false)
+  isFreezable     Boolean          @default(false)
+
   createdAt    DateTime           @default(now())
   updatedAt    DateTime           @updatedAt
 
@@ -501,6 +595,29 @@ model MealPlan {
   clinicalChecklistNotes String?
   isSharedWithPatient Boolean @default(true)
   isActive       Boolean   @default(true)
+
+  // === 5.8 PLANES: MODELOS AVANZADOS, FASES, GESTIÓN Y SALIDAS ===
+  planningModel          String            @default("TRADITIONAL") // "TRADITIONAL" | "EXCHANGE" | "FLEXIBLE_RANGES" | "CALORIE_CYCLING" | "INTERMITTENT_FASTING" | "PHASED"
+  currentPhase           String?           // "INDUCTION" | "LOSS" | "MAINTENANCE" | "REVERSE_DIET"
+  autoTransitionDate     DateTime?
+  targetKcalRest         Float?            // Ciclado calórico: calorías en días de descanso
+  targetCarbsGRest       Float?            // Ciclado calórico: CH en descanso
+  targetProteinGRest     Float?
+  targetFatGRest         Float?
+  targetKcalMin          Float?            // Rangos flexibles (ej. 1800 - 2000 kcal)
+  targetKcalMax          Float?
+  targetProteinGMin      Float?
+  targetProteinGMax      Float?
+  hydrationTargetLiters  Float             @default(2.0)
+  supplementationPlanJson String           @default("[]") // Pauta con equivalentes
+  eatingOutGuide         String?           // Guía comer fuera, viajes y celebraciones
+  version                Int               @default(1)
+  previousVersionId      String?
+  expiresAt              DateTime?         // Caducidad para aviso de renovación
+  firstOpenedByPatientAt DateTime?         // Seguimiento de apertura
+  digitalSignatureHash   String?           // Firma digital con QR
+  batchCookingGuideJson  String            @default("[]")
+
   createdAt      DateTime  @default(now())
   updatedAt      DateTime  @updatedAt
 
@@ -524,28 +641,37 @@ model DayPlan {
 }
 
 model Meal {
-  id        String     @id @default(cuid())
-  dayPlanId String
-  dayPlan   DayPlan    @relation(fields: [dayPlanId], references: [id], onDelete: Cascade)
-  mealType  String     // MealType enum values
-  order     Int
+  id          String     @id @default(cuid())
+  dayPlanId   String
+  dayPlan     DayPlan    @relation(fields: [dayPlanId], references: [id], onDelete: Cascade)
+  mealType    String     // MealType enum values
+  order       Int
+  isOptionB   Boolean    @default(false)
+  optionGroup String?    // Grupo para opciones A/B
+  isCheatMeal Boolean    @default(false) // Comida libre
+  timingType  String     @default("REGULAR") // "REGULAR" | "PRE_WORKOUT" | "POST_WORKOUT" | "SNACK"
 
-  items     MealItem[]
+  items       MealItem[]
 
   @@index([dayPlanId])
 }
 
 model MealItem {
-  id        String   @id @default(cuid())
-  mealId    String
-  meal      Meal     @relation(fields: [mealId], references: [id], onDelete: Cascade)
-  foodId    Int?
-  food      Food?    @relation(fields: [foodId], references: [id], onDelete: SetNull)
-  recipeId  String?
-  recipe    Recipe?  @relation(fields: [recipeId], references: [id], onDelete: SetNull)
-  quantityG Float
-  servings  Float    @default(1)
-  notes     String?
+  id                  String   @id @default(cuid())
+  mealId              String
+  meal                Meal     @relation(fields: [mealId], references: [id], onDelete: Cascade)
+  foodId              Int?
+  food                Food?    @relation(fields: [foodId], references: [id], onDelete: SetNull)
+  recipeId            String?
+  recipe              Recipe?  @relation(fields: [recipeId], references: [id], onDelete: SetNull)
+  quantityG           Float
+  servings            Float    @default(1)
+  exchangeServings    Float?   // Raciones por sistema de intercambios
+  exchangeGroup       String?  // "LACTEOS" | "VERDURAS" | "FRUTAS" | "FARINACEOS" | "PROTEICOS" | "GRASAS"
+  portionMeasureName  String?  // Medida casera (ej. "cucharada", "puñado")
+  portionMeasureGrams Float?   // Gramos de la medida casera
+  isAlternative       Boolean  @default(false) // Opción B de ingrediente
+  notes               String?
 
   @@index([mealId])
   @@index([foodId])
@@ -559,6 +685,9 @@ model PatientConsent {
   type             String    // "RGPD" | "INFORMED_CONSENT" | "IMAGE_RIGHTS" | "ONLINE_CONSULTATION"
   title            String
   version          String    @default("1.0")
+  status           String    @default("NOT_SENT") // "NOT_SENT" | "SENT" | "IN_PROGRESS" | "COMPLETED"
+  sentAt           DateTime?
+  viewedAt         DateTime?
   accepted         Boolean   @default(false)
   acceptedAt       DateTime?
   signatureData    String?   // Base64 signature image or confirmation hash
@@ -616,4 +745,194 @@ model EmergencyLockdown {
   createdAt        DateTime  @default(now())
   updatedAt        DateTime  @updatedAt
 }
+
+model ClinicalScreening {
+  id             String   @id @default(cuid())
+  patientId      String
+  patient        Patient  @relation(fields: [patientId], references: [id], onDelete: Cascade)
+  date           DateTime @default(now())
+  type           String   // "SCOFF" | "MEDAS" | "FINDRISC" | "MUST" | "MNA" | "IPAQ"
+  score          Float
+  maxScore       Float?
+  resultCategory String   // "BAJO_RIESGO" | "MODERADO" | "ALTO_RIESGO" | "ADHERENCIA_ALTA", etc.
+  answersJson    String   @default("{}")
+  notes          String?
+  createdAt      DateTime @default(now())
+
+  @@index([patientId, type])
+}
+
+model ProgressPhoto {
+  id           String   @id @default(cuid())
+  patientId    String
+  patient      Patient  @relation(fields: [patientId], references: [id], onDelete: Cascade)
+  date         DateTime @default(now())
+  photoUrl     String
+  label        String?  // "Frontal" | "Lateral" | "Posterior"
+  notes        String?
+  consentGiven Boolean  @default(true)
+  createdAt    DateTime @default(now())
+
+  @@index([patientId])
+}
+
+// === 5.4 CUESTIONARIOS Y FIRMAS ===
+
+model QuestionnaireTemplate {
+  id          String   @id @default(cuid())
+  userId      String?
+  user        User?    @relation(fields: [userId], references: [id], onDelete: Cascade)
+  type        String   // "ALTA" | "DEPORTIVA" | "PEDIATRICA" | "EMBARAZO" | "TCA" | "SEGUIMIENTO" | "SATISFACCION" | "PERSONALIZADO"
+  title       String
+  description String?
+  schemaJson  String   // JSON con preguntas condicionales, opciones y validaciones
+  isDefault   Boolean  @default(false)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  patientQuestionnaires PatientQuestionnaire[]
+
+  @@index([userId])
+}
+
+model PatientQuestionnaire {
+  id                   String                 @id @default(cuid())
+  patientId            String
+  patient              Patient                @relation(fields: [patientId], references: [id], onDelete: Cascade)
+  templateId           String?
+  template             QuestionnaireTemplate? @relation(fields: [templateId], references: [id], onDelete: SetNull)
+  type                 String                 @default("ALTA") // "ALTA" | "DEPORTIVA" | "PEDIATRICA" | "EMBARAZO" | "TCA" | "SEGUIMIENTO" | "SATISFACCION"
+  title                String
+  status               String                 @default("NOT_SENT") // "NOT_SENT" | "SENT" | "IN_PROGRESS" | "COMPLETED"
+  sentAt               DateTime?
+  openedAt             DateTime?
+  completedAt          DateTime?
+  draftAnswersJson     String?                // Autoguardado en borrador mientras el paciente rellena
+  answersJson          String?                // Respuestas finales enviadas
+  attachmentsJson      String?                // JSON array de analíticas/fotos adjuntadas
+  redFlagsJson         String?                // Banderas rojas clínicas calculadas
+  pendingFieldsCount   Int                    @default(0)
+  reviewedFieldsCount  Int                    @default(0)
+  isReopened           Boolean                @default(false)
+  createdAt            DateTime               @default(now())
+  updatedAt            DateTime               @updatedAt
+
+  @@index([patientId, status])
+}
+
+// === 5.5 AGENDA Y SOLICITUDES DE CITA ===
+
+model AppointmentRequest {
+  id                 String       @id @default(cuid())
+  patientId          String
+  patient            Patient      @relation(fields: [patientId], references: [id], onDelete: Cascade)
+  appointmentId      String?
+  appointment        Appointment? @relation(fields: [appointmentId], references: [id], onDelete: SetNull)
+  type               String       @default("NEW") // "NEW" | "RESCHEDULE" | "CANCEL"
+  status             String       @default("PENDING") // "PENDING" | "ACCEPTED" | "REJECTED"
+  appointmentType    String       @default("REVISION") // "PRIMERA" | "REVISION" | "ONLINE" | "DOMICILIO" | "GRUPAL"
+  modality           String       @default("ONLINE") // "ONLINE" | "PRESENCIAL"
+  preferredTimeOfDay String?      // "MORNING" | "AFTERNOON" | "ANY"
+  preferredDays      String?      // "L,X,V"
+  reason             String?
+  patientNotes       String?
+  proposedDate       DateTime?
+  adminNotes         String?
+  resolvedAt         DateTime?
+  createdAt          DateTime     @default(now())
+  updatedAt          DateTime     @updatedAt
+
+  @@index([patientId, status])
+}
+
+model AgendaBlock {
+  id            String   @id @default(cuid())
+  userId        String
+  user          User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  title         String
+  reason        String   @default("OTRO") // "VACACIONES" | "FORMACION" | "FESTIVO" | "PERSONAL" | "OTRO"
+  startDateTime DateTime
+  endDateTime   DateTime
+  allDay        Boolean  @default(false)
+  notes         String?
+  createdAt     DateTime @default(now())
+
+  @@index([userId, startDateTime])
+}
+
+// === 5.8 REGLAS DE ABSORCIÓN E INTERACCIONES DE NUTRIENTES ===
+model AbsorptionInteractionRule {
+  id                    String   @id @default(cuid())
+  userId                String?
+  user                  User?    @relation(fields: [userId], references: [id], onDelete: Cascade)
+  name                  String
+  nutrientTarget        String   // "HIERRO" | "CALCIO" | "ZINC"
+  inhibitorKeywordsJson String   // e.g. ["cafe", "te", "calcio", "leche", "queso", "lacteo", "fibra_excesiva"]
+  enhancerKeywordsJson  String   // e.g. ["vitamina_c", "naranja", "limon", "kiwi", "pimiento", "fresas"]
+  recommendationMessage String   // Recomendación para Eva
+  suggestedAdjustment   String?  // Ajuste sugerido
+  isEnabled             Boolean  @default(true)
+  isCustom              Boolean  @default(false)
+  createdAt             DateTime @default(now())
+  updatedAt             DateTime @updatedAt
+
+  @@index([userId, nutrientTarget])
+}
+
+// === 5.6 CONTROL DE CALIDAD DEL CATÁLOGO: FUSIONES DE DUPLICADOS ===
+model FoodDuplicateMergeLog {
+  id                     String   @id @default(cuid())
+  userId                 String
+  user                   User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  primaryFoodId          Int
+  mergedFoodId           Int
+  primaryFoodName        String
+  mergedFoodName         String
+  mergedRecipeItemsCount Int      @default(0)
+  mergedMealItemsCount   Int      @default(0)
+  createdAt              DateTime @default(now())
+
+  @@index([userId])
+}
+
+// === 5.9 PROTOCOLOS CLÍNICOS AVANZADOS ===
+model ClinicalProtocolRecord {
+  id              String    @id @default(cuid())
+  patientId       String
+  patient         Patient   @relation(fields: [patientId], references: [id], onDelete: Cascade)
+  type            String    // DIABETES_CGM | RENAL | DASH_HTA | DISLIPEMIA | GOTA | ANEMIA | CELIAQUIA | EII_SIBO | FODMAP_PHASES | EMBARAZO_LACTANCIA | PEDIATRIA | MENOPAUSIA | BARIATRICA | DISFAGIA_IDDSI | DEPORTE | KETO
+  title           String
+  phase           String?   // Para protocolos por fases (FODMAP, Bariátrica, SIBO, etc.)
+  parametersJson  String    @default("{}") // Parámetros clínicos estructurados (ratios, CGM, texturas, suplementación)
+  symptomLogJson  String    @default("[]") // Diario de síntomas asociado
+  notes           String?
+  startDate       DateTime  @default(now())
+  endDate         DateTime?
+  status          String    @default("ACTIVE") // ACTIVE | COMPLETED | PAUSED
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+
+  @@index([patientId, type])
+}
+
+// === 5.10 CALCULADORA CLÍNICA & EVALUACIONES DE RIESGO ===
+model CalculatorResultRecord {
+  id                     String    @id @default(cuid())
+  patientId              String
+  patient                Patient   @relation(fields: [patientId], references: [id], onDelete: Cascade)
+  formula                String    // HARRIS_BENEDICT | MIFFLIN | KATCH | CUNNINGHAM | SCHOFIELD | FAO_OMS | OWEN | IRETON_JONES | PENN_STATE
+  bmrKcal                Float
+  tdeeKcal               Float
+  activityFactor         Float
+  specialNeedsJson       String?   // Ajustes embarazo, lactancia, edad, renal
+  stepsOrMetsJson        String?   // Gasto adicional por pasos o METs
+  weightPredictionJson   String?   // Modelo dinámico NIH Body Weight Planner y escenarios
+  cardiovascularRiskJson String?   // SCORE2, REGICOR, FINDRISC, Síndrome Metabólico
+  micronutrientDriJson   String?   // DRI micronutrientes calculados
+  notes                  String?
+  createdAt              DateTime  @default(now())
+
+  @@index([patientId, createdAt])
+}
+
 

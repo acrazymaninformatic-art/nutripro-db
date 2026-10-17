@@ -45,6 +45,12 @@ export interface CreateRecipeInput {
   cookTimeMin?: number
   instructions: string
   category?: string
+  dietaryTags?: string[]
+  difficulty?: string
+  estimatedCost?: number
+  equipment?: string[]
+  isBatchCooking?: boolean
+  isFreezable?: boolean
   ingredients: {
     foodId: number
     quantityG: number
@@ -65,6 +71,12 @@ export async function createRecipe(input: CreateRecipeInput) {
       cookTimeMin: input.cookTimeMin || null,
       instructions: input.instructions,
       category: input.category || 'General',
+      dietaryTagsJson: JSON.stringify(input.dietaryTags || []),
+      difficulty: input.difficulty || 'FACIL',
+      estimatedCost: input.estimatedCost || null,
+      equipmentJson: JSON.stringify(input.equipment || []),
+      isBatchCooking: Boolean(input.isBatchCooking),
+      isFreezable: Boolean(input.isFreezable),
       ingredients: {
         create: input.ingredients.map(ing => ({
           foodId: ing.foodId,

@@ -297,3 +297,281 @@ export function estimateBodyFatFromSkinfolds(
 
   return Math.round(clampedBodyFat * 100) / 100;
 }
+
+/**
+ * -----------------------------------------------------------------------------
+ * ÍNDICE CINTURA-TALLA (ICT / Waist-to-Height Ratio - WHtR)
+ * -----------------------------------------------------------------------------
+ * Indicador de riesgo cardiometabólico y adiposidad central según la regla de Ashwell.
+ * Umbral general: "Mantén tu cintura a menos de la mitad de tu altura" (ICT < 0.50).
+ */
+export interface WHtRResult {
+  ratio: number;
+  category: 'Delgadez' | 'Saludable / Óptimo' | 'Riesgo Aumentado' | 'Riesgo Muy Elevado';
+  riskLevel: 'bajo' | 'normal' | 'moderado' | 'alto';
+}
+
+export function calculateWaistToHeightRatio(waistCm: number, heightCm: number): WHtRResult {
+  if (waistCm <= 0 || heightCm <= 0) {
+    throw new Error('La cintura y la altura deben ser valores mayores a 0');
+  }
+
+  const ratio = Math.round((waistCm / heightCm) * 100) / 100;
+  if (ratio < 0.40) {
+    return { ratio, category: 'Delgadez', riskLevel: 'bajo' };
+  } else if (ratio < 0.50) {
+    return { ratio, category: 'Saludable / Óptimo', riskLevel: 'normal' };
+  } else if (ratio < 0.60) {
+    return { ratio, category: 'Riesgo Aumentado', riskLevel: 'moderado' };
+  } else {
+    return { ratio, category: 'Riesgo Muy Elevado', riskLevel: 'alto' };
+  }
+}
+
+/**
+ * -----------------------------------------------------------------------------
+ * ECUACIÓN CUN-BAE (Clínica Universidad de Navarra - Body Adiposity Estimator)
+ * -----------------------------------------------------------------------------
+ * Estimación de % de grasa corporal validada en población española (Gómez-Ambrosi et al., 2012).
+ * Precisión superior al IMC aislado frente a DEXA.
+ */
+export function calculateCUNBAE(bmi: number, ageYears: number, sex: 'male' | 'female'): number {
+  if (bmi <= 0 || ageYears <= 0) return 0;
+  // sexCoef: 0 para varones, 1 para mujeres
+  const sexCoef = sex === 'female' ? 1 : 0;
+  const bmi2 = bmi * bmi;
+
+  const bfPct =
+    -44.988 +
+    (0.503 * ageYears) +
+    (10.689 * sexCoef) +
+    (3.172 * bmi) -
+    (0.026 * bmi2) +
+    (0.181 * bmi * sexCoef) -
+    (0.02 * bmi * ageYears) -
+    (0.005 * bmi2 * sexCoef) +
+    (0.00021 * bmi2 * ageYears);
+
+  return Math.max(3, Math.min(65, Math.round(bfPct * 10) / 10));
+}
+
+/**
+ * -----------------------------------------------------------------------------
+ * SOMATOTIPO DE HEATH-CARTER (Antropometría ISAK)
+ * -----------------------------------------------------------------------------
+ * Endomorfia (adiposidad relativa), Mesomorfia (robustez músculo-esquelética) y Ectomorfia (linealidad relativa).
+ */
+export interface HeathCarterSomatotype {
+  endomorphy: number;
+  mesomorphy: number;
+  ectomorphy: number;
+  dominantType: string;
+}
+
+export function calculateHeathCarterSomatotype(params: {
+  heightCm: number;
+  weightKg: number;
+  tricepsMm: number;
+  subscapularMm: number;
+  suprailiacMm: number;
+  humerusDiamCm?: number;
+  femurDiamCm?: number;
+  armCircCm?: number;
+  calfCircCm?: number;
+}): HeathCarterSomatotype {
+  const { heightCm, weightKg, tricepsMm, subscapularMm, suprailiacMm } = params;
+
+  // 1. Endomorfia (Cálculo corregido por altura)
+  const sum3 = tricepsMm + subscapularMm + suprailiacMm;
+  const sum3Corrected = sum3 * (170.18 / heightCm);
+  const endomorphy =
+    -0.7182 +
+    0.1451 * sum3Corrected -
+    0.00068 * Math.pow(sum3Corrected, 2) +
+    0.0000014 * Math.pow(sum3Corrected, 3);
+
+  // 2. Mesomorfia (Diámetros y perímetros corregidos, o aproximación estándar si no constan)
+  const humerus = params.humerusDiamCm || 6.8;
+  const femur = params.femurDiamCm || 9.4;
+  const armCorrected = (params.armCircCm || 30) - (tricepsMm / 10);
+  const calfCorrected = (params.calfCircCm || 36) - (params.tricepsMm * 0.7 / 10);
+  const mesomorphy =
+    0.858 * humerus +
+    0.601 * femur +
+    0.188 * armCorrected +
+    0.161 * calfCorrected -
+    0.131 * heightCm +
+    4.5;
+
+  // 3. Ectomorfia (Índice ponderal HMR = height / cbrt(weight))
+  const hmr = heightCm / Math.cbrt(weightKg);
+  let ectomorphy = 0.1;
+  if (hmr >= 40.75) {
+    ectomorphy = 0.732 * hmr - 28.58;
+  } else if (hmr > 38.25) {
+    ectomorphy = 0.463 * hmr - 17.63;
+  } else {
+    ectomorphy = 0.1;
+  }
+
+  const endo = Math.max(0.5, Math.round(endomorphy * 10) / 10);
+  const meso = Math.max(0.5, Math.round(mesomorphy * 10) / 10);
+  const ecto = Math.max(0.5, Math.round(ectomorphy * 10) / 10);
+
+  let dominantType = 'Equilibrado';
+  if (endo > meso && endo > ecto) dominantType = 'Endomorfo Predominante';
+  else if (meso > endo && meso > ecto) dominantType = 'Mesomorfo Predominante';
+  else if (ecto > endo && ecto > meso) dominantType = 'Ectomorfo Predominante';
+  else if (endo === meso) dominantType = 'Endo-Mesomorfo';
+  else if (meso === ecto) dominantType = 'Meso-Ectomorfo';
+
+  return { endomorphy: endo, mesomorphy: meso, ectomorphy: ecto, dominantType };
+}
+
+/**
+ * -----------------------------------------------------------------------------
+ * GANANCIA DE PESO EN EL EMBARAZO (Guía IOM 2009)
+ * -----------------------------------------------------------------------------
+ */
+export interface PregnancyWeightGainTarget {
+  recommendedTotalMinKg: number;
+  recommendedTotalMaxKg: number;
+  expectedGainAtWeekMinKg: number;
+  expectedGainAtWeekMaxKg: number;
+  actualGainKg: number;
+  status: 'Por debajo' | 'Dentro del rango óptimo' | 'Por encima';
+}
+
+export function calculateGestationalWeightGain(
+  pregestationalBmi: number,
+  pregestationalWeightKg: number,
+  currentWeightKg: number,
+  weekOfPregnancy: number
+): PregnancyWeightGainTarget {
+  let totalMin = 11.5;
+  let totalMax = 16.0;
+  let rateKgPerWeek = 0.42;
+
+  if (pregestationalBmi < 18.5) {
+    totalMin = 12.5;
+    totalMax = 18.0;
+    rateKgPerWeek = 0.51;
+  } else if (pregestationalBmi < 25) {
+    totalMin = 11.5;
+    totalMax = 16.0;
+    rateKgPerWeek = 0.42;
+  } else if (pregestationalBmi < 30) {
+    totalMin = 7.0;
+    totalMax = 11.5;
+    rateKgPerWeek = 0.28;
+  } else {
+    totalMin = 5.0;
+    totalMax = 9.0;
+    rateKgPerWeek = 0.22;
+  }
+
+  // En el 1er trimestre (semanas 1-13) ganancia esperada: 0.5 - 2.0 kg
+  const weeksAfterT1 = Math.max(0, weekOfPregnancy - 13);
+  const expectedGainMin = Math.round((Math.min(weekOfPregnancy / 13, 1) * 0.5 + weeksAfterT1 * (rateKgPerWeek * 0.8)) * 10) / 10;
+  const expectedGainMax = Math.round((Math.min(weekOfPregnancy / 13, 1) * 2.0 + weeksAfterT1 * (rateKgPerWeek * 1.2)) * 10) / 10;
+
+  const actualGain = Math.round((currentWeightKg - pregestationalWeightKg) * 10) / 10;
+
+  let status: PregnancyWeightGainTarget['status'] = 'Dentro del rango óptimo';
+  if (actualGain < expectedGainMin - 0.5) status = 'Por debajo';
+  else if (actualGain > expectedGainMax + 0.5) status = 'Por encima';
+
+  return {
+    recommendedTotalMinKg: totalMin,
+    recommendedTotalMaxKg: totalMax,
+    expectedGainAtWeekMinKg: expectedGainMin,
+    expectedGainAtWeekMaxKg: expectedGainMax,
+    actualGainKg: actualGain,
+    status,
+  };
+}
+
+/**
+ * -----------------------------------------------------------------------------
+ * ÍNDICES CALCULADOS EN ANALÍTICAS SANGUÍNEAS (5.3)
+ * -----------------------------------------------------------------------------
+ */
+export interface BloodIndicesResult {
+  tgHdlRatio: { value: number; interpretation: string; status: 'normal' | 'warning' | 'danger' } | null;
+  friedewaldLdl: { value: number; valid: boolean; status: 'normal' | 'warning' | 'danger' } | null;
+  homaIr: { value: number; interpretation: string; status: 'normal' | 'warning' | 'danger' } | null;
+  fib4: { value: number; interpretation: string; status: 'normal' | 'warning' | 'danger' } | null;
+}
+
+export function calculateBloodIndices(params: {
+  cholesterolTotalMgDl?: number | null;
+  hdlMgDl?: number | null;
+  triglyceridesMgDl?: number | null;
+  glucoseMgDl?: number | null;
+  insulinUiuMl?: number | null;
+  ageYears?: number | null;
+  astUL?: number | null;
+  altUL?: number | null;
+  plateletsKUl?: number | null;
+}): BloodIndicesResult {
+  const { cholesterolTotalMgDl, hdlMgDl, triglyceridesMgDl, glucoseMgDl, insulinUiuMl, ageYears, astUL, altUL, plateletsKUl } = params;
+
+  // 1. Ratio Triglicéridos / HDL (Marcador de resistencia a la insulina y aterogenicidad)
+  let tgHdlRatio: BloodIndicesResult['tgHdlRatio'] = null;
+  if (triglyceridesMgDl && hdlMgDl && hdlMgDl > 0) {
+    const ratio = Math.round((triglyceridesMgDl / hdlMgDl) * 100) / 100;
+    let interpretation = 'Óptimo (Sensibilidad insulínica normal)';
+    let status: 'normal' | 'warning' | 'danger' = 'normal';
+    if (ratio > 3.0) {
+      interpretation = 'Elevado: Alta sospecha de resistencia insulínica y patrón B LDL';
+      status = 'danger';
+    } else if (ratio > 2.0) {
+      interpretation = 'Límite / Riesgo moderado';
+      status = 'warning';
+    }
+    tgHdlRatio = { value: ratio, interpretation, status };
+  }
+
+  // 2. LDL Calculado de Friedewald: LDL = CT - HDL - (TG / 5) (Válido si TG < 400 mg/dL)
+  let friedewaldLdl: BloodIndicesResult['friedewaldLdl'] = null;
+  if (cholesterolTotalMgDl && hdlMgDl && triglyceridesMgDl) {
+    const valid = triglyceridesMgDl < 400;
+    const ldlCalc = Math.round((cholesterolTotalMgDl - hdlMgDl - (triglyceridesMgDl / 5)) * 10) / 10;
+    const status: 'normal' | 'warning' | 'danger' = ldlCalc >= 160 ? 'danger' : ldlCalc >= 130 ? 'warning' : 'normal';
+    friedewaldLdl = { value: ldlCalc, valid, status };
+  }
+
+  // 3. HOMA-IR (Homeostatic Model Assessment of Insulin Resistance): (Glucosa mg/dL * Insulina µIU/mL) / 405
+  let homaIr: BloodIndicesResult['homaIr'] = null;
+  if (glucoseMgDl && insulinUiuMl && glucoseMgDl > 0 && insulinUiuMl > 0) {
+    const homa = Math.round(((glucoseMgDl * insulinUiuMl) / 405) * 100) / 100;
+    let interpretation = 'Sensibilidad a la insulina normal (< 2.0)';
+    let status: 'normal' | 'warning' | 'danger' = 'normal';
+    if (homa >= 3.0) {
+      interpretation = 'Resistencia a la insulina manifiesta (HOMA-IR ≥ 3.0)';
+      status = 'danger';
+    } else if (homa >= 2.0) {
+      interpretation = 'Sospecha de resistencia incipiente (2.0 - 2.9)';
+      status = 'warning';
+    }
+    homaIr = { value: homa, interpretation, status };
+  }
+
+  // 4. FIB-4 (Fibrosis-4 Index para hígado graso no alcohólico): (Edad * AST) / (Plaquetas * sqrt(ALT))
+  let fib4: BloodIndicesResult['fib4'] = null;
+  if (ageYears && astUL && altUL && plateletsKUl && altUL > 0 && plateletsKUl > 0) {
+    const fibVal = Math.round(((ageYears * astUL) / (plateletsKUl * Math.sqrt(altUL))) * 100) / 100;
+    let interpretation = 'Bajo riesgo de fibrosis avanzada (< 1.30)';
+    let status: 'normal' | 'warning' | 'danger' = 'normal';
+    if (fibVal > 2.67) {
+      interpretation = 'Alto riesgo de fibrosis hepática avanzada (> 2.67)';
+      status = 'danger';
+    } else if (fibVal >= 1.30) {
+      interpretation = 'Zona indeterminada (1.30 - 2.67)';
+      status = 'warning';
+    }
+    fib4 = { value: fibVal, interpretation, status };
+  }
+
+  return { tgHdlRatio, friedewaldLdl, homaIr, fib4 };
+}
