@@ -30,7 +30,7 @@ export default function LockdownPage() {
           </p>
           <div className="pt-2 flex items-center gap-2 text-blue-400 font-medium">
             <Mail className="w-4 h-4" />
-            <a href="mailto:evavidalinfo@gmail.com" className="hover:underline">evavidalinfo@gmail.com</a>
+            <a href="mailto:info@evavidalnutricion.com" className="hover:underline">info@evavidalnutricion.com</a>
           </div>
         </div>
 

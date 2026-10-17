@@ -88,7 +88,7 @@ export default async function PoliticasPage() {
                 </h4>
                 <p>
                   En cualquier momento puedes solicitar la descarga completa de tu expediente clínico, rectificación de datos inexactos
-                  o la supresión de tu cuenta a través del portal o dirigiéndote por escrito a <strong>evavidalinfo@gmail.com</strong>.
+                  o la supresión de tu cuenta a través del portal o dirigiéndote por escrito a <strong>info@evavidalnutricion.com</strong>.
                   La historia clínica se conservará durante el plazo legal mínimo exigido por la normativa sanitaria.
                 </p>
               </div>

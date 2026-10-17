@@ -167,7 +167,7 @@ export function generateAppointmentEmailHtml({
                 ${professionalName} — Nutricionista Colegiada
               </p>
               <p style="margin: 4px 0 0 0; font-size: 12px; color: #94a3b8;">
-                ${clinicName} • Email de contacto: <a href="mailto:evavidalinfo@gmail.com" style="color: #0284c7; text-decoration: none;">evavidalinfo@gmail.com</a>
+                ${clinicName} • Email de contacto: <a href="mailto:info@evavidalnutricion.com" style="color: #0284c7; text-decoration: none;">info@evavidalnutricion.com</a>
               </p>
             </td>
           </tr>
@@ -195,7 +195,7 @@ export async function sendAppointmentEmail({
 }: SendAppointmentEmailParams) {
   const isOnline = modality.toUpperCase() === 'ONLINE'
   const eventTitle = `Cita de Nutrición: ${patientName} - ${professionalName}`
-  const eventDesc = `Consulta Nutricional con ${professionalName} (${clinicName}).\nModalidad: ${isOnline ? 'Online (Videollamada)' : 'Presencial'}\nNotas: ${notes || 'Consulta programada'}\nContacto: evavidalinfo@gmail.com`
+  const eventDesc = `Consulta Nutricional con ${professionalName} (${clinicName}).\nModalidad: ${isOnline ? 'Online (Videollamada)' : 'Presencial'}\nNotas: ${notes || 'Consulta programada'}\nContacto: info@evavidalnutricion.com`
 
   const googleCalendarUrl = generateGoogleCalendarUrl({
     title: eventTitle,
@@ -227,9 +227,9 @@ export async function sendAppointmentEmail({
     rescheduleUrl,
   })
 
-  const plainText = `Hola ${patientName.split(' ')[0]},\n\nTu cita de nutrición con ${professionalName} está confirmada para el ${appointmentDate.toLocaleDateString('es-ES')} a las ${appointmentDate.toLocaleTimeString('es-ES', { hour: '2-digit', minute: '2-digit' })} h.\n\nModalidad: ${isOnline ? 'Online' : 'Presencial'}\n\nAñadir a Google Calendar: ${googleCalendarUrl}\n\nAtentamente,\n${professionalName}\n${clinicName}\nevavidalinfo@gmail.com`
+  const plainText = `Hola ${patientName.split(' ')[0]},\n\nTu cita de nutrición con ${professionalName} está confirmada para el ${appointmentDate.toLocaleDateString('es-ES')} a las ${appointmentDate.toLocaleTimeString('es-ES', { hour: '2-digit', minute: '2-digit' })} h.\n\nModalidad: ${isOnline ? 'Online' : 'Presencial'}\n\nAñadir a Google Calendar: ${googleCalendarUrl}\n\nAtentamente,\n${professionalName}\n${clinicName}\ninfo@evavidalnutricion.com`
 
-  const smtpFrom = process.env.SMTP_FROM || process.env.SMTP_USER
+  const smtpFrom = process.env.SMTP_FROM || 'info@evavidalnutricion.com'
   const smtpUser = process.env.SMTP_USER
   const smtpPass = process.env.SMTP_PASS
   const smtpHost = process.env.SMTP_HOST
@@ -436,7 +436,7 @@ export function generateAppointmentReminderEmailHtml({
                 ${professionalName} — Nutricionista Colegiada
               </p>
               <p style="margin: 4px 0 0 0; font-size: 12px; color: #94a3b8;">
-                Email oficial: <a href="mailto:evavidalinfo@gmail.com" style="color: #0284c7; text-decoration: none;">evavidalinfo@gmail.com</a>
+                Email oficial: <a href="mailto:info@evavidalnutricion.com" style="color: #0284c7; text-decoration: none;">info@evavidalnutricion.com</a>
               </p>
             </td>
           </tr>
@@ -463,7 +463,7 @@ export async function sendAppointmentReminderEmail({
 }: SendAppointmentEmailParams) {
   const isOnline = modality.toUpperCase() === 'ONLINE'
   const eventTitle = `Cita de Nutrición: ${patientName} - ${professionalName}`
-  const eventDesc = `Consulta Nutricional con ${professionalName} (${clinicName}).\nModalidad: ${isOnline ? 'Online (Videollamada)' : 'Presencial'}\nNotas: ${notes || 'Consulta programada'}\nContacto: evavidalinfo@gmail.com`
+  const eventDesc = `Consulta Nutricional con ${professionalName} (${clinicName}).\nModalidad: ${isOnline ? 'Online (Videollamada)' : 'Presencial'}\nNotas: ${notes || 'Consulta programada'}\nContacto: info@evavidalnutricion.com`
 
   const googleCalendarUrl = generateGoogleCalendarUrl({
     title: eventTitle,
@@ -494,9 +494,9 @@ export async function sendAppointmentReminderEmail({
     googleCalendarUrl,
   })
 
-  const plainText = `Hola ${patientName.split(' ')[0]},\n\nTe recordamos que mañana ${appointmentDate.toLocaleDateString('es-ES')} a las ${appointmentDate.toLocaleTimeString('es-ES', { hour: '2-digit', minute: '2-digit' })} h tienes tu consulta de nutrición con ${professionalName}.\n\nModalidad: ${isOnline ? 'Online' : 'Presencial'}\n\nAñadir / Ver en Google Calendar: ${googleCalendarUrl}\n\nAtentamente,\n${professionalName}\n${clinicName}\nevavidalinfo@gmail.com`
+  const plainText = `Hola ${patientName.split(' ')[0]},\n\nTe recordamos que mañana ${appointmentDate.toLocaleDateString('es-ES')} a las ${appointmentDate.toLocaleTimeString('es-ES', { hour: '2-digit', minute: '2-digit' })} h tienes tu consulta de nutrición con ${professionalName}.\n\nModalidad: ${isOnline ? 'Online' : 'Presencial'}\n\nAñadir / Ver en Google Calendar: ${googleCalendarUrl}\n\nAtentamente,\n${professionalName}\n${clinicName}\ninfo@evavidalnutricion.com`
 
-  const smtpFrom = process.env.SMTP_FROM || process.env.SMTP_USER
+  const smtpFrom = process.env.SMTP_FROM || 'info@evavidalnutricion.com'
   const smtpUser = process.env.SMTP_USER
   const smtpPass = process.env.SMTP_PASS
   const smtpHost = process.env.SMTP_HOST

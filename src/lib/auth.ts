@@ -12,7 +12,7 @@ import {
   type SessionPayload,
 } from '@/lib/session-token'
 
-export const ADMIN_EMAIL = (process.env.ADMIN_EMAIL || 'evavidalinfo@gmail.com').trim().toLowerCase()
+export const ADMIN_EMAIL = (process.env.ADMIN_EMAIL || 'info@evavidalnutricion.com').trim().toLowerCase()
 
 export async function createSession(
   userOrId: string | { id: string; role?: string; email?: string; patientId?: string | null }
@@ -120,7 +120,8 @@ export async function requireUser() {
 
 export async function requireAdmin() {
   const user = await getSessionUser()
-  if (!user || user.role !== 'ADMIN' || user.email.toLowerCase() !== ADMIN_EMAIL) {
+  const isAdminEmail = user && (user.email.toLowerCase() === ADMIN_EMAIL || user.email.toLowerCase() === 'info@evavidalnutricion.com')
+  if (!user || user.role !== 'ADMIN' || !isAdminEmail) {
     if (user) {
       // Alerta y auditoría inmutable de intento de acceso no autorizado a administración (3.6.1 y 3.6.9)
       try {
@@ -144,7 +145,8 @@ export async function requireAdmin() {
 
 export async function requirePatient() {
   const user = await requireUser()
-  if (user.role === 'ADMIN' && user.email.toLowerCase() === ADMIN_EMAIL) {
+  const isAdminUser = user.role === 'ADMIN' && (user.email.toLowerCase() === ADMIN_EMAIL || user.email.toLowerCase() === 'info@evavidalnutricion.com')
+  if (isAdminUser) {
     // Vista previa de solo lectura generada por el servidor para Eva Vidal (3.5)
     const cookieStore = await cookies()
     const previewPatientId = cookieStore.get('evsoftware_preview_patient_id')?.value

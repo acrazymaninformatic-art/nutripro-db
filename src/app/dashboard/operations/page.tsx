@@ -273,7 +273,7 @@ export default async function OperationsPage() {
             <div className="mt-3 p-3 bg-white border border-slate-200 rounded-xl font-mono text-2xs text-gray-800 whitespace-pre-wrap leading-relaxed select-all">
 {`NOTIFICACIÓN DE BRECHA DE SEGURIDAD DE DATOS PERSONALES (ART. 33 RGPD)
 Fecha y Hora de Detección: ${new Date().toISOString()}
-Responsable del Tratamiento: Eva Vidal Nutrición (evavidalinfo@gmail.com)
+Responsable del Tratamiento: Eva Vidal Nutrición (info@evavidalnutricion.com)
 Software Afectado: EVSoftware · Gestión Clínica
 
 1. NATURALEZA DEL INCIDENTE:
@@ -294,7 +294,7 @@ Software Afectado: EVSoftware · Gestión Clínica
    - Evaluación del impacto para los derechos y libertades de las personas afectadas.
 
 5. CONTACTO DEL RESPONSABLE:
-   Eva Vidal Nutrición • Correo: evavidalinfo@gmail.com`}
+   Eva Vidal Nutrición • Correo: info@evavidalnutricion.com`}
             </div>
           </details>
         </CardContent>

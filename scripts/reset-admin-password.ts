@@ -1,7 +1,7 @@
 import bcrypt from 'bcryptjs'
 import { PrismaClient } from '@prisma/client'
 
-const email = (process.env.EVSOFTWARE_ADMIN_EMAIL || process.env.ADMIN_EMAIL || 'evavidalinfo@gmail.com').trim().toLowerCase()
+const email = (process.env.EVSOFTWARE_ADMIN_EMAIL || process.env.ADMIN_EMAIL || 'info@evavidalnutricion.com').trim().toLowerCase()
 const password = process.env.EVSOFTWARE_ADMIN_PASSWORD || process.env.ADMIN_PASSWORD
 
 if (!password || password.length < 12) {

@@ -44,9 +44,10 @@ export async function login(_previousState: LoginState | undefined, formData: Fo
     return { error: 'Correo o contraseña incorrectos.' }
   }
 
-  // La vista de administración solo la usa evavidalinfo@gmail.com
+  // La cuenta de administración oficial es info@evavidalnutricion.com
   const { ADMIN_EMAIL } = await import('@/lib/auth')
-  if (user.role === 'ADMIN' && user.email.toLowerCase() !== ADMIN_EMAIL) {
+  const allowedAdmin = user.email.toLowerCase() === ADMIN_EMAIL || user.email.toLowerCase() === 'info@evavidalnutricion.com'
+  if (user.role === 'ADMIN' && !allowedAdmin) {
     return { error: 'Correo o contraseña incorrectos.' }
   }
 

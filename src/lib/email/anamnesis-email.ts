@@ -100,7 +100,7 @@ export function generateAnamnesisEmailHtml({
                 Atentamente,<br>
                 <strong style="color: #1e293b; font-size: 14px;">${professionalName}</strong><br>
                 <span style="color: #0284c7; font-weight: 600;">${clinicName}</span><br>
-                <span style="color: #64748b; font-size: 12px;">evavidalinfo@gmail.com</span>
+                <span style="color: #64748b; font-size: 12px;">info@evavidalnutricion.com</span>
               </p>
             </td>
           </tr>
@@ -155,12 +155,12 @@ export async function sendAnamnesisEmail({
     clinicName,
   })
 
-  const plainText = `Hola ${patientName.split(' ')[0]},\n\nPara preparar tu consulta nutricional y diseñar un menú personalizado adaptado a tus gustos y necesidades, por favor completa tu cuestionario previo en el siguiente enlace:\n\n${anamnesisUrl}\n\nSolo te llevará 3 minutos y nos ayudará a preparar tu pauta.\n\nAtentamente,\n${professionalName}\n${clinicName}\nevavidalinfo@gmail.com`
+  const plainText = `Hola ${patientName.split(' ')[0]},\n\nPara preparar tu consulta nutricional y diseñar un menú personalizado adaptado a tus gustos y necesidades, por favor completa tu cuestionario previo en el siguiente enlace:\n\n${anamnesisUrl}\n\nSolo te llevará 3 minutos y nos ayudará a preparar tu pauta.\n\nAtentamente,\n${professionalName}\n${clinicName}\ninfo@evavidalnutricion.com`
 
   const mailtoUrl = `mailto:${encodeURIComponent(patientEmail)}?subject=${encodeURIComponent(emailSubject)}&body=${encodeURIComponent(plainText)}`
 
-  // El correo de remitente oficial siempre es evavidalinfo@gmail.com
-  const smtpFrom = process.env.SMTP_FROM || process.env.SMTP_USER
+  // El correo de remitente oficial siempre es info@evavidalnutricion.com
+  const smtpFrom = process.env.SMTP_FROM || 'info@evavidalnutricion.com'
   const smtpUser = process.env.SMTP_USER
   const smtpPass = process.env.SMTP_PASS
   const smtpHost = process.env.SMTP_HOST

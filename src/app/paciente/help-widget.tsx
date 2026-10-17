@@ -330,16 +330,16 @@ export function HelpWidget() {
                 />
               </div>
 
-              <div className="flex items-center gap-1.5 overflow-x-auto pb-1 text-2xs scrollbar-none">
+              <div className="flex flex-wrap items-center gap-1.5 text-2xs">
                 {categories.map((cat) => (
                   <button
                     key={cat}
                     type="button"
                     onClick={() => setSelectedCategory(cat)}
-                    className={`px-3 py-1 rounded-full whitespace-nowrap font-medium transition-colors ${
+                    className={`px-3 py-1.5 rounded-full font-medium transition-all duration-150 cursor-pointer ${
                       selectedCategory === cat
-                        ? 'bg-blue-600 text-white shadow-2xs'
-                        : 'bg-white text-gray-600 border border-gray-200 hover:bg-gray-100'
+                        ? 'bg-blue-600 text-white shadow-xs font-bold'
+                        : 'bg-white text-gray-600 border border-gray-200 hover:bg-gray-100 hover:text-gray-900'
                     }`}
                   >
                     {cat}

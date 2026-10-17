@@ -27,6 +27,7 @@ import {
 } from 'lucide-react'
 import Link from 'next/link'
 import { getFoodImage, FALLBACK_FOOD_SVG } from '@/lib/nutrition'
+import { PlanDossierPdf } from '@/components/nutrition/plan-dossier-pdf'
 
 interface FoodItem {
   id: number
@@ -93,18 +94,31 @@ interface DayData {
   meals: MealData[]
 }
 
+interface PatientSummary {
+  firstName: string
+  lastName: string
+  sex?: string | null
+  heightCm?: number | null
+  allergies?: string | null
+  intolerances?: string | null
+}
+
 interface PlanData {
   id: string
   name: string
   startDate: string | Date
   endDate?: string | Date | null
   targetKcal: number
+  targetProteinG?: number | null
+  targetCarbsG?: number | null
+  targetFatG?: number | null
   hideCaloriesTCA: boolean
   notes?: string | null
   planningModel?: string | null
   currentPhase?: string | null
   eatingOutGuide?: string | null
   hydrationTargetLiters?: number | null
+  patient?: PatientSummary | null
   days: DayData[]
 }
 
@@ -266,8 +280,9 @@ export function PlanClient({ plan, visibleRecipes }: Props) {
   })
 
   return (
-    <div className="space-y-6 animate-fade-in">
-      {/* Top Breadcrumb & Print */}
+    <div>
+      <div className="space-y-6 animate-fade-in print:hidden">
+        {/* Top Breadcrumb & Print */}
       <div className="flex items-center justify-between">
         <Link
           href="/paciente"
@@ -1003,6 +1018,9 @@ export function PlanClient({ plan, visibleRecipes }: Props) {
           </div>
         </div>
       )}
+      </div>
+
+      <PlanDossierPdf plan={plan} className="hidden print:block print:space-y-0" />
     </div>
   )
 }

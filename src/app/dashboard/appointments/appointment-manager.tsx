@@ -750,7 +750,7 @@ export function AppointmentManager({
           <div>
             <span className="font-bold text-blue-900">Recordatorios de Cita 100% Automáticos:</span>{' '}
             <span className="text-gray-600">
-              El sistema envía por correo electrónico a cada paciente el recordatorio oficial el día anterior a su cita (desde evavidalinfo@gmail.com). No necesitas pulsar ningún botón.
+              El sistema envía por correo electrónico a cada paciente el recordatorio oficial el día anterior a su cita (desde info@evavidalnutricion.com). No necesitas pulsar ningún botón.
             </span>
           </div>
         </div>
@@ -1186,7 +1186,7 @@ export function AppointmentManager({
                   title: `Cita Nutrición: ${app.patient.firstName} ${app.patient.lastName} - Eva Vidal`,
                   startDate: appDate,
                   durationMin: app.durationMin,
-                  description: `Consulta Nutricional con Eva Vidal.\nModalidad: ${app.modality}\nNotas: ${app.notes || 'Consulta'}\nContacto: evavidalinfo@gmail.com`,
+                  description: `Consulta Nutricional con Eva Vidal.\nModalidad: ${app.modality}\nNotas: ${app.notes || 'Consulta'}\nContacto: info@evavidalnutricion.com`,
                   location: isOnline ? 'Online / Google Meet' : app.location || 'Consulta Nutricional Eva Vidal',
                 })
 
@@ -1786,7 +1786,7 @@ export function AppointmentManager({
                   title: `Cita Nutrición: ${selectedAppointment.patient.firstName} ${selectedAppointment.patient.lastName} - Eva Vidal`,
                   startDate: appDate,
                   durationMin: selectedAppointment.durationMin,
-                  description: `Consulta Nutricional con Eva Vidal.\nModalidad: ${selectedAppointment.modality}\nNotas: ${selectedAppointment.notes || 'Consulta'}\nContacto: evavidalinfo@gmail.com`,
+                  description: `Consulta Nutricional con Eva Vidal.\nModalidad: ${selectedAppointment.modality}\nNotas: ${selectedAppointment.notes || 'Consulta'}\nContacto: info@evavidalnutricion.com`,
                   location: isOnline ? 'Online / Google Meet' : selectedAppointment.location || 'Consulta Nutricional Eva Vidal',
                 })
                 return (

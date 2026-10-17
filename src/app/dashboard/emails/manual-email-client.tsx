@@ -381,7 +381,7 @@ export function ManualEmailClient({ patients, recentLogs }: Props) {
                       <div className="pt-4 border-t border-slate-100 text-3xs text-slate-500">
                         <strong className="text-slate-900 block text-xs">Eva Vidal</strong>
                         <span>Nutrición Clínica y Dietética Personalizada</span>
-                        <span className="block text-slate-400 mt-0.5">evavidalinfo@gmail.com</span>
+                        <span className="block text-slate-400 mt-0.5">info@evavidalnutricion.com</span>
                       </div>
                     </div>
                   </div>

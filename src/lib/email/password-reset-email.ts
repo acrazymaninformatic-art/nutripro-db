@@ -7,7 +7,7 @@ function escapeHtml(value: string) {
 }
 
 export async function sendPasswordResetEmail({ email, name, resetUrl }: { email: string; name: string; resetUrl: string }) {
-  const smtpFrom = process.env.SMTP_FROM || process.env.SMTP_USER
+  const smtpFrom = process.env.SMTP_FROM || 'info@evavidalnutricion.com'
   const smtpUser = process.env.SMTP_USER
   const smtpPass = process.env.SMTP_PASS
   const smtpHost = process.env.SMTP_HOST
@@ -43,7 +43,7 @@ export async function sendPatientPortalWelcomeEmail({
   name: string
   inviteUrl: string
 }) {
-  const smtpFrom = process.env.SMTP_FROM || process.env.SMTP_USER
+  const smtpFrom = process.env.SMTP_FROM || 'info@evavidalnutricion.com'
   const smtpUser = process.env.SMTP_USER
   const smtpPass = process.env.SMTP_PASS
   const smtpHost = process.env.SMTP_HOST
@@ -63,10 +63,11 @@ export async function sendPatientPortalWelcomeEmail({
   })
 
   const emailSubject = 'Activa tu acceso al Portal del Paciente · Eva Vidal Nutrición'
-  const plainText = `Hola ${name || 'Paciente'},\n\nEva Vidal ha creado tu acceso exclusivo al Portal del Paciente.\n\nPara activar tu cuenta y fijar tu contraseña de acceso, haz clic en el siguiente enlace seguro (válido durante 24 horas):\n${inviteUrl}\n\nTu usuario de acceso es: ${email}\n\nDesde el portal podrás revisar tus planes de alimentación, tus recetas detalladas, registrar tu evolución y consultar tus próximas citas.\n\nAtentamente,\nEva Vidal Nutrición\nevavidalinfo@gmail.com`
+  const plainText = `Hola ${name || 'Paciente'},\n\nEva Vidal ha creado tu acceso exclusivo al Portal del Paciente.\n\nPara activar tu cuenta y fijar tu contraseña de acceso, haz clic en el siguiente enlace seguro (válido durante 24 horas):\n${inviteUrl}\n\nTu usuario de acceso es: ${email}\n\nDesde el portal podrás revisar tus planes de alimentación, tus recetas detalladas, registrar tu evolución y consultar tus próximas citas.\n\nAtentamente,\nEva Vidal Nutrición\ninfo@evavidalnutricion.com`
 
   await transporter.sendMail({
     from: `"Eva Vidal · Consulta Nutricional" <${smtpFrom}>`,
+    replyTo: smtpFrom,
     to: email,
     subject: emailSubject,
     text: plainText,
@@ -112,7 +113,7 @@ export async function sendPatientPortalWelcomeEmail({
 
               <div style="background:#fffbeb;border:1px solid #fef3c7;border-radius:14px;padding:14px 16px;margin:24px 0 0 0">
                 <p style="margin:0;font-size:12px;line-height:1.5;color:#92400e">
-                  <strong>🔒 Seguridad médica y privacidad:</strong> Por seguridad de tu historial clínico, este enlace es personal de un solo uso y caduca en <strong>24 horas</strong>. Si necesitas asistencia, contacta directamente con Eva en <a href="mailto:evavidalinfo@gmail.com" style="color:#b45309;font-weight:600">evavidalinfo@gmail.com</a>.
+                  <strong>🔒 Seguridad médica y privacidad:</strong> Por seguridad de tu historial clínico, este enlace es personal de un solo uso y caduca en <strong>24 horas</strong>. Si necesitas asistencia, contacta directamente con Eva en <a href="mailto:info@evavidalnutricion.com" style="color:#b45309;font-weight:600">info@evavidalnutricion.com</a>.
                 </p>
               </div>
             </td>

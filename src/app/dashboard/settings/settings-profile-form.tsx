@@ -88,7 +88,7 @@ export function SettingsProfileForm({ user }: Props) {
                 id="email"
                 name="email"
                 type="email"
-                defaultValue={user.email || 'evavidalinfo@gmail.com'}
+                defaultValue={user.email || 'info@evavidalnutricion.com'}
                 required
                 className="rounded-xl h-10 text-xs"
               />

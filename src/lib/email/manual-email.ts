@@ -71,7 +71,7 @@ export function generateManualEmailHtml({
                     <td style="vertical-align: middle;">
                       <div style="font-size: 14px; font-weight: 800; color: #0f172a;">Eva Vidal</div>
                       <div style="font-size: 12px; font-weight: 600; color: #0284c7;">Nutrición Clínica y Dietética Personalizada</div>
-                      <div style="font-size: 12px; color: #64748b; margin-top: 4px;">Email oficial: evavidalinfo@gmail.com</div>
+                      <div style="font-size: 12px; color: #64748b; margin-top: 4px;">Email oficial: info@evavidalnutricion.com</div>
                     </td>
                   </tr>
                 </table>
@@ -114,7 +114,7 @@ export async function sendManualEmail({
   const smtpPort = process.env.SMTP_PORT ? Number(process.env.SMTP_PORT) : 465
   const smtpUser = process.env.SMTP_USER
   const smtpPass = process.env.SMTP_PASS
-  const smtpFrom = process.env.SMTP_FROM || smtpUser
+  const smtpFrom = process.env.SMTP_FROM || 'info@evavidalnutricion.com'
   const smtpFromName = process.env.SMTP_FROM_NAME || 'Eva Vidal - Consulta Nutricional'
 
   if (!smtpHost || !smtpUser || !smtpPass) {
@@ -143,6 +143,7 @@ export async function sendManualEmail({
   try {
     await transporter.sendMail({
       from: `"${smtpFromName}" <${smtpFrom}>`,
+      replyTo: smtpFrom,
       to: email,
       subject,
       text: message,

@@ -320,10 +320,9 @@ export function PlanViewer({ plan }: PlanViewerProps) {
       )}
 
       {/* =========================================================================
-          VISTA 1: EL DOSSIER COMPLETO IMPRESO / EXPORTABLE EN PDF (7-9 HOJAS)
+          VISTA 1: EL DOSSIER COMPLETO IMPRESO / EXPORTABLE EN PDF (10 HOJAS)
           ========================================================================= */}
-      {(activeTab === 'dossier' || typeof window === 'undefined') && (
-        <div className="space-y-8 print:space-y-0">
+      <div className={activeTab === 'dossier' ? 'space-y-8 print:space-y-0' : 'hidden print:block print:space-y-0'}>
           {/* ---------------------------------------------------------------------
               HOJA 1: PORTADA CLÍNICA Y RESUMEN DEL PACIENTE (A4 PAGE 1)
               --------------------------------------------------------------------- */}
@@ -953,7 +952,6 @@ export function PlanViewer({ plan }: PlanViewerProps) {
             </div>
           </section>
         </div>
-      )}
 
       {/* =========================================================================
           VISTA 2: NAVEGADOR INTERACTIVO POR DÍAS (SOLO EN PANTALLA)

@@ -29,6 +29,7 @@ export default async function PacientePlanPage() {
           { createdAt: 'desc' },
         ],
         include: {
+          patient: true,
           days: {
             orderBy: { dayNumber: 'asc' },
             include: {
@@ -115,6 +116,19 @@ export default async function PacientePlanPage() {
       plan={{
         id: plan.id,
         name: plan.name,
+        patient: plan.patient
+          ? {
+              firstName: plan.patient.firstName,
+              lastName: plan.patient.lastName,
+              sex: plan.patient.sex,
+              heightCm: plan.patient.heightCm,
+              allergies: plan.patient.allergies,
+              intolerances: plan.patient.intolerances,
+            }
+          : null,
+        targetProteinG: plan.targetProteinG,
+        targetCarbsG: plan.targetCarbsG,
+        targetFatG: plan.targetFatG,
         startDate: plan.startDate.toISOString(),
         endDate: plan.endDate ? plan.endDate.toISOString() : null,
         targetKcal: plan.targetKcal,

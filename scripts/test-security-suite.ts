@@ -13,7 +13,7 @@ import {
 } from '../src/lib/session-token'
 import bcrypt from 'bcryptjs'
 
-const ADMIN_EMAIL = 'evavidalinfo@gmail.com'
+const ADMIN_EMAIL = 'info@evavidalnutricion.com'
 
 function createSignedToken(data: SessionPayload) {
   const payload = createSessionTokenPayload(data)
@@ -114,7 +114,7 @@ async function runSecuritySuite() {
     // ------------------------------------------------------------------------
     console.log(`\n${BOLD}4. Registro con correo de administración sin alta manual:${RESET}`)
     assert(
-      ADMIN_EMAIL === 'evavidalinfo@gmail.com',
+      ADMIN_EMAIL === 'info@evavidalnutricion.com',
       `La única cuenta con facultades administrativas es '${ADMIN_EMAIL}' pre-sembrada en servidor`
     )
 

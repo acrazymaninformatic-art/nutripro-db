@@ -37,8 +37,8 @@ interface Props {
 
 export function PatientContactTools({ patient }: Props) {
   const [patientEmail, setPatientEmail] = useState(patient.email || '')
-  // El correo profesional de la consulta siempre es evavidalinfo@gmail.com
-  const professionalEmail = 'evavidalinfo@gmail.com'
+  // El correo profesional de la consulta siempre es info@evavidalnutricion.com
+  const professionalEmail = 'info@evavidalnutricion.com'
   const professionalName = patient.professionalName || 'Eva Vidal'
   
   const [loading, setLoading] = useState(false)

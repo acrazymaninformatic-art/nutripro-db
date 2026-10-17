@@ -154,7 +154,7 @@ ${
 👨‍🍳 PREPARACIÓN:
 ${recipe.instructions}
 
-✨ Eva Vidal Nutrición - evavidalinfo@gmail.com`
+✨ Eva Vidal Nutrición - info@evavidalnutricion.com`
 
     try {
       await navigator.clipboard.writeText(text)
@@ -228,7 +228,7 @@ ${recipe.instructions}
             <h1 className="text-xl font-black text-blue-950 uppercase tracking-wide">
               Eva Vidal Nutrición
             </h1>
-            <p className="text-xs text-gray-600">Nutrición Clínica y Dietética Personalizada | evavidalinfo@gmail.com</p>
+            <p className="text-xs text-gray-600">Nutrición Clínica y Dietética Personalizada | info@evavidalnutricion.com</p>
           </div>
           <span className="text-xs font-bold text-gray-500">Ficha Terapéutica de Receta</span>
         </div>
