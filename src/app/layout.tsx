@@ -1,6 +1,7 @@
 import type { Metadata } from 'next'
 import { Inter, Sora } from 'next/font/google'
 import './globals.css'
+import { GsapMotionProvider } from '@/components/ui/gsap-motion-provider'
 
 const inter = Inter({
   subsets: ['latin'],
@@ -30,7 +31,7 @@ export default function RootLayout({
   return (
     <html lang="es" className="h-full">
       <body className={`${inter.variable} ${sora.variable} min-h-full antialiased`}>
-        {children}
+        <GsapMotionProvider>{children}</GsapMotionProvider>
       </body>
     </html>
   )

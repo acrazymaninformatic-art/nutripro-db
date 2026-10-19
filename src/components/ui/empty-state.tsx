@@ -22,6 +22,8 @@ export function EmptyState({
         'flex flex-col items-center justify-center p-8 sm:p-12 text-center rounded-3xl border border-dashed border-slate-200/90 bg-white/60 backdrop-blur-xs',
         className
       )}
+      data-gsap-reveal
+      data-gsap-hover
       {...props}
     >
       {Icon && (

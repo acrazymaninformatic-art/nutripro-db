@@ -69,6 +69,7 @@ export function Sidebar({
           aria-label="Cerrar menú de navegación"
           onClick={onMobileClose}
           className="fixed inset-0 z-40 bg-slate-950/30 backdrop-blur-[2px] lg:hidden animate-overlay-in"
+          data-gsap-overlay
         />
       )}
       <aside
@@ -78,6 +79,7 @@ export function Sidebar({
           mobileOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0',
           mobileOpen ? 'flex' : 'hidden lg:flex'
         )}
+        data-gsap-sidebar
       >
       {/* Logo & Toggle Header */}
       <div className="flex h-16 items-center justify-between border-b border-slate-200/80 px-4">
@@ -152,6 +154,7 @@ export function Sidebar({
               prefetch={true}
               onClick={onMobileClose}
               aria-current={isActive ? 'page' : undefined}
+              data-gsap-nav-item
               title={isCollapsed ? item.name : undefined}
               className={cn(
                 'group flex items-center text-xs font-bold rounded-2xl transition-all duration-200',

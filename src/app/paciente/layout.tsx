@@ -80,9 +80,12 @@ export default async function PacienteLayout({
     // Si estamos en /paciente/politicas o no se puede inferir con certeza la ruta en el layout,
     // renderizamos el contenido directamente sin el menú del portal para evitar bucles (ERR_TOO_MANY_REDIRECTS)
     return (
-      <div className="min-h-screen bg-slate-50 flex flex-col">
+      <div className="min-h-screen bg-slate-50 flex flex-col" data-gsap-portal="patient">
         {isAdminPreview && (
-          <div className="bg-amber-500 text-amber-950 px-4 py-2.5 font-medium text-xs flex flex-wrap items-center justify-between gap-3 shadow-sm border-b border-amber-600 z-50">
+          <div
+            className="bg-amber-500 text-amber-950 px-4 py-2.5 font-medium text-xs flex flex-wrap items-center justify-between gap-3 shadow-sm border-b border-amber-600 z-50"
+            data-gsap-banner
+          >
             <div className="flex items-center gap-2">
               <ShieldAlert className="w-4 h-4 text-amber-950 shrink-0" />
               <span>
@@ -100,15 +103,23 @@ export default async function PacienteLayout({
             </form>
           </div>
         )}
-        <main className="flex-1">{children}</main>
+        <main className="flex-1">
+          <PageMotion>{children}</PageMotion>
+        </main>
       </div>
     )
   }
 
   return (
-    <div className="surface-grid flex h-screen flex-col overflow-hidden bg-ambient-patient">
+    <div
+      className="surface-grid flex h-screen flex-col overflow-hidden bg-ambient-patient"
+      data-gsap-portal="patient"
+    >
       {isAdminPreview && (
-        <div className="bg-amber-500 text-amber-950 px-4 py-2.5 font-medium text-xs flex flex-wrap items-center justify-between gap-3 shadow-sm border-b border-amber-600 z-50 shrink-0">
+        <div
+          className="bg-amber-500 text-amber-950 px-4 py-2.5 font-medium text-xs flex flex-wrap items-center justify-between gap-3 shadow-sm border-b border-amber-600 z-50 shrink-0"
+          data-gsap-banner
+        >
           <div className="flex items-center gap-2">
             <ShieldAlert className="w-4 h-4 text-amber-950 shrink-0" />
             <span>
@@ -128,7 +139,10 @@ export default async function PacienteLayout({
       )}
       <div className="flex-1 flex overflow-hidden min-w-0">
         {/* Sidebar for Desktop (Estático e inamovible, igual que en admin) */}
-        <aside className="hidden md:flex w-72 h-full bg-white/95 backdrop-blur-md border-r border-slate-200/80 shrink-0 flex-col overflow-hidden shadow-xs z-30">
+        <aside
+          className="hidden md:flex w-72 h-full bg-white/95 backdrop-blur-md border-r border-slate-200/80 shrink-0 flex-col overflow-hidden shadow-xs z-30"
+          data-gsap-sidebar
+        >
           {/* Brand Header */}
           <div className="flex items-center justify-between p-6 border-b border-slate-100 shrink-0">
             <Link href="/paciente" className="flex items-center gap-3.5 group">
@@ -193,7 +207,10 @@ export default async function PacienteLayout({
         {/* Main Content Area */}
         <div className="flex min-w-0 flex-1 flex-col overflow-hidden">
           {/* Top Header Bar for Desktop & Mobile */}
-          <header className="glass-panel z-20 flex h-16 shrink-0 items-center justify-between border-b border-white/70 px-4 shadow-[0_4px_18px_-16px_rgba(15,23,42,.5)] md:px-8">
+          <header
+            className="glass-panel z-20 flex h-16 shrink-0 items-center justify-between border-b border-white/70 px-4 shadow-[0_4px_18px_-16px_rgba(15,23,42,.5)] md:px-8"
+            data-gsap-header
+          >
             {/* Mobile Brand */}
             <div className="flex items-center gap-3 md:hidden">
               <Link href="/paciente" className="flex items-center gap-2.5">
@@ -231,7 +248,10 @@ export default async function PacienteLayout({
           </header>
 
           {/* Page Content */}
-          <main className="flex-1 overflow-y-auto p-4 pb-24 md:p-8 md:pb-8">
+          <main
+            className="flex-1 overflow-y-auto p-4 pb-24 md:p-8 md:pb-8"
+            data-gsap-scroll="patient"
+          >
             <div className="max-w-6xl mx-auto animate-fade-in">
               <PageMotion>{children}</PageMotion>
             </div>

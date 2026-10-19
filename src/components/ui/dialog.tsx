@@ -122,6 +122,7 @@ const DialogOverlay = React.forwardRef<
         'fixed inset-0 z-50 bg-slate-950/50 backdrop-blur-sm transition-opacity duration-200 animate-overlay-in',
         className
       )}
+      data-gsap-overlay
       {...props}
     />
   )
@@ -178,6 +179,7 @@ const DialogContent = React.forwardRef<HTMLDivElement, DialogContentProps>(
             'animate-dialog-in',
             className
           )}
+          data-gsap-modal
           {...props}
         >
           {children}

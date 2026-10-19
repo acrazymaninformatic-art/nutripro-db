@@ -15,7 +15,10 @@ export function DashboardShell({
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
 
   return (
-    <div className="flex h-screen overflow-hidden bg-ambient-eva print:h-auto print:overflow-visible print:bg-white print:block">
+    <div
+      className="flex h-screen overflow-hidden bg-ambient-eva print:h-auto print:overflow-visible print:bg-white print:block"
+      data-gsap-portal="admin"
+    >
       <div className="print:hidden">
         <Sidebar
           professionalName={professionalName}
@@ -27,7 +30,10 @@ export function DashboardShell({
         <div className="print:hidden">
           <Header onMenu={() => setMobileMenuOpen(true)} />
         </div>
-        <main className="surface-grid flex-1 overflow-y-auto bg-transparent p-4 sm:p-6 print:m-0 print:h-auto print:overflow-visible print:bg-white print:block print:p-0">
+        <main
+          className="surface-grid flex-1 overflow-y-auto bg-transparent p-4 sm:p-6 print:m-0 print:h-auto print:overflow-visible print:bg-white print:block print:p-0"
+          data-gsap-scroll="admin"
+        >
           <div className="page-shell">
             <PageMotion>{children}</PageMotion>
           </div>

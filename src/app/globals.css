@@ -303,6 +303,17 @@ button, a, input, select, textarea {
   transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
+/* GSAP keeps the portal motion in one place. These safeguards prevent an
+   interrupted transition from affecting clinical printouts. */
+[data-gsap-page],
+[data-gsap-card],
+[data-gsap-reveal],
+[data-gsap-sidebar],
+[data-gsap-header],
+[data-gsap-banner] {
+  backface-visibility: hidden;
+}
+
 .stagger-1 { animation-delay: 50ms; }
 .stagger-2 { animation-delay: 100ms; }
 .stagger-3 { animation-delay: 150ms; }
@@ -400,5 +411,16 @@ button, a, input, select, textarea {
   img {
     max-width: 100% !important;
     display: inline-block !important;
+  }
+
+  [data-gsap-page],
+  [data-gsap-card],
+  [data-gsap-reveal],
+  [data-gsap-sidebar],
+  [data-gsap-header],
+  [data-gsap-banner] {
+    opacity: 1 !important;
+    visibility: visible !important;
+    transform: none !important;
   }
 }

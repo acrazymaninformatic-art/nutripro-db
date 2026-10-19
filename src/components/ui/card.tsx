@@ -11,6 +11,8 @@ const Card = React.forwardRef<
       'rounded-3xl border border-slate-200/80 bg-white/95 text-slate-900 shadow-[0_1px_2px_rgba(15,23,42,.03),0_12px_28px_-20px_rgba(15,23,42,.28)] transition-[transform,box-shadow,border-color] duration-300 ease-out',
       className
     )}
+    data-gsap-card
+    data-gsap-hover
     {...props}
   />
 ))
