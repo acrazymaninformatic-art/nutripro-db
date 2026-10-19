@@ -272,7 +272,7 @@ export default function NewPatientPage() {
 
       // Step 1 - With safe fallbacks if the user skipped
       formData.append('firstName', firstName.trim() || 'Paciente')
-      formData.append('lastName', lastName.trim() || `ID-${Math.floor(Math.random() * 9000 + 1000)}`)
+      formData.append('lastName', lastName.trim() || `ID-${Date.now()}`)
       formData.append('email', email.trim())
       formData.append('phone', phone.trim())
       formData.append('birthDate', birthDate || '1995-01-01')

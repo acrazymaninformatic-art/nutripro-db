@@ -1,11 +1,11 @@
 'use server'
 
 import { prisma } from '@/lib/prisma'
-import { requireAdmin } from '@/lib/auth'
+import { requireAdmin, requireUserId } from '@/lib/auth'
 import { revalidatePath } from 'next/cache'
 
 export async function addPatientDocument(formData: FormData) {
-  await requireAdmin()
+  const userId = await requireUserId()
 
   const patientId = String(formData.get('patientId') || '')
   const title = String(formData.get('title') || '').trim()
@@ -18,6 +18,12 @@ export async function addPatientDocument(formData: FormData) {
   if (!patientId || !title || !fileUrl) {
     throw new Error('Faltan campos obligatorios para guardar el documento.')
   }
+
+  const patient = await prisma.patient.findFirst({
+    where: { id: patientId, userId },
+    select: { id: true },
+  })
+  if (!patient) throw new Error('Paciente no encontrado.')
 
   const doc = await prisma.patientDocument.create({
     data: {
@@ -36,7 +42,13 @@ export async function addPatientDocument(formData: FormData) {
 }
 
 export async function toggleDocumentSharing(documentId: string, patientId: string, isShared: boolean) {
-  await requireAdmin()
+  const userId = await requireUserId()
+
+  const doc = await prisma.patientDocument.findFirst({
+    where: { id: documentId, patientId, patient: { userId } },
+    select: { id: true },
+  })
+  if (!doc) throw new Error('Documento no encontrado.')
 
   await prisma.patientDocument.update({
     where: { id: documentId },
@@ -48,7 +60,13 @@ export async function toggleDocumentSharing(documentId: string, patientId: strin
 }
 
 export async function deletePatientDocument(documentId: string, patientId: string) {
-  await requireAdmin()
+  const userId = await requireUserId()
+
+  const doc = await prisma.patientDocument.findFirst({
+    where: { id: documentId, patientId, patient: { userId } },
+    select: { id: true },
+  })
+  if (!doc) throw new Error('Documento no encontrado.')
 
   await prisma.patientDocument.delete({
     where: { id: documentId },

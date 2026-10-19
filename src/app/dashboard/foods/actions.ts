@@ -53,8 +53,9 @@ export async function getCategories() {
 }
 
 export async function getAllFoodsForBrowser() {
-  await requireUserId()
+  const userId = await requireUserId()
   return prisma.food.findMany({
+    where: { userId },
     select: {
       id: true,
       name: true,
@@ -111,17 +112,17 @@ export async function getAllFoodsForBrowser() {
 }
 
 export async function getFoodByBarcode(barcode: string) {
-  await requireUserId()
+  const userId = await requireUserId()
   if (!barcode || !barcode.trim()) return null
-  return prisma.food.findUnique({
-    where: { barcode: barcode.trim() },
+  return prisma.food.findFirst({
+    where: { barcode: barcode.trim(), userId },
   })
 }
 
 export async function toggleFoodFavorite(foodId: number) {
-  await requireUserId()
-  const food = await prisma.food.findUnique({
-    where: { id: foodId },
+  const userId = await requireUserId()
+  const food = await prisma.food.findFirst({
+    where: { id: foodId, userId },
     select: { isFavorite: true },
   })
   if (!food) throw new Error('Alimento no encontrado')
@@ -142,8 +143,8 @@ export async function mergeDuplicateFoods(primaryFoodId: number, duplicateFoodId
   }
 
   const [primary, duplicate] = await Promise.all([
-    prisma.food.findUnique({ where: { id: primaryFoodId } }),
-    prisma.food.findUnique({ where: { id: duplicateFoodId } }),
+    prisma.food.findFirst({ where: { id: primaryFoodId, userId } }),
+    prisma.food.findFirst({ where: { id: duplicateFoodId, userId } }),
   ])
 
   if (!primary || !duplicate) {
@@ -202,7 +203,7 @@ export async function bulkUpdateFoods(
     dietaryTags?: string[]
   }
 ) {
-  await requireUserId()
+  const userId = await requireUserId()
   if (!foodIds || foodIds.length === 0) return { updatedCount: 0 }
 
   const dataToUpdate: any = {}
@@ -212,7 +213,7 @@ export async function bulkUpdateFoods(
   if (updates.dietaryTags) dataToUpdate.dietaryTagsJson = JSON.stringify(updates.dietaryTags)
 
   const result = await prisma.food.updateMany({
-    where: { id: { in: foodIds } },
+    where: { id: { in: foodIds }, userId },
     data: dataToUpdate,
   })
 
@@ -319,7 +320,8 @@ export async function createFood(formData: FormData) {
 }
 
 export async function deleteFood(id: number) {
-  await requireUserId()
+  const userId = await requireUserId()
+  if (!await prisma.food.findFirst({ where: { id, userId }, select: { id: true } })) throw new Error('Alimento no encontrado.')
   await prisma.food.delete({
     where: { id },
   })

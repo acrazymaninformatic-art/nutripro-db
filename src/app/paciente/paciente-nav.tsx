@@ -52,6 +52,7 @@ export function PacienteDesktopNav() {
             id={navId}
             data-tour={navId}
             href={item.href}
+            aria-current={isActive ? 'page' : undefined}
             className={cn(
               'flex items-center gap-3 px-3.5 py-2.5 rounded-2xl text-xs font-bold transition-all duration-200 group',
               isActive
@@ -106,6 +107,7 @@ export function PacienteMobileNav() {
           <Link
             key={item.href}
             href={item.href}
+            aria-current={isActive ? 'page' : undefined}
             className={cn(
               'flex flex-col items-center gap-1 py-1 px-3 rounded-2xl transition-all duration-200 relative',
               isActive

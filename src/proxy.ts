@@ -1,7 +1,9 @@
 import { NextResponse, type NextRequest } from 'next/server'
-import { SESSION_COOKIE, verifySessionToken } from '@/lib/session-token'
+import { verifySessionTokenEdge } from '@/lib/session-token-edge'
 
-export function proxy(request: NextRequest) {
+const SESSION_COOKIE = 'evsoftware_session'
+
+export async function proxy(request: NextRequest) {
   const { pathname } = request.nextUrl
   const requestHeaders = new Headers(request.headers)
   requestHeaders.set('x-pathname', pathname)
@@ -21,7 +23,7 @@ export function proxy(request: NextRequest) {
   const token = request.cookies.get(SESSION_COOKIE)?.value
   let valid = false
   try {
-    valid = Boolean(verifySessionToken(token))
+    valid = await verifySessionTokenEdge(token)
   } catch {
     valid = false
   }

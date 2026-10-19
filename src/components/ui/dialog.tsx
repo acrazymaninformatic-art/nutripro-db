@@ -119,7 +119,7 @@ const DialogOverlay = React.forwardRef<
     <div
       ref={ref}
       className={cn(
-        'fixed inset-0 z-50 bg-slate-950/50 backdrop-blur-sm transition-opacity duration-200 animate-in fade-in',
+        'fixed inset-0 z-50 bg-slate-950/50 backdrop-blur-sm transition-opacity duration-200 animate-overlay-in',
         className
       )}
       {...props}
@@ -175,7 +175,7 @@ const DialogContent = React.forwardRef<HTMLDivElement, DialogContentProps>(
           aria-modal="true"
           className={cn(
             'fixed left-1/2 top-1/2 z-50 grid w-full max-w-lg -translate-x-1/2 -translate-y-1/2 gap-4 border border-slate-200/90 bg-white p-6 shadow-2xl duration-200 sm:rounded-3xl',
-            'animate-in fade-in zoom-in-95',
+            'animate-dialog-in',
             className
           )}
           {...props}
@@ -184,7 +184,7 @@ const DialogContent = React.forwardRef<HTMLDivElement, DialogContentProps>(
           <button
             type="button"
             onClick={handleClose}
-            className="absolute right-4 top-4 rounded-sm p-1 text-gray-400 opacity-70 transition-opacity hover:opacity-100 hover:text-gray-600 focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2"
+            className="absolute right-4 top-4 rounded-xl p-2 text-slate-400 opacity-80 transition-[background-color,color,opacity] hover:bg-slate-100 hover:text-slate-700 hover:opacity-100 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
             aria-label="Cerrar"
           >
             <X className="h-4 w-4" />

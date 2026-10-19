@@ -29,9 +29,18 @@ export function verifySessionToken(token: string | undefined): (SessionPayload &
   if (!token) return null
   const [payload, signature] = token.split('.')
   if (!payload || !signature) return null
+
+  // Constant-time comparison: always compare equal-length buffers to prevent timing attacks.
+  // HMAC-SHA256 output is fixed-length (32 bytes -> 44 base64url chars), so pad shorter buffers.
   const expected = Buffer.from(signSessionPayload(payload))
   const received = Buffer.from(signature)
-  if (expected.length !== received.length || !timingSafeEqual(expected, received)) return null
+  const len = Math.max(expected.length, received.length)
+  const expectedPadded = Buffer.alloc(len, 0)
+  const receivedPadded = Buffer.alloc(len, 0)
+  expected.copy(expectedPadded)
+  received.copy(receivedPadded)
+  if (!timingSafeEqual(expectedPadded, receivedPadded)) return null
+
   try {
     const parsed = JSON.parse(Buffer.from(payload, 'base64url').toString('utf8')) as SessionPayload & { expiresAt?: number }
     if (!parsed.userId || !parsed.expiresAt || parsed.expiresAt <= Date.now()) return null

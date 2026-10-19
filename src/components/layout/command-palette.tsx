@@ -231,7 +231,7 @@ export function CommandPalette() {
             <div className="max-h-[380px] overflow-y-auto p-2 space-y-1">
               {filteredCommands.length === 0 ? (
                 <div className="text-center py-10 text-gray-400 text-xs">
-                  No se encontraron comandos o secciones para &ldquo;{query}&rdquo;
+                  No se encontraron comandos o secciones para «{query}»
                 </div>
               ) : (
                 filteredCommands.map((item, idx) => {

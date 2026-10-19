@@ -148,10 +148,23 @@ export async function togglePortalAccess(patientId: string, enabled: boolean) {
     throw new Error('Paciente no encontrado.')
   }
 
+  // Invalidate all existing sessions immediately when blocking access
+  const portalUser = await prisma.user.findFirst({
+    where: { patientId: patient.id },
+    select: { id: true },
+  })
+
   await prisma.patient.update({
     where: { id: patient.id },
     data: { portalAccessEnabled: enabled },
   })
+
+  if (portalUser && !enabled) {
+    await prisma.user.update({
+      where: { id: portalUser.id },
+      data: { sessionRevokedAt: new Date() },
+    })
+  }
 
   await prisma.auditLog.create({
     data: {

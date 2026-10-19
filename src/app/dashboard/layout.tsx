@@ -1,5 +1,4 @@
-import { Sidebar } from '@/components/layout/sidebar'
-import { Header } from '@/components/layout/header'
+import { DashboardShell } from '@/components/layout/dashboard-shell'
 import { requireAdmin } from '@/lib/auth'
 
 export default async function DashboardLayout({
@@ -8,21 +7,5 @@ export default async function DashboardLayout({
   children: React.ReactNode
 }) {
   const user = await requireAdmin()
-  return (
-    <div className="flex h-screen overflow-hidden bg-ambient-eva print:h-auto print:overflow-visible print:bg-white print:block">
-      <div className="print:hidden">
-        <Sidebar professionalName={user.name} />
-      </div>
-      <div className="flex flex-1 flex-col overflow-hidden min-w-0 print:h-auto print:overflow-visible print:block">
-        <div className="print:hidden">
-          <Header />
-        </div>
-        <main className="flex-1 overflow-y-auto p-6 bg-transparent print:p-0 print:m-0 print:h-auto print:overflow-visible print:bg-white print:block">
-          <div className="animate-fade-in">
-            {children}
-          </div>
-        </main>
-      </div>
-    </div>
-  )
+  return <DashboardShell professionalName={user.name}>{children}</DashboardShell>
 }

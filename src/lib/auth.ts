@@ -87,6 +87,7 @@ export async function getSessionUser() {
       clinicName: true,
       phone: true,
       address: true,
+      sessionRevokedAt: true,
       patientAccount: {
         select: {
           id: true,
@@ -97,6 +98,11 @@ export async function getSessionUser() {
     },
   })
   if (!user) return null
+
+  // Immediate session termination if the session was revoked (e.g. portal access blocked)
+  if (user.sessionRevokedAt && user.sessionRevokedAt.getTime() > 0) {
+    return null
+  }
 
   // Ensure role and email match the cryptographically signed session token
   if (session.role && user.role !== session.role) return null

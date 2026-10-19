@@ -26,6 +26,8 @@ export interface CreateBloodAnalysisInput {
 }
 
 export async function getBloodAnalyses(patientId: string) {
+  const userId = await requireUserId()
+  if (!await prisma.patient.findFirst({ where: { id: patientId, userId }, select: { id: true } })) throw new Error('Paciente no encontrado.')
   return await prisma.bloodAnalysis.findMany({
     where: { patientId },
     orderBy: { date: 'desc' },
@@ -36,6 +38,9 @@ export async function createBloodAnalysis(input: CreateBloodAnalysisInput) {
   if (!input.patientId) {
     throw new Error('ID de paciente obligatorio')
   }
+
+  const userId = await requireUserId()
+  if (!await prisma.patient.findFirst({ where: { id: input.patientId, userId }, select: { id: true } })) throw new Error('Paciente no encontrado.')
 
   const record = await prisma.bloodAnalysis.create({
     data: {

@@ -18,6 +18,7 @@ import {
   LogOut,
   Mail,
   Activity,
+  X,
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { logout } from '@/app/login/actions'
@@ -41,7 +42,15 @@ const navItems: NavItem[] = [
   { name: 'Calculadora', href: '/dashboard/calculator', icon: Calculator },
 ]
 
-export function Sidebar({ professionalName }: { professionalName: string }) {
+export function Sidebar({
+  professionalName,
+  mobileOpen = false,
+  onMobileClose,
+}: {
+  professionalName: string
+  mobileOpen?: boolean
+  onMobileClose?: () => void
+}) {
   const [isCollapsed, setIsCollapsed] = useState(false)
   const pathname = usePathname()
 
@@ -53,12 +62,23 @@ export function Sidebar({ professionalName }: { professionalName: string }) {
   }
 
   return (
-    <aside
-      className={cn(
-        'relative flex flex-col h-screen bg-white/95 backdrop-blur-md border-r border-slate-200/80 transition-all duration-300 ease-in-out shrink-0 select-none z-20',
-        isCollapsed ? 'w-16' : 'w-64'
+    <>
+      {mobileOpen && (
+        <button
+          type="button"
+          aria-label="Cerrar menú de navegación"
+          onClick={onMobileClose}
+          className="fixed inset-0 z-40 bg-slate-950/30 backdrop-blur-[2px] lg:hidden animate-overlay-in"
+        />
       )}
-    >
+      <aside
+        className={cn(
+          'fixed inset-y-0 left-0 z-50 flex h-screen shrink-0 flex-col select-none border-r border-slate-200/80 bg-white/95 shadow-2xl backdrop-blur-xl transition-[width,transform] duration-300 ease-out lg:relative lg:z-20 lg:shadow-none',
+          isCollapsed ? 'lg:w-16' : 'w-72 lg:w-64',
+          mobileOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0',
+          mobileOpen ? 'flex' : 'hidden lg:flex'
+        )}
+      >
       {/* Logo & Toggle Header */}
       <div className="flex items-center justify-between h-16 px-4 border-b border-slate-200/80">
         <Link
@@ -83,6 +103,14 @@ export function Sidebar({ professionalName }: { professionalName: string }) {
             </div>
           )}
         </Link>
+        <button
+          type="button"
+          onClick={onMobileClose}
+          aria-label="Cerrar menú"
+          className="ml-auto rounded-xl p-2 text-slate-400 transition-colors hover:bg-slate-100 hover:text-slate-700 lg:hidden"
+        >
+          <X className="h-4 w-4" />
+        </button>
         {!isCollapsed && (
           <button
             type="button"
@@ -122,6 +150,8 @@ export function Sidebar({ professionalName }: { professionalName: string }) {
               key={item.href}
               href={item.href}
               prefetch={true}
+              onClick={onMobileClose}
+              aria-current={isActive ? 'page' : undefined}
               title={isCollapsed ? item.name : undefined}
               className={cn(
                 'group flex items-center text-xs font-bold rounded-2xl transition-all duration-200',
@@ -180,6 +210,7 @@ export function Sidebar({ professionalName }: { professionalName: string }) {
               <Link
                 href="/dashboard/settings"
                 prefetch={true}
+                onClick={onMobileClose}
                 className="p-1.5 text-slate-400 hover:text-slate-700 hover:bg-slate-100 rounded-xl transition-colors"
                 title="Configuración"
                 aria-label="Configuración"
@@ -218,6 +249,7 @@ export function Sidebar({ professionalName }: { professionalName: string }) {
           </div>
         )}
       </div>
-    </aside>
+      </aside>
+    </>
   )
 }

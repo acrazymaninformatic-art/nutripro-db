@@ -80,11 +80,11 @@ export async function updateProtocolPhaseAction({
   newPhase: string
   notes?: string
 }) {
-  await requireUserId()
-  const current = await prisma.clinicalProtocolRecord.findUnique({
-    where: { id: recordId },
+  const userId = await requireUserId()
+  const current = await prisma.clinicalProtocolRecord.findFirst({
+    where: { id: recordId, patient: { userId } },
   })
-  if (!current) throw new Error('Registro de protocolo no encontrado')
+  if (!current) throw new Error('Registro de protocolo no encontrado.')
 
   const updated = await prisma.clinicalProtocolRecord.update({
     where: { id: recordId },
@@ -197,11 +197,11 @@ export async function updateProtocolStatusAction(
   recordId: string,
   status: 'ACTIVE' | 'COMPLETED' | 'PAUSED'
 ) {
-  await requireUserId()
-  const current = await prisma.clinicalProtocolRecord.findUnique({
-    where: { id: recordId },
+  const userId = await requireUserId()
+  const current = await prisma.clinicalProtocolRecord.findFirst({
+    where: { id: recordId, patient: { userId } },
   })
-  if (!current) throw new Error('Protocolo no encontrado')
+  if (!current) throw new Error('Protocolo no encontrado.')
 
   const updated = await prisma.clinicalProtocolRecord.update({
     where: { id: recordId },

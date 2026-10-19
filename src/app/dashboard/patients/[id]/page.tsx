@@ -92,7 +92,7 @@ export default async function PatientDetailPage({ params, searchParams }: Patien
 
   const idealWeightData = calculateIdealWeight(
     patient.heightCm,
-    patient.sex.toLowerCase() as 'male' | 'female'
+    (patient.sex || 'FEMALE').toLowerCase() as 'male' | 'female'
   )
 
   const objectiveLabel = OBJECTIVE_LABELS[patient.objective as Objective] || patient.objective

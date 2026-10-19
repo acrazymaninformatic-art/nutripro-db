@@ -32,6 +32,7 @@ model User {
   clinicName    String?
   phone         String?
   address       String?
+  sessionRevokedAt DateTime? // Invalidates all existing sessions when set (e.g. portal access blocked)
   createdAt     DateTime   @default(now())
   updatedAt     DateTime   @updatedAt
 

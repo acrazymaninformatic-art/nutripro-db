@@ -1,7 +1,7 @@
 'use server'
 
 import { prisma } from '@/lib/prisma'
-import { requireAdmin } from '@/lib/auth'
+import { requireAdmin, requireUserId } from '@/lib/auth'
 import { revalidatePath } from 'next/cache'
 
 export async function createSoapConsultation(formData: FormData) {
@@ -41,7 +41,13 @@ export async function createSoapConsultation(formData: FormData) {
 }
 
 export async function deleteConsultation(consultationId: string, patientId: string) {
-  await requireAdmin()
+  const userId = await requireUserId()
+
+  const consultation = await prisma.consultation.findFirst({
+    where: { id: consultationId, patientId, patient: { userId } },
+    select: { id: true },
+  })
+  if (!consultation) throw new Error('Consulta no encontrada.')
 
   await prisma.consultation.delete({
     where: { id: consultationId },
@@ -52,10 +58,16 @@ export async function deleteConsultation(consultationId: string, patientId: stri
 }
 
 export async function toggleConsultationSharing(consultationId: string, patientId: string, isShared: boolean) {
-  await requireAdmin()
+  const userId = await requireUserId()
+
+  const consultation = await prisma.consultation.findFirst({
+    where: { id: consultationId, patientId, patient: { userId } },
+    select: { id: true },
+  })
+  if (!consultation) throw new Error('Consulta no encontrada.')
 
   const updated = await prisma.consultation.update({
-    where: { id: consultationId, patientId },
+    where: { id: consultationId },
     data: { isSharedWithPatient: isShared },
   })
 

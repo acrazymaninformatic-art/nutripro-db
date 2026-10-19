@@ -24,6 +24,12 @@ export async function createPatientConsent(patientId: string, type: string, titl
 export async function acceptPatientConsentByAdmin(consentId: string, patientId: string) {
   const admin = await requireAdmin()
 
+  const consent = await prisma.patientConsent.findFirst({
+    where: { id: consentId, patientId },
+    select: { id: true },
+  })
+  if (!consent) throw new Error('Consentimiento no encontrado.')
+
   await prisma.patientConsent.update({
     where: { id: consentId },
     data: {
@@ -38,7 +44,13 @@ export async function acceptPatientConsentByAdmin(consentId: string, patientId: 
 }
 
 export async function revokePatientConsent(consentId: string, patientId: string, reason: string) {
-  await requireAdmin()
+  const admin = await requireAdmin()
+
+  const consent = await prisma.patientConsent.findFirst({
+    where: { id: consentId, patientId },
+    select: { id: true },
+  })
+  if (!consent) throw new Error('Consentimiento no encontrado.')
 
   await prisma.patientConsent.update({
     where: { id: consentId },

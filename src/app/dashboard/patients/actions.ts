@@ -377,7 +377,7 @@ export async function hardDeletePatient(patientId: string) {
   })
 
   await prisma.patient.delete({
-    where: { id: patientId },
+    where: { id: patientId, userId },
   })
 
   revalidatePath('/dashboard')
@@ -922,7 +922,7 @@ export async function updatePatientGoalsAndTags(
   if (!patient) throw new Error('Paciente no encontrado.')
 
   const updated = await prisma.patient.update({
-    where: { id: patientId },
+    where: { id: patientId, userId },
     data: {
       targetWeightKg: data.targetWeightKg !== undefined ? data.targetWeightKg : undefined,
       targetWeightDate: data.targetWeightDate ? new Date(data.targetWeightDate) : data.targetWeightDate === null ? null : undefined,
@@ -944,7 +944,7 @@ export async function dischargePatient(patientId: string, summary: string) {
   if (!patient) throw new Error('Paciente no encontrado.')
 
   const updated = await prisma.patient.update({
-    where: { id: patientId },
+    where: { id: patientId, userId },
     data: {
       isDischarged: true,
       dischargedAt: new Date(),
@@ -975,7 +975,7 @@ export async function reopenPatient(patientId: string) {
   if (!patient) throw new Error('Paciente no encontrado.')
 
   const updated = await prisma.patient.update({
-    where: { id: patientId },
+    where: { id: patientId, userId },
     data: {
       isDischarged: false,
       dischargedAt: null,

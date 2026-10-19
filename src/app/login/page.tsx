@@ -29,14 +29,14 @@ export default async function LoginPage() {
       <div className="absolute top-1/4 -left-20 w-80 h-80 bg-blue-400/10 rounded-full blur-3xl pointer-events-none" />
       <div className="absolute bottom-1/4 -right-20 w-80 h-80 bg-teal-400/10 rounded-full blur-3xl pointer-events-none" />
 
-      <section className="w-full max-w-md glass-card-premium rounded-3xl p-8 sm:p-10 shadow-xl border border-white/80 relative z-10 animate-slide-up">
+      <section className="w-full max-w-md glass-card-premium rounded-[2rem] p-7 sm:p-10 shadow-2xl border border-white/80 relative z-10 animate-slide-up">
         {/* Brand badge */}
         <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-blue-50/90 border border-blue-200/80 text-[11px] font-bold text-blue-700 uppercase tracking-wider mb-6 shadow-2xs">
           <Sparkles className="w-3.5 h-3.5 text-blue-600" />
           <span>Acceso Seguro · EVSoftware</span>
         </div>
 
-        <div className="mb-6 flex items-center gap-3.5">
+        <div className="mb-7 flex items-center gap-3.5">
           <div className="w-13 h-13 rounded-2xl bg-white border border-slate-200/80 p-2 shadow-xs shrink-0 flex items-center justify-center">
             <Image
               src="/logo.png"
@@ -53,7 +53,7 @@ export default async function LoginPage() {
           </div>
         </div>
 
-        <p className="text-xs text-slate-600 leading-relaxed font-medium bg-slate-50/70 p-3 rounded-2xl border border-slate-200/60 mb-6">
+        <p className="text-xs text-slate-600 leading-relaxed font-medium bg-gradient-to-br from-slate-50/90 to-blue-50/40 p-3.5 rounded-2xl border border-slate-200/60 mb-6">
           Introduce tus credenciales para acceder a tu consulta clínica profesional o a tu portal personal de paciente.
         </p>
 

@@ -8,7 +8,7 @@ export function LoginForm() {
   const [state, action, pending] = useActionState<LoginState | undefined, FormData>(login, undefined)
 
   return (
-    <form action={action} className="mt-2 space-y-4">
+    <form action={action} className="mt-2 space-y-5">
       <div className="space-y-1.5">
         <label htmlFor="email" className="block text-xs font-bold text-slate-700">
           Correo electrónico
@@ -20,7 +20,7 @@ export function LoginForm() {
           autoComplete="username"
           placeholder="tu@correo.com"
           required
-          className="w-full rounded-2xl border border-slate-200 bg-white/80 px-3.5 py-2.5 text-sm outline-none transition-all focus:border-blue-500 focus:bg-white focus:ring-4 focus:ring-blue-500/10 placeholder:text-slate-400 font-medium"
+          className="w-full rounded-2xl border border-slate-200/90 bg-white/90 px-3.5 py-3 text-sm font-medium text-slate-900 shadow-[0_2px_8px_-6px_rgba(15,23,42,.32)] outline-none transition-[border-color,box-shadow,background-color] duration-200 placeholder:text-slate-400 hover:border-slate-300 focus:border-blue-500 focus:bg-white focus:ring-4 focus:ring-blue-500/10"
         />
       </div>
 
@@ -43,7 +43,7 @@ export function LoginForm() {
           autoComplete="current-password"
           placeholder="••••••••"
           required
-          className="w-full rounded-2xl border border-slate-200 bg-white/80 px-3.5 py-2.5 text-sm outline-none transition-all focus:border-blue-500 focus:bg-white focus:ring-4 focus:ring-blue-500/10 font-medium"
+          className="w-full rounded-2xl border border-slate-200/90 bg-white/90 px-3.5 py-3 text-sm font-medium text-slate-900 shadow-[0_2px_8px_-6px_rgba(15,23,42,.32)] outline-none transition-[border-color,box-shadow,background-color] duration-200 hover:border-slate-300 focus:border-blue-500 focus:bg-white focus:ring-4 focus:ring-blue-500/10"
         />
       </div>
 
@@ -55,7 +55,7 @@ export function LoginForm() {
 
       <button
         disabled={pending}
-        className="w-full rounded-2xl bg-blue-600 px-4 py-3 text-sm font-bold text-white shadow-xs hover:bg-blue-700 active:scale-[0.98] transition-all disabled:opacity-60 cursor-pointer flex items-center justify-center gap-2"
+        className="w-full rounded-2xl bg-gradient-to-r from-blue-600 to-sky-700 px-4 py-3.5 text-sm font-bold text-white shadow-[0_10px_24px_-14px_rgba(2,132,199,.9)] transition-[transform,box-shadow,background-color] duration-200 hover:-translate-y-px hover:shadow-[0_14px_28px_-14px_rgba(2,132,199,.95)] active:scale-[0.98] disabled:cursor-wait disabled:opacity-60 cursor-pointer flex items-center justify-center gap-2"
       >
         {pending ? (
           <>

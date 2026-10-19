@@ -91,7 +91,7 @@ export default async function PacienteLayout({
   }
 
   return (
-    <div className="flex flex-col h-screen overflow-hidden bg-ambient-patient">
+    <div className="surface-grid flex h-screen flex-col overflow-hidden bg-ambient-patient">
       {isAdminPreview && (
         <div className="bg-amber-500 text-amber-950 px-4 py-2.5 font-medium text-xs flex flex-wrap items-center justify-between gap-3 shadow-sm border-b border-amber-600 z-50 shrink-0">
           <div className="flex items-center gap-2">
@@ -176,9 +176,9 @@ export default async function PacienteLayout({
         </aside>
 
         {/* Main Content Area */}
-        <div className="flex-1 flex flex-col overflow-hidden min-w-0">
+        <div className="flex min-w-0 flex-1 flex-col overflow-hidden">
           {/* Top Header Bar for Desktop & Mobile */}
-          <header className="h-16 glass-panel shrink-0 z-20 px-4 md:px-8 flex items-center justify-between shadow-2xs">
+          <header className="glass-panel z-20 flex h-16 shrink-0 items-center justify-between border-b border-white/70 px-4 shadow-[0_4px_18px_-16px_rgba(15,23,42,.5)] md:px-8">
             {/* Mobile Brand */}
             <div className="flex items-center gap-3 md:hidden">
               <Link href="/paciente" className="flex items-center gap-2.5">
@@ -216,7 +216,7 @@ export default async function PacienteLayout({
           </header>
 
           {/* Page Content */}
-          <main className="flex-1 overflow-y-auto p-4 md:p-8 pb-24 md:pb-8">
+          <main className="flex-1 overflow-y-auto p-4 pb-24 md:p-8 md:pb-8">
             <div className="max-w-6xl mx-auto animate-fade-in">
               {children}
             </div>
