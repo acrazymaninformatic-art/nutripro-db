@@ -104,7 +104,7 @@ export function AnamnesisForm({ patient, token }: Props) {
   // Pantalla de confirmación una vez enviado (NO se puede editar ni rellenar otro)
   if (isSubmitted) {
     return (
-      <Card className="rounded-3xl border-blue-200 bg-white p-8 sm:p-10 text-center shadow-xl">
+      <Card className="rounded-3xl border-blue-200 bg-white p-8 sm:p-10 text-center shadow-xl animate-pop-in">
         <div className="w-20 h-20 rounded-full bg-blue-100 text-blue-600 flex items-center justify-center mx-auto mb-5 shadow-inner">
           <CheckCircle2 className="w-12 h-12" />
         </div>
@@ -136,7 +136,7 @@ export function AnamnesisForm({ patient, token }: Props) {
   }
 
   return (
-    <form onSubmit={handleSubmit} className="space-y-6">
+    <form onSubmit={handleSubmit} className="space-y-6 animate-fade-in">
       {/* Alerta de error si ocurre */}
       {error && (
         <div className="p-4 bg-red-50 border border-red-200 rounded-2xl text-xs text-red-900 flex items-start gap-2.5 shadow-xs">

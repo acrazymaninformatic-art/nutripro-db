@@ -19,7 +19,7 @@ export default async function AnamnesisPage({ searchParams }: Props) {
   if (!token || token.length > 200) {
     return (
       <div className="min-h-screen bg-slate-50 py-16 px-4 flex items-center justify-center">
-        <Card className="max-w-md w-full p-8 rounded-3xl border-gray-200 bg-white text-center shadow-lg">
+        <Card className="max-w-md w-full p-8 rounded-3xl border-gray-200 bg-white text-center shadow-lg animate-pop-in">
           <div className="w-16 h-16 rounded-full bg-amber-100 text-amber-700 flex items-center justify-center mx-auto mb-4">
             <AlertCircle className="w-9 h-9" />
           </div>
@@ -47,7 +47,7 @@ export default async function AnamnesisPage({ searchParams }: Props) {
   if (!patient) {
     return (
       <div className="min-h-screen bg-slate-50 py-16 px-4 flex items-center justify-center">
-        <Card className="max-w-md w-full p-8 rounded-3xl border-gray-200 bg-white text-center shadow-lg">
+        <Card className="max-w-md w-full p-8 rounded-3xl border-gray-200 bg-white text-center shadow-lg animate-pop-in">
           <div className="w-16 h-16 rounded-full bg-red-100 text-red-600 flex items-center justify-center mx-auto mb-4">
             <AlertCircle className="w-9 h-9" />
           </div>
@@ -68,7 +68,7 @@ export default async function AnamnesisPage({ searchParams }: Props) {
   if (isAlreadyCompleted) {
     return (
       <div className="min-h-screen bg-slate-50 py-16 px-4 flex items-center justify-center">
-        <Card className="max-w-lg w-full p-8 rounded-3xl border-blue-200 bg-white text-center shadow-xl">
+        <Card className="max-w-lg w-full p-8 rounded-3xl border-blue-200 bg-white text-center shadow-xl animate-pop-in">
           <div className="w-16 h-16 rounded-2xl bg-white border border-blue-200 p-1 flex items-center justify-center mx-auto mb-4 shadow-sm overflow-hidden">
             <img
               src="/logo.png"
@@ -113,7 +113,7 @@ export default async function AnamnesisPage({ searchParams }: Props) {
   if (isMinorAtDate(patient.birthDate) && !patient.guardianConsentAt) {
     return (
       <div className="min-h-screen bg-slate-50 py-16 px-4 flex items-center justify-center">
-        <Card className="max-w-lg w-full p-8 rounded-3xl border-amber-200 bg-white text-center shadow-lg">
+        <Card className="max-w-lg w-full p-8 rounded-3xl border-amber-200 bg-white text-center shadow-lg animate-pop-in">
           <div className="w-16 h-16 rounded-full bg-amber-100 text-amber-700 flex items-center justify-center mx-auto mb-4"><AlertCircle className="w-9 h-9" /></div>
           <h1 className="text-xl font-black text-gray-900">Falta la representación legal</h1>
           <p className="text-sm text-gray-600 mt-3 leading-relaxed">La consulta debe registrar primero la identidad y la constancia de información del padre, madre o representante legal antes de recibir datos de salud de una persona menor.</p>
@@ -124,9 +124,9 @@ export default async function AnamnesisPage({ searchParams }: Props) {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-slate-100 via-blue-50/20 to-slate-50 py-10 px-4 sm:px-6">
+    <div className="min-h-screen animate-fade-in bg-gradient-to-b from-slate-100 via-blue-50/20 to-slate-50 py-10 px-4 sm:px-6">
       <div className="max-w-3xl mx-auto">
-        <div className="text-center mb-8">
+        <div className="mb-8 animate-slide-up text-center">
           <div className="inline-flex items-center justify-center w-16 h-16 rounded-2xl bg-white border border-blue-200 p-1.5 shadow-md mb-3 overflow-hidden">
             <img
               src="/logo.png"
@@ -145,19 +145,21 @@ export default async function AnamnesisPage({ searchParams }: Props) {
           </p>
         </div>
 
-        <AnamnesisForm
-          token={token}
-          patient={{
-            name: `${patient.firstName} ${patient.lastName}`,
-            phone: patient.phone,
-            email: patient.email,
-            medicalHistory: patient.medicalHistory,
-            currentMedications: patient.currentMedications,
-            isGLP1Treatment: patient.isGLP1Treatment,
-            foodAversions: patient.foodAversions,
-            shortTermGoal: patient.shortTermGoal,
-          }}
-        />
+        <div className="animate-slide-up">
+          <AnamnesisForm
+            token={token}
+            patient={{
+              name: `${patient.firstName} ${patient.lastName}`,
+              phone: patient.phone,
+              email: patient.email,
+              medicalHistory: patient.medicalHistory,
+              currentMedications: patient.currentMedications,
+              isGLP1Treatment: patient.isGLP1Treatment,
+              foodAversions: patient.foodAversions,
+              shortTermGoal: patient.shortTermGoal,
+            }}
+          />
+        </div>
       </div>
     </div>
   )

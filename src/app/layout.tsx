@@ -29,7 +29,7 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="es" className="h-full">
-      <body className={`${inter.variable} ${sora.variable} theme-dark min-h-full antialiased`}>
+      <body className={`${inter.variable} ${sora.variable} min-h-full antialiased`}>
         {children}
       </body>
     </html>

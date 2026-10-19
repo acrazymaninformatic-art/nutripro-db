@@ -5,6 +5,7 @@ import {
   LEGAL_PROFILE,
   LEGAL_PROFILE_MISSING_FIELDS,
 } from '@/lib/legal'
+import { PageMotion, ScrollReveal } from '@/components/ui/page-motion'
 
 export function LegalDocument({
   eyebrow,
@@ -18,8 +19,9 @@ export function LegalDocument({
   children: React.ReactNode
 }) {
   return (
-    <main className="min-h-screen bg-slate-50 px-4 py-10 text-slate-800 sm:px-6">
-      <article className="mx-auto max-w-4xl rounded-3xl border border-slate-200 bg-white p-6 shadow-sm sm:p-10">
+    <PageMotion>
+      <main className="min-h-screen bg-ambient-eva px-4 py-10 text-slate-800 sm:px-6">
+        <article className="mx-auto max-w-4xl rounded-3xl border border-slate-200/80 bg-white/95 p-6 shadow-[0_18px_50px_-30px_rgba(15,23,42,.32)] backdrop-blur-sm sm:p-10">
         <div className="flex flex-wrap items-center justify-between gap-3">
           <Link href="/login" className="inline-flex items-center gap-1.5 text-sm font-semibold text-blue-700 hover:underline">
             <ArrowLeft className="h-4 w-4" />
@@ -66,16 +68,19 @@ export function LegalDocument({
             <Link className="text-blue-700 hover:underline" href="/cookies">Cookies</Link>
           </nav>
         </footer>
-      </article>
-    </main>
+        </article>
+      </main>
+    </PageMotion>
   )
 }
 
 export function LegalSection({ title, children }: { title: string; children: React.ReactNode }) {
   return (
-    <section>
-      <h2 className="text-xl font-black tracking-tight text-slate-950">{title}</h2>
-      <div className="mt-2 space-y-3">{children}</div>
-    </section>
+    <ScrollReveal>
+      <section>
+        <h2 className="text-xl font-black tracking-tight text-slate-950">{title}</h2>
+        <div className="mt-2 space-y-3">{children}</div>
+      </section>
+    </ScrollReveal>
   )
 }

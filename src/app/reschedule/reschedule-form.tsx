@@ -19,17 +19,17 @@ export function RescheduleForm({ token, durationMin }: { token: string; duration
           required
           min={minDate}
           onChange={(event) => setDate(event.target.value)}
-          className="w-full rounded-xl border border-slate-300 px-3 py-2.5 outline-none focus:border-blue-600 focus:ring-2 focus:ring-blue-100"
+          className="w-full rounded-2xl border border-slate-200/90 bg-white/90 px-3.5 py-3 outline-none transition-[border-color,box-shadow] duration-200 focus:border-blue-500 focus:ring-4 focus:ring-blue-500/10"
         />
         <p className="text-xs text-slate-500">
           La duración de tu cita se mantiene en {durationMin} minutos. El horario solo se confirma si está libre.
         </p>
       </div>
-      {state?.error && <p role="alert" className="rounded-xl bg-rose-50 p-3 text-sm text-rose-800">{state.error}</p>}
+      {state?.error && <p role="alert" className="animate-shake rounded-2xl border border-rose-200 bg-rose-50 p-3 text-sm text-rose-800">{state.error}</p>}
       {state?.success ? (
-        <p role="status" className="rounded-xl bg-emerald-50 p-3 text-sm text-emerald-800">{state.success}</p>
+        <p role="status" className="rounded-2xl border border-emerald-200 bg-emerald-50 p-3 text-sm text-emerald-800">{state.success}</p>
       ) : (
-        <button disabled={pending} className="w-full rounded-xl bg-blue-700 px-4 py-3 font-semibold text-white hover:bg-blue-800 disabled:opacity-60">
+        <button disabled={pending} className="btn-tactile w-full rounded-2xl bg-gradient-to-r from-blue-600 to-sky-700 px-4 py-3 font-semibold text-white shadow-[0_10px_24px_-14px_rgba(2,132,199,.9)] hover:-translate-y-px hover:shadow-[0_14px_28px_-14px_rgba(2,132,199,.95)] disabled:cursor-wait disabled:opacity-60">
           {pending ? 'Comprobando disponibilidad…' : 'Confirmar nueva cita'}
         </button>
       )}

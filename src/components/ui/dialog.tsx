@@ -119,7 +119,7 @@ const DialogOverlay = React.forwardRef<
     <div
       ref={ref}
       className={cn(
-        'fixed inset-0 z-50 bg-[#020611]/75 backdrop-blur-sm transition-opacity duration-200 animate-overlay-in',
+        'fixed inset-0 z-50 bg-slate-950/50 backdrop-blur-sm transition-opacity duration-200 animate-overlay-in',
         className
       )}
       {...props}
@@ -174,7 +174,7 @@ const DialogContent = React.forwardRef<HTMLDivElement, DialogContentProps>(
           role="dialog"
           aria-modal="true"
           className={cn(
-            'fixed left-1/2 top-1/2 z-50 grid w-[calc(100%-2rem)] max-w-lg -translate-x-1/2 -translate-y-1/2 gap-4 rounded-3xl border border-[#1C2B4A] bg-[#0F1A30] p-6 text-[#E6EEFF] shadow-2xl duration-200 sm:w-full sm:p-7',
+            'fixed left-1/2 top-1/2 z-50 grid w-full max-w-lg -translate-x-1/2 -translate-y-1/2 gap-4 border border-slate-200/90 bg-white p-6 shadow-2xl duration-200 sm:rounded-3xl',
             'animate-dialog-in',
             className
           )}
@@ -257,7 +257,7 @@ const DialogTitle = React.forwardRef<
   <h2
     ref={ref}
     className={cn(
-      'text-lg font-bold leading-tight tracking-tight text-[#E6EEFF]',
+      'text-lg font-semibold leading-none tracking-tight text-gray-900',
       className
     )}
     {...props}
@@ -271,7 +271,7 @@ const DialogDescription = React.forwardRef<
 >(({ className, ...props }, ref) => (
   <p
     ref={ref}
-    className={cn('text-sm leading-relaxed text-[#8FA3C7]', className)}
+    className={cn('text-sm text-gray-500', className)}
     {...props}
   />
 ))
