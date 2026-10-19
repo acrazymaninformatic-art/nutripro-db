@@ -62,17 +62,15 @@ export function GsapMotionProvider({ children }: { children: React.ReactNode }) 
       const revealBatch = (elements: Element[]) => {
         if (reducedMotion) {
           gsap.set(elements, {
-            autoAlpha: 1,
             x: 0,
             y: 0,
             scale: 1,
-            clearProps: 'transform,opacity,visibility,willChange',
+            clearProps: 'transform,willChange',
           })
           return
         }
 
         gsap.to(elements, {
-          autoAlpha: 1,
           x: 0,
           y: 0,
           scale: 1,
@@ -81,7 +79,7 @@ export function GsapMotionProvider({ children }: { children: React.ReactNode }) 
           stagger: { each: 0.06, from: 'start' },
           ease: 'power3.out',
           overwrite: 'auto',
-          clearProps: 'transform,opacity,visibility,willChange',
+          clearProps: 'transform,willChange',
         })
       }
 
@@ -97,20 +95,21 @@ export function GsapMotionProvider({ children }: { children: React.ReactNode }) 
 
         if (!elements.length) return
 
+        // Never hide clinical content while waiting for ScrollTrigger. If a
+        // nested scroller is recalculated late, the data remains readable and
+        // only the transform animation is deferred.
         elements.forEach((element) => {
           element.dataset.gsapBound = 'true'
 
           if (reducedMotion) {
             gsap.set(element, {
-              autoAlpha: 1,
               x: 0,
               y: 0,
               scale: 1,
-              clearProps: 'transform,opacity,visibility,willChange',
+              clearProps: 'transform,willChange',
             })
           } else {
             gsap.set(element, {
-              autoAlpha: 0,
               y: 18,
               scale: 0.985,
               willChange: 'transform,opacity',
@@ -173,11 +172,10 @@ export function GsapMotionProvider({ children }: { children: React.ReactNode }) 
               ...activeNavTargets,
             ],
             {
-              autoAlpha: 1,
               x: 0,
               y: 0,
               scale: 1,
-              clearProps: 'transform,opacity,visibility,willChange',
+              clearProps: 'transform,willChange',
             }
           )
           return
@@ -186,12 +184,12 @@ export function GsapMotionProvider({ children }: { children: React.ReactNode }) 
         if (pageTargets.length) {
           gsap.fromTo(
             pageTargets,
-            { autoAlpha: 0, y: 12 },
+            { autoAlpha: 0, y: 18 },
             {
               autoAlpha: 1,
               y: 0,
-              duration: 0.58,
-              ease: 'power3.out',
+              duration: 0.64,
+              ease: 'power2.out',
               stagger: 0.025,
               clearProps: 'transform,opacity,visibility,willChange',
             }
@@ -201,13 +199,12 @@ export function GsapMotionProvider({ children }: { children: React.ReactNode }) 
         if (sidebarTargets.length) {
           gsap.fromTo(
             sidebarTargets,
-            { autoAlpha: 0, x: -20 },
+            { x: -20 },
             {
-              autoAlpha: 1,
               x: 0,
               duration: 0.62,
               ease: 'power3.out',
-              clearProps: 'transform,opacity,visibility,willChange',
+              clearProps: 'transform,willChange',
             }
           )
         }
@@ -215,13 +212,12 @@ export function GsapMotionProvider({ children }: { children: React.ReactNode }) 
         if (headerTargets.length) {
           gsap.fromTo(
             headerTargets,
-            { autoAlpha: 0, y: -10 },
+            { y: -10 },
             {
-              autoAlpha: 1,
               y: 0,
               duration: 0.52,
               ease: 'power3.out',
-              clearProps: 'transform,opacity,visibility,willChange',
+              clearProps: 'transform,willChange',
             }
           )
         }
@@ -229,14 +225,13 @@ export function GsapMotionProvider({ children }: { children: React.ReactNode }) 
         if (bannerTargets.length) {
           gsap.fromTo(
             bannerTargets,
-            { autoAlpha: 0, y: -8, scale: 0.99 },
+            { y: -8, scale: 0.99 },
             {
-              autoAlpha: 1,
               y: 0,
               scale: 1,
               duration: 0.48,
               ease: 'back.out(1.25)',
-              clearProps: 'transform,opacity,visibility,willChange',
+              clearProps: 'transform,willChange',
             }
           )
         }
@@ -244,13 +239,12 @@ export function GsapMotionProvider({ children }: { children: React.ReactNode }) 
         if (routeTitleTargets.length) {
           gsap.fromTo(
             routeTitleTargets,
-            { autoAlpha: 0, y: 5 },
+            { y: 5 },
             {
-              autoAlpha: 1,
               y: 0,
               duration: 0.34,
               ease: 'power2.out',
-              clearProps: 'transform,opacity,visibility,willChange',
+              clearProps: 'transform,willChange',
             }
           )
         }
@@ -283,11 +277,10 @@ export function GsapMotionProvider({ children }: { children: React.ReactNode }) 
 
         if (reducedMotion) {
           gsap.set([...overlays, ...modals], {
-            autoAlpha: 1,
             x: 0,
             y: 0,
             scale: 1,
-            clearProps: 'transform,opacity,visibility,willChange',
+            clearProps: 'transform,willChange',
           })
         } else {
           overlays
@@ -296,12 +289,12 @@ export function GsapMotionProvider({ children }: { children: React.ReactNode }) 
               element.dataset.gsapOverlayBound = 'true'
               gsap.fromTo(
                 element,
-                { autoAlpha: 0 },
+                { y: -4 },
                 {
-                  autoAlpha: 1,
+                  y: 0,
                   duration: 0.26,
                   ease: 'power2.out',
-                  clearProps: 'opacity,visibility,willChange',
+                  clearProps: 'transform,willChange',
                 }
               )
             })
@@ -312,14 +305,13 @@ export function GsapMotionProvider({ children }: { children: React.ReactNode }) 
               element.dataset.gsapModalBound = 'true'
               gsap.fromTo(
                 element,
-                { autoAlpha: 0, y: 14, scale: 0.985 },
+                { y: 14, scale: 0.985 },
                 {
-                  autoAlpha: 1,
                   y: 0,
                   scale: 1,
                   duration: 0.42,
                   ease: 'back.out(1.15)',
-                  clearProps: 'transform,opacity,visibility,willChange',
+                  clearProps: 'transform,willChange',
                 }
               )
             })
