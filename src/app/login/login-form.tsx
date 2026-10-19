@@ -10,7 +10,7 @@ export function LoginForm() {
   return (
     <form action={action} className="mt-2 space-y-5">
       <div className="space-y-1.5">
-        <label htmlFor="email" className="block text-xs font-bold text-slate-700">
+          <label htmlFor="email" className="block text-xs font-bold text-[#C7D6F2]">
           Correo electrónico
         </label>
         <input
@@ -20,18 +20,18 @@ export function LoginForm() {
           autoComplete="username"
           placeholder="tu@correo.com"
           required
-          className="w-full rounded-2xl border border-slate-200/90 bg-white/90 px-3.5 py-3 text-sm font-medium text-slate-900 shadow-[0_2px_8px_-6px_rgba(15,23,42,.32)] outline-none transition-[border-color,box-shadow,background-color] duration-200 placeholder:text-slate-400 hover:border-slate-300 focus:border-blue-500 focus:bg-white focus:ring-4 focus:ring-blue-500/10"
+          className="w-full rounded-2xl border border-[#1C2B4A] bg-[#0A1120]/70 px-3.5 py-3 text-sm font-medium text-[#E6EEFF] shadow-[0_2px_8px_-6px_rgba(0,0,0,.55)] outline-none transition-[border-color,background-color,opacity] duration-200 placeholder:text-[#647A9F] hover:border-blue-400/45 focus:border-blue-400 focus:bg-[#13213B] focus:ring-4 focus:ring-blue-500/15"
         />
       </div>
 
       <div className="space-y-1.5">
         <div className="flex items-center justify-between gap-3">
-          <label htmlFor="password" className="block text-xs font-bold text-slate-700">
+          <label htmlFor="password" className="block text-xs font-bold text-[#C7D6F2]">
             Contraseña
           </label>
           <Link
             href="/forgot-password"
-            className="text-xs font-semibold text-blue-600 hover:text-blue-700 hover:underline transition-colors"
+            className="text-xs font-semibold text-blue-300 transition-colors hover:text-blue-200 hover:underline"
           >
             ¿Olvidaste tu contraseña?
           </Link>
@@ -43,7 +43,7 @@ export function LoginForm() {
           autoComplete="current-password"
           placeholder="••••••••"
           required
-          className="w-full rounded-2xl border border-slate-200/90 bg-white/90 px-3.5 py-3 text-sm font-medium text-slate-900 shadow-[0_2px_8px_-6px_rgba(15,23,42,.32)] outline-none transition-[border-color,box-shadow,background-color] duration-200 hover:border-slate-300 focus:border-blue-500 focus:bg-white focus:ring-4 focus:ring-blue-500/10"
+          className="w-full rounded-2xl border border-[#1C2B4A] bg-[#0A1120]/70 px-3.5 py-3 text-sm font-medium text-[#E6EEFF] shadow-[0_2px_8px_-6px_rgba(0,0,0,.55)] outline-none transition-[border-color,background-color,opacity] duration-200 placeholder:text-[#647A9F] hover:border-blue-400/45 focus:border-blue-400 focus:bg-[#13213B] focus:ring-4 focus:ring-blue-500/15"
         />
       </div>
 

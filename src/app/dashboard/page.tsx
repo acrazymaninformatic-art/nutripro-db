@@ -16,6 +16,7 @@ import {
 } from 'lucide-react'
 import { OBJECTIVE_LABELS, type Objective } from '@/types'
 import { requireAdmin } from '@/lib/auth'
+import { ScrollReveal } from '@/components/ui/page-motion'
 
 export const dynamic = 'force-dynamic'
 
@@ -77,7 +78,7 @@ export default async function DashboardPage() {
       </div>
 
       {/* 4 Stat Cards Row */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
+      <ScrollReveal className="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-4" delay={0.06}>
         {/* Card 1: Pacientes */}
         <Card className="rounded-3xl border border-slate-200/80 shadow-xs hover-lift hover-glow-blue transition-all group bg-gradient-to-br from-white via-white to-blue-50/20 animate-slide-up stagger-1">
           <CardContent className="p-6 flex items-center justify-between">
@@ -153,9 +154,10 @@ export default async function DashboardPage() {
             </div>
           </CardContent>
         </Card>
-      </div>
+      </ScrollReveal>
 
       {/* Recent Patients Table */}
+      <ScrollReveal delay={0.12}>
       <Card className="rounded-3xl border border-slate-200/80 shadow-xs hover-lift bg-white overflow-hidden animate-slide-up stagger-5">
         <CardHeader className="flex flex-row items-center justify-between p-6 pb-4 border-b border-slate-100 bg-slate-50/40">
           <div>
@@ -245,6 +247,7 @@ export default async function DashboardPage() {
           )}
         </CardContent>
       </Card>
+      </ScrollReveal>
     </div>
   )
 }

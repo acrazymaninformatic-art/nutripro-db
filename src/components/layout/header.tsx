@@ -39,19 +39,19 @@ export function Header({ onMenu }: { onMenu?: () => void }) {
   const title = getTitle(pathname)
 
   return (
-    <header className="glass-nav sticky top-0 z-30 flex h-16 shrink-0 items-center justify-between border-b border-slate-200/80 px-4 shadow-[0_4px_18px_-16px_rgba(15,23,42,.5)] select-none sm:px-6">
+    <header className="glass-nav sticky top-0 z-30 flex h-16 shrink-0 items-center justify-between border-b border-[#1C2B4A] px-4 shadow-[0_4px_18px_-16px_rgba(0,0,0,.8)] select-none sm:px-6">
       <div className="flex min-w-0 items-center gap-3">
         <button
           type="button"
           onClick={onMenu}
           aria-label="Abrir menú de navegación"
-          className="focus-ring flex h-10 w-10 items-center justify-center rounded-2xl border border-slate-200/80 bg-white/75 text-slate-600 shadow-2xs transition-[background-color,color,transform] hover:bg-blue-50 hover:text-blue-700 active:scale-95 lg:hidden"
+          className="focus-ring flex h-10 w-10 items-center justify-center rounded-2xl border border-[#1C2B4A] bg-[#13213B] text-[#8FA3C7] shadow-2xs transition-[background-color,color,transform] hover:bg-blue-500/15 hover:text-blue-300 active:scale-95 lg:hidden"
         >
           <Menu className="h-5 w-5" />
         </button>
         <div className="min-w-0">
           <p className="hidden text-[10px] font-bold uppercase tracking-[0.18em] text-blue-600 sm:block">EVSoftware · Consulta clínica</p>
-          <h1 className="truncate text-base font-bold tracking-tight text-slate-950 sm:text-lg">{title}</h1>
+          <h1 className="truncate text-base font-bold tracking-tight text-[#E6EEFF] sm:text-lg">{title}</h1>
         </div>
       </div>
 

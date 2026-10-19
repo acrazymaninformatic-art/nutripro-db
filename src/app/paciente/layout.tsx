@@ -21,6 +21,7 @@ import { Button } from '@/components/ui/button'
 import { HelpWidget } from './help-widget'
 import { PacienteDesktopNav, PacienteMobileNav } from './paciente-nav'
 import { NotificationCenter } from '@/components/notifications/notification-center'
+import { PageMotion } from '@/components/ui/page-motion'
 
 export const dynamic = 'force-dynamic'
 
@@ -218,7 +219,7 @@ export default async function PacienteLayout({
           {/* Page Content */}
           <main className="flex-1 overflow-y-auto p-4 pb-24 md:p-8 md:pb-8">
             <div className="max-w-6xl mx-auto animate-fade-in">
-              {children}
+              <PageMotion>{children}</PageMotion>
             </div>
           </main>
         </div>

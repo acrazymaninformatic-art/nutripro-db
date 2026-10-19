@@ -1,0 +1,4 @@
+interface:
+  display_name: "DESIGN.md Style Apply"
+  short_description: "Apply DESIGN.md aesthetics to product UI"
+  default_prompt: "Use $design-md-style-apply to design this product in the style of the selected DESIGN.md profile."

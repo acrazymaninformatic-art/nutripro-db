@@ -1,9 +1,15 @@
 import type { Metadata } from 'next'
-import { Inter } from 'next/font/google'
+import { Inter, Sora } from 'next/font/google'
 import './globals.css'
 
 const inter = Inter({
   subsets: ['latin'],
+  variable: '--font-inter',
+})
+
+const sora = Sora({
+  subsets: ['latin'],
+  variable: '--font-sora',
 })
 
 export const metadata: Metadata = {
@@ -23,7 +29,7 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="es" className="h-full">
-      <body className={`${inter.className} min-h-full antialiased`}>
+      <body className={`${inter.variable} ${sora.variable} theme-dark min-h-full antialiased`}>
         {children}
       </body>
     </html>

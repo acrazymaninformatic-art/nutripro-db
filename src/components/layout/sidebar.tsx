@@ -73,19 +73,19 @@ export function Sidebar({
       )}
       <aside
         className={cn(
-          'fixed inset-y-0 left-0 z-50 flex h-screen shrink-0 flex-col select-none border-r border-slate-200/80 bg-white/95 shadow-2xl backdrop-blur-xl transition-[width,transform] duration-300 ease-out lg:relative lg:z-20 lg:shadow-none',
+          'fixed inset-y-0 left-0 z-50 flex h-screen shrink-0 flex-col select-none border-r border-[#1C2B4A] bg-[#0A1120]/95 shadow-2xl backdrop-blur-xl transition-[width,transform] duration-300 ease-out lg:relative lg:z-20 lg:shadow-none',
           isCollapsed ? 'lg:w-16' : 'w-72 lg:w-64',
           mobileOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0',
           mobileOpen ? 'flex' : 'hidden lg:flex'
         )}
       >
       {/* Logo & Toggle Header */}
-      <div className="flex items-center justify-between h-16 px-4 border-b border-slate-200/80">
+      <div className="flex h-16 items-center justify-between border-b border-[#1C2B4A] px-4">
         <Link
           href="/dashboard"
           className="flex items-center gap-3 overflow-hidden focus:outline-none"
         >
-          <div className="flex items-center justify-center w-9 h-9 rounded-xl bg-white border border-slate-200 shrink-0 shadow-2xs overflow-hidden p-0.5">
+          <div className="flex h-9 w-9 shrink-0 items-center justify-center overflow-hidden rounded-xl border border-[#1C2B4A] bg-[#0F1A30] p-0.5 shadow-2xs">
             <img
               src="/logo.png"
               alt="Eva Vidal"
@@ -94,10 +94,10 @@ export function Sidebar({
           </div>
           {!isCollapsed && (
             <div className="flex flex-col min-w-0">
-              <span className="text-sm font-black text-slate-900 tracking-tight leading-none">
+              <span className="text-sm font-black tracking-tight leading-none text-[#E6EEFF]">
                 EVSoftware
               </span>
-              <span className="text-[10px] text-blue-600 font-bold leading-tight mt-1">
+              <span className="mt-1 text-[10px] font-bold leading-tight text-blue-300">
                 Consulta · Eva Vidal
               </span>
             </div>
@@ -107,7 +107,7 @@ export function Sidebar({
           type="button"
           onClick={onMobileClose}
           aria-label="Cerrar menú"
-          className="ml-auto rounded-xl p-2 text-slate-400 transition-colors hover:bg-slate-100 hover:text-slate-700 lg:hidden"
+          className="ml-auto rounded-xl p-2 text-[#647A9F] transition-colors hover:bg-white/10 hover:text-white lg:hidden"
         >
           <X className="h-4 w-4" />
         </button>
@@ -115,7 +115,7 @@ export function Sidebar({
           <button
             type="button"
             onClick={() => setIsCollapsed(true)}
-            className="p-1.5 text-slate-400 hover:text-slate-700 hover:bg-slate-100 rounded-xl transition-colors"
+             className="rounded-xl p-1.5 text-[#647A9F] transition-colors hover:bg-white/10 hover:text-white"
             title="Colapsar menú"
             aria-label="Colapsar menú"
           >
@@ -126,11 +126,11 @@ export function Sidebar({
 
       {/* Collapse Toggle when collapsed */}
       {isCollapsed && (
-        <div className="flex justify-center py-2 border-b border-slate-100">
+        <div className="flex justify-center border-b border-[#1C2B4A] py-2">
           <button
             type="button"
             onClick={() => setIsCollapsed(false)}
-            className="p-1.5 text-slate-400 hover:text-slate-700 hover:bg-slate-100 rounded-xl transition-colors"
+             className="rounded-xl p-1.5 text-[#647A9F] transition-colors hover:bg-white/10 hover:text-white"
             title="Expandir menú"
             aria-label="Expandir menú"
           >
@@ -160,7 +160,7 @@ export function Sidebar({
                   : 'gap-3 px-3.5 py-2.5',
                 isActive
                   ? 'bg-gradient-to-r from-blue-600 to-blue-700 text-white shadow-xs shadow-blue-600/25'
-                  : 'text-slate-600 hover:bg-blue-50/70 hover:text-blue-700'
+                   : 'text-[#8FA3C7] hover:bg-blue-500/10 hover:text-blue-300'
               )}
             >
               <div
@@ -168,7 +168,7 @@ export function Sidebar({
                   'w-7 h-7 rounded-xl flex items-center justify-center transition-all duration-200',
                   isActive
                     ? 'bg-white/20 text-white'
-                    : 'text-slate-400 group-hover:text-blue-600 group-hover:bg-blue-100/60'
+                    : 'text-[#647A9F] group-hover:bg-blue-500/15 group-hover:text-blue-300'
                 )}
               >
                 <Icon
@@ -192,16 +192,16 @@ export function Sidebar({
       </nav>
 
       {/* Bottom section: User avatar with name, settings gear icon */}
-      <div className="p-3 border-t border-slate-200/80 bg-white/50">
+      <div className="border-t border-[#1C2B4A] bg-[#0F1A30]/70 p-3">
         {!isCollapsed ? (
-          <div className="flex items-center justify-between gap-2 p-2 rounded-2xl hover:bg-slate-100/70 transition-colors">
+          <div className="flex items-center justify-between gap-2 rounded-2xl p-2 transition-colors hover:bg-white/5">
             <div className="flex items-center gap-2.5 min-w-0">
               <div className="flex items-center justify-center w-8 h-8 rounded-xl bg-blue-100 text-blue-800 font-bold text-xs shrink-0 border border-blue-200/80">
                 EV
               </div>
               <div className="flex flex-col min-w-0">
-                <span className="text-xs font-bold text-slate-900 truncate">{professionalName}</span>
-                <span className="text-[11px] text-slate-500 truncate">
+                <span className="truncate text-xs font-bold text-[#E6EEFF]">{professionalName}</span>
+                <span className="truncate text-[11px] text-[#647A9F]">
                   Nutricionista Clínica
                 </span>
               </div>
@@ -211,14 +211,14 @@ export function Sidebar({
                 href="/dashboard/settings"
                 prefetch={true}
                 onClick={onMobileClose}
-                className="p-1.5 text-slate-400 hover:text-slate-700 hover:bg-slate-100 rounded-xl transition-colors"
+                 className="rounded-xl p-1.5 text-[#647A9F] transition-colors hover:bg-white/10 hover:text-white"
                 title="Configuración"
                 aria-label="Configuración"
               >
                 <Settings className="w-4 h-4" />
               </Link>
               <form action={logout}>
-                <button type="submit" className="p-1.5 text-slate-400 hover:text-rose-700 hover:bg-rose-50 rounded-xl transition-colors" title="Cerrar sesión" aria-label="Cerrar sesión">
+               <button type="submit" className="rounded-xl p-1.5 text-[#647A9F] transition-colors hover:bg-rose-500/15 hover:text-rose-300" title="Cerrar sesión" aria-label="Cerrar sesión">
                   <LogOut className="w-4 h-4" />
                 </button>
               </form>

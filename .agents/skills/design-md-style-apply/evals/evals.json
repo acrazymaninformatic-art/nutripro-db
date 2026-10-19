@@ -1,0 +1,36 @@
+{
+  "skill_name": "design-md-style-apply",
+  "skill_deps": [
+    "design/design-md-style-audit/SKILL.md"
+  ],
+  "evals": [
+    {
+      "id": 1,
+      "name": "apply-vercel-landing-page",
+      "prompt": "Build a landing page for a serverless database startup called 'NeonEdge' in the style of Vercel. The page needs: a hero with tagline and CTA, a three-feature grid, a code snippet demo block, a 'trusted by' logo strip, and a footer. Use React and Tailwind. Dark theme. Here's the Vercel DESIGN.md path: /home/mihai/code/skills/design-md-catalog/vercel/DESIGN.md",
+      "files": ["/tmp/test-apply/src/App.tsx"],
+      "assertions": [
+        {"id": "produces-structured-code", "text": "Produces React component code with Tailwind classes, not just a description", "type": "format"},
+        {"id": "names-source-file", "text": "States the selected style slug and source DESIGN.md file path in the response", "type": "format"},
+        {"id": "dna-translated-not-copied", "text": "Translates source aesthetic into product-specific content — does not copy Vercel brand marks, logos, or product names", "type": "quality"},
+        {"id": "all-sections-present", "text": "Code covers all requested sections: hero, feature grid, code snippet, logo strip, footer", "type": "quality"},
+        {"id": "no-mixed-styles", "text": "Does not mix in another famous brand's visual DNA unless explicitly stated as intentional", "type": "quality"},
+        {"id": "states-implementation-changes", "text": "Response summarizes main implementation changes applied", "type": "format"}
+      ]
+    },
+    {
+      "id": 2,
+      "name": "apply-linear-project-dashboard",
+      "prompt": "Build a project management dashboard shell in the style of Linear. It needs: a sidebar with project list, a main content area with an issue table (columns: title, status, assignee, priority), a top command palette bar, and keyboard shortcut hints. Use React and Tailwind. Dark theme. The DESIGN.md file is at /home/mihai/code/skills/design-md-catalog/linear/DESIGN.md",
+      "files": ["/tmp/test-apply/src/Dashboard.tsx"],
+      "assertions": [
+        {"id": "produces-structured-code", "text": "Produces React component code with Tailwind classes, not just a description", "type": "format"},
+        {"id": "command-palette-present", "text": "Includes a command palette bar component reflecting Linear's keyboard-first DNA", "type": "quality"},
+        {"id": "sidebar-main-layout", "text": "Layout has a sidebar + main content area split", "type": "quality"},
+        {"id": "dna-dimensions-covered", "text": "Translation covers color tokens, typography, spacing density, and component geometry from the source", "type": "quality"},
+        {"id": "no-brand-clone", "text": "Does not copy Linear brand name, product names, or exact marketing copy", "type": "quality"},
+        {"id": "states-source-and-changes", "text": "States the source file and summarizes main implementation changes", "type": "format"}
+      ]
+    }
+  ]
+}

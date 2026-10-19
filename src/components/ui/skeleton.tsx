@@ -7,7 +7,7 @@ export function Skeleton({
   return (
     <div
       className={cn(
-        'rounded-2xl skeleton-shimmer bg-slate-100',
+        'rounded-2xl skeleton-shimmer bg-[#13213B]',
         className
       )}
       {...props}

@@ -3,6 +3,7 @@
 import { useState } from 'react'
 import { Sidebar } from './sidebar'
 import { Header } from './header'
+import { PageMotion } from '@/components/ui/page-motion'
 
 export function DashboardShell({
   professionalName,
@@ -27,7 +28,9 @@ export function DashboardShell({
           <Header onMenu={() => setMobileMenuOpen(true)} />
         </div>
         <main className="surface-grid flex-1 overflow-y-auto bg-transparent p-4 sm:p-6 print:m-0 print:h-auto print:overflow-visible print:bg-white print:block print:p-0">
-          <div className="page-shell animate-fade-in">{children}</div>
+          <div className="page-shell">
+            <PageMotion>{children}</PageMotion>
+          </div>
         </main>
       </div>
     </div>
