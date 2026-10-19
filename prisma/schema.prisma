@@ -152,6 +152,15 @@ model Patient {
   consentRevokedAt    DateTime?
   consentRevocationReason String?
 
+  // === MENORES Y REPRESENTACIÓN LEGAL ===
+  guardianName                 String?
+  guardianRelationship         String?
+  guardianEmail                String?
+  guardianPhone                String?
+  guardianConsentAt            DateTime?
+  guardianConsentPolicyVersion String?
+  guardianConsentMethod        String?
+
   // === PORTAL DEL PACIENTE & SEGURIDAD ===
   portalAccessEnabled Boolean         @default(true)
   portalLastLoginAt   DateTime?
@@ -231,6 +240,14 @@ model AnamnesisSubmission {
   previousDietsExp     String?
   supplementsNotes     String?
   shortTermGoal        String?
+
+  // Evidencia mínima de información y consentimiento del envío público
+  privacyNoticeVersion      String?
+  privacyNoticeAcceptedAt   DateTime?
+  healthDataConsentVersion  String?
+  healthDataConsentAt       DateTime?
+  submissionIpAddress       String?
+  submissionUserAgent       String?
 
   @@index([patientId])
 }
@@ -422,7 +439,7 @@ model DataSubjectRequest {
   user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
   patientId   String
   patient     Patient  @relation(fields: [patientId], references: [id], onDelete: Cascade)
-  requestType String   // EXPORT | ERASURE | RECTIFICATION | ACCESS
+  requestType String   // EXPORT | ERASURE | RECTIFICATION | ACCESS | RESTRICTION | OPPOSITION
   status      String   @default("PENDING") // PENDING | IN_PROGRESS | COMPLETED | REJECTED
   notes       String?
   completedAt DateTime?
@@ -935,5 +952,4 @@ model CalculatorResultRecord {
 
   @@index([patientId, createdAt])
 }
-
 

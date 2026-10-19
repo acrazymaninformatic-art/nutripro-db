@@ -31,3 +31,37 @@ export async function registerDataSubjectRequest(patientId: string, requestType:
   revalidatePath(`/dashboard/patients/${patientId}`)
   return { message: requestType === 'EXPORT' ? 'Solicitud de exportación registrada. Ya puedes descargar la copia desde esta ficha.' : 'Solicitud de eliminación registrada para revisión antes de borrar permanentemente.' }
 }
+
+export async function resolveDataSubjectRequest(
+  requestId: string,
+  status: 'COMPLETED' | 'REJECTED',
+  notes?: string
+) {
+  const userId = await requireUserId()
+  const request = await prisma.dataSubjectRequest.findFirst({
+    where: { id: requestId, userId },
+    select: { id: true, patientId: true, requestType: true },
+  })
+  if (!request) throw new Error('Solicitud RGPD no encontrada.')
+
+  await prisma.$transaction([
+    prisma.dataSubjectRequest.update({
+      where: { id: request.id },
+      data: { status, completedAt: new Date(), notes: notes?.trim().slice(0, 2000) || undefined },
+    }),
+    prisma.auditLog.create({
+      data: {
+        userId,
+        patientId: request.patientId,
+        action: `RGPD_${request.requestType}_${status}`,
+        entityType: 'DataSubjectRequest',
+        entityId: request.id,
+        details: notes?.trim().slice(0, 500) || null,
+      },
+    }),
+  ])
+
+  revalidatePath(`/dashboard/patients/${request.patientId}`)
+  revalidatePath('/dashboard/operations')
+  return { message: status === 'COMPLETED' ? 'Solicitud marcada como completada.' : 'Solicitud marcada como rechazada.' }
+}

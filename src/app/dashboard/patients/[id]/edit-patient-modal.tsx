@@ -40,6 +40,12 @@ interface Props {
     medicationsStatus?: string | null
     pathologiesStatus?: string | null
     dietaryPreferences?: string | null
+    guardianName?: string | null
+    guardianRelationship?: string | null
+    guardianEmail?: string | null
+    guardianPhone?: string | null
+    guardianConsentAt?: Date | string | null
+    guardianConsentMethod?: string | null
   }
   iconOnly?: boolean
 }
@@ -181,6 +187,22 @@ export function EditPatientModal({ patient, iconOnly = false }: Props) {
                     />
                   </div>
                 </div>
+              </div>
+
+              <div className="rounded-2xl border border-amber-200 bg-amber-50 p-4 text-xs text-amber-950 space-y-3">
+                <div>
+                  <p className="font-bold">Representación legal si es menor de edad</p>
+                  <p className="mt-1 leading-5">Si la fecha de nacimiento corresponde a una persona menor, completa estos datos y conserva la constancia de información del representante.</p>
+                </div>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                  <div className="space-y-1"><Label className="text-xs font-semibold">Nombre del representante</Label><Input name="guardianName" defaultValue={patient.guardianName || ''} className="rounded-xl h-9 text-xs bg-white" /></div>
+                  <div className="space-y-1"><Label className="text-xs font-semibold">Relación</Label><Input name="guardianRelationship" defaultValue={patient.guardianRelationship || ''} placeholder="Padre, madre, tutor..." className="rounded-xl h-9 text-xs bg-white" /></div>
+                  <div className="space-y-1"><Label className="text-xs font-semibold">Correo del representante</Label><Input name="guardianEmail" type="email" defaultValue={patient.guardianEmail || ''} className="rounded-xl h-9 text-xs bg-white" /></div>
+                  <div className="space-y-1"><Label className="text-xs font-semibold">Teléfono del representante</Label><Input name="guardianPhone" defaultValue={patient.guardianPhone || ''} className="rounded-xl h-9 text-xs bg-white" /></div>
+                  <div className="space-y-1 sm:col-span-2"><Label className="text-xs font-semibold">Método de constancia</Label><select name="guardianConsentMethod" defaultValue={patient.guardianConsentMethod || 'PRESENCIAL'} className="w-full h-9 px-3 bg-white border border-gray-200 rounded-xl text-xs font-medium"><option value="PRESENCIAL">Información presencial</option><option value="TELEFONO">Información por teléfono</option><option value="DOCUMENTO">Documento firmado</option></select></div>
+                </div>
+                <label className="flex items-start gap-2 leading-5"><input name="guardianConsentAccepted" value="true" type="checkbox" className="mt-0.5" /><span>Confirmo o actualizo la constancia de representación e información legal cuando sea necesaria.</span></label>
+                {patient.guardianConsentAt && <p className="text-[11px] text-amber-800">Constancia registrada el {new Date(patient.guardianConsentAt).toLocaleDateString('es-ES')}.</p>}
               </div>
 
               {/* Objetivos y Actividad */}

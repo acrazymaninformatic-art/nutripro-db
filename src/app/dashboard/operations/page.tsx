@@ -25,7 +25,9 @@ export default async function OperationsPage() {
 
   const now = Date.now()
   const requestsWithCountdown = pendingRequestsList.map((req) => {
-    const deadline = new Date(new Date(req.createdAt).getTime() + 30 * 24 * 60 * 60 * 1000)
+    // El art. 12.3 RGPD habla de un mes natural, no de 30 días fijos.
+    const deadline = new Date(req.createdAt)
+    deadline.setMonth(deadline.getMonth() + 1)
     const daysLeft = Math.ceil((deadline.getTime() - now) / (1000 * 60 * 60 * 24))
     return { ...req, deadline, daysLeft }
   })
@@ -302,4 +304,3 @@ Software Afectado: EVSoftware · Gestión Clínica
     </div>
   )
 }
-

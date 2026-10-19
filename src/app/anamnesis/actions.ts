@@ -3,6 +3,9 @@
 import { prisma } from '@/lib/prisma'
 import { revalidatePath } from 'next/cache'
 import { hashAnamnesisToken } from '@/lib/anamnesis-token'
+import { headers } from 'next/headers'
+import { getForwardedClientAddress, LEGAL_POLICY_VERSION } from '@/lib/legal'
+import { isMinorAtDate } from '@/lib/patient-age'
 
 export interface AnamnesisPayload {
   token: string
@@ -41,6 +44,8 @@ export interface AnamnesisPayload {
   previousDietsExp?: string
   supplementsNotes?: string
   shortTermGoal?: string
+  privacyNoticeAccepted?: boolean
+  healthDataConsentAccepted?: boolean
 }
 
 export async function submitAnamnesis(data: AnamnesisPayload) {
@@ -48,15 +53,34 @@ export async function submitAnamnesis(data: AnamnesisPayload) {
     throw new Error('Acceso no autorizado: Solo puedes enviar el cuestionario a través del enlace personal facilitado por tu nutricionista.')
   }
 
+  if (!data.privacyNoticeAccepted || !data.healthDataConsentAccepted) {
+    throw new Error('Debes leer la información de privacidad y confirmar por separado el tratamiento de datos de salud antes de enviar el cuestionario.')
+  }
+
   const tokenHash = hashAnamnesisToken(data.token)
   const existing = await prisma.patient.findFirst({
-    where: { anamnesisAccessTokenHash: tokenHash, anamnesisAccessTokenExpiresAt: { gt: new Date() } },
+    where: {
+      anamnesisAccessTokenHash: tokenHash,
+      anamnesisAccessTokenExpiresAt: { gt: new Date() },
+      isActive: true,
+      portalAccessEnabled: true,
+      isHardDeleted: false,
+    },
     include: { anamnesisSubmissions: true },
   })
 
   if (!existing) {
     throw new Error('No se ha encontrado el expediente del paciente asociado a este enlace.')
   }
+
+  if (isMinorAtDate(existing.birthDate) && !existing.guardianConsentAt) {
+    throw new Error('Este enlace no puede recibir datos de una persona menor hasta que la consulta registre la intervención del representante legal.')
+  }
+
+  const headerList = await headers()
+  const submittedAt = new Date()
+  const submissionIpAddress = getForwardedClientAddress(headerList.get('x-forwarded-for') || headerList.get('x-real-ip'))
+  const submissionUserAgent = (headerList.get('user-agent') || 'no disponible').slice(0, 500)
 
   // Comprobar si ya fue rellenado previamente (bloqueo estricto para evitar re-ediciones o duplicados)
   if (existing.anamnesisStatus === 'COMPLETED' || existing.anamnesisSubmissions.length > 0) {
@@ -98,6 +122,12 @@ export async function submitAnamnesis(data: AnamnesisPayload) {
       previousDietsExp: data.previousDietsExp || null,
       supplementsNotes: data.supplementsNotes || null,
       shortTermGoal: data.shortTermGoal || null,
+      privacyNoticeVersion: LEGAL_POLICY_VERSION,
+      privacyNoticeAcceptedAt: submittedAt,
+      healthDataConsentVersion: LEGAL_POLICY_VERSION,
+      healthDataConsentAt: submittedAt,
+      submissionIpAddress,
+      submissionUserAgent,
     },
   })
 

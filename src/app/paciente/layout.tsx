@@ -22,6 +22,7 @@ import { HelpWidget } from './help-widget'
 import { PacienteDesktopNav, PacienteMobileNav } from './paciente-nav'
 import { NotificationCenter } from '@/components/notifications/notification-center'
 import { PageMotion } from '@/components/ui/page-motion'
+import { LEGAL_POLICY_VERSION, REQUIRED_PORTAL_CONSENTS } from '@/lib/legal'
 
 export const dynamic = 'force-dynamic'
 
@@ -46,11 +47,24 @@ export default async function PacienteLayout({
   if (patientId) {
     const patient = await prisma.patient.findUnique({
       where: { id: patientId },
-      select: { firstName: true, lastName: true, consentAcceptedAt: true, consentPolicyVersion: true },
+      select: {
+        firstName: true,
+        lastName: true,
+        consentAcceptedAt: true,
+        consentPolicyVersion: true,
+        consents: {
+          where: { type: { in: REQUIRED_PORTAL_CONSENTS.map((consent) => consent.type) }, version: LEGAL_POLICY_VERSION, accepted: true, revokedAt: null },
+          select: { type: true },
+        },
+      },
     })
     if (patient) {
       patientName = `${patient.firstName} ${patient.lastName}`.trim()
-      consentAccepted = Boolean(patient.consentAcceptedAt && patient.consentPolicyVersion === '1.0')
+      consentAccepted = Boolean(
+        patient.consentAcceptedAt &&
+        patient.consentPolicyVersion === LEGAL_POLICY_VERSION &&
+        REQUIRED_PORTAL_CONSENTS.every((requiredConsent) => patient.consents.some((consent) => consent.type === requiredConsent.type))
+      )
     }
   }
 

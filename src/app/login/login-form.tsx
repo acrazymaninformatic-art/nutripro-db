@@ -66,6 +66,13 @@ export function LoginForm() {
           'Iniciar sesión'
         )}
       </button>
+
+      <nav aria-label="Información legal" className="flex flex-wrap justify-center gap-x-3 gap-y-1 pt-1 text-[11px] font-medium text-[#8FA3C7]">
+        <Link href="/legal" className="transition-colors hover:text-blue-200 hover:underline">Aviso legal</Link>
+        <Link href="/privacy-policy" className="transition-colors hover:text-blue-200 hover:underline">Privacidad</Link>
+        <Link href="/terms" className="transition-colors hover:text-blue-200 hover:underline">Condiciones</Link>
+        <Link href="/cookies" className="transition-colors hover:text-blue-200 hover:underline">Cookies</Link>
+      </nav>
     </form>
   )
 }

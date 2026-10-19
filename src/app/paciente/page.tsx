@@ -24,6 +24,7 @@ import {
 } from 'lucide-react'
 import { PatientProtocolCard } from './patient-protocol-card'
 import { getFoodImage, FALLBACK_FOOD_SVG } from '@/lib/nutrition'
+import { LEGAL_POLICY_VERSION, REQUIRED_PORTAL_CONSENTS } from '@/lib/legal'
 
 export const dynamic = 'force-dynamic'
 
@@ -118,8 +119,9 @@ export default async function PacienteDashboardPage() {
         orderBy: { date: 'asc' },
         select: { date: true, modality: true, location: true },
       }),
-      prisma.patientConsent.count({
-        where: { patientId, accepted: false },
+      prisma.patientConsent.findMany({
+        where: { patientId, type: { in: REQUIRED_PORTAL_CONSENTS.map((consent) => consent.type) }, version: LEGAL_POLICY_VERSION },
+        select: { type: true, accepted: true, revokedAt: true },
       }),
       prisma.clinicalProtocolRecord.findFirst({
         where: { patientId, status: 'ACTIVE' },
@@ -127,7 +129,12 @@ export default async function PacienteDashboardPage() {
       }),
     ])
 
-    if (!isAdminPreview && (!patientData?.consentAcceptedAt || patientData.consentPolicyVersion !== '1.0')) {
+    const hasAcceptedCurrentPolicies = Boolean(
+      patientData?.consentAcceptedAt &&
+      patientData.consentPolicyVersion === LEGAL_POLICY_VERSION &&
+      REQUIRED_PORTAL_CONSENTS.every((requiredConsent) => consents.some((consent) => consent.type === requiredConsent.type && consent.accepted && !consent.revokedAt))
+    )
+    if (!isAdminPreview && !hasAcceptedCurrentPolicies) {
       redirect('/paciente/politicas')
     }
 
@@ -135,7 +142,7 @@ export default async function PacienteDashboardPage() {
       firstName = patientData.firstName
     }
     hasPendingAnamnesis = patientData?.anamnesisStatus === 'PENDING' || patientData?.anamnesisStatus === 'SENT'
-    pendingConsentsCount = consents
+    pendingConsentsCount = REQUIRED_PORTAL_CONSENTS.filter((requiredConsent) => !consents.some((consent) => consent.type === requiredConsent.type && consent.accepted && !consent.revokedAt)).length
     lastAnthropometry = anthropometry
     activeMealPlan = mealPlan
     documentCount = docsCount

@@ -5,6 +5,8 @@ import { revalidatePath } from 'next/cache'
 import { requireUserId } from '@/lib/auth'
 import { calculateBMI, calculateWaistToHeightRatio, calculateCUNBAE, calculateHeathCarterSomatotype } from '@/lib/nutrition/anthropometry'
 import { getScreeningDefinition } from '@/lib/clinical/screenings'
+import { isMinorAtDate } from '@/lib/patient-age'
+import { LEGAL_POLICY_VERSION, REQUIRED_PORTAL_CONSENTS } from '@/lib/legal'
 
 // Helper to get or fallback to demo nutritionist user
 async function getDefaultUserId(): Promise<string> {
@@ -101,7 +103,12 @@ export async function getPatient(id: string) {
 export async function createPatient(formData: FormData) {
   await requireUserId()
   const userId = await getDefaultUserId()
-  if (formData.get('consentAccepted') !== 'true') throw new Error('Es obligatorio registrar el consentimiento para tratar datos personales y de salud.')
+  const hasPrivacyNotice = formData.get('privacyNoticeAccepted') === 'true'
+  const hasPortalTerms = formData.get('portalTermsAccepted') === 'true'
+  const hasHealthDataConsent = formData.get('healthDataConsentAccepted') === 'true'
+  if (!hasPrivacyNotice || !hasPortalTerms || !hasHealthDataConsent) {
+    throw new Error('Es obligatorio registrar por separado la información de privacidad, las condiciones del portal y la base para tratar datos de salud.')
+  }
 
   // Step 1: Datos Personales
   const firstName = formData.get('firstName') as string
@@ -109,6 +116,18 @@ export async function createPatient(formData: FormData) {
   const email = (formData.get('email') as string) || null
   const phone = (formData.get('phone') as string) || null
   const birthDateStr = formData.get('birthDate') as string
+  const birthDate = new Date(birthDateStr)
+  if (Number.isNaN(birthDate.getTime())) throw new Error('La fecha de nacimiento no es válida.')
+  const isMinor = isMinorAtDate(birthDate)
+  const guardianName = (formData.get('guardianName') as string)?.trim() || null
+  const guardianRelationship = (formData.get('guardianRelationship') as string)?.trim() || null
+  const guardianEmail = (formData.get('guardianEmail') as string)?.trim() || null
+  const guardianPhone = (formData.get('guardianPhone') as string)?.trim() || null
+  const guardianConsentAccepted = formData.get('guardianConsentAccepted') === 'true'
+  const guardianConsentMethod = (formData.get('guardianConsentMethod') as string)?.trim() || null
+  if (isMinor && (!guardianName || !guardianRelationship || !guardianConsentAccepted)) {
+    throw new Error('Para un paciente menor de edad debes registrar al representante legal, su relación y la constancia de información/consentimiento.')
+  }
   const sex = (formData.get('sex') as string) || 'FEMALE'
   const heightCm = parseFloat(formData.get('heightCm') as string) || 165
   const referralSource = (formData.get('referralSource') as string) || null
@@ -189,12 +208,19 @@ export async function createPatient(formData: FormData) {
     data: {
       userId,
       consentAcceptedAt: new Date(),
-      consentPolicyVersion: '2026-10-14',
+      consentPolicyVersion: LEGAL_POLICY_VERSION,
       firstName,
       lastName,
       email,
       phone,
-      birthDate: new Date(birthDateStr),
+      birthDate,
+      guardianName: isMinor ? guardianName : null,
+      guardianRelationship: isMinor ? guardianRelationship : null,
+      guardianEmail: isMinor ? guardianEmail : null,
+      guardianPhone: isMinor ? guardianPhone : null,
+      guardianConsentAt: isMinor ? new Date() : null,
+      guardianConsentPolicyVersion: isMinor ? LEGAL_POLICY_VERSION : null,
+      guardianConsentMethod: isMinor ? guardianConsentMethod || 'PROFESSIONAL_ATTESTATION' : null,
       sex,
       heightCm,
       referralSource,
@@ -257,6 +283,19 @@ export async function createPatient(formData: FormData) {
     },
   })
 
+  await prisma.patientConsent.createMany({
+    data: REQUIRED_PORTAL_CONSENTS.map((consent) => ({
+      patientId: patient.id,
+      type: consent.type,
+      title: consent.title,
+      version: LEGAL_POLICY_VERSION,
+      status: 'COMPLETED',
+      accepted: true,
+      acceptedAt: new Date(),
+      signatureData: 'Registrado por la profesional tras informar a la persona interesada.',
+    })),
+  })
+
   // If initial weight was provided, create the first anthropometry entry
   if (initialWeightStr && !isNaN(parseFloat(initialWeightStr))) {
     await prisma.anthropometry.create({
@@ -278,11 +317,41 @@ export async function createPatient(formData: FormData) {
 
 export async function updatePatient(id: string, formData: FormData) {
   const userId = await requireUserId()
+  const currentPatient = await prisma.patient.findFirst({
+    where: { id, userId },
+    select: {
+      id: true,
+      birthDate: true,
+      guardianName: true,
+      guardianRelationship: true,
+      guardianEmail: true,
+      guardianPhone: true,
+      guardianConsentAt: true,
+      guardianConsentPolicyVersion: true,
+      guardianConsentMethod: true,
+    },
+  })
+  if (!currentPatient) throw new Error('Paciente no encontrado.')
   const firstName = formData.get('firstName') as string
   const lastName = formData.get('lastName') as string
   const email = (formData.get('email') as string) || null
   const phone = (formData.get('phone') as string) || null
   const birthDateStr = formData.get('birthDate') as string
+  const nextBirthDate = birthDateStr ? new Date(birthDateStr) : undefined
+  if (nextBirthDate && Number.isNaN(nextBirthDate.getTime())) throw new Error('La fecha de nacimiento no es válida.')
+  const isMinor = isMinorAtDate(nextBirthDate || currentPatient.birthDate)
+  const guardianName = formData.has('guardianName') ? ((formData.get('guardianName') as string)?.trim() || null) : currentPatient.guardianName
+  const guardianRelationship = formData.has('guardianRelationship') ? ((formData.get('guardianRelationship') as string)?.trim() || null) : currentPatient.guardianRelationship
+  const guardianEmail = formData.has('guardianEmail') ? ((formData.get('guardianEmail') as string)?.trim() || null) : currentPatient.guardianEmail
+  const guardianPhone = formData.has('guardianPhone') ? ((formData.get('guardianPhone') as string)?.trim() || null) : currentPatient.guardianPhone
+  const guardianConsentAccepted = formData.get('guardianConsentAccepted') === 'true'
+  const guardianConsentAt = currentPatient.guardianConsentAt || (guardianConsentAccepted ? new Date() : null)
+  if (isMinor && (!guardianName || !guardianRelationship || !guardianConsentAt)) {
+    throw new Error('Para un paciente menor de edad debes mantener registrada la información y constancia del representante legal.')
+  }
+  const guardianConsentMethod = formData.has('guardianConsentMethod')
+    ? ((formData.get('guardianConsentMethod') as string)?.trim() || 'PROFESSIONAL_ATTESTATION')
+    : currentPatient.guardianConsentMethod
   const sex = formData.get('sex') as string
   const heightCm = parseFloat(formData.get('heightCm') as string)
   const objective = formData.get('objective') as string
@@ -309,7 +378,14 @@ export async function updatePatient(id: string, formData: FormData) {
       lastName,
       email,
       phone,
-      birthDate: birthDateStr ? new Date(birthDateStr) : undefined,
+      birthDate: nextBirthDate,
+      guardianName,
+      guardianRelationship,
+      guardianEmail,
+      guardianPhone,
+      guardianConsentAt,
+      guardianConsentPolicyVersion: guardianConsentAt ? (currentPatient.guardianConsentPolicyVersion || LEGAL_POLICY_VERSION) : null,
+      guardianConsentMethod,
       sex: sex || undefined,
       heightCm: isNaN(heightCm) ? undefined : heightCm,
       objective: objective || undefined,
@@ -362,7 +438,7 @@ export async function hardDeletePatient(patientId: string) {
   const userId = await requireUserId()
   const patient = await prisma.patient.findFirst({
     where: { id: patientId, userId },
-    select: { id: true, firstName: true, lastName: true },
+    select: { id: true },
   })
   if (!patient) throw new Error('Paciente no encontrado.')
 
@@ -372,7 +448,7 @@ export async function hardDeletePatient(patientId: string) {
       action: 'HARD_DELETE_PATIENT',
       entityType: 'PATIENT',
       entityId: patientId,
-      details: `Eliminación definitiva de expediente RGPD: ${patient.firstName} ${patient.lastName}.`,
+      details: 'Eliminación definitiva de expediente RGPD solicitada por la profesional autorizada. Se conserva únicamente la trazabilidad mínima del evento.',
     },
   })
 
@@ -1038,4 +1114,3 @@ export async function deleteProgressPhoto(photoId: string, patientId: string) {
   revalidatePath(`/dashboard/patients/${patientId}`)
   return { success: true }
 }
-

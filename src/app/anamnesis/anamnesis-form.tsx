@@ -22,6 +22,7 @@ import {
   Stethoscope,
 } from 'lucide-react'
 import { submitAnamnesis } from './actions'
+import Link from 'next/link'
 
 interface Props {
   token: string
@@ -88,6 +89,8 @@ export function AnamnesisForm({ patient, token }: Props) {
         previousDietsExp: formData.get('previousDietsExp') as string,
         supplementsNotes: formData.get('supplementsNotes') as string,
         shortTermGoal: formData.get('shortTermGoal') as string,
+        privacyNoticeAccepted: formData.get('privacyNoticeAccepted') === 'on',
+        healthDataConsentAccepted: formData.get('healthDataConsentAccepted') === 'on',
       })
 
       setIsSubmitted(true)
@@ -553,6 +556,11 @@ Cena: Ensalada con atún y huevo duro..."
           <p className="text-2xs text-gray-500 mt-0.5">
             Tus datos se transmitirán directamente a la consulta médica de <strong>Eva Vidal</strong>.
           </p>
+        </div>
+
+        <div className="w-full sm:max-w-xl space-y-2.5 text-xs leading-5 text-gray-700">
+          <label className="flex items-start gap-2"><input name="privacyNoticeAccepted" type="checkbox" required className="mt-1 h-4 w-4 accent-blue-600" /><span>He leído la <Link href="/privacy-policy" target="_blank" className="font-semibold text-blue-700 underline">información de privacidad</Link> y conozco mis derechos. *</span></label>
+          <label className="flex items-start gap-2"><input name="healthDataConsentAccepted" type="checkbox" required className="mt-1 h-4 w-4 accent-blue-600" /><span>Confirmo que he recibido información y consiento expresamente el tratamiento de los datos de salud que facilito para la atención nutricional. *</span></label>
         </div>
 
         <Button

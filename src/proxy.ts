@@ -3,22 +3,33 @@ import { verifySessionTokenEdge } from '@/lib/session-token-edge'
 
 const SESSION_COOKIE = 'evsoftware_session'
 
+function applySecurityHeaders(response: NextResponse, sensitive = false) {
+  response.headers.set('X-Content-Type-Options', 'nosniff')
+  response.headers.set('X-Frame-Options', 'DENY')
+  response.headers.set('Permissions-Policy', 'camera=(), microphone=(), geolocation=()')
+  response.headers.set('Referrer-Policy', sensitive ? 'no-referrer' : 'strict-origin-when-cross-origin')
+  if (process.env.NODE_ENV === 'production') {
+    response.headers.set('Strict-Transport-Security', 'max-age=31536000; includeSubDomains')
+  }
+  return response
+}
+
 export async function proxy(request: NextRequest) {
   const { pathname } = request.nextUrl
   const requestHeaders = new Headers(request.headers)
   requestHeaders.set('x-pathname', pathname)
 
-  if (pathname === '/login' || pathname === '/forgot-password' || pathname === '/privacy-policy' || pathname === '/robots.txt') {
-    return NextResponse.next({ request: { headers: requestHeaders } })
+  if (pathname === '/login' || pathname === '/forgot-password' || pathname === '/privacy-policy' || pathname === '/legal' || pathname === '/terms' || pathname === '/cookies' || pathname === '/robots.txt') {
+    return applySecurityHeaders(NextResponse.next({ request: { headers: requestHeaders } }))
   }
   if (pathname.startsWith('/anamnesis') || pathname === '/reschedule' || pathname === '/reset-password') {
     const response = NextResponse.next({ request: { headers: requestHeaders } })
     response.headers.set('Cache-Control', 'private, no-store, max-age=0')
     response.headers.set('Referrer-Policy', 'no-referrer')
     response.headers.set('X-Robots-Tag', 'noindex, nofollow, noarchive')
-    return response
+    return applySecurityHeaders(response, true)
   }
-  if (pathname === '/api/cron/reminders') return NextResponse.next({ request: { headers: requestHeaders } })
+  if (pathname === '/api/cron/reminders') return applySecurityHeaders(NextResponse.next({ request: { headers: requestHeaders } }), true)
 
   const token = request.cookies.get(SESSION_COOKIE)?.value
   let valid = false
@@ -31,15 +42,15 @@ export async function proxy(request: NextRequest) {
     const response = NextResponse.next({ request: { headers: requestHeaders } })
     response.headers.set('Cache-Control', 'private, no-store, max-age=0')
     response.headers.set('Vary', 'Cookie')
-    return response
+    return applySecurityHeaders(response, true)
   }
 
-  if (pathname.startsWith('/api/')) return NextResponse.json({ error: 'No autorizado' }, { status: 401 })
+  if (pathname.startsWith('/api/')) return applySecurityHeaders(NextResponse.json({ error: 'No autorizado' }, { status: 401 }), true)
   const loginUrl = new URL('/login', request.url)
   loginUrl.searchParams.set('next', pathname)
   const response = NextResponse.redirect(loginUrl)
   response.headers.set('Cache-Control', 'private, no-store, max-age=0')
-  return response
+  return applySecurityHeaders(response, true)
 }
 
 export const config = {

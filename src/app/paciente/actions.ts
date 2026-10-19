@@ -5,6 +5,7 @@ import { revalidatePath } from 'next/cache'
 import { redirect } from 'next/navigation'
 import { prisma } from '@/lib/prisma'
 import { destroySession, requirePatient } from '@/lib/auth'
+import { getForwardedClientAddress, LEGAL_POLICY_VERSION, REQUIRED_PORTAL_CONSENTS } from '@/lib/legal'
 
 export async function logoutAction() {
   await destroySession()
@@ -18,48 +19,81 @@ export async function logout() {
 /**
  * Aceptación obligatoria de políticas RGPD, Cookies y Condiciones de uso al primer login
  */
-export async function acceptPatientPoliciesAction() {
-  const { patientId, isAdminPreview } = await requirePatient()
+export async function acceptPatientPoliciesAction(formData: FormData) {
+  const { user, patientId, isAdminPreview } = await requirePatient()
   if (isAdminPreview) throw new Error('Modo vista previa de solo lectura (Eva Vidal).')
   if (!patientId) {
     throw new Error('Paciente no identificado')
   }
 
-  await prisma.patient.update({
-    where: { id: patientId },
-    data: {
-      consentAcceptedAt: new Date(),
-      consentPolicyVersion: '1.0',
-    },
-  })
-
-  // Asegurar que exista el registro formal en PatientConsent
-  const existingConsent = await prisma.patientConsent.findFirst({
-    where: { patientId, type: 'RGPD' },
-  })
-
-  if (!existingConsent) {
-    await prisma.patientConsent.create({
-      data: {
-        patientId,
-        type: 'RGPD',
-        title: 'Tratamiento de Datos Personales y de Salud (Art. 9 RGPD)',
-        version: '1.0',
-        accepted: true,
-        acceptedAt: new Date(),
-        signatureData: 'Aceptado digitalmente en primer inicio de sesión en el portal',
-      },
-    })
-  } else if (!existingConsent.accepted) {
-    await prisma.patientConsent.update({
-      where: { id: existingConsent.id },
-      data: {
-        accepted: true,
-        acceptedAt: new Date(),
-        signatureData: 'Aceptado digitalmente en primer inicio de sesión en el portal',
-      },
-    })
+  const acceptedFields = ['privacyNoticeAccepted', 'portalTermsAccepted', 'healthDataConsentAccepted']
+  if (acceptedFields.some((field) => formData.get(field) !== 'on' && formData.get(field) !== 'true')) {
+    throw new Error('Debes aceptar por separado la información de privacidad, las condiciones de uso y el tratamiento de datos de salud.')
   }
+
+  const headerList = await headers()
+  const acceptedAt = new Date()
+  const ipAddress = getForwardedClientAddress(headerList.get('x-forwarded-for') || headerList.get('x-real-ip'))
+  const userAgent = (headerList.get('user-agent') || 'no disponible').slice(0, 500)
+
+  await prisma.$transaction(async (tx) => {
+    await tx.patient.update({
+      where: { id: patientId },
+      data: {
+        consentAcceptedAt: acceptedAt,
+        consentPolicyVersion: LEGAL_POLICY_VERSION,
+        consentDeliveryStatus: 'COMPLETED',
+      },
+    })
+
+    for (const requiredConsent of REQUIRED_PORTAL_CONSENTS) {
+      const existingConsent = await tx.patientConsent.findFirst({
+        where: { patientId, type: requiredConsent.type, version: LEGAL_POLICY_VERSION },
+        orderBy: { createdAt: 'desc' },
+      })
+
+      if (existingConsent) {
+        await tx.patientConsent.update({
+          where: { id: existingConsent.id },
+          data: {
+            status: 'COMPLETED',
+            accepted: true,
+            acceptedAt,
+            signatureData: 'Aceptado digitalmente en el portal tras lectura separada del documento.',
+            ipAddress,
+            userAgent,
+            revokedAt: null,
+            revocationReason: null,
+          },
+        })
+      } else {
+        await tx.patientConsent.create({
+          data: {
+            patientId,
+            type: requiredConsent.type,
+            title: requiredConsent.title,
+            version: LEGAL_POLICY_VERSION,
+            status: 'COMPLETED',
+            accepted: true,
+            acceptedAt,
+            signatureData: 'Aceptado digitalmente en el portal tras lectura separada del documento.',
+            ipAddress,
+            userAgent,
+          },
+        })
+      }
+    }
+
+    await tx.auditLog.create({
+      data: {
+        userId: user.id,
+        patientId,
+        action: 'PORTAL_LEGAL_POLICIES_ACCEPTED',
+        entityType: 'PatientConsent',
+        details: `Aceptación separada de privacidad, condiciones y datos de salud. Versión ${LEGAL_POLICY_VERSION}.`,
+      },
+    })
+  })
 
   revalidatePath('/paciente')
   redirect('/paciente')
@@ -442,4 +476,3 @@ export async function submitPortalAnamnesisAction(data: any) {
 
   return submitPatientQuestionnaireAction(q.id, data)
 }
-

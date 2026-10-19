@@ -19,6 +19,8 @@ import {
 import {
   changePasswordAction,
   requestDataErasureAction,
+  requestDataAccessAction,
+  requestDataRectificationAction,
   exportPatientDataAction,
   type ChangePasswordState,
 } from '../config-actions'
@@ -43,6 +45,7 @@ export function ConfigClient({ userEmail, pendingRequests }: Props) {
   const [erasureSuccess, setErasureSuccess] = useState<string | null>(null)
   const [showErasureConfirm, setShowErasureConfirm] = useState(false)
   const [erasureNotes, setErasureNotes] = useState('')
+  const [rightsLoading, setRightsLoading] = useState(false)
 
   const handleDownloadData = async () => {
     setDownloading(true)
@@ -76,6 +79,19 @@ export function ConfigClient({ userEmail, pendingRequests }: Props) {
       alert(e.message || 'Error al registrar solicitud')
     } finally {
       setErasureLoading(false)
+    }
+  }
+
+  const handleRightsRequest = async (type: 'ACCESS' | 'RECTIFICATION') => {
+    setRightsLoading(true)
+    setErasureSuccess(null)
+    try {
+      const res = type === 'ACCESS' ? await requestDataAccessAction() : await requestDataRectificationAction()
+      setErasureSuccess(res.message)
+    } catch (e: any) {
+      alert(e.message || 'Error al registrar solicitud')
+    } finally {
+      setRightsLoading(false)
     }
   }
 
@@ -201,7 +217,19 @@ export function ConfigClient({ userEmail, pendingRequests }: Props) {
         </CardContent>
       </Card>
 
-      {/* 3. Solicitud de Supresión de Datos (RGPD Art. 17) */}
+      {/* 3. Otros derechos RGPD */}
+      <Card className="rounded-3xl border-slate-200/80 shadow-xs overflow-hidden">
+        <CardHeader className="bg-slate-50/60 pb-3.5 border-b border-slate-100">
+          <CardTitle className="text-base font-bold text-slate-900 flex items-center gap-2"><ShieldCheck className="w-4 h-4 text-blue-600" /><span>Acceso y rectificación</span></CardTitle>
+          <CardDescription className="text-xs text-slate-500">Además de descargar tus datos, puedes pedir una revisión formal de la información.</CardDescription>
+        </CardHeader>
+        <CardContent className="p-6 flex flex-wrap gap-2.5">
+          <Button onClick={() => handleRightsRequest('ACCESS')} disabled={rightsLoading} variant="outline" className="rounded-2xl text-xs font-bold gap-2"><ShieldCheck className="w-4 h-4 text-blue-600" />Solicitar acceso formal</Button>
+          <Button onClick={() => handleRightsRequest('RECTIFICATION')} disabled={rightsLoading} variant="outline" className="rounded-2xl text-xs font-bold gap-2"><FileDown className="w-4 h-4 text-blue-600" />Solicitar rectificación</Button>
+        </CardContent>
+      </Card>
+
+      {/* 4. Solicitud de Supresión de Datos (RGPD Art. 17) */}
       <Card className="rounded-3xl border-slate-200/80 shadow-xs overflow-hidden">
         <CardHeader className="bg-slate-50/60 pb-3.5 border-b border-slate-100">
           <CardTitle className="text-base font-bold text-slate-900 flex items-center gap-2">

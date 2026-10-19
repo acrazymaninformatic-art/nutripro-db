@@ -40,6 +40,8 @@ import {
   Objective,
   ActivityLevel,
 } from '@/types'
+import { isMinorAtDate } from '@/lib/patient-age'
+import { LEGAL_POLICY_VERSION } from '@/lib/legal'
 
 // Step Definitions
 const STEPS = [
@@ -100,7 +102,10 @@ export default function NewPatientPage() {
   const [visitedSteps, setVisitedSteps] = useState<Set<number>>(new Set([1]))
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
-  const [consentAccepted, setConsentAccepted] = useState(false)
+  const [privacyNoticeAccepted, setPrivacyNoticeAccepted] = useState(false)
+  const [portalTermsAccepted, setPortalTermsAccepted] = useState(false)
+  const [healthDataConsentAccepted, setHealthDataConsentAccepted] = useState(false)
+  const [guardianConsentAccepted, setGuardianConsentAccepted] = useState(false)
 
   // Step 1: Personal
   const [firstName, setFirstName] = useState('')
@@ -108,6 +113,11 @@ export default function NewPatientPage() {
   const [email, setEmail] = useState('')
   const [phone, setPhone] = useState('')
   const [birthDate, setBirthDate] = useState('1995-01-01')
+  const [guardianName, setGuardianName] = useState('')
+  const [guardianRelationship, setGuardianRelationship] = useState('')
+  const [guardianEmail, setGuardianEmail] = useState('')
+  const [guardianPhone, setGuardianPhone] = useState('')
+  const [guardianConsentMethod, setGuardianConsentMethod] = useState('PRESENCIAL')
   const [sex, setSex] = useState<Sex>('FEMALE')
   const [heightCm, setHeightCm] = useState('165')
   const [referralSource, setReferralSource] = useState('')
@@ -172,6 +182,10 @@ export default function NewPatientPage() {
   const [bodyFatPct, setBodyFatPct] = useState('')
   const [waistCm, setWaistCm] = useState('')
   const [hipCm, setHipCm] = useState('')
+
+  const isMinor = Boolean(birthDate && isMinorAtDate(birthDate))
+  const consentAccepted = privacyNoticeAccepted && portalTermsAccepted && healthDataConsentAccepted
+  const canSubmit = consentAccepted && (!isMinor || guardianConsentAccepted)
 
   // Bioimpedance Scale Import States
   const [scaleParsing, setScaleParsing] = useState(false)
@@ -276,6 +290,12 @@ export default function NewPatientPage() {
       formData.append('email', email.trim())
       formData.append('phone', phone.trim())
       formData.append('birthDate', birthDate || '1995-01-01')
+      formData.append('guardianName', guardianName.trim())
+      formData.append('guardianRelationship', guardianRelationship.trim())
+      formData.append('guardianEmail', guardianEmail.trim())
+      formData.append('guardianPhone', guardianPhone.trim())
+      formData.append('guardianConsentAccepted', guardianConsentAccepted ? 'true' : 'false')
+      formData.append('guardianConsentMethod', guardianConsentMethod)
       formData.append('sex', sex || 'FEMALE')
       formData.append('heightCm', heightCm || '170')
       formData.append('referralSource', referralSource)
@@ -344,7 +364,9 @@ export default function NewPatientPage() {
       formData.append('bodyFatPct', bodyFatPct)
       formData.append('waistCm', waistCm)
       formData.append('hipCm', hipCm)
-      formData.append('consentAccepted', String(consentAccepted))
+      formData.append('privacyNoticeAccepted', String(privacyNoticeAccepted))
+      formData.append('portalTermsAccepted', String(portalTermsAccepted))
+      formData.append('healthDataConsentAccepted', String(healthDataConsentAccepted))
 
       await createPatient(formData)
       router.push('/dashboard/patients')
@@ -512,6 +534,45 @@ export default function NewPatientPage() {
                     onChange={e => setBirthDate(e.target.value)}
                   />
                 </div>
+
+                {isMinor && (
+                  <div className="sm:col-span-2 rounded-2xl border border-amber-200 bg-amber-50 p-4 text-xs text-amber-950 space-y-3">
+                    <div>
+                      <p className="font-bold">Paciente menor de edad</p>
+                      <p className="mt-1 leading-5">Registra al padre, madre o representante legal y deja constancia de que ha recibido la información aplicable antes de guardar el expediente.</p>
+                    </div>
+                    <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+                      <div className="space-y-1.5">
+                        <Label htmlFor="guardianName">Nombre del representante legal *</Label>
+                        <Input id="guardianName" value={guardianName} onChange={e => setGuardianName(e.target.value)} required={isMinor} className="rounded-xl bg-white" />
+                      </div>
+                      <div className="space-y-1.5">
+                        <Label htmlFor="guardianRelationship">Relación *</Label>
+                        <Input id="guardianRelationship" placeholder="Padre, madre, tutor..." value={guardianRelationship} onChange={e => setGuardianRelationship(e.target.value)} required={isMinor} className="rounded-xl bg-white" />
+                      </div>
+                      <div className="space-y-1.5">
+                        <Label htmlFor="guardianEmail">Correo del representante</Label>
+                        <Input id="guardianEmail" type="email" value={guardianEmail} onChange={e => setGuardianEmail(e.target.value)} className="rounded-xl bg-white" />
+                      </div>
+                      <div className="space-y-1.5">
+                        <Label htmlFor="guardianPhone">Teléfono del representante</Label>
+                        <Input id="guardianPhone" value={guardianPhone} onChange={e => setGuardianPhone(e.target.value)} className="rounded-xl bg-white" />
+                      </div>
+                      <div className="space-y-1.5 sm:col-span-2">
+                        <Label htmlFor="guardianConsentMethod">Método de constancia</Label>
+                        <Select id="guardianConsentMethod" value={guardianConsentMethod} onChange={e => setGuardianConsentMethod(e.target.value)} className="bg-white">
+                          <option value="PRESENCIAL">Información presencial</option>
+                          <option value="TELEFONO">Información por teléfono</option>
+                          <option value="DOCUMENTO">Documento firmado</option>
+                        </Select>
+                      </div>
+                    </div>
+                    <label className="flex items-start gap-2 font-medium leading-5">
+                      <input type="checkbox" checked={guardianConsentAccepted} onChange={e => setGuardianConsentAccepted(e.target.checked)} className="mt-0.5" />
+                      <span>Confirmo que he verificado la representación y que el representante ha recibido la información y autorizado el tratamiento necesario para la atención nutricional. *</span>
+                    </label>
+                  </div>
+                )}
 
                 <div className="space-y-1.5">
                   <Label>Sexo Biológico *</Label>
@@ -1433,11 +1494,12 @@ export default function NewPatientPage() {
 
         {/* Wizard Footer Controls */}
         <div className="mt-6 flex flex-wrap items-center justify-between gap-4 p-4 bg-white rounded-xl border border-gray-200 shadow-sm">
-          <p className="w-full text-xs leading-relaxed text-gray-500">Consulta la <Link href="/privacy-policy" target="_blank" className="font-semibold text-blue-700 underline">información de privacidad y tratamiento de datos (versión 2026-10-13)</Link> antes de registrar el consentimiento.</p>
-          <label className="mr-4 flex max-w-2xl items-start gap-2 text-xs leading-relaxed text-gray-700">
-            <input type="checkbox" checked={consentAccepted} onChange={(e) => setConsentAccepted(e.target.checked)} className="mt-0.5" />
-            <span>Confirmo que he informado al paciente y obtenido su consentimiento explícito para registrar y tratar sus datos personales y de salud con fines de atención nutricional. Versión de información: 2026-10-13. *</span>
-          </label>
+          <p className="w-full text-xs leading-relaxed text-gray-500">Consulta el <Link href="/privacy-policy" target="_blank" className="font-semibold text-blue-700 underline">aviso de privacidad</Link>, las <Link href="/terms" target="_blank" className="font-semibold text-blue-700 underline">condiciones del portal</Link> y la <Link href="/cookies" target="_blank" className="font-semibold text-blue-700 underline">política de cookies</Link> antes de registrar la información legal (versión {LEGAL_POLICY_VERSION}).</p>
+          <div className="mr-4 grid max-w-3xl gap-2 text-xs leading-relaxed text-gray-700">
+            <label className="flex items-start gap-2"><input type="checkbox" checked={privacyNoticeAccepted} onChange={(e) => setPrivacyNoticeAccepted(e.target.checked)} className="mt-0.5" /><span>Confirmo que he informado a la persona interesada sobre privacidad y derechos. *</span></label>
+            <label className="flex items-start gap-2"><input type="checkbox" checked={portalTermsAccepted} onChange={(e) => setPortalTermsAccepted(e.target.checked)} className="mt-0.5" /><span>Confirmo la aceptación de las condiciones de uso del portal clínico. *</span></label>
+            <label className="flex items-start gap-2"><input type="checkbox" checked={healthDataConsentAccepted} onChange={(e) => setHealthDataConsentAccepted(e.target.checked)} className="mt-0.5" /><span>Confirmo que existe una base válida y documentada para tratar los datos de salud con finalidad asistencial. *</span></label>
+          </div>
           <div>
             {currentStep > 1 ? (
               <Button
@@ -1475,7 +1537,7 @@ export default function NewPatientPage() {
                   variant="outline"
                   size="sm"
                   onClick={() => handleFinalSubmit()}
-                  disabled={loading || !consentAccepted}
+                  disabled={loading || !canSubmit}
                   className="text-xs text-green-700 border-green-200 hover:bg-green-50"
                   title="Guardar paciente directamente con los datos ingresados hasta ahora"
                 >
@@ -1497,7 +1559,7 @@ export default function NewPatientPage() {
             ) : (
               <Button
                 type="submit"
-                disabled={loading || !consentAccepted}
+                disabled={loading || !canSubmit}
                 className="bg-green-600 hover:bg-green-700 text-white gap-2 min-w-[170px]"
               >
                 {loading ? (

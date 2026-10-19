@@ -26,6 +26,10 @@ Define en el entorno de despliegue `AUTH_SECRET` (al menos 32 caracteres aleator
 
 Al desplegar el nuevo esquema, ejecuta `npm run db:push` y después `npm run admin:password` con el correo y la nueva contraseña del profesional configurados como variables de entorno. El segundo comando solo actualiza la contraseña de esa cuenta; no ejecuta el seed de alimentos. Configura `CRON_SECRET` también en el entorno de producción para que Vercel pueda autenticar el cron de recordatorios.
 
+## Cumplimiento y datos legales
+
+La aplicación incluye páginas separadas de aviso legal, privacidad, condiciones y cookies, además de controles de consentimiento versionados y derechos RGPD. Antes de usarla públicamente deben completarse el NIF, domicilio profesional y colegio profesional en `src/lib/legal.ts`, revisar los textos con asesoría jurídica, formalizar los contratos de encargo de Vercel/Supabase/Google y aprobar la tabla de conservación. Consulta el checklist completo en `docs/legal-compliance-readiness.md`.
+
 ## Learn More
 
 To learn more about Next.js, take a look at the following resources:

@@ -69,10 +69,11 @@ export async function changePasswordAction(
   return { success: 'Contraseña actualizada correctamente.' }
 }
 
-export async function requestDataErasureAction(
+async function createPatientDataSubjectRequest(
+  requestType: 'ERASURE' | 'ACCESS' | 'RECTIFICATION' | 'RESTRICTION' | 'OPPOSITION' | 'EXPORT',
   notes?: string
 ): Promise<{ success: boolean; message: string }> {
-  const { user, patientId, isAdminPreview } = await requirePatient()
+  const { patientId, isAdminPreview } = await requirePatient()
   if (isAdminPreview) {
     return {
       success: false,
@@ -88,14 +89,21 @@ export async function requestDataErasureAction(
 
   if (!patient) throw new Error('Expediente no encontrado')
 
-  // Registrar la solicitud formal de supresión RGPD
+  const existingRequest = await prisma.dataSubjectRequest.findFirst({
+    where: { userId: patient.userId, patientId: patient.id, requestType, status: { in: ['PENDING', 'IN_PROGRESS'] } },
+    select: { id: true },
+  })
+  if (existingRequest) {
+    return { success: true, message: 'Ya existe una solicitud abierta de este tipo. La consulta la tramitará dentro del plazo legal.' }
+  }
+
   await prisma.dataSubjectRequest.create({
     data: {
       userId: patient.userId,
       patientId: patient.id,
-      requestType: 'ERASURE',
+      requestType,
       status: 'PENDING',
-      notes: notes || 'Solicitud de supresión y derecho al olvido tramitada por el paciente desde su portal.',
+      notes: notes || `Solicitud ${requestType} tramitada por el paciente desde su portal.`,
     },
   })
 
@@ -103,18 +111,30 @@ export async function requestDataErasureAction(
     data: {
       userId: patient.userId,
       patientId: patient.id,
-      action: 'DATA_ERASURE_REQUEST',
+      action: `DATA_${requestType}_REQUEST`,
       entityType: 'PATIENT',
       entityId: patient.id,
-      details: 'Solicitud de supresión de datos registrada por el paciente conforme al Art. 17 RGPD',
+      details: `Solicitud de derechos ${requestType} registrada por el paciente conforme al RGPD.`,
     },
   })
 
   revalidatePath('/paciente/configuracion')
   return {
     success: true,
-    message: 'Solicitud de supresión registrada formalmente. Eva Vidal revisará tu petición conforme a los plazos legales de conservación de historias clínicas.',
+    message: `Solicitud de ${requestType === 'ERASURE' ? 'supresión' : requestType === 'RECTIFICATION' ? 'rectificación' : requestType === 'ACCESS' ? 'acceso' : 'derechos'} registrada formalmente. Eva Vidal la revisará conforme a los plazos legales.`,
   }
+}
+
+export async function requestDataErasureAction(notes?: string) {
+  return createPatientDataSubjectRequest('ERASURE', notes)
+}
+
+export async function requestDataAccessAction(notes?: string) {
+  return createPatientDataSubjectRequest('ACCESS', notes)
+}
+
+export async function requestDataRectificationAction(notes?: string) {
+  return createPatientDataSubjectRequest('RECTIFICATION', notes)
 }
 
 export async function exportPatientDataAction(): Promise<{ dataJson: string; fileName: string }> {

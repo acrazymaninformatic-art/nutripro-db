@@ -5,7 +5,7 @@ import { Download, FileWarning, ShieldCheck, ShieldOff, CheckCircle2, AlertTrian
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
-import { registerDataSubjectRequest, revokePatientConsent } from '../privacy-actions'
+import { registerDataSubjectRequest, revokePatientConsent, resolveDataSubjectRequest } from '../privacy-actions'
 
 interface Props {
   patientId: string
@@ -49,6 +49,19 @@ export function PrivacyPanel({
         setMessage('Consentimiento revocado y registrado con éxito.')
       } catch (error: any) {
         setMessage(error?.message || 'No se pudo revocar el consentimiento.')
+      }
+    })
+  }
+
+  const resolveRequest = (requestId: string, status: 'COMPLETED' | 'REJECTED') => {
+    const notes = window.prompt(status === 'COMPLETED' ? 'Nota de resolución (opcional):' : 'Motivo de rechazo (opcional):')
+    if (notes === null) return
+    startTransition(async () => {
+      try {
+        const result = await resolveDataSubjectRequest(requestId, status, notes)
+        setMessage(result.message)
+      } catch (error: any) {
+        setMessage(error?.message || 'No se pudo actualizar la solicitud.')
       }
     })
   }
@@ -109,9 +122,16 @@ export function PrivacyPanel({
                 : 'No constan solicitudes abiertas'}
             </p>
             {requests.length > 0 && (
-              <p className="text-2xs text-slate-500">
-                Última: <strong className="text-slate-700">{requests[0].requestType}</strong> · Estado: {requests[0].status}
-              </p>
+              <div className="space-y-2">
+                <p className="text-2xs text-slate-500">Última: <strong className="text-slate-700">{requests[0].requestType}</strong> · Estado: {requests[0].status}</p>
+                {requests.filter((request) => ['PENDING', 'IN_PROGRESS'].includes(request.status)).slice(0, 3).map((request) => (
+                  <div key={request.id} className="flex flex-wrap items-center gap-1.5 pt-1">
+                    <span className="text-2xs font-semibold text-slate-700">{request.requestType}</span>
+                    <Button type="button" size="sm" disabled={pending} onClick={() => resolveRequest(request.id, 'COMPLETED')} className="h-7 rounded-lg bg-emerald-600 px-2 text-2xs text-white hover:bg-emerald-700">Completar</Button>
+                    <Button type="button" size="sm" disabled={pending} onClick={() => resolveRequest(request.id, 'REJECTED')} variant="outline" className="h-7 rounded-lg border-rose-200 px-2 text-2xs text-rose-700 hover:bg-rose-50">Rechazar</Button>
+                  </div>
+                ))}
+              </div>
             )}
           </div>
         </div>

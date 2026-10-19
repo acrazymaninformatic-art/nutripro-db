@@ -4,6 +4,7 @@ import { CheckCircle2, AlertCircle, ShieldCheck } from 'lucide-react'
 import { Card } from '@/components/ui/card'
 import type { Metadata } from 'next'
 import { hashAnamnesisToken } from '@/lib/anamnesis-token'
+import { isMinorAtDate } from '@/lib/patient-age'
 
 export const dynamic = 'force-dynamic'
 export const metadata: Metadata = { title: 'Cuestionario de salud · Eva Vidal Nutrición', robots: { index: false, follow: false, noarchive: true } }
@@ -104,6 +105,19 @@ export default async function AnamnesisPage({ searchParams }: Props) {
           <div className="text-2xs text-gray-400 font-medium">
             EVSoftware • Eva Vidal Nutrición
           </div>
+        </Card>
+      </div>
+    )
+  }
+
+  if (isMinorAtDate(patient.birthDate) && !patient.guardianConsentAt) {
+    return (
+      <div className="min-h-screen bg-slate-50 py-16 px-4 flex items-center justify-center">
+        <Card className="max-w-lg w-full p-8 rounded-3xl border-amber-200 bg-white text-center shadow-lg">
+          <div className="w-16 h-16 rounded-full bg-amber-100 text-amber-700 flex items-center justify-center mx-auto mb-4"><AlertCircle className="w-9 h-9" /></div>
+          <h1 className="text-xl font-black text-gray-900">Falta la representación legal</h1>
+          <p className="text-sm text-gray-600 mt-3 leading-relaxed">La consulta debe registrar primero la identidad y la constancia de información del padre, madre o representante legal antes de recibir datos de salud de una persona menor.</p>
+          <p className="text-xs text-gray-500 mt-4">Contacta con Eva Vidal para completar este paso de forma segura.</p>
         </Card>
       </div>
     )
