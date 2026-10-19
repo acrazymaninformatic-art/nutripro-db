@@ -4,23 +4,29 @@ import { prisma } from '@/lib/prisma'
 import { revalidatePath } from 'next/cache'
 import { requireUserId } from '@/lib/auth'
 
+function foodScope(userId: string) {
+  // The seeded catalogue is shared (userId = null). Custom foods remain
+  // private to their owner.
+  return { OR: [{ userId: null, isPrivate: false }, { userId }] }
+}
+
 export async function getFoods(
   search?: string,
   category?: string,
   page: number = 1,
   pageSize: number = 40
 ) {
-  await requireUserId()
-  const where: any = {}
+  const userId = await requireUserId()
+  const where: any = { AND: [foodScope(userId)] }
 
   if (search && search.trim() !== '') {
-    where.name = {
+    where.AND.push({ name: {
       contains: search.trim(),
-    }
+    } })
   }
 
   if (category && category !== 'ALL') {
-    where.category = category
+    where.AND.push({ category })
   }
 
   const [total, foods] = await Promise.all([
@@ -44,8 +50,9 @@ export async function getFoods(
 
 
 export async function getCategories() {
-  await requireUserId()
+  const userId = await requireUserId()
   const foods = await prisma.food.findMany({
+    where: foodScope(userId),
     select: { category: true },
     distinct: ['category'],
   })
@@ -55,7 +62,7 @@ export async function getCategories() {
 export async function getAllFoodsForBrowser() {
   const userId = await requireUserId()
   return prisma.food.findMany({
-    where: { userId },
+    where: foodScope(userId),
     select: {
       id: true,
       name: true,
@@ -115,14 +122,16 @@ export async function getFoodByBarcode(barcode: string) {
   const userId = await requireUserId()
   if (!barcode || !barcode.trim()) return null
   return prisma.food.findFirst({
-    where: { barcode: barcode.trim(), userId },
+    where: {
+      AND: [foodScope(userId), { barcode: barcode.trim() }],
+    },
   })
 }
 
 export async function toggleFoodFavorite(foodId: number) {
   const userId = await requireUserId()
   const food = await prisma.food.findFirst({
-    where: { id: foodId, userId },
+    where: { AND: [foodScope(userId), { id: foodId }] },
     select: { isFavorite: true },
   })
   if (!food) throw new Error('Alimento no encontrado')
@@ -143,8 +152,8 @@ export async function mergeDuplicateFoods(primaryFoodId: number, duplicateFoodId
   }
 
   const [primary, duplicate] = await Promise.all([
-    prisma.food.findFirst({ where: { id: primaryFoodId, userId } }),
-    prisma.food.findFirst({ where: { id: duplicateFoodId, userId } }),
+    prisma.food.findFirst({ where: { AND: [foodScope(userId), { id: primaryFoodId }] } }),
+    prisma.food.findFirst({ where: { AND: [foodScope(userId), { id: duplicateFoodId }] } }),
   ])
 
   if (!primary || !duplicate) {
@@ -213,7 +222,7 @@ export async function bulkUpdateFoods(
   if (updates.dietaryTags) dataToUpdate.dietaryTagsJson = JSON.stringify(updates.dietaryTags)
 
   const result = await prisma.food.updateMany({
-    where: { id: { in: foodIds }, userId },
+    where: { AND: [foodScope(userId), { id: { in: foodIds } }] },
     data: dataToUpdate,
   })
 

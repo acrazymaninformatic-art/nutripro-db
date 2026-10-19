@@ -10,11 +10,12 @@ if (typeof window !== 'undefined') {
   gsap.registerPlugin(ScrollTrigger)
 }
 
-const REVEAL_SELECTOR = '[data-gsap-reveal], [data-gsap-card]'
-const AUTO_REVEAL_SELECTOR = `${REVEAL_SELECTOR}, .animate-fade-in, .animate-slide-up, .animate-scale-in, .animate-pop-in`
+const CARD_SELECTOR = '[data-gsap-card]'
+const REVEAL_SELECTOR = '[data-gsap-reveal]'
+const AUTO_REVEAL_SELECTOR = REVEAL_SELECTOR
 const MODAL_SELECTOR = '[role="dialog"], [data-gsap-modal]'
 const OVERLAY_SELECTOR = '[data-gsap-overlay], [data-gsap-backdrop]'
-const DYNAMIC_SELECTOR = `${AUTO_REVEAL_SELECTOR}, ${MODAL_SELECTOR}, ${OVERLAY_SELECTOR}, .animate-in`
+const DYNAMIC_SELECTOR = `${AUTO_REVEAL_SELECTOR}, ${CARD_SELECTOR}, ${MODAL_SELECTOR}, ${OVERLAY_SELECTOR}, .animate-in`
 const INTERACTIVE_SELECTOR =
   '[data-gsap-hover], button, [role="button"], .glass-card, .glass-card-premium, .hover-lift, .hover-lift-lg'
 
@@ -141,8 +142,44 @@ export function GsapMotionProvider({ children }: { children: React.ReactNode }) 
         })
       }
 
+      const animateCards = (targets: HTMLElement[]) => {
+        const cards = uniqueElements(
+          targets.filter((element) => !element.dataset.gsapCardBound && !isIgnored(element))
+        )
+
+        if (!cards.length) return
+
+        cards.forEach((card) => {
+          card.dataset.gsapCardBound = 'true'
+        })
+
+        if (reducedMotion) {
+          gsap.set(cards, {
+            x: 0,
+            y: 0,
+            scale: 1,
+            clearProps: 'transform,willChange',
+          })
+          return
+        }
+
+        gsap.fromTo(
+          cards,
+          { y: 16, scale: 0.985 },
+          {
+            y: 0,
+            scale: 1,
+            duration: 0.68,
+            ease: 'power3.out',
+            stagger: { each: 0.055, from: 'start' },
+            clearProps: 'transform,willChange',
+          }
+        )
+      }
+
       const animatePage = () => {
         const pageTargets = Array.from(root.querySelectorAll<HTMLElement>('[data-gsap-page]'))
+        const cardTargets = Array.from(root.querySelectorAll<HTMLElement>(CARD_SELECTOR))
         const sidebarTargets = Array.from(root.querySelectorAll<HTMLElement>('[data-gsap-sidebar]'))
           .filter((element) => !element.dataset.gsapMounted)
         const headerTargets = Array.from(root.querySelectorAll<HTMLElement>('[data-gsap-header]'))
@@ -160,6 +197,7 @@ export function GsapMotionProvider({ children }: { children: React.ReactNode }) 
 
         const revealTargets = Array.from(root.querySelectorAll<HTMLElement>(AUTO_REVEAL_SELECTOR))
         bindRevealTargets(revealTargets)
+        animateCards(cardTargets)
 
         if (reducedMotion) {
           gsap.set(
@@ -268,12 +306,15 @@ export function GsapMotionProvider({ children }: { children: React.ReactNode }) 
       const animateDynamicNodes = contextSafe((nodes: HTMLElement[]) => {
         const uniqueNodes = uniqueElements(nodes)
         const overlays = uniqueNodes.filter((element) => element.matches(OVERLAY_SELECTOR))
+        const cards = uniqueNodes.filter((element) => element.matches(CARD_SELECTOR))
         const modals = uniqueNodes.filter(
           (element) =>
             element.matches(MODAL_SELECTOR) ||
             (element.matches('.animate-in') && !element.matches(OVERLAY_SELECTOR))
         )
         const revealTargets = uniqueNodes.filter((element) => element.matches(AUTO_REVEAL_SELECTOR))
+
+        animateCards(cards)
 
         if (reducedMotion) {
           gsap.set([...overlays, ...modals], {
@@ -434,7 +475,7 @@ export function GsapMotionProvider({ children }: { children: React.ReactNode }) 
   )
 
   return (
-    <div ref={rootRef} data-gsap-root style={{ display: 'contents' }}>
+    <div ref={rootRef} data-gsap-root className="min-h-full">
       {children}
     </div>
   )

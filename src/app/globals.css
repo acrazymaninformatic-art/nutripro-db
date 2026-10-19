@@ -306,7 +306,6 @@ button, a, input, select, textarea {
 /* GSAP keeps the portal motion in one place. These safeguards prevent an
    interrupted transition from affecting clinical printouts. */
 [data-gsap-page],
-[data-gsap-card],
 [data-gsap-reveal],
 [data-gsap-sidebar],
 [data-gsap-header],
@@ -414,7 +413,6 @@ button, a, input, select, textarea {
   }
 
   [data-gsap-page],
-  [data-gsap-card],
   [data-gsap-reveal],
   [data-gsap-sidebar],
   [data-gsap-header],
