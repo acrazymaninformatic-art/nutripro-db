@@ -10,36 +10,7 @@ import { Label } from '@/components/ui/label'
 import { Select } from '@/components/ui/select'
 import { Badge } from '@/components/ui/badge'
 import { Textarea } from '@/components/ui/textarea'
-import {
-  CalendarDays,
-  Plus,
-  Trash2,
-  Copy,
-  ClipboardPaste,
-  Edit2,
-  Flame,
-  CheckCircle2,
-  AlertCircle,
-  Loader2,
-  Sparkles,
-  User,
-  Calculator,
-  Sliders,
-  Check,
-  FileText,
-  GripVertical,
-  Search,
-  X,
-  Wand2,
-  RefreshCw,
-  Scale,
-  ShieldAlert,
-  Eye,
-  EyeOff,
-  Layers,
-  Pill,
-  BookOpen,
-} from 'lucide-react'
+import { AlertTriangle, ArrowRight, Calculator, CalendarDays, Check, ClipboardPaste, Copy, EyeOff, FileText, Flame, GripVertical, Layers, Lightbulb, Loader2, Pill, Plus, Search, ShieldAlert, Siren, Sparkles, Target, Trash2, User, Wand2, X, Zap } from 'lucide-react'
 import {
   getFoodImage,
   generateAutomatedWeeklyPlan,
@@ -331,7 +302,7 @@ export function PlanBuilderForm({
 
     setGridSchedule(scaledGrid as any)
     setAutoGenNotice(
-      `✨ Plantilla clínica "${template.name}" aplicada con 1 clic: Escalada proporcionalmente a ${targetKcal} kcal/día (${template.macroRatio.proteinPct}% P / ${template.macroRatio.carbsPct}% C / ${template.macroRatio.fatPct}% G). Gramajes ajustados para ${selectedPatient?.firstName || 'el paciente'}.`
+      ` Plantilla clínica "${template.name}" aplicada con 1 clic: Escalada proporcionalmente a ${targetKcal} kcal/día (${template.macroRatio.proteinPct}% P / ${template.macroRatio.carbsPct}% C / ${template.macroRatio.fatPct}% G). Gramajes ajustados para ${selectedPatient?.firstName || 'el paciente'}.`
     )
   }
 
@@ -995,7 +966,7 @@ export function PlanBuilderForm({
                       {tmpl.badge}
                     </Badge>
                     <span className="text-[11px] text-blue-600 font-black group-hover:scale-105 transition-transform">
-                      1 Clic ⚡
+                      1 Clic <Zap className="h-[1em] w-[1em] shrink-0" />
                     </span>
                   </div>
                   <h4 className="text-xs font-bold text-gray-900 group-hover:text-blue-700 transition-colors">
@@ -1025,7 +996,7 @@ export function PlanBuilderForm({
             <Copy className="h-4 w-4 text-blue-600" />
             <span>Alimento en memoria:</span>
             <span className="font-extrabold underline">{copiedItemName} ({copiedItem.quantityG}g)</span>
-            <span className="text-blue-700 text-[11px]">→ Haz clic en "Pegar" en cualquier celda de la tabla para duplicarlo al instante.</span>
+            <span className="text-blue-700 text-[11px]"><ArrowRight className="h-[1em] w-[1em] shrink-0" /> Haz clic en "Pegar" en cualquier celda de la tabla para duplicarlo al instante.</span>
           </div>
 
           <Button
@@ -1051,7 +1022,7 @@ export function PlanBuilderForm({
             <div className="flex-1">
               <div className="flex flex-wrap items-center justify-between gap-2">
                 <h3 className="text-sm font-black text-red-950 flex items-center gap-1.5">
-                  🚨 ALERTA CRÍTICA: {planAllergenConflicts.length} ALIMENTO{planAllergenConflicts.length > 1 ? 'S' : ''} INCOMPATIBLE{planAllergenConflicts.length > 1 ? 'S' : ''} CON ALÉRGENOS DEL PACIENTE
+                  <Siren className="h-[1em] w-[1em] shrink-0" /> ALERTA CRÍTICA: {planAllergenConflicts.length} ALIMENTO{planAllergenConflicts.length > 1 ? 'S' : ''} INCOMPATIBLE{planAllergenConflicts.length > 1 ? 'S' : ''} CON ALÉRGENOS DEL PACIENTE
                 </h3>
                 <span className="text-[11px] font-bold text-red-700 bg-red-100 px-2.5 py-0.5 rounded-full border border-red-300">
                   Riesgo Médico Grave
@@ -1068,7 +1039,7 @@ export function PlanBuilderForm({
               <div className="mt-3 flex flex-wrap gap-2">
                 {planAllergenConflicts.map((c, i) => (
                   <div key={i} className="text-xs font-bold bg-white text-red-950 px-3 py-1.5 rounded-xl border-2 border-red-300 shadow-xs flex items-center gap-2">
-                    <span className="text-sm">⚠️</span>
+                    <span className="text-sm"><AlertTriangle className="h-[1em] w-[1em] shrink-0" /></span>
                     <span className="font-black text-red-900">{c.foodName}</span>
                     <span className="text-[10px] text-red-700 font-bold bg-red-100 px-1.5 py-0.5 rounded">
                       {c.conflict.allergenLabel} • {c.mealLabel} ({c.dayName})
@@ -1092,7 +1063,7 @@ export function PlanBuilderForm({
           </div>
 
           <span className="text-[11px] font-semibold text-gray-500 hidden md:inline">
-            💡 Haz clic en el nombre de cualquier día para renombrarlo
+            <Lightbulb className="h-[1em] w-[1em] shrink-0" /> Haz clic en el nombre de cualquier día para renombrarlo
           </span>
         </CardHeader>
 
@@ -1201,7 +1172,7 @@ export function PlanBuilderForm({
                                           </span>
                                           {itemConflict && (
                                             <span className="shrink-0 px-1 py-0.2 rounded text-[7.5px] font-black bg-red-600 text-white shadow-2xs">
-                                              🚨 {itemConflict.allergenLabel}
+                                              <Siren className="h-[1em] w-[1em] shrink-0" /> {itemConflict.allergenLabel}
                                             </span>
                                           )}
                                         </div>
@@ -1351,7 +1322,7 @@ export function PlanBuilderForm({
                               title={`Ajustar gramos de este día al objetivo (${precisionResults.targetKcal} kcal)`}
                               className="mt-0.5 text-[8px] font-bold text-blue-700 hover:text-blue-900 bg-white hover:bg-blue-50 border border-blue-200 px-1 py-0.5 rounded whitespace-nowrap transition-colors"
                             >
-                              🎯 Ajustar
+                              <Target className="h-[1em] w-[1em] shrink-0" /> Ajustar
                             </button>
                           </div>
                         </div>
@@ -1462,13 +1433,13 @@ export function PlanBuilderForm({
                           </span>
                           {conflict && (
                             <span className="px-1.5 py-0.5 rounded-md bg-red-600 text-white font-black text-[9px] tracking-wide inline-flex items-center gap-0.5 shadow-xs">
-                              🚨 ALÉRGENO: {conflict.allergenLabel.toUpperCase()}
+                              <Siren className="h-[1em] w-[1em] shrink-0" /> ALÉRGENO: {conflict.allergenLabel.toUpperCase()}
                             </span>
                           )}
                         </div>
                         <span className={`text-[10px] block ${conflict ? 'text-red-700 font-semibold' : 'text-gray-400'}`}>
                           {food.category || 'General'}
-                          {conflict && ` • ⚠️ Incompatible con ${selectedPatient?.firstName}`}
+                          {conflict && ` • Incompatible con ${selectedPatient?.firstName}`}
                         </span>
                       </div>
                     </div>

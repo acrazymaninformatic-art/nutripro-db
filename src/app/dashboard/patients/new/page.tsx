@@ -11,24 +11,7 @@ import { Label } from '@/components/ui/label'
 import { Select } from '@/components/ui/select'
 import { Textarea } from '@/components/ui/textarea'
 import { Badge } from '@/components/ui/badge'
-import {
-  ArrowLeft,
-  ArrowRight,
-  User,
-  HeartPulse,
-  Activity,
-  Sparkles,
-  Dumbbell,
-  Flower2,
-  Target,
-  Check,
-  Loader2,
-  AlertTriangle,
-  Info,
-  Scale,
-  Upload,
-  FileSpreadsheet,
-} from 'lucide-react'
+import { ArrowLeft, ArrowRight, User, HeartPulse, Activity, Sparkles, Dumbbell, Flower2, Target, Check, Loader2, AlertTriangle, Info, Scale, Upload } from 'lucide-react'
 import {
   SEX_VALUES,
   SEX_LABELS,
@@ -219,7 +202,7 @@ export default function NewPatientPage() {
       if (latest.waistCm != null) details.push(`${latest.waistCm} cm cintura`)
 
       setScaleSuccess(
-        `✓ Datos de ${file.name} volcados automáticamente: ${details.join(' • ')}`
+        ` Datos de ${file.name} volcados automáticamente: ${details.join(' • ')}`
       )
     } catch (err: any) {
       setScaleError(err?.message || 'Error al procesar el archivo de la báscula.')

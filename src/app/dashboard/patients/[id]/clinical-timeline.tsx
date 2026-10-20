@@ -4,19 +4,7 @@ import { useState, useMemo } from 'react'
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
-import {
-  Clock,
-  Stethoscope,
-  Scale,
-  CalendarPlus,
-  Activity,
-  FileText,
-  ShieldCheck,
-  ClipboardList,
-  Filter,
-  Calculator,
-  HeartPulse,
-} from 'lucide-react'
+import { Clock, Stethoscope, Scale, CalendarPlus, Activity, FileText, ShieldCheck, ClipboardList, Calculator, HeartPulse } from 'lucide-react'
 
 export interface TimelineEvent {
   id: string

@@ -8,21 +8,7 @@ import { Badge } from '@/components/ui/badge'
 import { Input } from '@/components/ui/input'
 import { FoodImage } from '@/components/nutrition/food-image'
 import { ModalPortal } from '@/components/ui/modal-portal'
-import {
-  ChefHat,
-  Plus,
-  Clock,
-  Users,
-  Flame,
-  Utensils,
-  Search,
-  X,
-  FileText,
-  Printer,
-  ExternalLink,
-  BookOpen,
-  Sparkles,
-} from 'lucide-react'
+import { ArrowRight, ChefHat, Clock, ExternalLink, FileText, Flame, Plus, Printer, Search, Snowflake, Users, Utensils, X } from 'lucide-react'
 
 export interface RecipeWithIngredients {
   id: string
@@ -448,7 +434,7 @@ export function RecipesClient({ initialRecipes }: RecipesClientProps) {
                       )}
                       {recipe.isFreezable && (
                         <Badge className="bg-sky-100 text-sky-900 border-0 text-[9px] font-bold py-0 px-1.5 rounded-md">
-                          ❄️ Congelable
+                          <Snowflake className="h-4 w-4" /> Congelable
                         </Badge>
                       )}
                       {(() => {
@@ -521,7 +507,7 @@ export function RecipesClient({ initialRecipes }: RecipesClientProps) {
                     onClick={(e) => e.stopPropagation()}
                     className="flex-1 text-center py-2 px-2.5 rounded-xl font-bold text-xs bg-blue-600 hover:bg-blue-700 text-white transition-colors shadow-2xs"
                   >
-                    Ficha Completa →
+                    Ficha Completa <ArrowRight className="h-[1em] w-[1em] shrink-0" />
                   </Link>
                 </CardFooter>
               </Card>

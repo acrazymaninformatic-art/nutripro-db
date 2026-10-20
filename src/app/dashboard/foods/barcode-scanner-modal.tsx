@@ -4,7 +4,7 @@ import { useState } from 'react'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Badge } from '@/components/ui/badge'
-import { X, Barcode, Search, AlertCircle, CheckCircle2, ArrowRight } from 'lucide-react'
+import { X, Barcode, AlertCircle } from 'lucide-react'
 import { getFoodByBarcode } from './actions'
 import { FoodDetailData } from './food-details-modal'
 

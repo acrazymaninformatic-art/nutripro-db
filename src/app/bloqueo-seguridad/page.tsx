@@ -1,6 +1,6 @@
 import type { Metadata } from 'next'
 import Link from 'next/link'
-import { ShieldAlert, PhoneCall, Mail } from 'lucide-react'
+import { ShieldAlert, Mail } from 'lucide-react'
 
 export const metadata: Metadata = {
   title: 'Mantenimiento de Seguridad · Eva Vidal Nutrición',

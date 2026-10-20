@@ -5,26 +5,7 @@ import { Card, CardHeader, CardTitle, CardDescription, CardContent } from '@/com
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
-import {
-  CalendarDays,
-  Calendar,
-  UtensilsCrossed,
-  ChefHat,
-  ShoppingCart,
-  Printer,
-  Sparkles,
-  Info,
-  Clock,
-  Flame,
-  ArrowLeft,
-  X,
-  Layers,
-  Search,
-  BookOpen,
-  ChevronRight,
-  Droplets,
-  Scale,
-} from 'lucide-react'
+import { ArrowLeft, BookOpen, Calendar, CalendarDays, ChefHat, Clock, Dumbbell, Flame, Info, Lightbulb, Printer, Scale, Search, ShoppingCart, Sparkles, UtensilsCrossed, X, Zap } from 'lucide-react'
 import Link from 'next/link'
 import { getFoodImage, FALLBACK_FOOD_SVG } from '@/lib/nutrition'
 import { PlanDossierPdf } from '@/components/nutrition/plan-dossier-pdf'
@@ -211,21 +192,21 @@ export function PlanClient({ plan, visibleRecipes }: Props) {
   function getSupermarketAisle(category?: string | null): string {
     const c = (category || '').toLowerCase()
     if (c.includes('fruta') || c.includes('verdura') || c.includes('hortaliza')) {
-      return '🥦 Frutas y Verduras Frescas'
+      return ' Frutas y Verduras Frescas'
     }
     if (c.includes('carne') || c.includes('pollo') || c.includes('pescado') || c.includes('marisco') || c.includes('huevo')) {
-      return '🥩 Carnes, Pescados y Huevos'
+      return ' Carnes, Pescados y Huevos'
     }
     if (c.includes('lacteo') || c.includes('lácteo') || c.includes('leche') || c.includes('queso') || c.includes('yogur')) {
-      return '🧀 Lácteos y Refrigerados'
+      return ' Lácteos y Refrigerados'
     }
     if (c.includes('legumbre') || c.includes('cereal') || c.includes('arroz') || c.includes('pasta') || c.includes('pan') || c.includes('avena')) {
-      return '🌾 Legumbres, Cereales y Pastas'
+      return ' Legumbres, Cereales y Pastas'
     }
     if (c.includes('fruto seco') || c.includes('semilla') || c.includes('aceite') || c.includes('grasa')) {
-      return '🥜 Aceites, Frutos Secos y Semillas'
+      return ' Aceites, Frutos Secos y Semillas'
     }
-    return '🥫 Despensa, Conservas y Condimentos'
+    return ' Despensa, Conservas y Condimentos'
   }
 
   // Collect all unique recipes from plan and visible catalog
@@ -314,7 +295,7 @@ export function PlanClient({ plan, visibleRecipes }: Props) {
               </Badge>
               {plan.targetKcal > 0 && !plan.hideCaloriesTCA && (
                 <Badge variant="outline" className="text-xs font-mono tabular-nums font-bold rounded-full bg-blue-50/80 text-blue-800 border-blue-200">
-                  ⚡ ~{Math.round(plan.targetKcal)} kcal/día
+                  <Zap className="h-[1em] w-[1em] shrink-0" /> ~{Math.round(plan.targetKcal)} kcal/día
                 </Badge>
               )}
             </div>
@@ -493,17 +474,17 @@ export function PlanClient({ plan, visibleRecipes }: Props) {
                         )}
                         {meal.timingType === 'PRE_WORKOUT' && (
                           <Badge className="bg-sky-100 text-sky-900 border-0 text-3xs font-black rounded-full">
-                            ⚡ Pre-Entreno
+                            <Zap className="h-[1em] w-[1em] shrink-0" /> Pre-Entreno
                           </Badge>
                         )}
                         {meal.timingType === 'POST_WORKOUT' && (
                           <Badge className="bg-blue-100 text-blue-900 border-0 text-3xs font-black rounded-full">
-                            🏋️ Post-Entreno
+                            <Dumbbell className="h-4 w-4" /> Post-Entreno
                           </Badge>
                         )}
                         {meal.isCheatMeal && (
                           <Badge className="bg-purple-100 text-purple-900 border-0 text-3xs font-black rounded-full">
-                            🍽️ Comida Libre
+                            <UtensilsCrossed className="h-4 w-4" /> Comida Libre
                           </Badge>
                         )}
                       </div>
@@ -569,7 +550,7 @@ export function PlanClient({ plan, visibleRecipes }: Props) {
                                     )}
                                   </div>
                                   <p className="text-xs text-slate-500 mt-0.5 line-clamp-1 leading-relaxed">
-                                    💡 {prepTip}
+                                    <Lightbulb className="h-[1em] w-[1em] shrink-0" /> {prepTip}
                                   </p>
                                 </div>
                               </div>

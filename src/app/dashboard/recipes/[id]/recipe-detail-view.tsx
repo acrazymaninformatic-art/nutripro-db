@@ -6,22 +6,7 @@ import { Card, CardHeader, CardTitle, CardDescription, CardContent } from '@/com
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
 import { DeleteRecipeButton } from './delete-recipe-button'
-import {
-  ArrowLeft,
-  ChefHat,
-  Clock,
-  Users,
-  Flame,
-  Utensils,
-  FileText,
-  Printer,
-  Copy,
-  Check,
-  Sparkles,
-  ShieldCheck,
-  Heart,
-  Share2,
-} from 'lucide-react'
+import { ArrowLeft, Clock, Users, Utensils, FileText, Printer, Copy, Check, Sparkles, ShieldCheck } from 'lucide-react'
 
 export interface RecipeIngredientData {
   id: string
@@ -135,26 +120,26 @@ export function RecipeDetailView({ recipe, fallback }: RecipeDetailViewProps) {
 
   // Copy recipe summary
   const handleCopyRecipe = async () => {
-    const text = `🍽️ RECETA: ${recipe.name}
-📂 Categoría: ${recipe.category || 'General'} | 👥 Raciones: ${servings}
-⚡ Calorías por ración: ${nutrients.perServingKcal} kcal (Prot: ${nutrients.perServingProt}g, Carb: ${nutrients.perServingCarbs}g, Grasas: ${nutrients.perServingFat}g)
+    const text = ` RECETA: ${recipe.name}
+ Categoría: ${recipe.category || 'General'} | Raciones: ${servings}
+ Calorías por ración: ${nutrients.perServingKcal} kcal (Prot: ${nutrients.perServingProt}g, Carb: ${nutrients.perServingCarbs}g, Grasas: ${nutrients.perServingFat}g)
 
-🛒 INGREDIENTES (${servings} raciones):
+ INGREDIENTES (${servings} raciones):
 ${
-  recipe.ingredients.length > 0
-    ? recipe.ingredients
-        .map(
-          (ing) =>
-            `- ${ing.food.name}: ${Math.round(ing.quantityG * scale)} g`
+ recipe.ingredients.length > 0
+ ? recipe.ingredients
+ .map(
+ (ing) =>
+ `- ${ing.food.name}: ${Math.round(ing.quantityG * scale)} g`
         )
         .join('\n')
     : fallback?.ingredients?.map((i) => `- ${i.name}: ${i.quantity}`).join('\n') || ''
 }
 
-👨‍🍳 PREPARACIÓN:
+‍ PREPARACIÓN:
 ${recipe.instructions}
 
-✨ Eva Vidal Nutrición - info@evavidalnutricion.com`
+ Eva Vidal Nutrición - info@evavidalnutricion.com`
 
     try {
       await navigator.clipboard.writeText(text)

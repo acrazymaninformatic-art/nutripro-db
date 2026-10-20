@@ -4,22 +4,7 @@ import { useState } from 'react'
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
-import {
-  ClipboardList,
-  CheckCircle2,
-  AlertTriangle,
-  Clock,
-  Sparkles,
-  ArrowRight,
-  Send,
-  User,
-  HeartPulse,
-  Stethoscope,
-  Moon,
-  Activity,
-  Target,
-  FileText,
-} from 'lucide-react'
+import { ArrowRight, ClipboardList, FileText, HeartPulse, Sparkles, Stethoscope, Target } from 'lucide-react'
 import { QuestionnaireReviewModal } from '@/app/dashboard/questionnaires/review-modal'
 
 interface Props {
@@ -94,7 +79,7 @@ export function PatientQuestionnaireReviewCard({ patient }: Props) {
                       : 'bg-amber-100 text-amber-800 border-amber-200'
                   }`}
                 >
-                  {isCompleted ? '✓ Respuestas Completadas' : '⏳ Pendiente de Rellenar'}
+                  {isCompleted ? ' Respuestas Completadas' : '⏳ Pendiente de Rellenar'}
                 </Badge>
               </div>
               <p className="text-xs text-slate-600 mt-1">
@@ -124,7 +109,7 @@ export function PatientQuestionnaireReviewCard({ patient }: Props) {
                   window.location.href = `/dashboard/questionnaires`
                 }}
               >
-                Gestionar en Cuestionarios →
+                Gestionar en Cuestionarios <ArrowRight className="h-[1em] w-[1em] shrink-0" />
               </Button>
             )}
           </div>

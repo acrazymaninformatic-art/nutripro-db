@@ -3,7 +3,7 @@
 import { useState } from 'react'
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
-import { HelpCircle, Save, CheckCircle2, RotateCcw, ChevronDown, ChevronUp } from 'lucide-react'
+import { HelpCircle, Save, CheckCircle2, RotateCcw } from 'lucide-react'
 import { updateFaqAction, resetFaqsAction } from './faq-actions'
 import type { FAQItem } from '@/lib/faq-service'
 

@@ -5,7 +5,7 @@ import { Card } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Badge } from '@/components/ui/badge'
-import { X, GitMerge, AlertCircle, CheckCircle2, ArrowRight, Search } from 'lucide-react'
+import { X, GitMerge, AlertCircle, CheckCircle2, ArrowRight } from 'lucide-react'
 import { mergeDuplicateFoods } from './actions'
 
 interface MinimalFood {

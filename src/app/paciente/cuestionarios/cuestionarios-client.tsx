@@ -4,17 +4,7 @@ import { useState } from 'react'
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
-import {
-  ClipboardCheck,
-  FileSignature,
-  CheckCircle2,
-  AlertTriangle,
-  Clock,
-  ArrowRight,
-  ShieldCheck,
-  FileText,
-  PenTool,
-} from 'lucide-react'
+import { ArrowRight, Check, CheckCircle2, ClipboardCheck, Clock, FileSignature, PenTool, ShieldCheck } from 'lucide-react'
 import Link from 'next/link'
 import { signConsentAction } from '../actions'
 import { ModalPortal } from '@/components/ui/modal-portal'
@@ -188,7 +178,7 @@ export function CuestionariosClient({
                 </div>
               </div>
               <Badge variant="default" className="text-2xs font-bold">
-                ✓ Respondido
+                <Check className="h-[1em] w-[1em] shrink-0" /> Respondido
               </Badge>
             </div>
           )}
@@ -211,7 +201,7 @@ export function CuestionariosClient({
                 </div>
               </div>
               <Badge variant="default" className="text-2xs font-bold">
-                ✓ Firmado
+                <Check className="h-[1em] w-[1em] shrink-0" /> Firmado
               </Badge>
             </div>
           ))}

@@ -20,7 +20,7 @@ export const OFFICIAL_ALLERGENS: AllergenDefinition[] = [
     id: 'GLUTEN',
     name: 'Gluten / Cereales con gluten',
     label: 'Gluten',
-    icon: '🌾',
+    icon: 'Wheat',
     keywords: [
       'gluten',
       'trigo',
@@ -85,7 +85,7 @@ export const OFFICIAL_ALLERGENS: AllergenDefinition[] = [
     id: 'LACTOSA',
     name: 'Lácteos / Lactosa',
     label: 'Lactosa / Lácteos',
-    icon: '🥛',
+    icon: 'Milk',
     keywords: [
       'lactosa',
       'leche',
@@ -140,7 +140,7 @@ export const OFFICIAL_ALLERGENS: AllergenDefinition[] = [
     id: 'HUEVO',
     name: 'Huevos y ovoderivados',
     label: 'Huevo',
-    icon: '🥚',
+    icon: 'Egg',
     keywords: [
       'huevo',
       'huevos',
@@ -159,7 +159,7 @@ export const OFFICIAL_ALLERGENS: AllergenDefinition[] = [
     id: 'PESCADO',
     name: 'Pescados',
     label: 'Pescado',
-    icon: '🐟',
+    icon: 'Fish',
     keywords: [
       'pescado',
       'salmón',
@@ -196,7 +196,7 @@ export const OFFICIAL_ALLERGENS: AllergenDefinition[] = [
     id: 'MARISCO',
     name: 'Crustáceos y Moluscos (Marisco)',
     label: 'Marisco / Crustáceos',
-    icon: '🦐',
+    icon: 'Shell',
     keywords: [
       'marisco',
       'mariscos',
@@ -241,7 +241,7 @@ export const OFFICIAL_ALLERGENS: AllergenDefinition[] = [
     id: 'FRUTOS_SECOS',
     name: 'Frutos de cáscara (Frutos secos)',
     label: 'Frutos Secos',
-    icon: '🥜',
+    icon: 'Nut',
     keywords: [
       'fruto seco',
       'frutos secos',
@@ -271,7 +271,7 @@ export const OFFICIAL_ALLERGENS: AllergenDefinition[] = [
     id: 'CACAHUETE',
     name: 'Cacahuetes / Maní',
     label: 'Cacahuete',
-    icon: '🥜',
+    icon: 'Nut',
     keywords: [
       'cacahuete',
       'cacahuetes',
@@ -287,7 +287,7 @@ export const OFFICIAL_ALLERGENS: AllergenDefinition[] = [
     id: 'SOJA',
     name: 'Soja y derivados',
     label: 'Soja',
-    icon: '🌱',
+    icon: 'Bean',
     keywords: [
       'soja',
       'tofu',
@@ -306,7 +306,7 @@ export const OFFICIAL_ALLERGENS: AllergenDefinition[] = [
     id: 'SESAMO',
     name: 'Granos de sésamo',
     label: 'Sésamo',
-    icon: '🌱',
+    icon: 'Sprout',
     keywords: [
       'sésamo',
       'sesamo',
@@ -322,7 +322,7 @@ export const OFFICIAL_ALLERGENS: AllergenDefinition[] = [
     id: 'APIO',
     name: 'Apio y derivados',
     label: 'Apio',
-    icon: '🥬',
+    icon: 'Leaf',
     keywords: ['apio', 'sal de apio'],
     safeExceptions: [],
   },
@@ -330,7 +330,7 @@ export const OFFICIAL_ALLERGENS: AllergenDefinition[] = [
     id: 'MOSTAZA',
     name: 'Mostaza y derivados',
     label: 'Mostaza',
-    icon: '🟡',
+    icon: 'Soup',
     keywords: ['mostaza', 'salsa de mostaza'],
     safeExceptions: [],
   },
@@ -338,7 +338,7 @@ export const OFFICIAL_ALLERGENS: AllergenDefinition[] = [
     id: 'SULFITOS',
     name: 'Dióxido de azufre y sulfitos',
     label: 'Sulfitos',
-    icon: '🍷',
+    icon: 'Wine',
     keywords: ['sulfito', 'sulfitos', 'vino', 'vinagre de vino'],
     safeExceptions: [],
   },
@@ -346,7 +346,7 @@ export const OFFICIAL_ALLERGENS: AllergenDefinition[] = [
     id: 'ALTRAMUCES',
     name: 'Altramuces y derivados',
     label: 'Altramuces',
-    icon: '🫘',
+    icon: 'Sprout',
     keywords: ['altramuz', 'altramuces', 'chocho'],
     safeExceptions: [],
   },
@@ -533,7 +533,7 @@ export function checkPatientAllergenConflict(
           severity: 'CRITICAL_ALLERGY',
           matchedPatientTerm: term,
           matchedFoodTerm: foodAllergen.matchedKeyword,
-          alertTitle: `🚨 ALERTA CRÍTICA: ${foodAllergen.label.toUpperCase()}`,
+          alertTitle: ` ALERTA CRÍTICA: ${foodAllergen.label.toUpperCase()}`,
           alertMessage: `El paciente ${patientName} tiene ALERGIA registrada a ${foodAllergen.label}. El alimento "${food.name}" contiene ${foodAllergen.matchedKeyword}. Su prescripción representa un riesgo directo de reacción alérgica grave.`,
         }
       }
@@ -551,7 +551,7 @@ export function checkPatientAllergenConflict(
           severity: 'INTOLERANCE',
           matchedPatientTerm: term,
           matchedFoodTerm: foodAllergen.matchedKeyword,
-          alertTitle: `⚠️ INTOLERANCIA CLÍNICA: ${foodAllergen.label.toUpperCase()}`,
+          alertTitle: ` INTOLERANCIA CLÍNICA: ${foodAllergen.label.toUpperCase()}`,
           alertMessage: `El paciente ${patientName} presenta INTOLERANCIA clínica a ${foodAllergen.label}. El alimento "${food.name}" contiene ${foodAllergen.matchedKeyword} y puede provocar sintomatología digestiva o inflamatoria.`,
         }
       }

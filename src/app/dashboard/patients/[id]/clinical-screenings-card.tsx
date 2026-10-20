@@ -6,17 +6,7 @@ import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
 import { Label } from '@/components/ui/label'
 import { Input } from '@/components/ui/input'
-import {
-  ClipboardList,
-  Plus,
-  Trash2,
-  Calendar,
-  Baby,
-  CheckCircle2,
-  AlertTriangle,
-  XCircle,
-  HelpCircle,
-} from 'lucide-react'
+import { ClipboardList, Plus, Trash2, Baby } from 'lucide-react'
 import { ALL_SCREENINGS, type ScreeningDefinition } from '@/lib/clinical/screenings'
 import { calculateGestationalWeightGain } from '@/lib/nutrition/anthropometry'
 import { saveClinicalScreening, deleteClinicalScreening } from '../actions'

@@ -3,18 +3,7 @@
 import { useState, useEffect, useRef } from 'react'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
-import {
-  Bell,
-  Calendar,
-  FileText,
-  Sparkles,
-  CheckCircle2,
-  AlertTriangle,
-  Clock,
-  ArrowRight,
-  X,
-  Check,
-} from 'lucide-react'
+import { Bell, Calendar, FileText, Sparkles, CheckCircle2, AlertTriangle, Clock, ArrowRight, X } from 'lucide-react'
 import { getNotificationsAction, type AppNotification } from './actions'
 
 interface Props {

@@ -4,21 +4,7 @@ import { useState } from 'react'
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
-import {
-  ShieldCheck,
-  ShieldAlert,
-  KeyRound,
-  Copy,
-  Check,
-  UserCheck,
-  UserX,
-  RefreshCw,
-  Clock,
-  ExternalLink,
-  Lock,
-  Unlock,
-  Eye,
-} from 'lucide-react'
+import { KeyRound, Copy, Check, UserCheck, UserX, RefreshCw, Clock, Lock, Unlock, Eye } from 'lucide-react'
 import {
   createPortalAccount,
   togglePortalAccess,
@@ -226,8 +212,8 @@ export function PortalAccessCard({
                 </span>
                 <span className="font-semibold text-gray-800 block mt-0.5">
                   {portalUser?.passwordChangeRequired
-                    ? '⚠️ Pendiente de fijar por el paciente'
-                    : '✓ Contraseña segura configurada'}
+                    ? ' Pendiente de fijar por el paciente'
+                    : ' Contraseña segura configurada'}
                 </span>
               </div>
             </div>

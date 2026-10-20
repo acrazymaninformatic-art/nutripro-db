@@ -1,4 +1,4 @@
-import { Activity, CheckCircle2, Database, Mail, ShieldCheck, ShieldAlert, Clock, FileWarning, ExternalLink } from 'lucide-react'
+import { Activity, ArrowRight, CheckCircle2, ClipboardList, Clock, Database, Mail, ShieldAlert, ShieldCheck, Siren } from 'lucide-react'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { requireUserId } from '@/lib/auth'
 import { prisma } from '@/lib/prisma'
@@ -49,7 +49,7 @@ export default async function OperationsPage() {
             href={href}
             className="text-xs font-semibold px-3 py-1.5 rounded-xl bg-blue-50 text-blue-700 hover:bg-blue-100 border border-blue-200"
           >
-            Ver registros →
+            Ver registros <ArrowRight className="h-[1em] w-[1em] shrink-0" />
           </a>
         )}
       </CardContent>
@@ -179,7 +179,7 @@ export default async function OperationsPage() {
                     <div className="flex items-center gap-2">
                       <span className={`px-2.5 py-1 rounded-full text-2xs border ${badgeClass}`}>
                         {isOverdue
-                          ? `⚠️ Vencido (-${Math.abs(req.daysLeft)}d)`
+                          ? ` Vencido (-${Math.abs(req.daysLeft)}d)`
                           : `⏳ ${req.daysLeft} días restantes`}
                       </span>
                       {req.patient && (
@@ -187,7 +187,7 @@ export default async function OperationsPage() {
                           href={`/dashboard/patients/${req.patient.id}`}
                           className="text-xs font-semibold text-blue-700 hover:underline"
                         >
-                          Ficha →
+                          Ficha <ArrowRight className="h-[1em] w-[1em] shrink-0" />
                         </Link>
                       )}
                     </div>
@@ -240,7 +240,7 @@ export default async function OperationsPage() {
                 type="button"
                 className="text-xs font-bold px-3.5 py-1.5 rounded-xl bg-red-600 hover:bg-red-700 text-white shadow-xs transition-colors"
               >
-                🚨 Activar Aislamiento de Emergencia
+                <Siren className="h-[1em] w-[1em] shrink-0" /> Activar Aislamiento de Emergencia
               </button>
             </Link>
           </div>
@@ -269,7 +269,7 @@ export default async function OperationsPage() {
 
           <details className="p-4 bg-slate-50 border border-slate-200 rounded-2xl text-xs">
             <summary className="font-bold text-slate-900 cursor-pointer flex items-center justify-between">
-              <span>📋 Borrador / Plantilla Oficial para Notificación de Incidente (Art. 33 RGPD)</span>
+              <span><ClipboardList className="h-[1em] w-[1em] shrink-0" /> Borrador / Plantilla Oficial para Notificación de Incidente (Art. 33 RGPD)</span>
               <span className="text-blue-700 font-semibold text-2xs">Expandir plantilla</span>
             </summary>
             <div className="mt-3 p-3 bg-white border border-slate-200 rounded-xl font-mono text-2xs text-gray-800 whitespace-pre-wrap leading-relaxed select-all">

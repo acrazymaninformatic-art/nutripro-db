@@ -16,24 +16,7 @@ import { SoapConsultationPanel } from './soap-consultation-panel'
 import { ConsentsDocumentsPanel } from './consents-documents-panel'
 import { HardDeleteModal } from './hard-delete-modal'
 import { checkDrugInteractions } from '@/lib/nutrition/drug-interactions'
-import {
-  ArrowLeft,
-  User,
-  HeartPulse,
-  Scale,
-  Calendar,
-  AlertTriangle,
-  History,
-  FileText,
-  Activity,
-  CalendarPlus,
-  ShieldAlert,
-  Pill,
-  Sparkles,
-  Eye,
-  Mail,
-  CheckCircle2,
-} from 'lucide-react'
+import { AlertTriangle, ArrowLeft, ArrowRight, Bell, Calendar, CalendarPlus, Check, Eye, FileText, HeartPulse, History, Mail, Pill, Scale, ShieldAlert, Siren, Sparkles, Target, Zap } from 'lucide-react'
 import {
   OBJECTIVE_LABELS,
   ACTIVITY_LEVEL_LABELS,
@@ -284,10 +267,10 @@ export default async function PatientDetailPage({ params, searchParams }: Patien
 
         <div className="flex flex-wrap gap-2 md:justify-end">
           <Badge variant="outline" className="text-xs px-3 py-1 bg-blue-50 text-blue-700 border-blue-200 rounded-full font-semibold">
-            🎯 {objectiveLabel}
+            <Target className="h-[1em] w-[1em] shrink-0" /> {objectiveLabel}
           </Badge>
           <Badge variant="outline" className="text-xs px-3 py-1 bg-amber-50 text-amber-700 border-amber-200 rounded-full font-semibold">
-            ⚡ {activityLabel}
+            <Zap className="h-[1em] w-[1em] shrink-0" /> {activityLabel}
           </Badge>
         </div>
       </div>
@@ -490,7 +473,7 @@ export default async function PatientDetailPage({ params, searchParams }: Patien
                       <span className="text-xs font-semibold text-gray-400 uppercase">Alergias</span>
                       {allergiesList.length > 0 && (
                         <span className="text-3xs font-extrabold text-red-700 bg-red-100/80 px-2 py-0.5 rounded-full">
-                          🛡️ Exclusión activa (UE 1169/2011)
+                           Exclusión activa (UE 1169/2011)
                         </span>
                       )}
                     </div>
@@ -498,18 +481,18 @@ export default async function PatientDetailPage({ params, searchParams }: Patien
                       <div className="flex flex-wrap gap-1 mt-1">
                         {allergiesList.map((a, i) => (
                           <span key={i} className="px-2.5 py-1 rounded-xl bg-red-50 text-red-700 text-xs font-bold border border-red-200 shadow-2xs">
-                            🚨 {a}
+                            <Siren className="h-[1em] w-[1em] shrink-0" /> {a}
                           </span>
                         ))}
                       </div>
                     ) : patient.allergiesStatus === 'NINGUNA_CONOCIDA' ? (
                       <p className="text-xs text-blue-800 font-semibold mt-1 flex items-center gap-1.5">
                         <span className="inline-block w-2 h-2 rounded-full bg-blue-500"></span>
-                        <span>✓ Ninguna conocida (confirmado)</span>
+                        <span><Check className="h-[1em] w-[1em] shrink-0" /> Ninguna conocida (confirmado)</span>
                       </p>
                     ) : (
                       <p className="text-xs text-amber-800 font-semibold mt-1 flex items-center gap-1.5 bg-amber-50 p-1.5 rounded-lg border border-amber-200">
-                        <span>⚠️ No consta (pendiente de preguntar)</span>
+                        <span><AlertTriangle className="h-[1em] w-[1em] shrink-0" /> No consta (pendiente de preguntar)</span>
                       </p>
                     )}
                   </div>
@@ -520,7 +503,7 @@ export default async function PatientDetailPage({ params, searchParams }: Patien
                       <span className="text-xs font-semibold text-gray-400 uppercase">Intolerancias</span>
                       {intolerancesList.length > 0 && (
                         <span className="text-3xs font-extrabold text-amber-800 bg-amber-100/80 px-2 py-0.5 rounded-full">
-                          ⚠️ Control de tolerancia activo
+                          <AlertTriangle className="h-[1em] w-[1em] shrink-0" /> Control de tolerancia activo
                         </span>
                       )}
                     </div>
@@ -528,18 +511,18 @@ export default async function PatientDetailPage({ params, searchParams }: Patien
                       <div className="flex flex-wrap gap-1 mt-1">
                         {intolerancesList.map((item, i) => (
                           <span key={i} className="px-2.5 py-1 rounded-xl bg-amber-50 text-amber-800 text-xs font-bold border border-amber-200 shadow-2xs">
-                            ⚠️ {item}
+                            <AlertTriangle className="h-[1em] w-[1em] shrink-0" /> {item}
                           </span>
                         ))}
                       </div>
                     ) : patient.intolerancesStatus === 'NINGUNA_CONOCIDA' ? (
                       <p className="text-xs text-blue-800 font-semibold mt-1 flex items-center gap-1.5">
                         <span className="inline-block w-2 h-2 rounded-full bg-blue-500"></span>
-                        <span>✓ Ninguna conocida (confirmado)</span>
+                        <span><Check className="h-[1em] w-[1em] shrink-0" /> Ninguna conocida (confirmado)</span>
                       </p>
                     ) : (
                       <p className="text-xs text-amber-800 font-semibold mt-1 flex items-center gap-1.5 bg-amber-50 p-1.5 rounded-lg border border-amber-200">
-                        <span>⚠️ No consta (pendiente de preguntar)</span>
+                        <span><AlertTriangle className="h-[1em] w-[1em] shrink-0" /> No consta (pendiente de preguntar)</span>
                       </p>
                     )}
                   </div>
@@ -554,11 +537,11 @@ export default async function PatientDetailPage({ params, searchParams }: Patien
                     ) : patient.medicationsStatus === 'NINGUNA_CONOCIDA' ? (
                       <p className="text-xs text-blue-800 font-semibold mt-1 flex items-center gap-1.5">
                         <span className="inline-block w-2 h-2 rounded-full bg-blue-500"></span>
-                        <span>✓ Ninguna conocida (confirmado)</span>
+                        <span><Check className="h-[1em] w-[1em] shrink-0" /> Ninguna conocida (confirmado)</span>
                       </p>
                     ) : (
                       <p className="text-xs text-amber-800 font-semibold mt-1 flex items-center gap-1.5 bg-amber-50 p-1.5 rounded-lg border border-amber-200">
-                        <span>⚠️ No consta (pendiente de preguntar)</span>
+                        <span><AlertTriangle className="h-[1em] w-[1em] shrink-0" /> No consta (pendiente de preguntar)</span>
                       </p>
                     )}
                   </div>
@@ -573,11 +556,11 @@ export default async function PatientDetailPage({ params, searchParams }: Patien
                     ) : patient.pathologiesStatus === 'NINGUNA_CONOCIDA' ? (
                       <p className="text-xs text-blue-800 font-semibold mt-1 flex items-center gap-1.5">
                         <span className="inline-block w-2 h-2 rounded-full bg-blue-500"></span>
-                        <span>✓ Ninguno conocido (confirmado)</span>
+                        <span><Check className="h-[1em] w-[1em] shrink-0" /> Ninguno conocido (confirmado)</span>
                       </p>
                     ) : (
                       <p className="text-xs text-amber-800 font-semibold mt-1 flex items-center gap-1.5 bg-amber-50 p-1.5 rounded-lg border border-amber-200">
-                        <span>⚠️ No consta (pendiente de preguntar)</span>
+                        <span><AlertTriangle className="h-[1em] w-[1em] shrink-0" /> No consta (pendiente de preguntar)</span>
                       </p>
                     )}
                   </div>
@@ -733,7 +716,7 @@ export default async function PatientDetailPage({ params, searchParams }: Patien
                   </div>
                   <Link href="/dashboard/appointments">
                     <Button size="sm" variant="outline" className="rounded-2xl text-xs font-bold hover:bg-blue-50 hover:text-blue-800">
-                      Gestionar en Agenda →
+                      Gestionar en Agenda <ArrowRight className="h-[1em] w-[1em] shrink-0" />
                     </Button>
                   </Link>
                 </CardHeader>
@@ -747,13 +730,13 @@ export default async function PatientDetailPage({ params, searchParams }: Patien
                             {d.toLocaleDateString('es-ES', { day: 'numeric', month: 'short', year: 'numeric' })} — {d.toLocaleTimeString('es-ES', { hour: '2-digit', minute: '2-digit' })} h
                           </span>
                           <span className="font-semibold text-gray-700">
-                            {app.modality === 'ONLINE' ? '💻 Online (Videollamada)' : '🏥 Presencial en Consulta'} ({app.durationMin} min)
+                            {app.modality === 'ONLINE' ? ' Online (Videollamada)' : ' Presencial en Consulta'} ({app.durationMin} min)
                           </span>
                           {app.notes && <span className="text-gray-500 italic truncate max-w-sm">"{app.notes}"</span>}
                         </div>
                         <div className="flex items-center gap-2">
-                          {app.emailSent && <span className="text-[11px] text-blue-700 font-bold">✓ Correo enviado</span>}
-                          {app.reminderSent && <span className="text-[11px] text-indigo-700 font-bold">🔔 Recordatorio 24h</span>}
+                          {app.emailSent && <span className="text-[11px] text-blue-700 font-bold"><Check className="h-[1em] w-[1em] shrink-0" /> Correo enviado</span>}
+                          {app.reminderSent && <span className="text-[11px] text-indigo-700 font-bold"><Bell className="h-4 w-4" /> Recordatorio 24h</span>}
                           <Badge variant="outline" className="text-2xs font-bold rounded-full bg-white">{app.status}</Badge>
                         </div>
                       </div>
@@ -767,7 +750,7 @@ export default async function PatientDetailPage({ params, searchParams }: Patien
                 <p className="text-sm font-bold text-slate-700">No hay citas programadas actualmente</p>
                 <Link href="/dashboard/appointments" className="mt-3 inline-block">
                   <Button size="sm" className="rounded-2xl bg-blue-600 hover:bg-blue-700 text-white font-bold text-xs">
-                    Programar Cita en Agenda →
+                    Programar Cita en Agenda <ArrowRight className="h-[1em] w-[1em] shrink-0" />
                   </Button>
                 </Link>
               </Card>
@@ -833,7 +816,7 @@ export default async function PatientDetailPage({ params, searchParams }: Patien
                 </div>
                 <Link href="/dashboard/emails">
                   <Button size="sm" variant="outline" className="rounded-2xl text-xs font-bold hover:bg-blue-50 hover:text-blue-800">
-                    Enviar Nuevo Correo →
+                    Enviar Nuevo Correo <ArrowRight className="h-[1em] w-[1em] shrink-0" />
                   </Button>
                 </Link>
               </CardHeader>
@@ -850,7 +833,7 @@ export default async function PatientDetailPage({ params, searchParams }: Patien
                           <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-2xs font-bold ${
                             log.status === 'SENT' ? 'bg-blue-100 text-blue-800' : 'bg-red-100 text-red-800'
                           }`}>
-                            {log.status === 'SENT' ? '✓ Enviado' : '✗ Fallido'}
+                            {log.status === 'SENT' ? ' Enviado' : ' Fallido'}
                           </span>
                           <span className="font-bold text-gray-900">{log.subject}</span>
                           <span className="text-2xs text-gray-500 font-mono">({log.type})</span>

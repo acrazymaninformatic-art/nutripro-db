@@ -8,31 +8,7 @@ import { Badge } from '@/components/ui/badge'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Select } from '@/components/ui/select'
-import {
-  Calculator,
-  Flame,
-  Activity,
-  Scale,
-  Droplets,
-  HeartPulse,
-  Sparkles,
-  Printer,
-  CalendarPlus,
-  Info,
-  ChevronRight,
-  TrendingDown,
-  TrendingUp,
-  Sliders,
-  Calendar,
-  Save,
-  CheckCircle2,
-  AlertCircle,
-  Footprints,
-  Baby,
-  ShieldAlert,
-  Dna,
-  BookOpen,
-} from 'lucide-react'
+import { Activity, AlertCircle, Baby, BookOpen, Calculator, CalendarPlus, CheckCircle2, Dna, Flame, Footprints, HeartPulse, Save, Sliders, TrendingDown, User } from 'lucide-react'
 import {
   calculateSchofield,
   calculateFaoOms,
@@ -600,7 +576,7 @@ export function ClinicalCalculator({
                           : 'bg-white border-gray-200 text-gray-600 hover:bg-gray-50'
                       }`}
                     >
-                      👩 Mujer
+                      <User className="h-4 w-4" /> Mujer
                     </button>
                     <button
                       type="button"
@@ -611,7 +587,7 @@ export function ClinicalCalculator({
                           : 'bg-white border-gray-200 text-gray-600 hover:bg-gray-50'
                       }`}
                     >
-                      👨 Hombre
+                      <User className="h-4 w-4" /> Hombre
                     </button>
                   </div>
                 </div>

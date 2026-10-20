@@ -13,27 +13,7 @@ import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
 import { Input } from '@/components/ui/input'
 import { Textarea } from '@/components/ui/textarea'
-import {
-  CheckCircle2,
-  AlertTriangle,
-  Clock,
-  ShieldAlert,
-  ArrowRight,
-  RotateCcw,
-  Sparkles,
-  FileText,
-  User,
-  HeartPulse,
-  Utensils,
-  Target,
-  Edit2,
-  Check,
-  X,
-  Eye,
-  Download,
-  AlertCircle,
-  Activity,
-} from 'lucide-react'
+import { AlertCircle, Check, CheckCircle2, Download, Edit2, FileText, HeartPulse, RotateCcw, ShieldAlert, X } from 'lucide-react'
 import {
   getQuestionnaireReviewDataAction,
   acceptFieldToPatientRecordAction,
@@ -201,7 +181,7 @@ export function QuestionnaireReviewModal({
                   </Badge>
                 ) : (
                   <Badge className="bg-emerald-600 text-white border-0 text-3xs font-black rounded-full">
-                    ✓ Todos los campos revisados
+                    <Check className="h-[1em] w-[1em] shrink-0" /> Todos los campos revisados
                   </Badge>
                 )}
               </div>
@@ -305,7 +285,7 @@ export function QuestionnaireReviewModal({
                               )}
                               {isAccepted && (
                                 <Badge className="bg-emerald-600 text-white text-3xs font-bold rounded-full">
-                                  ✓ Copiado a la Ficha
+                                  <Check className="h-[1em] w-[1em] shrink-0" /> Copiado a la Ficha
                                 </Badge>
                               )}
                             </div>
@@ -426,7 +406,7 @@ export function QuestionnaireReviewModal({
                               )}
                               {isAccepted && (
                                 <Badge className="bg-emerald-600 text-white text-3xs font-bold rounded-full">
-                                  ✓ Aceptado en ficha
+                                  <Check className="h-[1em] w-[1em] shrink-0" /> Aceptado en ficha
                                 </Badge>
                               )}
                               {isDiscarded && (

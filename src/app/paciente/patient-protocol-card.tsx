@@ -4,16 +4,7 @@ import { useState } from 'react'
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
-import {
-  HeartPulse,
-  Thermometer,
-  Sparkles,
-  ChevronRight,
-  CheckCircle2,
-  AlertCircle,
-  Activity,
-  Layers,
-} from 'lucide-react'
+import { HeartPulse, Thermometer, CheckCircle2 } from 'lucide-react'
 import { CLINICAL_PROTOCOLS } from '@/lib/clinical/protocols/protocols-registry'
 import { addSymptomLogAction } from '@/lib/clinical/protocols/protocol-actions'
 import { ModalPortal } from '@/components/ui/modal-portal'

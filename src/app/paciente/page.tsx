@@ -5,23 +5,7 @@ import { prisma } from '@/lib/prisma'
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
-import {
-  Scale,
-  UtensilsCrossed,
-  FileText,
-  Calendar,
-  ChevronRight,
-  TrendingUp,
-  FolderOpen,
-  Sparkles,
-  Heart,
-  ClipboardCheck,
-  AlertTriangle,
-  ArrowRight,
-  Clock,
-  User,
-  Settings,
-} from 'lucide-react'
+import { AlertTriangle, ArrowRight, Calendar, ChevronRight, ClipboardCheck, CookingPot, FileText, Heart, Scale, Settings, Sparkles, TrendingUp, User, UtensilsCrossed } from 'lucide-react'
 import { PatientProtocolCard } from './patient-protocol-card'
 import { getFoodImage, FALLBACK_FOOD_SVG } from '@/lib/nutrition'
 import { LEGAL_POLICY_VERSION, REQUIRED_PORTAL_CONSENTS } from '@/lib/legal'
@@ -435,7 +419,7 @@ export default async function PacienteDashboardPage() {
                               <div className="min-w-0 flex-1">
                                 {it.recipe ? (
                                   <span className="font-bold text-slate-900 block leading-snug line-clamp-3">
-                                    🍳 {it.recipe.name}
+                                    <CookingPot className="h-4 w-4" /> {it.recipe.name}
                                   </span>
                                 ) : it.food ? (
                                   <span className="block leading-snug">

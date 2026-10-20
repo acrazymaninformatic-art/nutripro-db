@@ -6,21 +6,7 @@ import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Textarea } from '@/components/ui/textarea'
-import {
-  CheckCircle2,
-  User,
-  HeartPulse,
-  Utensils,
-  Target,
-  AlertCircle,
-  ArrowRight,
-  Activity,
-  Droplets,
-  Moon,
-  Sparkles,
-  ShieldCheck,
-  Stethoscope,
-} from 'lucide-react'
+import { Activity, AlertCircle, ArrowRight, Ban, CheckCircle2, Droplets, Heart, HeartPulse, Lock, Moon, ShieldCheck, Stethoscope, Target, User, Utensils } from 'lucide-react'
 import { submitAnamnesis } from './actions'
 import Link from 'next/link'
 
@@ -124,7 +110,7 @@ export function AnamnesisForm({ patient, token }: Props) {
             Tu nutricionista <strong>Eva Vidal</strong> revisará minuciosamente tus respuestas para tener preparada tu estrategia y tu plan de alimentación adaptado a tu estilo de vida antes de tu sesión.
           </p>
           <p className="text-blue-900/70 text-2xs italic pt-1">
-            🔒 Este formulario queda cerrado por seguridad clínica. Si surge algún cambio de medicación o síntoma antes de la cita, lo comentaremos en la consulta.
+            <Lock className="h-[1em] w-[1em] shrink-0" /> Este formulario queda cerrado por seguridad clínica. Si surge algún cambio de medicación o síntoma antes de la cita, lo comentaremos en la consulta.
           </p>
         </div>
 
@@ -350,7 +336,7 @@ export function AnamnesisForm({ patient, token }: Props) {
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div className="space-y-1.5">
               <Label className="text-xs font-semibold text-blue-900 flex items-center gap-1.5">
-                <span>❤️ Alimentos que TE ENCANTAN (Prioritarios)</span>
+                <span><Heart className="h-[1em] w-[1em] shrink-0" /> Alimentos que TE ENCANTAN (Prioritarios)</span>
               </Label>
               <Textarea
                 name="foodPreferences"
@@ -361,7 +347,7 @@ export function AnamnesisForm({ patient, token }: Props) {
             </div>
             <div className="space-y-1.5">
               <Label className="text-xs font-semibold text-rose-900 flex items-center gap-1.5">
-                <span>🚫 Alimentos que RECHAZAS (No poner nunca)</span>
+                <span><Ban className="h-[1em] w-[1em] shrink-0" /> Alimentos que RECHAZAS (No poner nunca)</span>
               </Label>
               <Textarea
                 name="foodAversions"

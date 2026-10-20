@@ -1,7 +1,7 @@
 'use client'
 
 import { useMemo, useState } from 'react'
-import { TrendingDown, TrendingUp, Scale, Target, Layers } from 'lucide-react'
+import { TrendingDown, TrendingUp, Scale, Target } from 'lucide-react'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 

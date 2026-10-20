@@ -6,24 +6,7 @@ import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
-import {
-  AlertTriangle,
-  ShieldAlert,
-  Target,
-  Trophy,
-  Calendar,
-  Sparkles,
-  Pill,
-  Baby,
-  Clock,
-  Tag,
-  CheckCircle2,
-  Lock,
-  ChevronDown,
-  ChevronUp,
-  FileCheck,
-  RotateCcw,
-} from 'lucide-react'
+import { AlertTriangle, Baby, Check, FileCheck, Mail, PartyPopper, Pill, RotateCcw, ShieldAlert, Sparkles, Tag, Target } from 'lucide-react'
 import { updatePatientGoalsAndTags, dischargePatient, reopenPatient } from '../actions'
 import { QuestionnaireReviewModal } from '@/app/dashboard/questionnaires/review-modal'
 
@@ -113,11 +96,11 @@ export function PatientHeaderAlerts({ patient, drugAlertsCount }: PatientHeaderA
 
   let milestoneTimeBadge: string | null = null
   if (monthsTracking >= 12) {
-    milestoneTimeBadge = '🏆 1 Año de Seguimiento'
+    milestoneTimeBadge = ' 1 Año de Seguimiento'
   } else if (monthsTracking >= 6) {
-    milestoneTimeBadge = '🌟 6 Meses de Acompañamiento'
+    milestoneTimeBadge = ' 6 Meses de Acompañamiento'
   } else if (monthsTracking >= 3) {
-    milestoneTimeBadge = '🎯 3 Meses de Compromiso'
+    milestoneTimeBadge = ' 3 Meses de Compromiso'
   }
 
   // Parse tags
@@ -234,7 +217,7 @@ export function PatientHeaderAlerts({ patient, drugAlertsCount }: PatientHeaderA
             <span className="text-[10px] font-bold text-gray-400 uppercase tracking-wider">Cuestionario:</span>
             {patient.questionnaireStatus === 'COMPLETED' ? (
               <Badge className="bg-blue-100 text-blue-900 border border-blue-300 font-bold px-2.5 py-0.5 rounded-full text-2xs">
-                ✓ Hecho (Completado)
+                <Check className="h-[1em] w-[1em] shrink-0" /> Hecho (Completado)
               </Badge>
             ) : patient.questionnaireStatus === 'IN_PROGRESS' ? (
               <Badge className="bg-amber-100 text-amber-900 border border-amber-300 font-bold px-2.5 py-0.5 rounded-full text-2xs">
@@ -242,7 +225,7 @@ export function PatientHeaderAlerts({ patient, drugAlertsCount }: PatientHeaderA
               </Badge>
             ) : patient.questionnaireStatus === 'SENT' ? (
               <Badge className="bg-blue-100 text-blue-900 border border-blue-300 font-bold px-2.5 py-0.5 rounded-full text-2xs">
-                📩 Enviado al portal
+                <Mail className="h-[1em] w-[1em] shrink-0" /> Enviado al portal
               </Badge>
             ) : (
               <Badge className="bg-gray-100 text-gray-600 border border-gray-300 font-medium px-2.5 py-0.5 rounded-full text-2xs">
@@ -257,7 +240,7 @@ export function PatientHeaderAlerts({ patient, drugAlertsCount }: PatientHeaderA
             <span className="text-[10px] font-bold text-gray-400 uppercase tracking-wider">Consentimiento RGPD:</span>
             {patient.consentStatus === 'COMPLETED' ? (
               <Badge className="bg-blue-100 text-blue-900 border border-blue-300 font-bold px-2.5 py-0.5 rounded-full text-2xs">
-                ✓ Firmado digitalmente
+                <Check className="h-[1em] w-[1em] shrink-0" /> Firmado digitalmente
               </Badge>
             ) : patient.consentStatus === 'IN_PROGRESS' ? (
               <Badge className="bg-amber-100 text-amber-900 border border-amber-300 font-bold px-2.5 py-0.5 rounded-full text-2xs">
@@ -265,7 +248,7 @@ export function PatientHeaderAlerts({ patient, drugAlertsCount }: PatientHeaderA
               </Badge>
             ) : patient.consentStatus === 'SENT' ? (
               <Badge className="bg-blue-100 text-blue-900 border border-blue-300 font-bold px-2.5 py-0.5 rounded-full text-2xs">
-                📩 Enviado al portal
+                <Mail className="h-[1em] w-[1em] shrink-0" /> Enviado al portal
               </Badge>
             ) : (
               <Badge className="bg-gray-100 text-gray-600 border border-gray-300 font-medium px-2.5 py-0.5 rounded-full text-2xs">
@@ -323,7 +306,7 @@ export function PatientHeaderAlerts({ patient, drugAlertsCount }: PatientHeaderA
           <div className="min-w-0">
             <span className="text-[10px] font-bold text-gray-400 uppercase tracking-wider block">Embarazo / Lactancia</span>
             <p className="text-xs font-bold text-gray-900 truncate">
-              {patient.pregnant ? '🤰 Embarazo en curso' : patient.breastfeeding ? '🤱 En lactancia activa' : 'No gestante'}
+              {patient.pregnant ? ' Embarazo en curso' : patient.breastfeeding ? ' En lactancia activa' : 'No gestante'}
             </p>
           </div>
         </div>
@@ -352,7 +335,7 @@ export function PatientHeaderAlerts({ patient, drugAlertsCount }: PatientHeaderA
                 <h3 className="text-sm font-bold text-gray-900">Objetivo Clínico de Peso y Ritmo Semanal</h3>
                 {isTargetReached && (
                   <Badge className="bg-blue-600 text-white font-bold rounded-full text-2xs animate-pulse">
-                    🎉 ¡OBJETIVO ALCANZADO!
+                    <PartyPopper className="h-4 w-4" /> ¡OBJETIVO ALCANZADO!
                   </Badge>
                 )}
                 {milestoneTimeBadge && (
@@ -564,7 +547,7 @@ export function PatientHeaderAlerts({ patient, drugAlertsCount }: PatientHeaderA
             </div>
 
             <p className="text-2xs text-amber-800 bg-amber-50 p-2.5 rounded-xl border border-amber-200">
-              ⚠️ Al tramitar el alta, el acceso al portal de este paciente quedará desactivado de forma automática como exige la normativa y la política de retención de EVSoftware.
+              <AlertTriangle className="h-[1em] w-[1em] shrink-0" /> Al tramitar el alta, el acceso al portal de este paciente quedará desactivado de forma automática como exige la normativa y la política de retención de EVSoftware.
             </p>
 
             <div className="flex justify-end gap-2 pt-2">

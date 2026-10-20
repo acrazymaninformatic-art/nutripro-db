@@ -3,22 +3,7 @@
 import { Card } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
-import {
-  X,
-  Apple,
-  Flame,
-  ShieldCheck,
-  Scale,
-  Sparkles,
-  Barcode,
-  Layers,
-  Leaf,
-  Droplets,
-  DollarSign,
-  AlertTriangle,
-  Info,
-  Calendar,
-} from 'lucide-react'
+import { AlertTriangle, Barcode, Check, Leaf, Scale, ShieldCheck, Sparkles, X } from 'lucide-react'
 
 export interface FoodDetailData {
   id: number
@@ -311,12 +296,12 @@ export function FoodDetailsModal({
               {allergens.length > 0 ? (
                 allergens.map((alg) => (
                   <Badge key={alg} variant="destructive" className="text-2xs font-bold rounded-lg">
-                    ⚠️ {alg}
+                    <AlertTriangle className="h-[1em] w-[1em] shrink-0" /> {alg}
                   </Badge>
                 ))
               ) : (
                 <Badge className="bg-emerald-100 text-emerald-900 text-2xs font-semibold rounded-lg">
-                  ✓ Libre de alérgenos de declaración obligatoria
+                  <Check className="h-[1em] w-[1em] shrink-0" /> Libre de alérgenos de declaración obligatoria
                 </Badge>
               )}
               {dietaryTags.map((tag) => (

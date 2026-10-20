@@ -5,20 +5,7 @@ import Link from 'next/link'
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
-import {
-  HeartPulse,
-  Calculator,
-  PlusCircle,
-  CheckCircle2,
-  AlertCircle,
-  ExternalLink,
-  ChevronRight,
-  Activity,
-  Layers,
-  Thermometer,
-  ShieldCheck,
-  ArrowRight,
-} from 'lucide-react'
+import { Activity, AlertTriangle, Calculator, CheckCircle2, ExternalLink, HeartPulse, Layers, PlusCircle, Thermometer } from 'lucide-react'
 import { CLINICAL_PROTOCOLS, type ClinicalProtocolDefinition } from '@/lib/clinical/protocols/protocols-registry'
 import {
   assignProtocolAction,
@@ -243,7 +230,7 @@ export function PatientClinicalProtocolsCard({
               <div className="p-3 bg-white rounded-xl border border-blue-100 text-xs space-y-1.5 text-gray-700">
                 <p className="font-semibold text-blue-900">{selectedDef.summary}</p>
                 {selectedDef.warnings && selectedDef.warnings.length > 0 && (
-                  <p className="text-amber-800 font-medium">⚠️ Advertencia: {selectedDef.warnings[0]}</p>
+                  <p className="text-amber-800 font-medium"><AlertTriangle className="h-[1em] w-[1em] shrink-0" /> Advertencia: {selectedDef.warnings[0]}</p>
                 )}
               </div>
             )}

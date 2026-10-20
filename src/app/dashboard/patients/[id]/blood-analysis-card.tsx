@@ -6,7 +6,7 @@ import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Badge } from '@/components/ui/badge'
-import { Activity, Plus, Trash2, Calendar, CheckCircle2, AlertTriangle, XCircle, ChevronDown, ChevronUp } from 'lucide-react'
+import { Activity, Plus, Trash2, Calendar, CheckCircle2, AlertTriangle, XCircle } from 'lucide-react'
 import { createBloodAnalysis, deleteBloodAnalysis } from '../blood-actions'
 import { calculateBloodIndices } from '@/lib/nutrition/anthropometry'
 

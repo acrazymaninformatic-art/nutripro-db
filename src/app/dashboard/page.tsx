@@ -3,17 +3,7 @@ import { prisma } from '@/lib/prisma'
 import { Card, CardHeader, CardTitle, CardContent, CardDescription } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
-import {
-  Users,
-  CalendarDays,
-  ClipboardList,
-  ChefHat,
-  UserPlus,
-  CalendarPlus,
-  ArrowRight,
-  Sparkles,
-  TrendingUp,
-} from 'lucide-react'
+import { ArrowRight, CalendarDays, CalendarPlus, ChefHat, ClipboardList, TrendingUp, UserPlus, Users } from 'lucide-react'
 import { OBJECTIVE_LABELS, type Objective } from '@/types'
 import { requireAdmin } from '@/lib/auth'
 import { ScrollReveal } from '@/components/ui/page-motion'
@@ -234,7 +224,7 @@ export default async function DashboardPage() {
                         <td className="px-6 py-4 text-right">
                           <Link href={`/dashboard/patients/${p.id}`}>
                             <Button variant="ghost" size="sm" className="text-blue-700 hover:text-blue-800 hover:bg-blue-50/70 rounded-xl font-bold text-xs h-8 px-3">
-                              Ver Ficha →
+                              Ver Ficha <ArrowRight className="h-[1em] w-[1em] shrink-0" />
                             </Button>
                           </Link>
                         </td>

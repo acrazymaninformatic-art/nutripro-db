@@ -5,18 +5,7 @@ import { requirePatient } from '@/lib/auth'
 import { prisma } from '@/lib/prisma'
 import { logoutAction } from './actions'
 import { exitPatientPreview } from '@/app/dashboard/patients/preview-actions'
-import {
-  LayoutDashboard,
-  CalendarDays,
-  Calendar,
-  TrendingUp,
-  FileText,
-  ClipboardCheck,
-  LogOut,
-  User,
-  ShieldAlert,
-  Settings,
-} from 'lucide-react'
+import { ArrowRight, LogOut, ShieldAlert, User } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { HelpWidget } from './help-widget'
 import { PacienteDesktopNav, PacienteMobileNav } from './paciente-nav'
@@ -99,7 +88,7 @@ export default async function PacienteLayout({
                 size="sm"
                 className="rounded-xl bg-amber-950 hover:bg-black text-amber-50 text-xs font-bold shadow-xs py-1 px-3 h-auto"
               >
-                Volver al expediente de consulta →
+                Volver al expediente de consulta <ArrowRight className="h-[1em] w-[1em] shrink-0" />
               </Button>
             </form>
           </div>
@@ -133,7 +122,7 @@ export default async function PacienteLayout({
               size="sm"
               className="rounded-xl bg-amber-950 hover:bg-black text-amber-50 text-xs font-bold shadow-xs py-1 px-3 h-auto"
             >
-              Volver al expediente de consulta →
+              Volver al expediente de consulta <ArrowRight className="h-[1em] w-[1em] shrink-0" />
             </Button>
           </form>
         </div>

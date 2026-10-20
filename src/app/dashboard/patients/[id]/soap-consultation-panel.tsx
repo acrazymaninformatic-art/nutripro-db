@@ -6,21 +6,7 @@ import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
-import {
-  Stethoscope,
-  Plus,
-  Eye,
-  EyeOff,
-  Calendar,
-  Trash2,
-  CheckCircle2,
-  Mic,
-  MicOff,
-  FileSignature,
-  FileText,
-  Sparkles,
-  Paperclip,
-} from 'lucide-react'
+import { Calendar, Eye, EyeOff, FileSignature, Mic, MicOff, Paperclip, Plus, Sparkles, Stethoscope, Trash2, Zap } from 'lucide-react'
 import { createSoapConsultation, deleteConsultation, toggleConsultationSharing } from './consultation-actions'
 
 interface ConsultationItem {
@@ -112,7 +98,7 @@ export function SoapConsultationPanel({ patientId, consultations }: Props) {
   }
 
   const handleGeneratePatientSummary = () => {
-    const summary = `Hola! Aquí tienes el resumen de tu consulta de hoy (${date}):\n\n📌 LO QUE REVISAMOS HOY:\n${objective || 'Revisión y seguimiento de tu composición corporal.'}\n\n🎯 TUS OBJETIVOS Y PAUTAS PARA LAS PRÓXIMAS SEMANAS:\n${plan || 'Continuar con el menú pautado y las pautas acordadas.'}\n\n💬 NOTA DE EVA:\n¡Muy buen trabajo en consulta! Recuerda que puedes consultar tus recetas y tu plan interactivo en cualquier momento desde tu portal.\n\n${signature}`
+    const summary = `Hola! Aquí tienes el resumen de tu consulta de hoy (${date}):\n\n LO QUE REVISAMOS HOY:\n${objective || 'Revisión y seguimiento de tu composición corporal.'}\n\n TUS OBJETIVOS Y PAUTAS PARA LAS PRÓXIMAS SEMANAS:\n${plan || 'Continuar con el menú pautado y las pautas acordadas.'}\n\n NOTA DE EVA:\n¡Muy buen trabajo en consulta! Recuerda que puedes consultar tus recetas y tu plan interactivo en cualquier momento desde tu portal.\n\n${signature}`
     setPatientSummary(summary)
   }
 
@@ -428,7 +414,7 @@ export function SoapConsultationPanel({ patientId, consultations }: Props) {
                   onClick={handleGeneratePatientSummary}
                   className="rounded-xl text-3xs font-bold border-amber-300 bg-white text-amber-900 hover:bg-amber-100"
                 >
-                  ⚡ Auto-Generar Resumen
+                  <Zap className="h-[1em] w-[1em] shrink-0" /> Auto-Generar Resumen
                 </Button>
               </div>
               <textarea

@@ -9,7 +9,7 @@ import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Select } from '@/components/ui/select'
 import { Textarea } from '@/components/ui/textarea'
-import { Plus, Trash2, ChefHat, Flame, Scale, Clock, Loader2 } from 'lucide-react'
+import { Plus, Trash2, ChefHat, Flame, Scale, Loader2 } from 'lucide-react'
 
 interface FoodItem {
   id: number

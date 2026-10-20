@@ -4,18 +4,7 @@ import { useState } from 'react'
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
-import {
-  Calendar,
-  Clock,
-  Video,
-  MapPin,
-  CalendarPlus,
-  RefreshCw,
-  XCircle,
-  CheckCircle2,
-  AlertCircle,
-  HelpCircle,
-} from 'lucide-react'
+import { Calendar, CalendarPlus, Clock, MapPin, RefreshCw, Video, XCircle } from 'lucide-react'
 import { requestAppointmentAction, requestAppointmentChangeAction } from '../actions'
 import { ModalPortal } from '@/components/ui/modal-portal'
 
@@ -285,7 +274,7 @@ export function CitasClient({ appointments, pendingRequests = [] }: Props) {
                                 onClick={() => handleCopyMeet(app.id, meetLink)}
                                 className="w-full text-center text-3xs font-semibold text-blue-600 hover:text-blue-800 transition-colors"
                               >
-                                {copiedMeetId === app.id ? '✓ ¡Enlace copiado al portapapeles!' : 'Copiar enlace de Google Meet'}
+                                {copiedMeetId === app.id ? ' ¡Enlace copiado al portapapeles!' : 'Copiar enlace de Google Meet'}
                               </button>
                             </>
                           )
@@ -380,11 +369,11 @@ export function CitasClient({ appointments, pendingRequests = [] }: Props) {
                   defaultValue="REVISION"
                   className="w-full text-xs rounded-xl border border-gray-200 p-2.5 bg-white font-medium focus:ring-2 focus:ring-blue-500"
                 >
-                  <option value="REVISION">🟢 Revisión y Seguimiento (45 min)</option>
-                  <option value="PRIMERA">🔵 Primera Consulta de Valoración (60 min)</option>
-                  <option value="ONLINE">🟣 Consulta Online (Videollamada, 45 min)</option>
-                  <option value="DOMICILIO">🟠 Consulta a Domicilio (60 min)</option>
-                  <option value="GRUPAL">🟣 Sesión Grupal / Taller (90 min)</option>
+                  <option value="REVISION"><span className="inline-block h-2 w-2 shrink-0 rounded-full bg-emerald-500 align-middle" /> Revisión y Seguimiento (45 min)</option>
+                  <option value="PRIMERA"><span className="inline-block h-2 w-2 shrink-0 rounded-full bg-blue-500 align-middle" /> Primera Consulta de Valoración (60 min)</option>
+                  <option value="ONLINE"><span className="inline-block h-2 w-2 shrink-0 rounded-full bg-purple-500 align-middle" /> Consulta Online (Videollamada, 45 min)</option>
+                  <option value="DOMICILIO"><span className="inline-block h-2 w-2 shrink-0 rounded-full bg-orange-500 align-middle" /> Consulta a Domicilio (60 min)</option>
+                  <option value="GRUPAL"><span className="inline-block h-2 w-2 shrink-0 rounded-full bg-purple-500 align-middle" /> Sesión Grupal / Taller (90 min)</option>
                 </select>
               </div>
 
@@ -394,8 +383,8 @@ export function CitasClient({ appointments, pendingRequests = [] }: Props) {
                   name="modality"
                   className="w-full text-xs rounded-xl border border-gray-200 p-2.5 bg-white font-medium focus:ring-2 focus:ring-blue-500"
                 >
-                  <option value="ONLINE">💻 Online por Videollamada (Google Meet)</option>
-                  <option value="PRESENCIAL">🏥 Presencial en Consulta</option>
+                  <option value="ONLINE">Online por Videollamada (Google Meet)</option>
+                  <option value="PRESENCIAL">Presencial en Consulta</option>
                 </select>
               </div>
 

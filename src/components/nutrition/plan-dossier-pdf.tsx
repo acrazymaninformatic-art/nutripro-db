@@ -2,24 +2,7 @@
 
 import { useMemo } from 'react'
 import { Badge } from '@/components/ui/badge'
-import {
-  CalendarDays,
-  ShoppingCart,
-  Flame,
-  User,
-  Info,
-  Clock,
-  Sparkles,
-  ChefHat,
-  Droplets,
-  Scale,
-  ShieldCheck,
-  CheckCircle2,
-  BookOpen,
-  Timer,
-  Utensils,
-  Layers,
-} from 'lucide-react'
+import { AlertTriangle, CalendarDays, ChefHat, CookingPot, Droplets, Info, Layers, ShieldCheck, ShoppingCart } from 'lucide-react'
 import {
   getFoodImage,
   getRecipeForFood,
@@ -246,7 +229,7 @@ export function PlanDossierPdf({ plan, hideCaloriesTCA: hideCaloriesTCAProp, cla
               </span>
               {(patient.allergies || patient.intolerances) && (
                 <span className="inline-block mt-1 text-[9px] font-black bg-red-100 text-red-800 border border-red-300 px-1.5 py-0.5 rounded-md">
-                  ⚠️ Alergias: {[patient.allergies, patient.intolerances].filter(Boolean).join(', ')}
+                  <AlertTriangle className="h-[1em] w-[1em] shrink-0" /> Alergias: {[patient.allergies, patient.intolerances].filter(Boolean).join(', ')}
                 </span>
               )}
             </div>
@@ -516,12 +499,12 @@ export function PlanDossierPdf({ plan, hideCaloriesTCA: hideCaloriesTCAProp, cla
                                     <span>{it.food?.category || 'General'}</span>
                                     {itemConflict && (
                                       <span className="text-red-700 font-black bg-red-100 px-1 rounded text-[9px]">
-                                        ⚠️ Alérgeno: {itemConflict.allergenLabel}
+                                        <AlertTriangle className="h-[1em] w-[1em] shrink-0" /> Alérgeno: {itemConflict.allergenLabel}
                                       </span>
                                     )}
                                     {itemRecipe && (
                                       <span className="text-blue-700 font-semibold bg-blue-50 px-1 rounded text-[9px]">
-                                        🍳 {itemRecipe.name}
+                                        <CookingPot className="h-4 w-4" /> {itemRecipe.name}
                                       </span>
                                     )}
                                   </div>
@@ -568,7 +551,7 @@ export function PlanDossierPdf({ plan, hideCaloriesTCA: hideCaloriesTCAProp, cla
                       Receta Sugerida del Día: {featuredRecipe.name}
                     </span>
                     <span className="text-[10px] font-bold text-blue-800">
-                      ⏱️ {featuredRecipe.prepTimeMin} min prep • {featuredRecipe.cookTimeMin} min cocción
+                      ⏱ {featuredRecipe.prepTimeMin} min prep • {featuredRecipe.cookTimeMin} min cocción
                     </span>
                   </div>
                   <div className="text-[10px] text-gray-700 leading-snug line-clamp-2">

@@ -2,18 +2,7 @@
 
 import { useState, useEffect } from 'react'
 import { useSearchParams, useRouter, usePathname } from 'next/navigation'
-import {
-  FileText,
-  Activity,
-  HeartPulse,
-  Calendar,
-  ShieldCheck,
-  Sparkles,
-  User,
-  ClipboardList,
-  CheckCircle2,
-  AlertTriangle,
-} from 'lucide-react'
+import { Activity, HeartPulse, Calendar, User, ClipboardList } from 'lucide-react'
 
 export type TabKey = 'resumen' | 'cuestionario' | 'evolucion' | 'clinica' | 'citas-legal'
 

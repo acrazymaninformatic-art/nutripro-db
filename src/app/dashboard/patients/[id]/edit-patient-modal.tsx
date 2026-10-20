@@ -248,9 +248,9 @@ export function EditPatientModal({ patient, iconOnly = false }: Props) {
                         defaultValue={patient.allergiesStatus || (patient.allergies ? 'CONFIRMED' : 'NO_CONSTA')}
                         className="text-[10px] bg-gray-50 border border-gray-200 rounded-lg px-1.5 py-0.5 font-medium"
                       >
-                        <option value="NO_CONSTA">⚠️ No consta</option>
-                        <option value="NINGUNA_CONOCIDA">✓ Ninguna conocida</option>
-                        <option value="CONFIRMED">✓ Confirmadas (valores)</option>
+                        <option value="NO_CONSTA">No consta</option>
+                        <option value="NINGUNA_CONOCIDA">Ninguna conocida</option>
+                        <option value="CONFIRMED">Confirmadas (valores)</option>
                       </select>
                     </div>
                     <Input
@@ -269,9 +269,9 @@ export function EditPatientModal({ patient, iconOnly = false }: Props) {
                         defaultValue={patient.intolerancesStatus || (patient.intolerances ? 'CONFIRMED' : 'NO_CONSTA')}
                         className="text-[10px] bg-gray-50 border border-gray-200 rounded-lg px-1.5 py-0.5 font-medium"
                       >
-                        <option value="NO_CONSTA">⚠️ No consta</option>
-                        <option value="NINGUNA_CONOCIDA">✓ Ninguna conocida</option>
-                        <option value="CONFIRMED">✓ Confirmadas (valores)</option>
+                        <option value="NO_CONSTA">No consta</option>
+                        <option value="NINGUNA_CONOCIDA">Ninguna conocida</option>
+                        <option value="CONFIRMED">Confirmadas (valores)</option>
                       </select>
                     </div>
                     <Input
@@ -292,9 +292,9 @@ export function EditPatientModal({ patient, iconOnly = false }: Props) {
                         defaultValue={patient.medicationsStatus || (patient.currentMedications ? 'CONFIRMED' : 'NO_CONSTA')}
                         className="text-[10px] bg-gray-50 border border-gray-200 rounded-lg px-1.5 py-0.5 font-medium"
                       >
-                        <option value="NO_CONSTA">⚠️ No consta</option>
-                        <option value="NINGUNA_CONOCIDA">✓ Ninguna conocida</option>
-                        <option value="CONFIRMED">✓ Confirmadas (valores)</option>
+                        <option value="NO_CONSTA">No consta</option>
+                        <option value="NINGUNA_CONOCIDA">Ninguna conocida</option>
+                        <option value="CONFIRMED">Confirmadas (valores)</option>
                       </select>
                     </div>
                     <Input
@@ -313,9 +313,9 @@ export function EditPatientModal({ patient, iconOnly = false }: Props) {
                         defaultValue={patient.pathologiesStatus || (patient.medicalHistory ? 'CONFIRMED' : 'NO_CONSTA')}
                         className="text-[10px] bg-gray-50 border border-gray-200 rounded-lg px-1.5 py-0.5 font-medium"
                       >
-                        <option value="NO_CONSTA">⚠️ No consta</option>
-                        <option value="NINGUNA_CONOCIDA">✓ Ninguna conocida</option>
-                        <option value="CONFIRMED">✓ Confirmadas (valores)</option>
+                        <option value="NO_CONSTA">No consta</option>
+                        <option value="NINGUNA_CONOCIDA">Ninguna conocida</option>
+                        <option value="CONFIRMED">Confirmadas (valores)</option>
                       </select>
                     </div>
                     <Input

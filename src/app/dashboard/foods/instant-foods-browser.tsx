@@ -5,25 +5,7 @@ import { Card, CardHeader, CardTitle, CardDescription, CardContent } from '@/com
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
-import {
-  Apple,
-  Search,
-  ChevronLeft,
-  ChevronRight,
-  Filter,
-  Flame,
-  ArrowUpDown,
-  Sparkles,
-  X,
-  Star,
-  Barcode,
-  GitMerge,
-  ShieldAlert,
-  Check,
-  CheckSquare,
-  Square,
-  Info,
-} from 'lucide-react'
+import { Apple, ArrowDown, ArrowUp, Barcode, Beef, CheckSquare, ChevronLeft, ChevronRight, Filter, GitMerge, Leaf, Search, Soup, Sparkles, Square, Star, Wheat, X } from 'lucide-react'
 import { FoodImage } from '@/components/nutrition/food-image'
 import { getFoodImage } from '@/lib/nutrition'
 import { FoodDetailsModal, FoodDetailData } from './food-details-modal'
@@ -277,7 +259,7 @@ export function InstantFoodsBrowser({
               >
                 <span>Kcal</span>
                 {sortBy === 'calories' && (
-                  <span className="text-[10px]">{sortOrder === 'asc' ? '↑' : '↓'}</span>
+                  <span className="text-[10px]">{sortOrder === 'asc' ? <ArrowUp className="h-[1em] w-[1em] shrink-0" /> : <ArrowDown className="h-[1em] w-[1em] shrink-0" />}</span>
                 )}
               </button>
               <button
@@ -291,7 +273,7 @@ export function InstantFoodsBrowser({
               >
                 <span>Prot</span>
                 {sortBy === 'protein' && (
-                  <span className="text-[10px]">{sortOrder === 'asc' ? '↑' : '↓'}</span>
+                  <span className="text-[10px]">{sortOrder === 'asc' ? <ArrowUp className="h-[1em] w-[1em] shrink-0" /> : <ArrowDown className="h-[1em] w-[1em] shrink-0" />}</span>
                 )}
               </button>
             </div>
@@ -333,7 +315,7 @@ export function InstantFoodsBrowser({
                     : 'bg-white text-slate-700 border-slate-200/80 hover:bg-slate-50'
                 }`}
               >
-                🥩 ≥ 20g Proteína
+                <Beef className="h-4 w-4" /> ≥ 20g Proteína
               </button>
               <button
                 type="button"
@@ -344,7 +326,7 @@ export function InstantFoodsBrowser({
                     : 'bg-white text-slate-700 border-slate-200/80 hover:bg-slate-50'
                 }`}
               >
-                🧂 Bajo sodio (≤ 120mg)
+                <Soup className="h-4 w-4" /> Bajo sodio (≤ 120mg)
               </button>
               <button
                 type="button"
@@ -355,7 +337,7 @@ export function InstantFoodsBrowser({
                     : 'bg-white text-slate-700 border-slate-200/80 hover:bg-slate-50'
                 }`}
               >
-                🌾 Alto en fibra (≥ 6g)
+                <Wheat className="h-4 w-4" /> Alto en fibra (≥ 6g)
               </button>
               <button
                 type="button"
@@ -366,7 +348,7 @@ export function InstantFoodsBrowser({
                     : 'bg-white text-slate-700 border-slate-200/80 hover:bg-slate-50'
                 }`}
               >
-                🍃 FODMAP Bajo
+                <Leaf className="h-4 w-4" /> FODMAP Bajo
               </button>
               <button
                 type="button"
@@ -385,13 +367,13 @@ export function InstantFoodsBrowser({
                 onChange={(e) => { setFilterAllergenFree(e.target.value); setCurrentPage(1); }}
                 className="px-3 py-1.5 rounded-xl font-bold bg-white text-slate-700 border border-slate-200/80 focus:ring-2 focus:ring-blue-500 text-xs cursor-pointer shadow-2xs"
               >
-                <option value="ALL">🛡️ Sin exclusión de alérgenos</option>
-                <option value="gluten">🌾 Sin Gluten</option>
-                <option value="lactosa">🥛 Sin Lactosa</option>
-                <option value="huevo">🥚 Sin Huevo</option>
-                <option value="frutos">🌰 Sin Frutos secos</option>
-                <option value="cacahuete">🥜 Sin Cacahuetes</option>
-                <option value="pescado">🐟 Sin Pescado</option>
+                <option value="ALL"> Sin exclusión de alérgenos</option>
+                <option value="gluten">Sin Gluten</option>
+                <option value="lactosa">Sin Lactosa</option>
+                <option value="huevo">Sin Huevo</option>
+                <option value="frutos">Sin Frutos secos</option>
+                <option value="cacahuete">Sin Cacahuetes</option>
+                <option value="pescado">Sin Pescado</option>
               </select>
             </div>
           </div>
@@ -623,16 +605,16 @@ export function InstantFoodsBrowser({
                       <th className="px-4 py-3.5">Alimento</th>
                       <th className="px-4 py-3.5">Categoría / Calidad</th>
                       <th className="px-4 py-3.5 text-right cursor-pointer hover:text-blue-600" onClick={() => toggleSort('calories')}>
-                        Energía {sortBy === 'calories' && (sortOrder === 'asc' ? '↑' : '↓')}
+                        Energía {sortBy === 'calories' && (sortOrder === 'asc' ? <ArrowUp className="h-[1em] w-[1em] shrink-0" /> : <ArrowDown className="h-[1em] w-[1em] shrink-0" />)}
                       </th>
                       <th className="px-4 py-3.5 text-right text-blue-700 cursor-pointer hover:underline" onClick={() => toggleSort('protein')}>
-                        Proteína {sortBy === 'protein' && (sortOrder === 'asc' ? '↑' : '↓')}
+                        Proteína {sortBy === 'protein' && (sortOrder === 'asc' ? <ArrowUp className="h-[1em] w-[1em] shrink-0" /> : <ArrowDown className="h-[1em] w-[1em] shrink-0" />)}
                       </th>
                       <th className="px-4 py-3.5 text-right text-amber-700 cursor-pointer hover:underline" onClick={() => toggleSort('carbs')}>
-                        Carbos {sortBy === 'carbs' && (sortOrder === 'asc' ? '↑' : '↓')}
+                        Carbos {sortBy === 'carbs' && (sortOrder === 'asc' ? <ArrowUp className="h-[1em] w-[1em] shrink-0" /> : <ArrowDown className="h-[1em] w-[1em] shrink-0" />)}
                       </th>
                       <th className="px-4 py-3.5 text-right text-rose-700 cursor-pointer hover:underline" onClick={() => toggleSort('fat')}>
-                        Grasas {sortBy === 'fat' && (sortOrder === 'asc' ? '↑' : '↓')}
+                        Grasas {sortBy === 'fat' && (sortOrder === 'asc' ? <ArrowUp className="h-[1em] w-[1em] shrink-0" /> : <ArrowDown className="h-[1em] w-[1em] shrink-0" />)}
                       </th>
                       <th className="px-4 py-3.5 text-right text-sky-700">Fibra</th>
                       <th className="w-12 px-3 py-3.5 text-center">Fav</th>

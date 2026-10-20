@@ -2,17 +2,7 @@
 
 import { useState, useEffect, useCallback } from 'react'
 import { usePathname } from 'next/navigation'
-import {
-  HelpCircle,
-  X,
-  Search,
-  Sparkles,
-  ChevronRight,
-  CheckCircle2,
-  BookOpen,
-  ArrowRight,
-  ClipboardList,
-} from 'lucide-react'
+import { HelpCircle, X, Search, Sparkles, ChevronRight, CheckCircle2, BookOpen, ClipboardList } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { DEFAULT_FAQS, type FAQItem } from '@/lib/faq-data'
 
@@ -68,7 +58,7 @@ const TOUR_STEPS: TourStep[] = [
   },
   {
     targetId: null,
-    title: '📋 Preparación para tu primera consulta',
+    title: ' Preparación para tu primera consulta',
     subtitle: 'Qué tener a mano con Eva Vidal',
     content:
       'Para aprovechar al máximo tu sesión de valoración:\n• Analíticas de sangre recientes o informes médicos relevantes.\n• Lista de medicación habitual y suplementos que tomes.\n• Cuestionario de anamnesis completado (en la pestaña Cuestionarios).\n• Tus objetivos principales y dudas anotadas para tratarlas con calma.',

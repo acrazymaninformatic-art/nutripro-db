@@ -3,7 +3,7 @@
 import { useState } from 'react'
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog'
 import { Button } from '@/components/ui/button'
-import { CheckCircle2, AlertTriangle, ShieldCheck, FileCheck, Check, Sparkles } from 'lucide-react'
+import { CheckCircle2, AlertTriangle, ShieldCheck, FileCheck } from 'lucide-react'
 import { publishMealPlan } from '../actions'
 
 interface Props {

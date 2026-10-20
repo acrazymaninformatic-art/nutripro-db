@@ -4,17 +4,7 @@ import { prisma } from '@/lib/prisma'
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
-import {
-  FileText,
-  FolderOpen,
-  ArrowLeft,
-  Calendar,
-  Download,
-  ExternalLink,
-  FileCheck,
-  Stethoscope,
-  MessageSquare,
-} from 'lucide-react'
+import { FileText, FolderOpen, ArrowLeft, Calendar, Download, MessageSquare } from 'lucide-react'
 
 export const dynamic = 'force-dynamic'
 

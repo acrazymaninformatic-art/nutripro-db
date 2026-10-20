@@ -9,36 +9,7 @@ import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Select } from '@/components/ui/select'
 import { Textarea } from '@/components/ui/textarea'
-import {
-  Calendar,
-  Clock,
-  Video,
-  MapPin,
-  Mail,
-  Plus,
-  Trash2,
-  CheckCircle2,
-  ExternalLink,
-  CalendarCheck,
-  User,
-  Loader2,
-  Check,
-  X,
-  Bell,
-  Sparkles,
-  ChevronLeft,
-  ChevronRight,
-  Search,
-  Building,
-  Phone,
-  MessageCircle,
-  CalendarDays,
-  List,
-  Inbox,
-  CalendarOff,
-  Copy,
-  ShieldAlert,
-} from 'lucide-react'
+import { Ban, Bell, Building, Building2, Calendar, CalendarCheck, CalendarDays, CalendarOff, Check, CheckCircle2, ChevronLeft, ChevronRight, Copy, ExternalLink, Inbox, Laptop, List, Loader2, Mail, MessageCircle, Plus, Search, ShieldAlert, Sparkles, Trash2, User, Video, X } from 'lucide-react'
 import {
   createAppointment,
   deleteAppointment,
@@ -332,8 +303,8 @@ export function AppointmentManager({
         setIsNewModalOpen(false)
         setActionSuccessMessage(
           sendEmail
-            ? `✓ Cita agendada (${APPOINTMENT_TYPE_CONFIG[appointmentType]?.label || appointmentType}). Se ha enviado la confirmación y enlace de Google Calendar a ${selectedPatient?.email || 'el paciente'}. El recordatorio se enviará automáticamente 24h antes.`
-            : '✓ Cita guardada en la agenda con éxito.'
+            ? ` Cita agendada (${APPOINTMENT_TYPE_CONFIG[appointmentType]?.label || appointmentType}). Se ha enviado la confirmación y enlace de Google Calendar a ${selectedPatient?.email || 'el paciente'}. El recordatorio se enviará automáticamente 24h antes.`
+            : ' Cita guardada en la agenda con éxito.'
         )
         setTimeout(() => setActionSuccessMessage(null), 6000)
       } catch (err: any) {
@@ -361,9 +332,9 @@ export function AppointmentManager({
             patientName: `${targetApp.patient.firstName} ${targetApp.patient.lastName}`,
             durationMin: targetApp.durationMin,
           })
-          setActionSuccessMessage(`✓ Cita cancelada. Hueco liberado para el ${new Date(targetApp.date).toLocaleDateString('es-ES')} a las ${new Date(targetApp.date).toLocaleTimeString('es-ES', { hour: '2-digit', minute: '2-digit' })} h. Puedes reasignarlo abajo a un paciente de la lista de espera.`)
+          setActionSuccessMessage(` Cita cancelada. Hueco liberado para el ${new Date(targetApp.date).toLocaleDateString('es-ES')} a las ${new Date(targetApp.date).toLocaleTimeString('es-ES', { hour: '2-digit', minute: '2-digit' })} h. Puedes reasignarlo abajo a un paciente de la lista de espera.`)
         } else {
-          setActionSuccessMessage(`✓ Estado de la cita actualizado a ${status}.`)
+          setActionSuccessMessage(` Estado de la cita actualizado a ${status}.`)
         }
         setTimeout(() => setActionSuccessMessage(null), 6000)
       } catch (err: any) {
@@ -406,7 +377,7 @@ export function AppointmentManager({
         const res = await assignSlotToAppointmentRequestAction(req.id, new Date(chosenDate).toISOString(), duration, notes)
         if (res.success) {
           setRequests((prev) => prev.filter((r) => r.id !== req.id))
-          setActionSuccessMessage(`✓ Cita asignada y confirmada para ${req.patient.firstName} ${req.patient.lastName}. Se le ha enviado un correo con los detalles y Google Calendar.`)
+          setActionSuccessMessage(` Cita asignada y confirmada para ${req.patient.firstName} ${req.patient.lastName}. Se le ha enviado un correo con los detalles y Google Calendar.`)
           setTimeout(() => setActionSuccessMessage(null), 6000)
         }
       } catch (err: any) {
@@ -429,9 +400,9 @@ export function AppointmentManager({
             patientName: `${req.patient.firstName} ${req.patient.lastName}`,
             durationMin: 45,
           })
-          setActionSuccessMessage(`✓ Cancelación aceptada. Hueco liberado disponible para reasignar a la lista de espera.`)
+          setActionSuccessMessage(` Cancelación aceptada. Hueco liberado disponible para reasignar a la lista de espera.`)
         } else {
-          setActionSuccessMessage(`✓ Solicitud ${decision === 'ACCEPT_CANCEL' ? 'aceptada' : 'rechazada'}.`)
+          setActionSuccessMessage(` Solicitud ${decision === 'ACCEPT_CANCEL' ? 'aceptada' : 'rechazada'}.`)
         }
         setTimeout(() => setActionSuccessMessage(null), 6000)
       } catch (err: any) {
@@ -449,7 +420,7 @@ export function AppointmentManager({
         if (res.success) {
           setWaitlist((prev) => prev.filter((w) => w.id !== entry.id))
           setCancelledSlotNotice(null)
-          setActionSuccessMessage(`✓ ¡Hueco reasignado con éxito a ${entry.patient.firstName} ${entry.patient.lastName}! Se le ha enviado confirmación por correo y Google Meet.`)
+          setActionSuccessMessage(` ¡Hueco reasignado con éxito a ${entry.patient.firstName} ${entry.patient.lastName}! Se le ha enviado confirmación por correo y Google Meet.`)
           setTimeout(() => setActionSuccessMessage(null), 6000)
         }
       } catch (err: any) {
@@ -475,7 +446,7 @@ export function AppointmentManager({
         setBlocks((prev) => [...prev, created as any])
         setBlockTitle('')
         setBlockNotes('')
-        setActionSuccessMessage(`✓ Período bloqueado en agenda: "${created.title}". No se permitirán citas en ese horario.`)
+        setActionSuccessMessage(` Período bloqueado en agenda: "${created.title}". No se permitirán citas en ese horario.`)
         setTimeout(() => setActionSuccessMessage(null), 5000)
       } catch (err: any) {
         alert(err.message || 'Error al crear bloqueo')
@@ -490,7 +461,7 @@ export function AppointmentManager({
       try {
         await deleteAgendaBlockAction(blockId)
         setBlocks((prev) => prev.filter((b) => b.id !== blockId))
-        setActionSuccessMessage('✓ Bloqueo eliminado. La franja vuelve a estar disponible.')
+        setActionSuccessMessage(' Bloqueo eliminado. La franja vuelve a estar disponible.')
         setTimeout(() => setActionSuccessMessage(null), 4000)
       } catch (err: any) {
         alert(err.message || 'Error al eliminar bloqueo')
@@ -509,7 +480,7 @@ export function AppointmentManager({
         if (selectedAppointment && selectedAppointment.id === id) {
           setSelectedAppointment(null)
         }
-        setActionSuccessMessage('✓ Cita eliminada de la agenda.')
+        setActionSuccessMessage(' Cita eliminada de la agenda.')
         setTimeout(() => setActionSuccessMessage(null), 4000)
       } catch (err: any) {
         alert('Error al eliminar la cita')
@@ -529,7 +500,7 @@ export function AppointmentManager({
           if (selectedAppointment && selectedAppointment.id === id) {
             setSelectedAppointment({ ...selectedAppointment, emailSent: true, emailSentAt: new Date() })
           }
-          setActionSuccessMessage('✓ Correo de cita reenviado correctamente al paciente con enlace de Google Calendar.')
+          setActionSuccessMessage(' Correo de cita reenviado correctamente al paciente con enlace de Google Calendar.')
           setTimeout(() => setActionSuccessMessage(null), 5000)
         } else {
           alert(res.message)
@@ -756,7 +727,7 @@ export function AppointmentManager({
           </div>
         </div>
         <Badge variant="outline" className="hidden sm:inline-flex bg-white text-blue-800 border-blue-200 font-bold text-3xs">
-          ✓ Activo 24h
+          <Check className="h-[1em] w-[1em] shrink-0" /> Activo 24h
         </Badge>
       </div>
 
@@ -954,7 +925,7 @@ export function AppointmentManager({
                             className="px-1.5 py-0.5 rounded text-3xs font-extrabold bg-rose-50 text-rose-900 border border-rose-200 truncate flex items-center gap-1 shadow-2xs"
                             title={`Bloqueo: ${b.title} (${b.reason})`}
                           >
-                            <span>⛔</span>
+                            <span><Ban className="h-4 w-4" /></span>
                             <span className="truncate">{b.title}</span>
                           </div>
                         ))
@@ -991,7 +962,7 @@ export function AppointmentManager({
                               {app.patient.firstName} {app.patient.lastName[0]}.
                             </span>
                             <span className="ml-auto shrink-0 text-[10px]">
-                              {isOnline ? '💻' : '🏥'}
+                              {isOnline ? <Laptop className="h-4 w-4" /> : <Building2 className="h-4 w-4" />}
                             </span>
                           </div>
                         )
@@ -1078,7 +1049,7 @@ export function AppointmentManager({
                             <span className="font-extrabold text-blue-900 text-2xs bg-white/80 px-1.5 py-0.5 rounded">
                               {appTime}
                             </span>
-                            <span className="text-2xs">{isOnline ? '💻' : '🏥'}</span>
+                            <span className="text-2xs">{isOnline ? <Laptop className="h-4 w-4" /> : <Building2 className="h-4 w-4" />}</span>
                           </div>
                           <h4 className="font-bold text-gray-900 truncate">
                             {app.patient.firstName} {app.patient.lastName}
@@ -1240,7 +1211,7 @@ export function AppointmentManager({
                       <div className="pt-2 border-t border-gray-100 flex items-center justify-between text-2xs">
                         <span className="text-blue-700 font-bold flex items-center gap-1">
                           <Bell className="h-3 w-3" />
-                          {app.reminderSent ? '✓ Recordatorio 24h enviado' : 'Recordatorio 24h programado'}
+                          {app.reminderSent ? ' Recordatorio 24h enviado' : 'Recordatorio 24h programado'}
                         </span>
                         <a
                           href={gCalUrl}
@@ -1335,7 +1306,7 @@ export function AppointmentManager({
                             {typeCfg.label} ({typeCfg.durationMin} min)
                           </span>
                           <span className="text-xs text-gray-500 font-semibold">
-                            {req.modality === 'ONLINE' ? '💻 Online (Meet)' : '🏥 Presencial'}
+                            {req.modality === 'ONLINE' ? ' Online (Meet)' : ' Presencial'}
                           </span>
                         </div>
                       </CardHeader>
@@ -1518,11 +1489,11 @@ export function AppointmentManager({
                   onChange={(e) => setBlockReason(e.target.value)}
                   className="rounded-xl text-xs font-semibold"
                 >
-                  <option value="VACACIONES">🏖️ Vacaciones</option>
-                  <option value="FORMACION">🎓 Formación / Congreso</option>
-                  <option value="FESTIVO">🎉 Festivo / Puente</option>
-                  <option value="PERSONAL">🏠 Asunto Personal</option>
-                  <option value="OTRO">📌 Otro</option>
+                  <option value="VACACIONES">Vacaciones</option>
+                  <option value="FORMACION">Formación / Congreso</option>
+                  <option value="FESTIVO">Festivo / Puente</option>
+                  <option value="PERSONAL">Asunto Personal</option>
+                  <option value="OTRO">Otro</option>
                 </Select>
               </div>
 
@@ -1667,7 +1638,7 @@ export function AppointmentManager({
               <div className="p-3.5 rounded-2xl bg-blue-50/80 border border-blue-200 space-y-2">
                 <div className="flex items-center justify-between">
                   <span className="font-bold text-blue-900 text-sm">
-                    🗓️{' '}
+                    <CalendarDays className="h-4 w-4" />{' '}
                     {new Date(selectedAppointment.date).toLocaleDateString('es-ES', {
                       weekday: 'long',
                       day: 'numeric',
@@ -1689,7 +1660,7 @@ export function AppointmentManager({
                 <div className="flex items-center justify-between text-gray-700 pt-1 border-t border-blue-200/60">
                   <div className="flex items-center gap-1.5 flex-wrap">
                     <span className="flex items-center gap-1 font-semibold">
-                      {selectedAppointment.modality === 'ONLINE' ? '💻 Videollamada Online' : '🏥 Presencial'}
+                      {selectedAppointment.modality === 'ONLINE' ? ' Videollamada Online' : ' Presencial'}
                     </span>
                     {selectedAppointment.appointmentType && (
                       <span
@@ -1762,7 +1733,7 @@ export function AppointmentManager({
                     </span>
                     <span className="text-gray-500 text-2xs">
                       {selectedAppointment.reminderSent
-                        ? '✓ Enviado automáticamente por email al paciente'
+                        ? ' Enviado automáticamente por email al paciente'
                         : 'Se enviará de forma 100% automática el día previo'}
                     </span>
                   </div>

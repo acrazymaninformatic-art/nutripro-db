@@ -7,31 +7,7 @@ import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Textarea } from '@/components/ui/textarea'
 import { Badge } from '@/components/ui/badge'
-import {
-  CheckCircle2,
-  User,
-  HeartPulse,
-  Utensils,
-  Target,
-  ArrowRight,
-  ArrowLeft,
-  Activity,
-  Droplets,
-  Moon,
-  Sparkles,
-  ShieldCheck,
-  Stethoscope,
-  Paperclip,
-  Upload,
-  FileText,
-  Clock,
-  AlertTriangle,
-  Baby,
-  Smile,
-  X,
-  Check,
-  Loader2,
-} from 'lucide-react'
+import { Activity, AlertTriangle, ArrowLeft, ArrowRight, Baby, Check, CheckCircle2, HeartPulse, Loader2, Moon, Paperclip, Stethoscope, Target, Upload, User, X } from 'lucide-react'
 import Link from 'next/link'
 import { submitPortalAnamnesisAction, saveQuestionnaireDraftAction } from '../../actions'
 
@@ -321,7 +297,7 @@ export function AltaFormClient({ patient }: Props) {
                         : 'bg-slate-200 text-slate-700'
                     }`}
                   >
-                    {isCompleted ? '✓' : s.num}
+                    {isCompleted ? <Check className="h-[1em] w-[1em] shrink-0" /> : s.num}
                   </span>
                   <span>{s.title}</span>
                 </button>

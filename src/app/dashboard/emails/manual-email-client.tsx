@@ -6,21 +6,7 @@ import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Textarea } from '@/components/ui/textarea'
 import { Badge } from '@/components/ui/badge'
-import {
-  Mail,
-  Send,
-  User,
-  Sparkles,
-  CheckCircle2,
-  AlertTriangle,
-  Clock,
-  History,
-  Eye,
-  Edit3,
-  FileText,
-  Calendar,
-  ShieldCheck,
-} from 'lucide-react'
+import { Mail, Send, Sparkles, CheckCircle2, AlertTriangle, History, Eye, Edit3, FileText, Calendar, ShieldCheck } from 'lucide-react'
 import { sendManualEmailAction } from './actions'
 
 interface PatientOption {

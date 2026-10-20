@@ -11,24 +11,7 @@ import {
 } from '@/components/ui/dialog'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
-import {
-  FileText,
-  Clock,
-  User,
-  HeartPulse,
-  Utensils,
-  Calendar,
-  AlertCircle,
-  CheckCircle2,
-  Copy,
-  Check,
-  Droplets,
-  Target,
-  Pill,
-  Activity,
-  Moon,
-  Stethoscope,
-} from 'lucide-react'
+import { Activity, AlertTriangle, Calendar, Check, Clock, Copy, FileText, HeartPulse, Pill, Stethoscope, Target, User, Utensils } from 'lucide-react'
 
 export interface AnamnesisSubmissionItem {
   id: string
@@ -260,7 +243,7 @@ ${activeSubmission.shortTermGoal || 'No indicado'}
 
                 {activeSubmission.isGLP1Treatment && (
                   <div className="p-2 bg-amber-50 rounded-xl border border-amber-200 text-amber-950">
-                    <strong>⚠️ Tratamiento GLP-1 declarado:</strong> Paciente bajo análogos GLP-1 (Ozempic/Wegovy/Mounjaro). Requiere suelo proteico elevado.
+                    <strong><AlertTriangle className="h-[1em] w-[1em] shrink-0" /> Tratamiento GLP-1 declarado:</strong> Paciente bajo análogos GLP-1 (Ozempic/Wegovy/Mounjaro). Requiere suelo proteico elevado.
                   </div>
                 )}
 

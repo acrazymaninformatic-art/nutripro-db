@@ -4,7 +4,7 @@ import { getMealPlan } from '../actions'
 import { PlanViewer } from './plan-viewer'
 import { DeletePlanButton } from './delete-plan-button'
 import { Badge } from '@/components/ui/badge'
-import { ArrowLeft, User, CalendarDays, Flame } from 'lucide-react'
+import { ArrowLeft } from 'lucide-react'
 
 export const dynamic = 'force-dynamic'
 

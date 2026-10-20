@@ -2,20 +2,7 @@
 
 import { useState, useEffect, useRef } from 'react'
 import { useRouter } from 'next/navigation'
-import {
-  Search,
-  Users,
-  ChefHat,
-  Apple,
-  Calendar,
-  Calculator,
-  Plus,
-  Settings,
-  ArrowRight,
-  Sparkles,
-  X,
-  ClipboardCheck,
-} from 'lucide-react'
+import { Apple, ArrowDown, ArrowRight, ArrowUp, Calculator, Calendar, ChefHat, ClipboardCheck, Plus, Search, Settings, Users, X } from 'lucide-react'
 
 interface SearchItem {
   id: string
@@ -294,8 +281,8 @@ export function CommandPalette() {
             <div className="p-3 border-t border-gray-100 bg-gray-50/70 flex items-center justify-between text-[11px] text-gray-400 px-4">
               <span className="flex items-center gap-1.5">
                 <span>Navegar con</span>
-                <kbd className="px-1.5 py-0.5 font-mono text-[9px] bg-white rounded border">↑</kbd>
-                <kbd className="px-1.5 py-0.5 font-mono text-[9px] bg-white rounded border">↓</kbd>
+                <kbd className="px-1.5 py-0.5 font-mono text-[9px] bg-white rounded border"><ArrowUp className="h-[1em] w-[1em] shrink-0" /></kbd>
+                <kbd className="px-1.5 py-0.5 font-mono text-[9px] bg-white rounded border"><ArrowDown className="h-[1em] w-[1em] shrink-0" /></kbd>
                 <span>y</span>
                 <kbd className="px-1.5 py-0.5 font-mono text-[9px] bg-white rounded border">Enter</kbd>
               </span>

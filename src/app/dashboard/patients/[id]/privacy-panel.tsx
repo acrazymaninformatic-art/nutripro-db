@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useTransition } from 'react'
-import { Download, FileWarning, ShieldCheck, ShieldOff, CheckCircle2, AlertTriangle, ShieldAlert } from 'lucide-react'
+import { AlertTriangle, Check, CheckCircle2, Download, FileWarning, ShieldCheck, ShieldOff } from 'lucide-react'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
@@ -98,11 +98,11 @@ export function PrivacyPanel({
                 </Badge>
               ) : consentAcceptedAt ? (
                 <Badge variant="outline" className="bg-blue-50 text-blue-800 border-blue-200 text-3xs font-black">
-                  ✓ Aceptado el {new Date(consentAcceptedAt).toLocaleDateString('es-ES')}
+                  <Check className="h-[1em] w-[1em] shrink-0" /> Aceptado el {new Date(consentAcceptedAt).toLocaleDateString('es-ES')}
                 </Badge>
               ) : (
                 <Badge variant="outline" className="bg-amber-50 text-amber-800 border-amber-200 text-3xs font-black">
-                  ⚠️ Pendiente de registrar
+                  <AlertTriangle className="h-[1em] w-[1em] shrink-0" /> Pendiente de registrar
                 </Badge>
               )}
             </div>

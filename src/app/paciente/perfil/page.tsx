@@ -3,20 +3,7 @@ import { requirePatient } from '@/lib/auth'
 import { prisma } from '@/lib/prisma'
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
-import {
-  User,
-  HeartPulse,
-  Scale,
-  Sparkles,
-  ArrowLeft,
-  Calendar,
-  Phone,
-  Mail,
-  ShieldCheck,
-  AlertTriangle,
-  Info,
-  CheckCircle2,
-} from 'lucide-react'
+import { AlertTriangle, ArrowLeft, ShieldCheck, Target, User, Zap } from 'lucide-react'
 import { OBJECTIVE_LABELS, ACTIVITY_LEVEL_LABELS, parseCommaSeparated, type Objective, type ActivityLevel } from '@/types'
 
 export const dynamic = 'force-dynamic'
@@ -104,10 +91,10 @@ export default async function PacientePerfilPage() {
 
         <div className="flex flex-wrap gap-2">
           <Badge variant="outline" className="text-xs px-3.5 py-1.5 bg-slate-50 text-slate-700 border-slate-200 rounded-full font-semibold">
-            🎯 {objectiveLabel}
+            <Target className="h-[1em] w-[1em] shrink-0" /> {objectiveLabel}
           </Badge>
           <Badge variant="outline" className="text-xs px-3.5 py-1.5 bg-blue-50 text-blue-800 border-blue-200 rounded-full font-semibold">
-            ⚡ {activityLabel}
+            <Zap className="h-[1em] w-[1em] shrink-0" /> {activityLabel}
           </Badge>
         </div>
       </div>

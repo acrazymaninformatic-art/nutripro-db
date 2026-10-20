@@ -6,17 +6,7 @@ import { MotionSettingsCard } from '@/components/ui/motion-settings-card'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
-import {
-  KeyRound,
-  Download,
-  Trash2,
-  Bell,
-  ShieldCheck,
-  AlertTriangle,
-  CheckCircle2,
-  Loader2,
-  FileDown,
-} from 'lucide-react'
+import { KeyRound, Download, Trash2, ShieldCheck, AlertTriangle, CheckCircle2, Loader2, FileDown } from 'lucide-react'
 import {
   changePasswordAction,
   requestDataErasureAction,

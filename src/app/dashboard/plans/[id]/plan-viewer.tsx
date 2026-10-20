@@ -4,33 +4,7 @@ import { useState, useMemo } from 'react'
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
-import {
-  CalendarDays,
-  ShoppingCart,
-  Printer,
-  Flame,
-  Leaf,
-  User,
-  HeartPulse,
-  Info,
-  Clock,
-  Sparkles,
-  ChefHat,
-  Droplets,
-  Scale,
-  ShieldCheck,
-  CheckCircle2,
-  FileText,
-  BookOpen,
-  X,
-  Timer,
-  Utensils,
-  ChevronRight,
-  Eye,
-  EyeOff,
-  Layers,
-  Pill,
-} from 'lucide-react'
+import { AlertTriangle, BookOpen, CalendarDays, ChefHat, ChevronRight, Clock, Droplets, Eye, EyeOff, FileText, Flame, Info, Layers, Lightbulb, Printer, ShieldCheck, ShoppingCart, Siren, Sparkles, Utensils, X } from 'lucide-react'
 import { getFoodImage, getRecipeForFood, FALLBACK_FOOD_SVG, type ClinicalRecipe, checkPatientAllergenConflict } from '@/lib/nutrition'
 import { FOOD_EXCHANGE_GROUPS } from '@/lib/nutrition/exchange-system'
 import { PrePublishChecklistModal } from './pre-publish-checklist-modal'
@@ -381,7 +355,7 @@ export function PlanViewer({ plan }: PlanViewerProps) {
                   </span>
                   {(plan.patient.allergies || plan.patient.intolerances) && (
                     <span className="inline-block mt-1 text-[9px] font-black bg-red-100 text-red-800 border border-red-300 px-1.5 py-0.5 rounded-md">
-                      ⚠️ Alergias: {[plan.patient.allergies, plan.patient.intolerances].filter(Boolean).join(', ')}
+                      <AlertTriangle className="h-[1em] w-[1em] shrink-0" /> Alergias: {[plan.patient.allergies, plan.patient.intolerances].filter(Boolean).join(', ')}
                     </span>
                   )}
                 </div>
@@ -653,7 +627,7 @@ export function PlanViewer({ plan }: PlanViewerProps) {
                                         <span className={itemConflict ? 'text-red-950 font-black' : ''}>{it.food?.name || 'Alimento'}</span>
                                         {itemConflict && (
                                           <span className="inline-flex items-center gap-0.5 text-[8.5px] font-black bg-red-600 text-white px-1.5 py-0.2 rounded shadow-2xs" title={itemConflict.alertMessage}>
-                                            🚨 {itemConflict.allergenLabel}
+                                            <Siren className="h-[1em] w-[1em] shrink-0" /> {itemConflict.allergenLabel}
                                           </span>
                                         )}
                                         {itemRecipe && (
@@ -742,7 +716,7 @@ export function PlanViewer({ plan }: PlanViewerProps) {
                         <div className="bg-white/80 p-2 rounded-xl border border-blue-200/60 flex flex-col justify-between">
                           <div>
                             <span className="font-bold text-blue-900 block mb-0.5">
-                              💡 Consejo del Nutricionista:
+                              <Lightbulb className="h-[1em] w-[1em] shrink-0" /> Consejo del Nutricionista:
                             </span>
                             <p className="text-blue-800 italic leading-snug">
                               {featuredRecipe.chefTip}
@@ -1259,7 +1233,7 @@ export function PlanViewer({ plan }: PlanViewerProps) {
               {/* Truco del Chef Nutricionista */}
               <div className="p-3 rounded-2xl bg-amber-50 border border-amber-200 text-amber-900 space-y-1">
                 <span className="font-bold text-amber-950 flex items-center gap-1">
-                  <span>💡 Consejo Nutricional del Especialista:</span>
+                  <span><Lightbulb className="h-[1em] w-[1em] shrink-0" /> Consejo Nutricional del Especialista:</span>
                 </span>
                 <p className="text-xs text-amber-800 leading-relaxed italic">
                   {selectedRecipe.chefTip}

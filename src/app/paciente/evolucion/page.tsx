@@ -4,16 +4,7 @@ import { prisma } from '@/lib/prisma'
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
-import {
-  TrendingUp,
-  Scale,
-  Activity,
-  ArrowLeft,
-  Calendar,
-  FileSpreadsheet,
-  PieChart,
-  Sparkles,
-} from 'lucide-react'
+import { TrendingUp, Activity, ArrowLeft, PieChart, Sparkles } from 'lucide-react'
 import { EvolutionChart } from '@/app/dashboard/patients/[id]/evolution-chart'
 
 export const dynamic = 'force-dynamic'

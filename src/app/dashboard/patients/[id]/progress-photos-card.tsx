@@ -6,7 +6,7 @@ import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
-import { Camera, Plus, Trash2, Calendar, ShieldCheck, ArrowRightLeft } from 'lucide-react'
+import { Camera, Plus, ArrowRightLeft } from 'lucide-react'
 import { saveProgressPhoto, deleteProgressPhoto } from '../actions'
 
 interface ProgressPhotosCardProps {
