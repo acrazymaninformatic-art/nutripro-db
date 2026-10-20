@@ -7,7 +7,10 @@ export const metadata: Metadata = { title: 'Nueva contraseña · EVSoftware · E
 export default async function ResetPasswordPage({ searchParams }: { searchParams: Promise<{ token?: string }> }) {
   const { token = '' } = await searchParams
   return (
-    <main className="relative flex min-h-screen items-center justify-center overflow-hidden bg-ambient-eva px-4 py-12">
+    <main
+      className="relative flex min-h-screen items-center justify-center overflow-hidden bg-ambient-eva px-4 py-12"
+      data-gsap-page
+    >
       <div className="pointer-events-none absolute -left-24 top-1/4 h-72 w-72 rounded-full bg-blue-400/10 blur-3xl" />
       <div className="pointer-events-none absolute -right-24 bottom-1/4 h-72 w-72 rounded-full bg-teal-400/10 blur-3xl" />
       <section className="relative z-10 w-full max-w-md animate-slide-up rounded-[2rem] border border-white/80 bg-white/92 p-7 shadow-2xl backdrop-blur-md sm:p-9">

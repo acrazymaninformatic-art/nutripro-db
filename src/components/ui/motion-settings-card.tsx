@@ -13,16 +13,16 @@ const OPTIONS: Array<{
   icon: typeof Sparkles
 }> = [
   {
+    value: 'on',
+    label: 'Siempre activas',
+    hint: 'Animaciones en todos los dispositivos, aunque el sistema las tenga apagadas.',
+    icon: Sparkles,
+  },
+  {
     value: 'auto',
     label: 'Automático',
     hint: 'Sigue la configuración de animaciones de tu sistema.',
     icon: Gauge,
-  },
-  {
-    value: 'on',
-    label: 'Siempre activas',
-    hint: 'Fuerza las animaciones aunque el sistema las tenga desactivadas.',
-    icon: Sparkles,
   },
   {
     value: 'off',
@@ -53,8 +53,9 @@ export function MotionSettingsCard({ className }: { className?: string }) {
           <strong className={enabled ? 'text-emerald-700' : 'text-slate-600'}>
             {enabled ? 'animaciones activas' : 'animaciones desactivadas'}
           </strong>
-          . Si tu sistema tiene las animaciones de Windows o macOS apagadas, elige
-          &laquo;Siempre activas&raquo; para verlas igualmente.
+          . Las animaciones están activadas por defecto en todos los equipos; si
+          prefieres que la aplicación respete la configuración de Windows o macOS,
+          elige &laquo;Automático&raquo;.
         </CardDescription>
       </CardHeader>
       <CardContent className="p-6 pt-0">
@@ -89,9 +90,10 @@ export function MotionSettingsCard({ className }: { className?: string }) {
 
         {systemReduced && preference === 'auto' && (
           <p className="mt-3 rounded-2xl border border-amber-200 bg-amber-50 px-4 py-3 text-[11px] font-semibold leading-relaxed text-amber-900">
-            Tu sistema tiene las animaciones de la interfaz desactivadas, por eso ahora mismo no se ven
-            movimientos. Pulsa <strong>&laquo;Siempre activas&raquo;</strong> para verlas igualmente en este
-            equipo.
+            Tu sistema tiene las animaciones de la interfaz desactivadas, por eso
+            ahora mismo no se ven movimientos. Pulsa{' '}
+            <strong>&laquo;Siempre activas&raquo;</strong> para verlas igualmente en
+            este equipo.
           </p>
         )}
       </CardContent>

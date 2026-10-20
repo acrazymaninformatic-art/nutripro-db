@@ -9,21 +9,21 @@ export const MOTION_CHANGE_EVENT = 'ev:motion-preference-change'
 
 /**
  * Preferencia de animaciones de la interfaz.
+ * - `on`:   (por defecto) animaciones siempre activas.
  * - `auto`: respeta la configuración del sistema (prefers-reduced-motion).
- * - `on`:   fuerza las animaciones aunque el sistema las tenga desactivadas.
  * - `off`:  desactiva siempre las animaciones.
  */
 export function readMotionPreference(): MotionPreference {
-  if (typeof window === 'undefined') return 'auto'
+  if (typeof window === 'undefined') return 'on'
 
   try {
     const stored = window.localStorage.getItem(MOTION_STORAGE_KEY)
     if (stored === 'on' || stored === 'off' || stored === 'auto') return stored
   } catch {
-    // localStorage bloqueado: seguimos con la preferencia del sistema.
+    // localStorage bloqueado: seguimos con la preferencia por defecto.
   }
 
-  return 'auto'
+  return 'on'
 }
 
 export function writeMotionPreference(preference: MotionPreference) {
@@ -54,8 +54,8 @@ export function resolveMotionEnabled(preference: MotionPreference) {
 export function useMotionPreference() {
   // El primer render debe coincidir con el servidor (SSR) para no provocar
   // errores de hidratación: el valor real se sincroniza en el efecto.
-  const [preference, setPreferenceState] = useState<MotionPreference>('auto')
-  const [enabled, setEnabled] = useState<boolean>(false)
+  const [preference, setPreferenceState] = useState<MotionPreference>('on')
+  const [enabled, setEnabled] = useState<boolean>(true)
 
   useEffect(() => {
     const sync = () => {

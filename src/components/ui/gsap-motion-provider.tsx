@@ -164,7 +164,7 @@ export function GsapMotionProvider({ children }: { children: React.ReactNode }) 
           x: 0,
           y: 0,
           scale: 1,
-          clearProps: 'transform,willChange',
+          clearProps: 'transform,opacity,visibility,willChange',
         })
       }
 
@@ -185,9 +185,9 @@ export function GsapMotionProvider({ children }: { children: React.ReactNode }) 
           x: 0,
           y: 0,
           scale: 1,
-          duration: 0.68,
+          duration: 0.72,
           delay: Number((elements[0] as HTMLElement | undefined)?.dataset.gsapDelay || 0),
-          stagger: { each: 0.06, from: 'start' },
+          stagger: { each: 0.07, from: 'start' },
           ease: 'power3.out',
           overwrite: 'auto',
           clearProps: 'transform,willChange',
@@ -247,8 +247,8 @@ export function GsapMotionProvider({ children }: { children: React.ReactNode }) 
             settle([element])
           } else {
             gsap.set(element, {
-              y: 12,
-              scale: 0.992,
+              y: 22,
+              scale: 0.975,
               willChange: 'transform',
             })
           }
@@ -399,13 +399,13 @@ export function GsapMotionProvider({ children }: { children: React.ReactNode }) 
         if (pageTargets.length) {
           gsap.fromTo(
             pageTargets,
-            { autoAlpha: 0, y: 18 },
+            { autoAlpha: 0, y: 24 },
             {
               autoAlpha: 1,
               y: 0,
-              duration: 0.64,
+              duration: 0.72,
               ease: 'power2.out',
-              stagger: 0.025,
+              stagger: 0.03,
               clearProps: 'transform,opacity,visibility,willChange',
             }
           )

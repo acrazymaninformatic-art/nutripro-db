@@ -24,7 +24,10 @@ export default async function LoginPage() {
   }
 
   return (
-    <main className="min-h-screen bg-ambient-eva flex items-center justify-center p-4 sm:p-6 relative overflow-hidden">
+    <main
+      className="min-h-screen bg-ambient-eva flex items-center justify-center p-4 sm:p-6 relative overflow-hidden"
+      data-gsap-page
+    >
       {/* Decorative ambient blurred orbs */}
       <div className="absolute top-1/4 -left-20 w-80 h-80 bg-blue-400/10 rounded-full blur-3xl pointer-events-none" />
       <div className="absolute bottom-1/4 -right-20 w-80 h-80 bg-teal-400/10 rounded-full blur-3xl pointer-events-none" />
