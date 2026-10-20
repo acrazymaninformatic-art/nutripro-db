@@ -25,7 +25,6 @@ const navLinks: NavLinkItem[] = [
   { name: 'Mi Plan', href: '/paciente/plan', icon: CalendarDays },
   { name: 'Mis Citas', href: '/paciente/citas', icon: Calendar },
   { name: 'Mi Evolución', href: '/paciente/evolucion', icon: TrendingUp },
-  { name: 'Mi Seguimiento', href: '/paciente/checkin', icon: ClipboardCheck },
   { name: 'Cuestionarios y Firmas', href: '/paciente/cuestionarios', icon: ClipboardCheck },
   { name: 'Mis Documentos', href: '/paciente/documentos', icon: FileText },
   { name: 'Mi Perfil', href: '/paciente/perfil', icon: User },

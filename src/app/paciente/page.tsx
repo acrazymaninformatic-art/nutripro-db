@@ -539,24 +539,6 @@ export default async function PacienteDashboardPage() {
             </Card>
           </Link>
 
-          {/* Link to Check-in */}
-          <Link href="/paciente/checkin" className="group block active:scale-[0.98] transition-transform">
-            <Card className="h-full glass-card glass-card-hover rounded-3xl border-slate-200/80">
-              <CardHeader>
-                <div className="w-11 h-11 rounded-2xl bg-gradient-to-br from-blue-50 to-blue-100/70 text-blue-700 flex items-center justify-center mb-2 group-hover:bg-blue-600 group-hover:text-white transition-all shadow-2xs">
-                  <ClipboardCheck className="w-5 h-5" />
-                </div>
-                <CardTitle className="text-sm font-bold text-slate-900 group-hover:text-blue-700 transition-colors flex items-center justify-between">
-                  <span>Mi Seguimiento</span>
-                  <ChevronRight className="w-4 h-4 text-slate-400 group-hover:translate-x-1 group-hover:text-blue-700 transition-all" />
-                </CardTitle>
-                <CardDescription className="text-xs text-slate-500 leading-relaxed font-normal">
-                  Registra adherencia, digestivo y hábitos entre consulta y consulta.
-                </CardDescription>
-              </CardHeader>
-            </Card>
-          </Link>
-
           {/* Link to Documentos */}
           <Link href="/paciente/documentos" className="group block active:scale-[0.98] transition-transform">
             <Card className="h-full glass-card glass-card-hover rounded-3xl border-slate-200/80">
