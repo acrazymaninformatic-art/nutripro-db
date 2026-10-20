@@ -3,6 +3,7 @@ import { getMealPlans } from './actions'
 import { Card, CardHeader, CardTitle, CardDescription, CardContent, CardFooter } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
+import { DuplicatePlanButton } from './duplicate-plan-button'
 import { CalendarDays, Plus, User, Flame, Calendar, ArrowRight } from 'lucide-react'
 
 export const dynamic = 'force-dynamic'
@@ -96,12 +97,15 @@ export default async function MealPlansPage() {
               </CardContent>
 
               <CardFooter className="pt-2 border-t bg-gray-50/70 p-4">
-                <Link href={`/dashboard/plans/${plan.id}`} className="w-full">
-                  <Button variant="outline" size="sm" className="w-full flex items-center justify-center gap-1.5 rounded-2xl font-bold border-gray-200 hover:bg-blue-50 hover:text-blue-900 hover:border-blue-300">
-                    <span>Ver Dossier, Recetas & Compra</span>
-                    <ArrowRight className="h-3.5 w-3.5" />
-                  </Button>
-                </Link>
+                <div className="flex items-center gap-2">
+                  <Link href={`/dashboard/plans/${plan.id}`} className="flex-1">
+                    <Button variant="outline" size="sm" className="w-full flex items-center justify-center gap-1.5 rounded-2xl font-bold border-gray-200 hover:bg-blue-50 hover:text-blue-900 hover:border-blue-300">
+                      <span>Ver Dossier, Recetas & Compra</span>
+                      <ArrowRight className="h-3.5 w-3.5" />
+                    </Button>
+                  </Link>
+                  <DuplicatePlanButton planId={plan.id} />
+                </div>
               </CardFooter>
             </Card>
           ))}

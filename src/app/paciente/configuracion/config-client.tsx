@@ -3,6 +3,8 @@
 import { useState, useActionState } from 'react'
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from '@/components/ui/card'
 import { MotionSettingsCard } from '@/components/ui/motion-settings-card'
+import { ThemeSettingsCard } from '@/components/ui/theme-settings-card'
+import { PwaCard } from '@/components/ui/pwa-card'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
@@ -108,6 +110,12 @@ export function ConfigClient({ userEmail, pendingRequests }: Props) {
 
       {/* Preferencias de animación de la interfaz (GSAP) */}
       <MotionSettingsCard />
+
+      {/* Tema claro / oscuro de la interfaz */}
+      <ThemeSettingsCard />
+
+      {/* Instalación de la app y avisos en el móvil */}
+      <PwaCard />
 
       {/* 1. Seguridad y Cambio de Contraseña */}
       <Card className="rounded-3xl border-slate-200/80 shadow-xs overflow-hidden">

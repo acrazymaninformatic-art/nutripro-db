@@ -7,6 +7,7 @@ import { Badge } from '@/components/ui/badge'
 import { ArrowRight, Check, CheckCircle2, ClipboardCheck, Clock, FileSignature, PenTool, ShieldCheck } from 'lucide-react'
 import Link from 'next/link'
 import { signConsentAction } from '../actions'
+import { SignaturePad } from './signature-pad'
 import { ModalPortal } from '@/components/ui/modal-portal'
 
 interface ConsentItem {
@@ -31,6 +32,7 @@ export function CuestionariosClient({
 }: Props) {
   const [signingConsentId, setSigningConsentId] = useState<string | null>(null)
   const [signatureName, setSignatureName] = useState('')
+  const [signatureImage, setSignatureImage] = useState<string | null>(null)
   const [loading, setLoading] = useState(false)
 
   const isAnamnesisPending = anamnesisStatus === 'PENDING' || anamnesisStatus === 'SENT'
@@ -46,10 +48,13 @@ export function CuestionariosClient({
     try {
       await signConsentAction(
         signingConsentId,
-        `Firma digital de conformidad: ${signatureName.trim()}`
+        signatureImage
+          ? `Firma digital de conformidad: ${signatureName.trim()} | Rúbrica: ${signatureImage}`
+          : `Firma digital de conformidad: ${signatureName.trim()}`
       )
       setSigningConsentId(null)
       setSignatureName('')
+      setSignatureImage(null)
     } finally {
       setLoading(false)
     }
@@ -242,6 +247,13 @@ export function CuestionariosClient({
                   placeholder="Ej: María Gómez Rodríguez"
                   className="w-full text-xs rounded-xl border border-slate-200 p-3 bg-white font-medium focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-600 transition-all shadow-2xs"
                 />
+              </div>
+
+              <div>
+                <label className="block text-xs font-bold text-slate-700 mb-1.5">
+                  Firma manuscrita (opcional)
+                </label>
+                <SignaturePad onChange={setSignatureImage} />
               </div>
 
               <div className="flex items-center justify-end gap-2.5 pt-4 border-t border-slate-100">

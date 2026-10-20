@@ -25,6 +25,264 @@
   --shadow-hover: 0 18px 42px -22px rgba(2, 132, 199, 0.32);
 }
 
+/*
+ * Modo oscuro: se reasignan las superficies y los textos más usados de la
+ * interfaz a la paleta nocturna. Se escribe fuera de `@layer` para que estas
+ * reglas ganen a las utilidades de Tailwind (mismo criterio que el resto de
+ * estilos globales del proyecto).
+ */
+.dark {
+  --background: #0b1120;
+  --foreground: #e2e8f0;
+  --surface-card: #0f172a;
+  --surface-elevated: #131f36;
+  --surface-border: rgba(51, 65, 85, 0.9);
+  --text-primary: #e2e8f0;
+  --text-secondary: #a8b6cc;
+  --text-muted: #7d8ea8;
+  --glass-bg: rgba(15, 23, 42, 0.86);
+  --glass-border: rgba(51, 65, 85, 0.75);
+  --shadow-soft: 0 1px 2px rgba(0, 0, 0, 0.35), 0 14px 34px -22px rgba(0, 0, 0, 0.7);
+  --shadow-hover: 0 18px 42px -22px rgba(37, 99, 235, 0.45);
+}
+
+.dark body {
+  background-color: #0b1120;
+  color: #e2e8f0;
+}
+
+/* Superficies */
+.dark .bg-white,
+.dark .bg-white\/90,
+.dark .bg-white\/95,
+.dark .bg-white\/85,
+.dark .bg-white\/80,
+.dark .bg-white\/75,
+.dark .bg-white\/70,
+.dark .bg-white\/60 {
+  background-color: #0f172a;
+}
+
+.dark .bg-slate-50,
+.dark .bg-slate-50\/80,
+.dark .bg-slate-50\/60,
+.dark .bg-slate-50\/70,
+.dark .bg-slate-50\/50,
+.dark .bg-slate-50\/40 {
+  background-color: #0d1729;
+}
+
+.dark .bg-slate-100,
+.dark .bg-slate-100\/80,
+.dark .bg-slate-100\/70,
+.dark .bg-slate-200 {
+  background-color: #16213a;
+}
+
+.dark .bg-slate-900,
+.dark .bg-slate-800 {
+  background-color: #060b16;
+}
+
+/* Tintes suaves de estado */
+.dark .bg-blue-50,
+.dark .bg-blue-50\/60,
+.dark .bg-blue-50\/70,
+.dark .bg-blue-50\/45 {
+  background-color: rgba(30, 64, 175, 0.22);
+}
+
+.dark .bg-emerald-50,
+.dark .bg-emerald-50\/60,
+.dark .bg-emerald-50\/70,
+.dark .bg-emerald-50\/45 {
+  background-color: rgba(4, 120, 87, 0.2);
+}
+
+.dark .bg-amber-50,
+.dark .bg-amber-50\/60,
+.dark .bg-amber-50\/70 {
+  background-color: rgba(180, 83, 9, 0.2);
+}
+
+.dark .bg-rose-50,
+.dark .bg-rose-50\/60,
+.dark .bg-rose-50\/70 {
+  background-color: rgba(190, 18, 60, 0.2);
+}
+
+.dark .bg-teal-50,
+.dark .bg-teal-50\/60 {
+  background-color: rgba(13, 148, 136, 0.2);
+}
+
+.dark .bg-indigo-50,
+.dark .bg-purple-50,
+.dark .bg-violet-50 {
+  background-color: rgba(79, 70, 229, 0.2);
+}
+
+/* Textos */
+.dark .text-slate-950,
+.dark .text-slate-900,
+.dark .text-slate-800,
+.dark .text-gray-900,
+.dark .text-gray-800,
+.dark .text-gray-950 {
+  color: #e6edf7;
+}
+
+.dark .text-slate-700,
+.dark .text-slate-600,
+.dark .text-gray-700,
+.dark .text-gray-600 {
+  color: #b3c1d4;
+}
+
+.dark .text-slate-500,
+.dark .text-slate-400,
+.dark .text-gray-500,
+.dark .text-gray-400 {
+  color: #8595ab;
+}
+
+.dark .text-slate-300,
+.dark .text-slate-200,
+.dark .text-gray-300 {
+  color: #64748b;
+}
+
+/* Colores de estado: en fondo oscuro los tonos 700/800 se aclaran para
+   mantener el contraste de badges, enlaces y textos de estado. */
+.dark .text-blue-700 { color: #7db3f7; }
+.dark .text-blue-800 { color: #93c5fd; }
+.dark .text-blue-900 { color: #bfdbfe; }
+.dark .text-emerald-700 { color: #6ee7b7; }
+.dark .text-emerald-800 { color: #a7f3d0; }
+.dark .text-green-700 { color: #86efac; }
+.dark .text-green-800 { color: #bbf7d0; }
+.dark .text-teal-700 { color: #5eead4; }
+.dark .text-teal-800 { color: #99f6e4; }
+.dark .text-amber-700 { color: #fcd34d; }
+.dark .text-amber-800 { color: #fde68a; }
+.dark .text-amber-900 { color: #fef3c7; }
+.dark .text-rose-700 { color: #fda4af; }
+.dark .text-rose-800 { color: #fecdd3; }
+.dark .text-purple-700 { color: #c4b5fd; }
+.dark .text-purple-800 { color: #ddd6fe; }
+.dark .text-indigo-700 { color: #a5b4fc; }
+.dark .text-indigo-800 { color: #c7d2fe; }
+.dark .text-orange-700 { color: #fdba74; }
+.dark .text-orange-800 { color: #fed7aa; }
+
+.dark .bg-blue-100,
+.dark .bg-blue-200 {
+  background-color: rgba(30, 64, 175, 0.34);
+}
+
+.dark .bg-emerald-100,
+.dark .bg-green-100 {
+  background-color: rgba(4, 120, 87, 0.32);
+}
+
+.dark .bg-teal-100 {
+  background-color: rgba(13, 148, 136, 0.32);
+}
+
+.dark .bg-amber-100,
+.dark .bg-orange-100 {
+  background-color: rgba(180, 83, 9, 0.32);
+}
+
+.dark .bg-rose-100 {
+  background-color: rgba(190, 18, 60, 0.32);
+}
+
+.dark .bg-purple-100,
+.dark .bg-indigo-100 {
+  background-color: rgba(79, 70, 229, 0.32);
+}
+
+/* Bordes y separadores */
+.dark .border-slate-100,
+.dark .border-slate-200,
+.dark .border-slate-200\/80,
+.dark .border-slate-300,
+.dark .border-slate-300\/80,
+.dark .border-gray-100,
+.dark .border-gray-200,
+.dark .border-gray-300 {
+  border-color: #1e293b;
+}
+
+.dark .divide-slate-100,
+.dark .divide-slate-200,
+.dark .divide-gray-100 {
+  border-color: #1e293b;
+}
+
+.dark .ring-slate-200,
+.dark .ring-slate-300 {
+  --tw-ring-color: #1e293b;
+}
+
+.dark .shadow-2xs,
+.dark .shadow-xs,
+.dark .shadow-sm,
+.dark .shadow-md,
+.dark .shadow-lg,
+.dark .shadow-xl,
+.dark .shadow-2xl {
+  --tw-shadow-color: rgba(0, 0, 0, 0.55);
+}
+
+.dark .glass-card,
+.dark .glass-panel,
+.dark .glass-nav {
+  background-color: rgba(15, 23, 42, 0.86);
+  border-color: rgba(51, 65, 85, 0.7);
+}
+
+.dark .surface-grid {
+  background-image:
+    linear-gradient(rgba(148, 163, 184, 0.07) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(148, 163, 184, 0.07) 1px, transparent 1px);
+}
+
+/* Degradados: se recolorean los stops para que los bloques con fondo
+   degradado no sigan siendo claros en modo oscuro. Se usan selectores por
+   atributo para cubrir también las variantes con opacidad (from-blue-50/70). */
+.dark [class*='from-white'] { --tw-gradient-from: #16213a; }
+.dark [class*='via-white'] { --tw-gradient-via: #1b2942; }
+.dark [class*='to-white'] { --tw-gradient-to: #16213a; }
+.dark [class*='from-gray-50'] { --tw-gradient-from: #131f36; }
+.dark [class*='via-gray-50'] { --tw-gradient-via: #16213a; }
+.dark [class*='to-gray-50'] { --tw-gradient-to: #131f36; }
+.dark [class*='from-slate-50'] { --tw-gradient-from: #131f36; }
+.dark [class*='via-slate-50'] { --tw-gradient-via: #16213a; }
+.dark [class*='to-slate-50'] { --tw-gradient-to: #131f36; }
+.dark [class*='from-slate-100'] { --tw-gradient-from: #1b2942; }
+.dark [class*='via-slate-100'] { --tw-gradient-via: #1b2942; }
+.dark [class*='to-slate-100'] { --tw-gradient-to: #1b2942; }
+.dark [class*='from-blue-50'] { --tw-gradient-from: rgba(30, 64, 175, 0.32); }
+.dark [class*='via-blue-50'] { --tw-gradient-via: rgba(30, 64, 175, 0.22); }
+.dark [class*='to-blue-50'] { --tw-gradient-to: rgba(30, 64, 175, 0.12); }
+.dark [class*='from-blue-100'] { --tw-gradient-from: rgba(30, 64, 175, 0.38); }
+.dark [class*='to-blue-100'] { --tw-gradient-to: rgba(30, 64, 175, 0.16); }
+.dark [class*='from-emerald-50'] { --tw-gradient-from: rgba(4, 120, 87, 0.3); }
+.dark [class*='via-emerald-50'] { --tw-gradient-via: rgba(4, 120, 87, 0.2); }
+.dark [class*='to-emerald-50'] { --tw-gradient-to: rgba(4, 120, 87, 0.12); }
+.dark [class*='from-amber-50'] { --tw-gradient-from: rgba(180, 83, 9, 0.3); }
+.dark [class*='via-amber-50'] { --tw-gradient-via: rgba(180, 83, 9, 0.2); }
+.dark [class*='to-amber-50'] { --tw-gradient-to: rgba(180, 83, 9, 0.12); }
+.dark [class*='from-rose-50'] { --tw-gradient-from: rgba(190, 18, 60, 0.3); }
+.dark [class*='via-rose-50'] { --tw-gradient-via: rgba(190, 18, 60, 0.2); }
+.dark [class*='to-rose-50'] { --tw-gradient-to: rgba(190, 18, 60, 0.12); }
+.dark [class*='from-purple-50'] { --tw-gradient-from: rgba(79, 70, 229, 0.3); }
+.dark [class*='to-purple-50'] { --tw-gradient-to: rgba(79, 70, 229, 0.12); }
+.dark [class*='from-indigo-50'] { --tw-gradient-from: rgba(79, 70, 229, 0.3); }
+.dark [class*='to-indigo-50'] { --tw-gradient-to: rgba(79, 70, 229, 0.12); }
+
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
@@ -172,6 +430,15 @@ button, a, input, select, textarea {
     radial-gradient(at 10% 5%, rgba(13, 148, 136, 0.06) 0px, transparent 55%),
     radial-gradient(at 90% 10%, rgba(16, 185, 129, 0.045) 0px, transparent 50%),
     radial-gradient(at 50% 85%, rgba(20, 184, 166, 0.035) 0px, transparent 60%);
+}
+
+.dark .bg-ambient-eva,
+.dark .bg-ambient-patient {
+  background-color: #0b1120;
+  background-image:
+    radial-gradient(at 10% 10%, rgba(37, 99, 235, 0.14) 0px, transparent 50%),
+    radial-gradient(at 90% 10%, rgba(79, 70, 229, 0.1) 0px, transparent 50%),
+    radial-gradient(at 50% 90%, rgba(14, 165, 233, 0.08) 0px, transparent 50%);
 }
 
 .elevation-flat {
@@ -401,8 +668,140 @@ main,
 }
 
 /* =====================================================================
-   ESTILOS DE IMPRESIÓN CLÍNICA EDITORIAL (A4 PDF DOSSIER)
+   CARTA DE REVISIÓN POR ATENCIÓN PRIMARIA (XRPT) · A4
    ===================================================================== */
+.xprt-page {
+  background: #ffffff;
+  color: #111827;
+  border: 1px solid #e2e8f0;
+  border-radius: 1.25rem;
+  padding: 2.5rem;
+  font-size: 12px;
+  line-height: 1.55;
+  box-shadow: 0 1px 2px rgba(15, 23, 42, 0.04);
+}
+
+.xprt-header {
+  display: flex;
+  justify-content: space-between;
+  gap: 1.5rem;
+  border-bottom: 2px solid #0f172a;
+  padding-bottom: 1rem;
+  margin-bottom: 1.25rem;
+}
+
+.xprt-brand {
+  font-size: 15px;
+  font-weight: 800;
+  letter-spacing: -0.01em;
+  color: #0f172a;
+}
+
+.xprt-sub {
+  font-size: 10px;
+  color: #475569;
+}
+
+.xprt-header-right {
+  text-align: right;
+}
+
+.xprt-doc-title {
+  font-size: 12px;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: #0f172a;
+}
+
+.xprt-section {
+  margin-bottom: 1.1rem;
+  break-inside: avoid;
+  page-break-inside: avoid;
+}
+
+.xprt-h2 {
+  font-size: 11px;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: #0f172a;
+  border-left: 3px solid #2563eb;
+  padding-left: 0.5rem;
+  margin-bottom: 0.5rem;
+}
+
+.xprt-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.5rem 0.75rem;
+}
+
+.xprt-grid dt {
+  font-size: 9px;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.07em;
+  color: #64748b;
+}
+
+.xprt-grid dd {
+  font-size: 11.5px;
+  font-weight: 600;
+  color: #111827;
+}
+
+.xprt-p {
+  font-size: 11.5px;
+  color: #1f2937;
+  margin-bottom: 0.4rem;
+}
+
+.xprt-list {
+  list-style: disc;
+  padding-left: 1.1rem;
+  display: grid;
+  gap: 0.3rem;
+  font-size: 11.5px;
+  color: #1f2937;
+}
+
+.xprt-signatures {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 2rem;
+  margin-top: 1.2rem;
+}
+
+.xprt-sign-line {
+  border-top: 1px solid #94a3b8;
+  margin-bottom: 0.35rem;
+}
+
+.xprt-footer {
+  border-top: 1px solid #e2e8f0;
+  padding-top: 0.75rem;
+  font-size: 9px;
+  color: #64748b;
+  display: grid;
+  gap: 0.25rem;
+}
+
+.dark .xprt-page {
+  background: #ffffff;
+  color: #111827;
+}
+
+@media print {
+  .xprt-page {
+    border: 0;
+    border-radius: 0;
+    box-shadow: none;
+    padding: 0;
+    font-size: 11px;
+  }
+}
+
 @media print {
   @page {
     size: A4 portrait;
@@ -456,6 +855,40 @@ main,
     break-inside: avoid !important;
   }
 
+  /* ===================================================================
+     PORTAL DEL PACIENTE: IMPRESIÓN LIMPIA EN A4
+     =================================================================== */
+  [data-gsap-portal='patient'] aside,
+  [data-gsap-portal='patient'] header,
+  [data-gsap-portal='patient'] nav,
+  [data-gsap-portal='patient'] > div > div > div > div.glass-nav,
+  [data-gsap-portal='patient'] .glass-nav,
+  [data-gsap-portal='patient'] button,
+  [data-gsap-portal='patient'] form {
+    display: none !important;
+  }
+
+  [data-gsap-portal='patient'] main,
+  [data-gsap-portal='patient'] main > div {
+    padding: 0 !important;
+    margin: 0 !important;
+    max-width: none !important;
+  }
+
+  [data-gsap-portal='patient'] .glass-card,
+  [data-gsap-portal='patient'] .glass-panel,
+  [data-gsap-portal='patient'] .rounded-3xl {
+    background: #ffffff !important;
+    border: 1px solid #e2e8f0 !important;
+    box-shadow: none !important;
+    break-inside: avoid;
+    page-break-inside: avoid;
+  }
+
+  .print-only {
+    display: block !important;
+  }
+
   img {
     max-width: 100% !important;
     display: inline-block !important;
@@ -471,3 +904,4 @@ main,
     transform: none !important;
   }
 }
+

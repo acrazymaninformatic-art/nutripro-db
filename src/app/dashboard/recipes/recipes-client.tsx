@@ -8,6 +8,7 @@ import { Badge } from '@/components/ui/badge'
 import { Input } from '@/components/ui/input'
 import { FoodImage } from '@/components/nutrition/food-image'
 import { ModalPortal } from '@/components/ui/modal-portal'
+import { DuplicateRecipeButton } from './duplicate-recipe-button'
 import { ArrowRight, ChefHat, Clock, ExternalLink, FileText, Flame, Plus, Printer, Search, Snowflake, Users, Utensils, X } from 'lucide-react'
 
 export interface RecipeWithIngredients {
@@ -509,6 +510,9 @@ export function RecipesClient({ initialRecipes }: RecipesClientProps) {
                   >
                     Ficha Completa <ArrowRight className="h-[1em] w-[1em] shrink-0" />
                   </Link>
+                  <div onClick={(e) => e.stopPropagation()}>
+                    <DuplicateRecipeButton recipeId={recipe.id} />
+                  </div>
                 </CardFooter>
               </Card>
             )

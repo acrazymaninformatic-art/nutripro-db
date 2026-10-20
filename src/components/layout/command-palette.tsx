@@ -2,15 +2,25 @@
 
 import { useState, useEffect, useRef } from 'react'
 import { useRouter } from 'next/navigation'
-import { Apple, ArrowDown, ArrowRight, ArrowUp, Calculator, Calendar, ChefHat, ClipboardCheck, Plus, Search, Settings, Users, X } from 'lucide-react'
+import { Apple, ArrowDown, ArrowRight, ArrowUp, Calculator, Calendar, CalendarDays, ChefHat, ClipboardCheck, Plus, Search, Settings, Users, X } from 'lucide-react'
+import { searchEverything } from '@/lib/search-actions'
 
 interface SearchItem {
   id: string
   title: string
   subtitle?: string
-  category: 'Acciones' | 'Navegación' | 'Pacientes' | 'Recetas'
+  category: 'Acciones' | 'Navegación' | 'Pacientes' | 'Recetas' | 'Alimentos' | 'Planes'
   href: string
   icon: React.ComponentType<{ className?: string }>
+}
+
+const CATEGORY_ICONS: Record<string, React.ComponentType<{ className?: string }>> = {
+  Pacientes: Users,
+  Recetas: ChefHat,
+  Alimentos: Apple,
+  Planes: CalendarDays,
+  Acciones: Plus,
+  Navegación: ArrowRight,
 }
 
 const DEFAULT_COMMANDS: SearchItem[] = [
@@ -139,6 +149,43 @@ export function CommandPalette() {
     }
   }, [isOpen])
 
+  // Búsqueda global en la base de datos (pacientes, recetas, alimentos, planes)
+  const [globalResults, setGlobalResults] = useState<SearchItem[]>([])
+  const [isSearching, setIsSearching] = useState(false)
+
+  useEffect(() => {
+    const term = query.trim()
+    if (term.length < 2) {
+      setGlobalResults([])
+      setIsSearching(false)
+      return
+    }
+
+    let cancelled = false
+    setIsSearching(true)
+    const timer = setTimeout(async () => {
+      try {
+        const data = await searchEverything(term)
+        if (cancelled) return
+        setGlobalResults(
+          data.map((result) => ({
+            ...result,
+            icon: CATEGORY_ICONS[result.category] || Search,
+          }))
+        )
+      } catch {
+        if (!cancelled) setGlobalResults([])
+      } finally {
+        if (!cancelled) setIsSearching(false)
+      }
+    }, 260)
+
+    return () => {
+      cancelled = true
+      clearTimeout(timer)
+    }
+  }, [query])
+
   // Filter commands
   const filteredCommands = query.trim()
     ? DEFAULT_COMMANDS.filter((cmd) =>
@@ -147,6 +194,8 @@ export function CommandPalette() {
           .includes(query.toLowerCase())
       )
     : DEFAULT_COMMANDS
+
+  const visibleItems: SearchItem[] = [...globalResults, ...filteredCommands]
 
   const handleSelect = (item: SearchItem) => {
     setIsOpen(false)
@@ -157,13 +206,13 @@ export function CommandPalette() {
   const handleKeyNav = (e: React.KeyboardEvent) => {
     if (e.key === 'ArrowDown') {
       e.preventDefault()
-      setSelectedIndex((prev) => (prev + 1) % filteredCommands.length)
+      setSelectedIndex((prev) => (prev + 1) % visibleItems.length)
     } else if (e.key === 'ArrowUp') {
       e.preventDefault()
-      setSelectedIndex((prev) => (prev - 1 + filteredCommands.length) % filteredCommands.length)
-    } else if (e.key === 'Enter' && filteredCommands[selectedIndex]) {
+      setSelectedIndex((prev) => (prev - 1 + visibleItems.length) % visibleItems.length)
+    } else if (e.key === 'Enter' && visibleItems[selectedIndex]) {
       e.preventDefault()
-      handleSelect(filteredCommands[selectedIndex])
+      handleSelect(visibleItems[selectedIndex])
     }
   }
 
@@ -215,13 +264,15 @@ export function CommandPalette() {
             </div>
 
             {/* Results list */}
-            <div className="max-h-[380px] overflow-y-auto p-2 space-y-1">
-              {filteredCommands.length === 0 ? (
+            <div className="max-h-[420px] overflow-y-auto p-2 space-y-1">
+              {visibleItems.length === 0 ? (
                 <div className="text-center py-10 text-gray-400 text-xs">
-                  No se encontraron comandos o secciones para «{query}»
+                  {isSearching
+                    ? 'Buscando en la consulta…'
+                    : `No se encontraron comandos o secciones para «${query}»`}
                 </div>
               ) : (
-                filteredCommands.map((item, idx) => {
+                visibleItems.map((item, idx) => {
                   const Icon = item.icon
                   const isSelected = idx === selectedIndex
 

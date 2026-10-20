@@ -101,3 +101,49 @@ export async function deleteRecipe(id: string) {
   revalidatePath('/dashboard')
   revalidatePath('/dashboard/recipes')
 }
+
+/**
+ * Duplica una receta con sus ingredientes para poder crear una variante
+ * (por ejemplo, cambiar el pescado o las raciones de un ingrediente).
+ */
+export async function duplicateRecipe(id: string) {
+  const userId = await requireUserId()
+
+  const source = await prisma.recipe.findFirst({
+    where: { id, userId },
+    include: { ingredients: true },
+  })
+
+  if (!source) throw new Error('Receta no encontrada.')
+
+  const copy = await prisma.recipe.create({
+    data: {
+      userId,
+      name: `${source.name} (copia)`,
+      description: source.description,
+      servings: source.servings,
+      prepTimeMin: source.prepTimeMin,
+      cookTimeMin: source.cookTimeMin,
+      instructions: source.instructions,
+      category: source.category,
+      imageUrl: source.imageUrl,
+      dietaryTagsJson: source.dietaryTagsJson,
+      difficulty: source.difficulty,
+      estimatedCost: source.estimatedCost,
+      equipmentJson: source.equipmentJson,
+      isBatchCooking: source.isBatchCooking,
+      isFreezable: source.isFreezable,
+      ingredients: {
+        create: source.ingredients.map((ingredient) => ({
+          foodId: ingredient.foodId,
+          quantityG: ingredient.quantityG,
+          notes: ingredient.notes,
+        })),
+      },
+    },
+  })
+
+  revalidatePath('/dashboard/recipes')
+
+  return { id: copy.id }
+}

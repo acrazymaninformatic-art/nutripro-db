@@ -27,6 +27,17 @@ export async function getPatients() {
         orderBy: { date: 'desc' },
         take: 1,
       },
+      appointments: {
+        orderBy: { date: 'desc' },
+        take: 1,
+        select: { id: true, date: true, status: true, modality: true, appointmentType: true },
+      },
+      mealPlans: {
+        where: { isActive: true },
+        orderBy: { createdAt: 'desc' },
+        take: 1,
+        select: { id: true, name: true, targetKcal: true },
+      },
     },
   })
 }

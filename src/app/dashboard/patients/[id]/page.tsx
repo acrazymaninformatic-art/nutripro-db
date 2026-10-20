@@ -16,7 +16,7 @@ import { SoapConsultationPanel } from './soap-consultation-panel'
 import { ConsentsDocumentsPanel } from './consents-documents-panel'
 import { HardDeleteModal } from './hard-delete-modal'
 import { checkDrugInteractions } from '@/lib/nutrition/drug-interactions'
-import { AlertTriangle, ArrowLeft, ArrowRight, Bell, Calendar, CalendarPlus, Check, Eye, FileText, HeartPulse, History, Mail, Pill, Scale, ShieldAlert, Siren, Sparkles, Target, Zap } from 'lucide-react'
+import { AlertTriangle, ArrowLeft, ArrowRight, Bell, Calendar, CalendarPlus, Check, Eye, FileText, HeartPulse, History, Mail, Pill, Scale, ShieldAlert, Siren, Sparkles, Stethoscope, Target, Zap } from 'lucide-react'
 import {
   OBJECTIVE_LABELS,
   ACTIVITY_LEVEL_LABELS,
@@ -180,6 +180,12 @@ export default async function PatientDetailPage({ params, searchParams }: Patien
             <Button variant="outline" size="sm" className="flex items-center gap-1.5 rounded-2xl border-blue-300 bg-blue-50 text-blue-800 hover:bg-blue-100 font-bold">
               <CalendarPlus className="h-4 w-4 text-blue-600" />
               <span>Crear Plan Nutricional</span>
+            </Button>
+          </Link>
+          <Link href={`/dashboard/patients/${patient.id}/informes/primaria`}>
+            <Button variant="outline" size="sm" className="flex items-center gap-1.5 rounded-2xl border-teal-300 bg-teal-50 text-teal-900 hover:bg-teal-100 font-bold">
+              <Stethoscope className="h-4 w-4 text-teal-600" />
+              <span>Carta para primaria</span>
             </Button>
           </Link>
           <form action={startPatientPreview.bind(null, patient.id)}>

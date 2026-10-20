@@ -6,17 +6,32 @@ import { Badge } from '@/components/ui/badge'
 import { UserPlus, Users, ArrowRight, Eye, Phone, Mail, Trash2, RotateCcw, Calendar, CalendarPlus, FileText } from 'lucide-react'
 import { OBJECTIVE_LABELS, type Objective } from '@/types'
 import { startPatientPreview } from './preview-actions'
+import { PatientFilters } from './patient-filters'
+import {
+  DuplicatePatientButton,
+  PatientPreviewTrigger,
+  TrashPatientButton,
+} from './patient-row-actions'
 
 export const dynamic = 'force-dynamic'
 
 interface PatientsPageProps {
-  searchParams?: Promise<{ tab?: string; tag?: string }>
+  searchParams?: Promise<{
+    tab?: string
+    tag?: string
+    objetivo?: string
+    visita?: string
+    riesgo?: string
+  }>
 }
 
 export default async function PatientsPage({ searchParams }: PatientsPageProps) {
   const params = await searchParams
   const currentTab = params?.tab === 'papelera' ? 'papelera' : 'activos'
   const selectedTag = params?.tag || null
+  const objetivoFilter = params?.objetivo || ''
+  const visitaFilter = params?.visita || ''
+  const riesgoFilter = params?.riesgo || ''
   const patients = await getPatients()
 
   const activePatients = patients.filter((p) => p.isActive)
@@ -40,15 +55,52 @@ export default async function PatientsPage({ searchParams }: PatientsPageProps) 
 
   // Filter by tag if selected
   const displayedPatients = tabPatients.filter((p) => {
-    if (!selectedTag) return true
-    try {
-      if (!p.tags) return false
-      const tags = JSON.parse(p.tags)
-      return tags.some((t: any) => t.name === selectedTag)
-    } catch {
-      return false
+    if (selectedTag) {
+      try {
+        if (!p.tags) return false
+        const tags = JSON.parse(p.tags)
+        if (!tags.some((t: any) => t.name === selectedTag)) return false
+      } catch {
+        return false
+      }
     }
+
+    if (objetivoFilter && p.objective !== objetivoFilter) return false
+
+    if (visitaFilter) {
+      const lastVisit = p.appointments?.[0]?.date
+      if (visitaFilter === 'never') {
+        if (lastVisit) return false
+      } else {
+        if (!lastVisit) return false
+        const days = Math.floor((Date.now() - new Date(lastVisit).getTime()) / 86400000)
+        if (days > Number(visitaFilter)) return false
+      }
+    }
+
+    if (riesgoFilter) {
+      if (riesgoFilter === 'pendientes' && (p.pendingReviewFieldsCount || 0) === 0) return false
+      if (riesgoFilter === 'sin_plan' && (p.mealPlans?.length || 0) > 0) return false
+      if (riesgoFilter === 'sin_cuestionario' && p.questionnaireDeliveryStatus !== 'NOT_SENT')
+        return false
+      if (riesgoFilter === 'sin_cita') {
+        const upcoming = p.appointments?.some(
+          (appointment) => new Date(appointment.date).getTime() >= Date.now()
+        )
+        if (upcoming) return false
+      }
+    }
+
+    return true
   })
+
+  // Resumen de cohorte para la cabecera de la tabla
+  const cohort = {
+    total: tabPatients.length,
+    conPlan: tabPatients.filter((p) => (p.mealPlans?.length || 0) > 0).length,
+    pendientes: tabPatients.filter((p) => (p.pendingReviewFieldsCount || 0) > 0).length,
+    sinVisita: tabPatients.filter((p) => !p.appointments?.[0]).length,
+  }
 
   return (
     <div className="space-y-6">
@@ -155,6 +207,26 @@ export default async function PatientsPage({ searchParams }: PatientsPageProps) 
             </CardDescription>
           </div>
         </CardHeader>
+
+        {/* Filtros de cohorte y resumen de la cartera */}
+        <div className="flex flex-col gap-3 border-b border-slate-100 bg-white px-5 py-3.5 lg:flex-row lg:items-center lg:justify-between">
+          <PatientFilters />
+          <div className="flex flex-wrap items-center gap-3 text-[11px] font-semibold text-slate-500">
+            <span className="rounded-full bg-slate-100 px-2.5 py-1 font-bold text-slate-700">
+              {cohort.total} en la vista
+            </span>
+            <span className="rounded-full bg-blue-50 px-2.5 py-1 font-bold text-blue-700">
+              {cohort.conPlan} con plan activo
+            </span>
+            <span className="rounded-full bg-amber-50 px-2.5 py-1 font-bold text-amber-700">
+              {cohort.pendientes} con revisiones pendientes
+            </span>
+            <span className="rounded-full bg-slate-50 px-2.5 py-1 font-bold text-slate-600">
+              {cohort.sinVisita} sin visita registrada
+            </span>
+          </div>
+        </div>
+
         <CardContent className="p-0">
           {displayedPatients.length === 0 ? (
             <div className="text-center py-12 px-4">
@@ -209,12 +281,11 @@ export default async function PatientsPage({ searchParams }: PatientsPageProps) 
                     return (
                       <tr key={patient.id} className="hover:bg-slate-50/60 transition-colors">
                         <td className="px-4 py-4 font-semibold text-slate-900">
-                          <Link
-                            href={`/dashboard/patients/${patient.id}`}
+                          <PatientPreviewTrigger
+                            patientId={patient.id}
+                            name={`${patient.lastName}, ${patient.firstName}`}
                             className="text-blue-700 hover:text-blue-800 hover:underline flex items-center gap-1.5 whitespace-nowrap"
-                          >
-                            <span>{patient.lastName}, {patient.firstName}</span>
-                          </Link>
+                          />
                           <span className="text-[11px] text-slate-400 font-normal block mt-0.5">
                             {patient.sex === 'MALE' ? 'Hombre' : 'Mujer'} • <span className="font-mono tabular-nums">{patient.heightCm} cm</span>
                           </span>
@@ -279,6 +350,11 @@ export default async function PatientsPage({ searchParams }: PatientsPageProps) 
                             >
                               <Mail className="h-4 w-4 text-blue-600" />
                             </Link>
+                            <DuplicatePatientButton patientId={patient.id} />
+                            <TrashPatientButton
+                              patientId={patient.id}
+                              patientName={`${patient.firstName} ${patient.lastName}`}
+                            />
                           </div>
                         </td>
                         <td className="px-4 py-4">

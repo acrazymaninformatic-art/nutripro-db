@@ -11,6 +11,7 @@ import { HelpWidget } from './help-widget'
 import { PacienteDesktopNav, PacienteMobileNav } from './paciente-nav'
 import { NotificationCenter } from '@/components/notifications/notification-center'
 import { MotionToggleButton } from '@/components/ui/motion-toggle-button'
+import { ThemeToggleButton } from '@/components/ui/theme-settings-card'
 import { PageMotion } from '@/components/ui/page-motion'
 import { LEGAL_POLICY_VERSION, REQUIRED_PORTAL_CONSENTS } from '@/lib/legal'
 
@@ -220,6 +221,7 @@ export default async function PacienteLayout({
             </div>
 
             <div className="flex items-center gap-2.5">
+              <ThemeToggleButton className="hidden md:flex" />
               <MotionToggleButton className="hidden md:flex" />
               <NotificationCenter role="PATIENT" />
               <div className="flex items-center gap-2 text-xs text-slate-700 bg-white/90 border border-slate-200/80 px-3 py-1.5 rounded-full font-semibold shadow-2xs">
@@ -243,6 +245,26 @@ export default async function PacienteLayout({
             className="flex-1 overflow-y-auto p-4 pb-24 md:p-8 md:pb-8"
             data-gsap-scroll="patient"
           >
+            {/* Cabecera solo para impresión (A4 limpio del portal) */}
+            <div className="print-only hidden mb-6 border-b border-slate-300 pb-4">
+              <div className="flex items-start justify-between gap-6">
+                <div>
+                  <p className="text-lg font-black text-slate-900">Eva Vidal Nutrición</p>
+                  <p className="text-xs text-slate-600">
+                    Consulta Nutricional y Dietética · Gran Vía 12, Madrid
+                  </p>
+                  <p className="text-xs text-slate-600">
+                    info@evavidalnutricion.com · +34 644 123 767
+                  </p>
+                </div>
+                <div className="text-right text-xs text-slate-600">
+                  <p className="font-bold text-slate-900">{patientName}</p>
+                  <p>Documento del portal del paciente</p>
+                  <p>{new Date().toLocaleDateString('es-ES')}</p>
+                </div>
+              </div>
+            </div>
+
             <div className="max-w-6xl mx-auto animate-fade-in">
               <PageMotion>{children}</PageMotion>
             </div>
