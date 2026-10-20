@@ -8,6 +8,8 @@
     "postinstall": "prisma generate",
     "db:push": "prisma db push",
     "admin:password": "tsx scripts/reset-admin-password.ts",
+    "test": "vitest run",
+    "test:watch": "vitest",
     "test:security": "tsx scripts/test-security-suite.ts",
     "start": "next start",
     "lint": "eslint"
@@ -39,6 +41,7 @@
     "prisma": "6.4.1",
     "tailwindcss": "^4",
     "tsx": "^4.23.15",
-    "typescript": "^5"
+    "typescript": "^5",
+    "vitest": "^3.2.7"
   }
 }

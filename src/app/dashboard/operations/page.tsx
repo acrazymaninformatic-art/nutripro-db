@@ -1,4 +1,4 @@
-import { Activity, ArrowRight, CheckCircle2, ClipboardList, Clock, Database, Mail, ShieldAlert, ShieldCheck, Siren } from 'lucide-react'
+import { Activity, ArrowRight, CheckCircle2, ClipboardList, Clock, Database, ExternalLink, Mail, ShieldAlert, ShieldCheck, Siren } from 'lucide-react'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { requireUserId } from '@/lib/auth'
 import { prisma } from '@/lib/prisma'
@@ -201,8 +201,19 @@ export default async function OperationsPage() {
         {/* Registro de actividad sensible */}
         <Card className="rounded-3xl border-gray-200">
           <CardHeader className="pb-3 border-b border-gray-100 bg-gray-50/50">
-            <CardTitle className="text-base">Registro de actividad sensible</CardTitle>
-            <CardDescription className="text-xs">Trazabilidad de accesos y acciones auditadas.</CardDescription>
+            <div className="flex flex-wrap items-center justify-between gap-3">
+              <div>
+                <CardTitle className="text-base">Registro de actividad sensible</CardTitle>
+                <CardDescription className="text-xs">Trazabilidad de accesos y acciones auditadas.</CardDescription>
+              </div>
+              <Link
+                href="/dashboard/audit"
+                className="text-xs font-semibold text-blue-700 hover:underline inline-flex items-center gap-1"
+              >
+                Ver auditoría completa
+                <ExternalLink className="h-3.5 w-3.5" />
+              </Link>
+            </div>
           </CardHeader>
           <CardContent className="p-4 space-y-2">
             {recentAccess.length ? recentAccess.map(item => (

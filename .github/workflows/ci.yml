@@ -1,0 +1,50 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  quality:
+    name: Lint · Tipos · Tests · Build
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+
+    env:
+      AUTH_SECRET: ci-only-secret-please-do-not-use-in-production-0000
+      DATABASE_URL: postgresql://ci:ci@localhost:5432/evsoftware
+      NEXT_TELEMETRY_DISABLED: '1'
+
+    steps:
+      - name: Repositorio
+        uses: actions/checkout@v4
+
+      - name: Node 20
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+
+      - name: Instalar dependencias
+        run: npm ci
+
+      - name: Prisma generate
+        run: npx prisma generate
+
+      - name: Lint
+        run: npm run lint
+
+      - name: Comprobación de tipos
+        run: npx tsc --noEmit
+
+      - name: Tests del motor clínico
+        run: npm run test
+
+      - name: Build de producción
+        run: npm run build

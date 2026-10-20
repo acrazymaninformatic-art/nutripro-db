@@ -15,6 +15,7 @@ import {
   ChevronRight,
   Settings,
   ClipboardCheck,
+  History,
   LogOut,
   Mail,
   Activity,
@@ -39,6 +40,7 @@ const navItems: NavItem[] = [
   { name: 'Planes', href: '/dashboard/plans', icon: CalendarDays },
   { name: 'Envío de Correos', href: '/dashboard/emails', icon: Mail },
   { name: 'Control', href: '/dashboard/operations', icon: Activity },
+  { name: 'Auditoría', href: '/dashboard/audit', icon: History },
   { name: 'Calculadora', href: '/dashboard/calculator', icon: Calculator },
 ]
 
