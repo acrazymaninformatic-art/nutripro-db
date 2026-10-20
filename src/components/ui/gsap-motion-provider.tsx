@@ -181,6 +181,7 @@ export function GsapMotionProvider({ children }: { children: React.ReactNode }) 
           x: 0,
           y: 0,
           scale: 1,
+          opacity: 1,
           clearProps: 'transform,translate,opacity,visibility,willChange',
         })
       }
@@ -198,17 +199,19 @@ export function GsapMotionProvider({ children }: { children: React.ReactNode }) 
           return
         }
 
+        // Sin desplazamiento vertical: al subir o bajar, las cards se salían
+        // de su contenedor (quedaban cortadas por el scroll o montadas sobre
+        // el bloque siguiente). Solo escala y opacidad, que nunca desbordan.
         gsap.to(elements, {
           x: 0,
           y: 0,
           scale: 1,
-          duration: 0.72,
+          opacity: 1,
+          duration: 0.6,
           delay: Number((elements[0] as HTMLElement | undefined)?.dataset.gsapDelay || 0),
-          // Sin escalonado: las tarjetas sisters deben moverse a la vez, si no
-          // la rejilla queda desalineada durante la entrada.
-          ease: 'power3.out',
+          ease: 'power2.out',
           overwrite: 'auto',
-          clearProps: 'transform,translate,willChange',
+          clearProps: 'transform,translate,opacity,visibility,willChange',
         })
       }
 
@@ -274,12 +277,13 @@ export function GsapMotionProvider({ children }: { children: React.ReactNode }) 
           const scroller = getScrollContainer(element, root)
 
           if (isBelowFold(element, scroller)) {
-            // Nunca escondemos el contenido clínico: solo transform, el dato
-            // siempre es legible aunque el trigger no llegue a dispararse.
+            // Nunca escondemos el contenido clínico y nunca lo desplazamos:
+            // solo una escala muy leve y algo de opacidad, para que la card
+            // no se salga de su caja ni se monte sobre el bloque siguiente.
             gsap.set(element, {
-              y: 22,
-              scale: 0.975,
-              willChange: 'transform',
+              scale: 0.985,
+              opacity: 0.75,
+              willChange: 'transform,opacity',
             })
 
             const group = groups.get(scroller) || []
@@ -294,20 +298,18 @@ export function GsapMotionProvider({ children }: { children: React.ReactNode }) 
 
         if (motionDisabled) return
 
-        // Bloques ya visibles: en el enganche inmediato entran con un
-        // movimiento suave desde su propia posición, sin saltos. En el
-        // enganche diferido los dejamos quietos: ya están en pantalla y
-        // cualquier desplazamiento se perceives como un tirón.
+        // Bloques ya visibles: entran con un escalado suave, sin moverse en
+        // vertical (moverse hacia arriba o abajo los sacaba de su caja).
         if (visibleElements.length && mode === 'immediate') {
           gsap.fromTo(
             visibleElements,
-            { y: 10, scale: 0.995 },
+            { scale: 0.985, opacity: 0.75 },
             {
-              y: 0,
               scale: 1,
-              duration: 0.55,
+              opacity: 1,
+              duration: 0.5,
               ease: 'power2.out',
-              clearProps: 'transform,translate,willChange',
+              clearProps: 'transform,translate,opacity,visibility,willChange',
             }
           )
         }
@@ -455,15 +457,15 @@ export function GsapMotionProvider({ children }: { children: React.ReactNode }) 
         }
 
         if (pageTargets.length) {
+          // Solo fundido: el contenedor de la página tiene scroll propio, así
+          // que cualquier desplazamiento vertical lo recortaba por arriba.
           gsap.fromTo(
             pageTargets,
-            { autoAlpha: 0, y: 14 },
+            { autoAlpha: 0 },
             {
               autoAlpha: 1,
-              y: 0,
-              duration: 0.45,
+              duration: 0.4,
               ease: 'power2.out',
-              stagger: 0.03,
               clearProps: 'transform,translate,opacity,visibility,willChange',
             }
           )
@@ -472,12 +474,12 @@ export function GsapMotionProvider({ children }: { children: React.ReactNode }) 
         if (sidebarTargets.length) {
           gsap.fromTo(
             sidebarTargets,
-            { x: -20 },
+            { autoAlpha: 0 },
             {
-              x: 0,
-              duration: 0.62,
-              ease: 'power3.out',
-              clearProps: 'transform,translate,willChange',
+              autoAlpha: 1,
+              duration: 0.4,
+              ease: 'power2.out',
+              clearProps: 'transform,translate,opacity,visibility,willChange',
             }
           )
         }
@@ -485,12 +487,12 @@ export function GsapMotionProvider({ children }: { children: React.ReactNode }) 
         if (headerTargets.length) {
           gsap.fromTo(
             headerTargets,
-            { y: -10 },
+            { autoAlpha: 0 },
             {
-              y: 0,
-              duration: 0.52,
-              ease: 'power3.out',
-              clearProps: 'transform,translate,willChange',
+              autoAlpha: 1,
+              duration: 0.35,
+              ease: 'power2.out',
+              clearProps: 'transform,translate,opacity,visibility,willChange',
             }
           )
         }
@@ -498,13 +500,13 @@ export function GsapMotionProvider({ children }: { children: React.ReactNode }) 
         if (bannerTargets.length) {
           gsap.fromTo(
             bannerTargets,
-            { y: -8, scale: 0.99 },
+            { autoAlpha: 0, scale: 0.99 },
             {
-              y: 0,
+              autoAlpha: 1,
               scale: 1,
-              duration: 0.48,
-              ease: 'back.out(1.25)',
-              clearProps: 'transform,translate,willChange',
+              duration: 0.4,
+              ease: 'power2.out',
+              clearProps: 'transform,translate,opacity,visibility,willChange',
             }
           )
         }
@@ -512,12 +514,12 @@ export function GsapMotionProvider({ children }: { children: React.ReactNode }) 
         if (routeTitleTargets.length) {
           gsap.fromTo(
             routeTitleTargets,
-            { y: 5 },
+            { autoAlpha: 0 },
             {
-              y: 0,
-              duration: 0.34,
+              autoAlpha: 1,
+              duration: 0.3,
               ease: 'power2.out',
-              clearProps: 'transform,translate,willChange',
+              clearProps: 'transform,translate,opacity,visibility,willChange',
             }
           )
         }
@@ -525,13 +527,11 @@ export function GsapMotionProvider({ children }: { children: React.ReactNode }) 
         if (activeNavTargets.length) {
           gsap.fromTo(
             activeNavTargets,
-            { x: -5, scale: 0.985 },
+            { scale: 0.985 },
             {
-              x: 0,
               scale: 1,
-              duration: 0.42,
-              ease: 'back.out(1.45)',
-              stagger: 0.035,
+              duration: 0.35,
+              ease: 'power2.out',
               clearProps: 'transform,translate,willChange',
             }
           )
