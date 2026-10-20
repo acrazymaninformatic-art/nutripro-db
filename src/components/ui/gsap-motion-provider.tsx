@@ -181,7 +181,7 @@ export function GsapMotionProvider({ children }: { children: React.ReactNode }) 
           x: 0,
           y: 0,
           scale: 1,
-          clearProps: 'transform,opacity,visibility,willChange',
+          clearProps: 'transform,translate,opacity,visibility,willChange',
         })
       }
 
@@ -208,7 +208,7 @@ export function GsapMotionProvider({ children }: { children: React.ReactNode }) 
           // la rejilla queda desalineada durante la entrada.
           ease: 'power3.out',
           overwrite: 'auto',
-          clearProps: 'transform,willChange',
+          clearProps: 'transform,translate,willChange',
         })
       }
 
@@ -307,7 +307,7 @@ export function GsapMotionProvider({ children }: { children: React.ReactNode }) 
               scale: 1,
               duration: 0.55,
               ease: 'power2.out',
-              clearProps: 'transform,willChange',
+              clearProps: 'transform,translate,willChange',
             }
           )
         }
@@ -464,7 +464,7 @@ export function GsapMotionProvider({ children }: { children: React.ReactNode }) 
               duration: 0.45,
               ease: 'power2.out',
               stagger: 0.03,
-              clearProps: 'transform,opacity,visibility,willChange',
+              clearProps: 'transform,translate,opacity,visibility,willChange',
             }
           )
         }
@@ -477,7 +477,7 @@ export function GsapMotionProvider({ children }: { children: React.ReactNode }) 
               x: 0,
               duration: 0.62,
               ease: 'power3.out',
-              clearProps: 'transform,willChange',
+              clearProps: 'transform,translate,willChange',
             }
           )
         }
@@ -490,7 +490,7 @@ export function GsapMotionProvider({ children }: { children: React.ReactNode }) 
               y: 0,
               duration: 0.52,
               ease: 'power3.out',
-              clearProps: 'transform,willChange',
+              clearProps: 'transform,translate,willChange',
             }
           )
         }
@@ -504,7 +504,7 @@ export function GsapMotionProvider({ children }: { children: React.ReactNode }) 
               scale: 1,
               duration: 0.48,
               ease: 'back.out(1.25)',
-              clearProps: 'transform,willChange',
+              clearProps: 'transform,translate,willChange',
             }
           )
         }
@@ -517,7 +517,7 @@ export function GsapMotionProvider({ children }: { children: React.ReactNode }) 
               y: 0,
               duration: 0.34,
               ease: 'power2.out',
-              clearProps: 'transform,willChange',
+              clearProps: 'transform,translate,willChange',
             }
           )
         }
@@ -532,7 +532,7 @@ export function GsapMotionProvider({ children }: { children: React.ReactNode }) 
               duration: 0.42,
               ease: 'back.out(1.45)',
               stagger: 0.035,
-              clearProps: 'transform,willChange',
+              clearProps: 'transform,translate,willChange',
             }
           )
         }
@@ -566,7 +566,7 @@ export function GsapMotionProvider({ children }: { children: React.ReactNode }) 
                   y: 0,
                   duration: 0.26,
                   ease: 'power2.out',
-                  clearProps: 'transform,willChange',
+                  clearProps: 'transform,translate,willChange',
                 }
               )
             })
@@ -575,15 +575,17 @@ export function GsapMotionProvider({ children }: { children: React.ReactNode }) 
             .filter((element) => !boundModalElements.has(element))
             .forEach((element) => {
               boundModalElements.add(element)
+              // Sin escalado: un panel con scroll interno, al escalarlo, se ve
+              // recortado durante la entrada. Solo fundido + subida corta.
               gsap.fromTo(
                 element,
-                { y: 14, scale: 0.985 },
+                { y: 12, autoAlpha: 0 },
                 {
                   y: 0,
-                  scale: 1,
-                  duration: 0.42,
-                  ease: 'back.out(1.15)',
-                  clearProps: 'transform,willChange',
+                  autoAlpha: 1,
+                  duration: 0.32,
+                  ease: 'power2.out',
+                  clearProps: 'transform,translate,opacity,visibility,willChange',
                 }
               )
             })
@@ -672,7 +674,7 @@ export function GsapMotionProvider({ children }: { children: React.ReactNode }) 
           duration: 0.24,
           ease: 'power2.out',
           overwrite: 'auto',
-          clearProps: 'transform,willChange',
+          clearProps: 'transform,translate,willChange',
         })
       })
 

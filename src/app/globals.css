@@ -272,16 +272,10 @@ button, a, input, select, textarea {
 }
 
 /*
- * Tailwind v4 centra el diálogo con la propiedad `translate`
- * (`-translate-x-1/2 -translate-y-1/2`), no con `transform`. Si los keyframes
- * vuelven a aplicar un `translate(-50%, -50%)` en `transform`, el desplazamiento
- * se duplica y el modal queda cortado por la izquierda y por arriba.
+ * La entrada de los diálogos la controla GSAP (fundido + subida corta, sin
+ * escalado) para que un panel con scroll interno no se vea recortado. Aquí
+ * solo queda el overlay, que únicamente anima la opacidad.
  */
-@keyframes dialogIn {
-  from { opacity: 0; transform: scale(0.96); }
-  to { opacity: 1; transform: scale(1); }
-}
-
 @keyframes overlayIn {
   from { opacity: 0; }
   to { opacity: 1; }
@@ -306,7 +300,6 @@ button, a, input, select, textarea {
 .animate-glow-blue { animation: pulseGlowBlue 2.5s infinite ease-in-out; }
 .animate-glow-teal { animation: pulseGlowTeal 2.5s infinite ease-in-out; }
 .animate-pop-in { animation: popInSpring 0.45s cubic-bezier(0.34, 1.56, 0.64, 1) both; }
-.animate-dialog-in { animation: dialogIn 0.26s cubic-bezier(0.16, 1, 0.3, 1) both; }
 .animate-overlay-in { animation: overlayIn 0.2s ease-out both; }
 .animate-shake { animation: shake 0.35s ease-in-out both; }
 

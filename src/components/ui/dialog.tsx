@@ -169,36 +169,46 @@ const DialogContent = React.forwardRef<HTMLDivElement, DialogContentProps>(
 
     return (
       <DialogPortal>
-        <DialogOverlay onClick={handleClose} />
-        <div
-          ref={ref}
-          role="dialog"
-          aria-modal="true"
-          className={cn(
-            // Tailwind v4 centra con la propiedad `translate`; el keyframe
-            // `dialogIn` ya no aplica un translate propio en `transform`.
-            // `flex flex-col` (en lugar de `grid`) evita que una columna
-            // `auto` crezca con el contenido y desborde el panel, y
-            // `max-h` + scroll interno evitan que los modales largos (revisión
-            // de cuestionarios) queden cortados fuera del viewport.
-            'fixed left-1/2 top-1/2 z-50 flex w-[calc(100vw-2rem)] max-w-lg max-h-[calc(100vh-2rem)] flex-col overflow-y-auto overscroll-contain -translate-x-1/2 -translate-y-1/2 gap-4 border border-slate-200/90 bg-white p-6 shadow-2xl duration-200 sm:rounded-3xl',
-            'animate-dialog-in',
-            className
-          )}
-          data-gsap-modal
-          {...props}
+        {/*
+         * El panel vive dentro del overlay (que hace de contenedor flex) y se
+         * centra con márgenes automáticos, NO con `-translate-x-1/2`.
+         * Motivo: GSAP 3.13+ escribe la propiedad CSS `translate` al animar
+         * `x`/`y`, y eso pisaba el `-50%` de Tailwind v4, dejando el modal
+         * descuadrado durante la entrada (salía cortado y luego se colocaba
+         * bien). Con el centrado por márgenes no hay conflicto.
+         */}
+        <DialogOverlay
+          onClick={handleClose}
+          className="flex items-start justify-center overflow-y-auto overscroll-contain p-4"
         >
-          {children}
-          <button
-            type="button"
-            onClick={handleClose}
-            className="absolute right-4 top-4 rounded-xl p-2 text-slate-400 opacity-80 transition-[background-color,color,opacity] hover:bg-slate-100 hover:text-slate-700 hover:opacity-100 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
-            aria-label="Cerrar"
+          <div
+            ref={ref}
+            role="dialog"
+            aria-modal="true"
+            onClick={(event) => event.stopPropagation()}
+            className={cn(
+              // `flex flex-col` (en lugar de `grid`) evita que una columna
+              // `auto` crezca con el contenido y desborde el panel, y
+              // `max-h` + scroll interno evitan que los modales largos
+              // (revisión de cuestionarios) queden cortados fuera del viewport.
+              'relative z-10 my-auto flex w-[calc(100vw-2rem)] max-w-lg max-h-[calc(100vh-2rem)] flex-col overflow-y-auto overscroll-contain gap-4 border border-slate-200/90 bg-white p-6 shadow-2xl sm:rounded-3xl',
+              className
+            )}
+            data-gsap-modal
+            {...props}
           >
-            <X className="h-4 w-4" />
-            <span className="sr-only">Cerrar</span>
-          </button>
-        </div>
+            {children}
+            <button
+              type="button"
+              onClick={handleClose}
+              className="absolute right-4 top-4 rounded-xl p-2 text-slate-400 opacity-80 transition-[background-color,color,opacity] hover:bg-slate-100 hover:text-slate-700 hover:opacity-100 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
+              aria-label="Cerrar"
+            >
+              <X className="h-4 w-4" />
+              <span className="sr-only">Cerrar</span>
+            </button>
+          </div>
+        </DialogOverlay>
       </DialogPortal>
     )
   }
