@@ -204,7 +204,8 @@ export function GsapMotionProvider({ children }: { children: React.ReactNode }) 
           scale: 1,
           duration: 0.72,
           delay: Number((elements[0] as HTMLElement | undefined)?.dataset.gsapDelay || 0),
-          stagger: { each: 0.07, from: 'start' },
+          // Sin escalonado: las tarjetas sisters deben moverse a la vez, si no
+          // la rejilla queda desalineada durante la entrada.
           ease: 'power3.out',
           overwrite: 'auto',
           clearProps: 'transform,willChange',
@@ -306,7 +307,6 @@ export function GsapMotionProvider({ children }: { children: React.ReactNode }) 
               scale: 1,
               duration: 0.55,
               ease: 'power2.out',
-              stagger: { each: 0.04, from: 'start' },
               clearProps: 'transform,willChange',
             }
           )

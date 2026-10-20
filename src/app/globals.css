@@ -51,6 +51,23 @@ html {
   scroll-behavior: smooth;
 }
 
+/*
+ * Modales de contenido alto (citas, protocolos, recetas, cuestionarios...):
+ * se centran cuando caben en pantalla y, cuando no, el panel hace scroll
+ * interno para que el modal nunca quede cortado por arriba ni por abajo.
+ */
+.modal-backdrop {
+  align-items: flex-start;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+}
+
+.modal-backdrop > * {
+  margin-block: auto;
+  max-height: calc(100vh - 2rem);
+  overflow-y: auto;
+}
+
 body {
   background: var(--background);
   color: var(--foreground);

@@ -26,6 +26,7 @@ import {
   addSymptomLogAction,
   updateProtocolStatusAction,
 } from '@/lib/clinical/protocols/protocol-actions'
+import { ModalPortal } from '@/components/ui/modal-portal'
 
 interface PatientClinicalProtocolsCardProps {
   patientId: string
@@ -452,7 +453,7 @@ export function PatientClinicalProtocolsCard({
 
       {/* SYMPTOM LOG MODAL */}
       {symptomModalProtocolId && (
-        <div className="fixed inset-0 z-50 bg-black/40 backdrop-blur-xs flex items-center justify-center p-4">
+        <ModalPortal><div className="fixed inset-0 z-50 modal-backdrop bg-black/40 backdrop-blur-xs flex items-center justify-center p-4">
           <div className="bg-white rounded-3xl p-6 max-w-md w-full shadow-xl space-y-4 animate-in zoom-in-95">
             <h4 className="text-base font-bold text-gray-900 flex items-center gap-2">
               <Thermometer className="h-5 w-5 text-blue-600" />
@@ -552,7 +553,7 @@ export function PatientClinicalProtocolsCard({
               </Button>
             </div>
           </div>
-        </div>
+        </div></ModalPortal>
       )}
     </Card>
   )

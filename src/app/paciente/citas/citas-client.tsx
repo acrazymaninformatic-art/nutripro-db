@@ -17,6 +17,7 @@ import {
   HelpCircle,
 } from 'lucide-react'
 import { requestAppointmentAction, requestAppointmentChangeAction } from '../actions'
+import { ModalPortal } from '@/components/ui/modal-portal'
 
 interface AppointmentItem {
   id: string
@@ -361,7 +362,7 @@ export function CitasClient({ appointments, pendingRequests = [] }: Props) {
 
       {/* Modal Solicitar Cita */}
       {showRequestModal && (
-        <div className="fixed inset-0 z-50 bg-black/50 backdrop-blur-xs flex items-center justify-center p-4">
+        <ModalPortal><div className="fixed inset-0 z-50 modal-backdrop bg-black/50 backdrop-blur-xs flex items-center justify-center p-4">
           <div className="bg-white rounded-3xl p-6 max-w-md w-full shadow-2xl border border-gray-200 animate-in fade-in zoom-in-95 duration-150">
             <h3 className="text-lg font-bold text-gray-900 mb-1 flex items-center gap-2">
               <CalendarPlus className="w-5 h-5 text-blue-600" />
@@ -450,12 +451,12 @@ export function CitasClient({ appointments, pendingRequests = [] }: Props) {
               </div>
             </form>
           </div>
-        </div>
+        </div></ModalPortal>
       )}
 
       {/* Modal Cambio / Cancelación */}
       {actionModal && (
-        <div className="fixed inset-0 z-50 bg-black/50 backdrop-blur-xs flex items-center justify-center p-4">
+        <ModalPortal><div className="fixed inset-0 z-50 modal-backdrop bg-black/50 backdrop-blur-xs flex items-center justify-center p-4">
           <div className="bg-white rounded-3xl p-6 max-w-md w-full shadow-2xl border border-gray-200 animate-in fade-in zoom-in-95 duration-150">
             <h3 className="text-lg font-bold text-gray-900 mb-1">
               {actionModal.type === 'CHANGE' ? 'Solicitar Cambio de Fecha' : 'Solicitar Cancelación de Cita'}
@@ -503,7 +504,7 @@ export function CitasClient({ appointments, pendingRequests = [] }: Props) {
               </div>
             </form>
           </div>
-        </div>
+        </div></ModalPortal>
       )}
     </div>
   )

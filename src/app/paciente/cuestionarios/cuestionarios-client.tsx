@@ -17,6 +17,7 @@ import {
 } from 'lucide-react'
 import Link from 'next/link'
 import { signConsentAction } from '../actions'
+import { ModalPortal } from '@/components/ui/modal-portal'
 
 interface ConsentItem {
   id: string
@@ -225,7 +226,7 @@ export function CuestionariosClient({
 
       {/* Modal para Firmar en Pantalla */}
       {signingConsentId && (
-        <div className="fixed inset-0 z-50 bg-slate-950/40 backdrop-blur-md flex items-center justify-center p-4">
+        <ModalPortal><div className="fixed inset-0 z-50 modal-backdrop bg-slate-950/40 backdrop-blur-md flex items-center justify-center p-4">
           <div className="bg-white rounded-3xl p-6 sm:p-8 max-w-md w-full shadow-2xl border border-slate-200/90 animate-in fade-in zoom-in-95 duration-200">
             <div className="w-12 h-12 rounded-2xl bg-blue-50 text-blue-700 flex items-center justify-center mb-4 border border-blue-100 shadow-2xs">
               <FileSignature className="w-6 h-6 text-blue-600" />
@@ -272,7 +273,7 @@ export function CuestionariosClient({
               </div>
             </form>
           </div>
-        </div>
+        </div></ModalPortal>
       )}
     </div>
   )

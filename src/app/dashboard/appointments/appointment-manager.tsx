@@ -54,6 +54,7 @@ import {
 } from './actions'
 import { APPOINTMENT_TYPE_CONFIG } from '@/types'
 import { generateGoogleCalendarUrl } from '@/lib/calendar-utils'
+import { ModalPortal } from '@/components/ui/modal-portal'
 
 interface PatientOption {
   id: string
@@ -1626,8 +1627,8 @@ export function AppointmentManager({
 
       {/* APPOINTMENT DETAILS MODAL */}
       {selectedAppointment && (
-        <div
-          className="fixed inset-0 z-50 bg-black/50 backdrop-blur-xs flex items-center justify-center p-4 animate-in fade-in"
+        <ModalPortal><div
+          className="fixed inset-0 z-50 modal-backdrop bg-black/50 backdrop-blur-xs flex items-center justify-center p-4 animate-in fade-in"
           onClick={() => setSelectedAppointment(null)}
         >
           <div
@@ -1869,13 +1870,13 @@ export function AppointmentManager({
               </Button>
             </div>
           </div>
-        </div>
+        </div></ModalPortal>
       )}
 
       {/* NEW APPOINTMENT MODAL */}
       {isNewModalOpen && (
-        <div
-          className="fixed inset-0 z-50 bg-black/50 backdrop-blur-xs flex items-center justify-center p-4 animate-in fade-in"
+        <ModalPortal><div
+          className="fixed inset-0 z-50 modal-backdrop bg-black/50 backdrop-blur-xs flex items-center justify-center p-4 animate-in fade-in"
           onClick={() => setIsNewModalOpen(false)}
         >
           <div
@@ -2079,7 +2080,7 @@ export function AppointmentManager({
               </div>
             </form>
           </div>
-        </div>
+        </div></ModalPortal>
       )}
     </div>
   )

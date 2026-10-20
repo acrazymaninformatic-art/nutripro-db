@@ -7,6 +7,7 @@ import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
 import { Input } from '@/components/ui/input'
 import { FoodImage } from '@/components/nutrition/food-image'
+import { ModalPortal } from '@/components/ui/modal-portal'
 import {
   ChefHat,
   Plus,
@@ -533,8 +534,9 @@ export function RecipesClient({ initialRecipes }: RecipesClientProps) {
           INTERACTIVE RECIPE DETAIL MODAL (No overlapping, zero scroll artifacts)
           ========================================================================= */}
       {selectedRecipe && modalNutrients && (
+        <ModalPortal>
         <div
-          className="fixed inset-0 z-50 bg-black/60 backdrop-blur-xs flex items-center justify-center p-4 animate-in fade-in-50 duration-200"
+          className="fixed inset-0 z-50 modal-backdrop bg-black/60 backdrop-blur-xs flex items-center justify-center p-4 animate-in fade-in-50 duration-200"
           onClick={() => setSelectedRecipe(null)}
         >
           <div
@@ -755,6 +757,7 @@ export function RecipesClient({ initialRecipes }: RecipesClientProps) {
             </div>
           </div>
         </div>
+        </ModalPortal>
       )}
     </div>
   )

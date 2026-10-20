@@ -35,6 +35,7 @@ import { getFoodImage, getRecipeForFood, FALLBACK_FOOD_SVG, type ClinicalRecipe,
 import { FOOD_EXCHANGE_GROUPS } from '@/lib/nutrition/exchange-system'
 import { PrePublishChecklistModal } from './pre-publish-checklist-modal'
 import { ExchangeGuide } from '@/components/nutrition/exchange-guide'
+import { ModalPortal } from '@/components/ui/modal-portal'
 
 interface PlanViewerProps {
   plan: any
@@ -1159,7 +1160,7 @@ export function PlanViewer({ plan }: PlanViewerProps) {
           MODAL DE RECETA CULINARIA CLÍNICA INTERACTIVA
           ========================================================================= */}
       {selectedRecipe && (
-        <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-xs flex items-center justify-center p-4 print:hidden animate-in fade-in-50 duration-200">
+        <ModalPortal><div className="fixed inset-0 z-50 modal-backdrop bg-black/60 backdrop-blur-xs flex items-center justify-center p-4 print:hidden animate-in fade-in-50 duration-200">
           <div className="bg-white rounded-3xl shadow-2xl max-w-lg w-full max-h-[90vh] overflow-y-auto border border-gray-200 overflow-hidden">
             {/* Foto de cabecera de la receta */}
             <div className="relative h-48 w-full bg-gray-100 overflow-hidden">
@@ -1275,7 +1276,7 @@ export function PlanViewer({ plan }: PlanViewerProps) {
               </div>
             </div>
           </div>
-        </div>
+        </div></ModalPortal>
       )}
     </div>
   )

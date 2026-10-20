@@ -28,6 +28,7 @@ import {
 import Link from 'next/link'
 import { getFoodImage, FALLBACK_FOOD_SVG } from '@/lib/nutrition'
 import { PlanDossierPdf } from '@/components/nutrition/plan-dossier-pdf'
+import { ModalPortal } from '@/components/ui/modal-portal'
 
 interface FoodItem {
   id: number
@@ -924,7 +925,7 @@ export function PlanClient({ plan, visibleRecipes }: Props) {
 
       {/* Modal Ficha de Receta Interactiva con Ingredientes y Modo de Preparación */}
       {selectedRecipe && (
-        <div className="fixed inset-0 z-50 bg-slate-950/60 backdrop-blur-sm flex items-center justify-center p-4">
+        <ModalPortal><div className="fixed inset-0 z-50 modal-backdrop bg-slate-950/60 backdrop-blur-sm flex items-center justify-center p-4">
           <div className="bg-white rounded-3xl p-6 sm:p-8 max-w-lg w-full shadow-2xl border border-slate-200/90 overflow-hidden animate-in fade-in zoom-in-95 duration-150 max-h-[88vh] flex flex-col">
             <div className="flex items-center justify-between pb-3.5 border-b border-slate-100 mb-4">
               <div className="flex items-center gap-2.5 min-w-0">
@@ -1016,7 +1017,7 @@ export function PlanClient({ plan, visibleRecipes }: Props) {
               </Button>
             </div>
           </div>
-        </div>
+        </div></ModalPortal>
       )}
       </div>
 

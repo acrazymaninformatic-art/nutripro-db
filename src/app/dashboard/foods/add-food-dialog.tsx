@@ -8,6 +8,7 @@ import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Select } from '@/components/ui/select'
 import { Plus, X, Apple, Loader2 } from 'lucide-react'
+import { ModalPortal } from '@/components/ui/modal-portal'
 
 export function AddFoodDialog({ categories }: { categories: string[] }) {
   const router = useRouter()
@@ -41,7 +42,7 @@ export function AddFoodDialog({ categories }: { categories: string[] }) {
   }
 
   return (
-    <div className="fixed inset-0 z-50 bg-black/50 flex items-center justify-center p-4">
+    <ModalPortal><div className="fixed inset-0 z-50 modal-backdrop bg-black/50 flex items-center justify-center p-4">
       <div className="bg-white rounded-xl shadow-xl max-w-lg w-full max-h-[90vh] overflow-y-auto animate-in fade-in-50 zoom-in-95">
         <form onSubmit={handleSubmit} noValidate>
           <div className="p-6 border-b flex items-center justify-between">
@@ -141,6 +142,6 @@ export function AddFoodDialog({ categories }: { categories: string[] }) {
           </div>
         </form>
       </div>
-    </div>
+    </div></ModalPortal>
   )
 }

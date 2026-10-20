@@ -16,6 +16,7 @@ import {
 } from 'lucide-react'
 import { CLINICAL_PROTOCOLS } from '@/lib/clinical/protocols/protocols-registry'
 import { addSymptomLogAction } from '@/lib/clinical/protocols/protocol-actions'
+import { ModalPortal } from '@/components/ui/modal-portal'
 
 interface PatientProtocolCardProps {
   protocol: any
@@ -177,7 +178,7 @@ export function PatientProtocolCard({ protocol }: PatientProtocolCardProps) {
 
       {/* SYMPTOM LOGGING MODAL */}
       {showLogModal && (
-        <div className="fixed inset-0 z-50 bg-black/40 backdrop-blur-xs flex items-center justify-center p-4">
+        <ModalPortal><div className="fixed inset-0 z-50 modal-backdrop bg-black/40 backdrop-blur-xs flex items-center justify-center p-4">
           <form
             onSubmit={handleSaveSymptom}
             className="bg-white rounded-3xl p-6 max-w-md w-full shadow-xl space-y-4 animate-in zoom-in-95"
@@ -284,7 +285,7 @@ export function PatientProtocolCard({ protocol }: PatientProtocolCardProps) {
               </Button>
             </div>
           </form>
-        </div>
+        </div></ModalPortal>
       )}
     </Card>
   )
