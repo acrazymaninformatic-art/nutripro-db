@@ -308,7 +308,7 @@ export function PlanClient({ plan, visibleRecipes }: Props) {
         <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
           <div className="space-y-1.5">
             <div className="flex items-center gap-2 flex-wrap">
-              <Badge variant="teal" className="text-xs font-bold rounded-full">
+              <Badge variant="default" className="text-xs font-bold rounded-full">
                 Plan Activo Publicado
               </Badge>
               {plan.targetKcal > 0 && !plan.hideCaloriesTCA && (
@@ -496,7 +496,7 @@ export function PlanClient({ plan, visibleRecipes }: Props) {
                           </Badge>
                         )}
                         {meal.timingType === 'POST_WORKOUT' && (
-                          <Badge className="bg-emerald-100 text-emerald-900 border-0 text-3xs font-black rounded-full">
+                          <Badge className="bg-blue-100 text-blue-900 border-0 text-3xs font-black rounded-full">
                             🏋️ Post-Entreno
                           </Badge>
                         )}

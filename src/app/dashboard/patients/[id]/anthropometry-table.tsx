@@ -102,7 +102,7 @@ export function AnthropometryTable({ patientId, measurements }: Props) {
                         onClick={() => handleToggle(m.id, m.isPublishedToPatient)}
                         className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-2xs font-bold border transition-all ${
                           m.isPublishedToPatient
-                            ? 'bg-emerald-50 text-emerald-800 border-emerald-300 hover:bg-emerald-100'
+                            ? 'bg-blue-50 text-blue-800 border-blue-300 hover:bg-blue-100'
                             : 'bg-gray-100 text-gray-600 border-gray-300 hover:bg-gray-200'
                         }`}
                         title="Haz clic para publicar u ocultar esta medición en el portal del paciente"
@@ -111,7 +111,7 @@ export function AnthropometryTable({ patientId, measurements }: Props) {
                           <Loader2 className="w-3 h-3 animate-spin" />
                         ) : m.isPublishedToPatient ? (
                           <>
-                            <Eye className="w-3 h-3 text-emerald-600" />
+                            <Eye className="w-3 h-3 text-blue-600" />
                             <span>Visible</span>
                           </>
                         ) : (

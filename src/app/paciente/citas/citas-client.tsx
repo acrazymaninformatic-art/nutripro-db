@@ -57,7 +57,7 @@ const APPOINTMENT_TYPE_META: Record<string, { label: string; color: string; dura
 }
 
 const STATUS_LABELS: Record<string, { label: string; badgeClass: string }> = {
-  CONFIRMED: { label: 'Confirmada', badgeClass: 'bg-emerald-100 text-emerald-800 border-emerald-200' },
+  CONFIRMED: { label: 'Confirmada', badgeClass: 'bg-blue-100 text-blue-800 border-blue-200' },
   REQUESTED: { label: 'En revisión por Eva', badgeClass: 'bg-amber-100 text-amber-900 border-amber-300' },
   RESCHEDULE_REQUESTED: { label: 'Cambio solicitado', badgeClass: 'bg-blue-100 text-blue-900 border-blue-300' },
   CANCEL_REQUESTED: { label: 'Cancelación solicitada', badgeClass: 'bg-rose-100 text-rose-900 border-rose-300' },
@@ -117,7 +117,7 @@ export function CitasClient({ appointments, pendingRequests = [] }: Props) {
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 bg-white/95 backdrop-blur-md p-6 rounded-3xl border border-slate-200/80 shadow-xs hover-lift animate-slide-up">
         <div>
           <h2 className="text-xl font-black text-slate-900 flex items-center gap-2.5">
-            <Calendar className="w-5 h-5 text-teal-600" />
+            <Calendar className="w-5 h-5 text-blue-600" />
             <span>Mis Citas y Revisiones</span>
           </h2>
           <p className="text-xs text-slate-500 mt-1">
@@ -127,7 +127,7 @@ export function CitasClient({ appointments, pendingRequests = [] }: Props) {
 
         <Button
           onClick={() => setShowRequestModal(true)}
-          className="rounded-2xl bg-teal-600 hover:bg-teal-700 text-white font-bold text-xs gap-2 py-5 shadow-xs shrink-0 btn-tactile hover-lift"
+          className="rounded-2xl bg-blue-600 hover:bg-blue-700 text-white font-bold text-xs gap-2 py-5 shadow-xs shrink-0 btn-tactile hover-lift"
         >
           <CalendarPlus className="w-4 h-4" />
           <span>Solicitar Cita</span>
@@ -255,7 +255,7 @@ export function CitasClient({ appointments, pendingRequests = [] }: Props) {
                         </>
                       ) : (
                         <>
-                          <MapPin className="w-4 h-4 text-emerald-600 shrink-0" />
+                          <MapPin className="w-4 h-4 text-blue-600 shrink-0" />
                           <span>{app.location || 'Consulta Presencial'}</span>
                         </>
                       )}

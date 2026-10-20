@@ -91,7 +91,7 @@ export default async function PacienteEvolucionPage() {
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 bg-white glass-card hover-lift p-6 sm:p-7 rounded-3xl border-slate-200/80 shadow-xs animate-slide-up">
         <div>
           <h1 className="text-xl sm:text-2xl font-extrabold text-slate-900 tracking-tight flex items-center gap-2.5">
-            <div className="w-9 h-9 rounded-2xl bg-teal-50 text-teal-700 flex items-center justify-center shadow-2xs">
+            <div className="w-9 h-9 rounded-2xl bg-blue-50 text-blue-700 flex items-center justify-center shadow-2xs">
               <TrendingUp className="w-5 h-5" />
             </div>
             <span>Mi Evolución y Composición Corporal</span>
@@ -159,7 +159,7 @@ export default async function PacienteEvolucionPage() {
             </span>
             <div className="text-2xl font-mono tabular-nums font-black text-slate-900 mt-1">
               {weightChange !== null ? (
-                <span className={weightChange <= 0 ? 'text-teal-600' : 'text-emerald-600'}>
+                <span className={weightChange <= 0 ? 'text-blue-600' : 'text-blue-600'}>
                   {weightChange > 0 ? `+${weightChange}` : weightChange} kg
                 </span>
               ) : (

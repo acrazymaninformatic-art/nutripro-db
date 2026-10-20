@@ -273,7 +273,7 @@ export function HelpWidget() {
                       type="button"
                       onClick={handleFinishTour}
                       size="sm"
-                      className="rounded-2xl bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs gap-1 shadow-sm"
+                      className="rounded-2xl bg-blue-600 hover:bg-blue-700 text-white font-bold text-xs gap-1 shadow-sm"
                     >
                       <CheckCircle2 className="w-4 h-4" />
                       <span>¡Empezar a usar mi portal!</span>

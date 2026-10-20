@@ -198,17 +198,17 @@ export function PatientHeaderAlerts({ patient, drugAlertsCount }: PatientHeaderA
     <div className="space-y-3">
       {/* 1. Alerta de Alta Clínica / Cierre de Seguimiento */}
       {patient.isDischarged && (
-        <div className="p-4 rounded-3xl bg-emerald-50 border-2 border-emerald-300 text-emerald-950 flex flex-col sm:flex-row sm:items-center justify-between gap-3 shadow-xs">
+        <div className="p-4 rounded-3xl bg-blue-50 border-2 border-blue-300 text-blue-950 flex flex-col sm:flex-row sm:items-center justify-between gap-3 shadow-xs">
           <div className="flex items-center gap-3">
-            <div className="p-2.5 bg-emerald-200 text-emerald-900 rounded-2xl">
+            <div className="p-2.5 bg-blue-200 text-blue-900 rounded-2xl">
               <FileCheck className="h-5 w-5" />
             </div>
             <div>
               <p className="font-bold text-sm flex items-center gap-2">
                 <span>Alta Clínica Tramitada (Cierre de Seguimiento)</span>
-                <Badge className="bg-emerald-600 text-white font-bold rounded-full text-2xs">ALTA</Badge>
+                <Badge className="bg-blue-600 text-white font-bold rounded-full text-2xs">ALTA</Badge>
               </p>
-              <p className="text-xs text-emerald-800">
+              <p className="text-xs text-blue-800">
                 {patient.dischargedAt && `Fecha de alta: ${new Date(patient.dischargedAt).toLocaleDateString('es-ES')}. `}
                 {patient.dischargeSummary || 'Objetivos nutricionales y de composición corporal alcanzados con éxito.'}
               </p>
@@ -219,7 +219,7 @@ export function PatientHeaderAlerts({ patient, drugAlertsCount }: PatientHeaderA
             variant="outline"
             onClick={handleReopen}
             disabled={loading}
-            className="rounded-2xl border-emerald-400 bg-white text-emerald-900 font-bold hover:bg-emerald-100 shrink-0"
+            className="rounded-2xl border-blue-400 bg-white text-blue-900 font-bold hover:bg-blue-100 shrink-0"
           >
             <RotateCcw className="h-3.5 w-3.5 mr-1" />
             Reabrir Seguimiento
@@ -233,7 +233,7 @@ export function PatientHeaderAlerts({ patient, drugAlertsCount }: PatientHeaderA
           <div className="flex items-center gap-2">
             <span className="text-[10px] font-bold text-gray-400 uppercase tracking-wider">Cuestionario:</span>
             {patient.questionnaireStatus === 'COMPLETED' ? (
-              <Badge className="bg-emerald-100 text-emerald-900 border border-emerald-300 font-bold px-2.5 py-0.5 rounded-full text-2xs">
+              <Badge className="bg-blue-100 text-blue-900 border border-blue-300 font-bold px-2.5 py-0.5 rounded-full text-2xs">
                 ✓ Hecho (Completado)
               </Badge>
             ) : patient.questionnaireStatus === 'IN_PROGRESS' ? (
@@ -256,7 +256,7 @@ export function PatientHeaderAlerts({ patient, drugAlertsCount }: PatientHeaderA
           <div className="flex items-center gap-2">
             <span className="text-[10px] font-bold text-gray-400 uppercase tracking-wider">Consentimiento RGPD:</span>
             {patient.consentStatus === 'COMPLETED' ? (
-              <Badge className="bg-emerald-100 text-emerald-900 border border-emerald-300 font-bold px-2.5 py-0.5 rounded-full text-2xs">
+              <Badge className="bg-blue-100 text-blue-900 border border-blue-300 font-bold px-2.5 py-0.5 rounded-full text-2xs">
                 ✓ Firmado digitalmente
               </Badge>
             ) : patient.consentStatus === 'IN_PROGRESS' ? (
@@ -291,7 +291,7 @@ export function PatientHeaderAlerts({ patient, drugAlertsCount }: PatientHeaderA
       <div className="grid grid-cols-1 md:grid-cols-4 gap-2.5">
         {/* Alergias & Intolerancias */}
         <div className="p-3 bg-white rounded-2xl border border-gray-200 shadow-2xs flex items-center gap-2.5">
-          <div className={`p-2 rounded-xl shrink-0 ${patient.allergies ? 'bg-rose-100 text-rose-700' : 'bg-emerald-100 text-emerald-700'}`}>
+          <div className={`p-2 rounded-xl shrink-0 ${patient.allergies ? 'bg-rose-100 text-rose-700' : 'bg-blue-100 text-blue-700'}`}>
             <AlertTriangle className="h-4 w-4" />
           </div>
           <div className="min-w-0">
@@ -330,7 +330,7 @@ export function PatientHeaderAlerts({ patient, drugAlertsCount }: PatientHeaderA
 
         {/* Interacciones Fármaco-Nutriente */}
         <div className="p-3 bg-white rounded-2xl border border-gray-200 shadow-2xs flex items-center gap-2.5">
-          <div className={`p-2 rounded-xl shrink-0 ${drugAlertsCount > 0 ? 'bg-rose-100 text-rose-700' : 'bg-emerald-100 text-emerald-700'}`}>
+          <div className={`p-2 rounded-xl shrink-0 ${drugAlertsCount > 0 ? 'bg-rose-100 text-rose-700' : 'bg-blue-100 text-blue-700'}`}>
             <ShieldAlert className="h-4 w-4" />
           </div>
           <div className="min-w-0">
@@ -351,7 +351,7 @@ export function PatientHeaderAlerts({ patient, drugAlertsCount }: PatientHeaderA
                 <Target className="h-4 w-4 text-blue-600" />
                 <h3 className="text-sm font-bold text-gray-900">Objetivo Clínico de Peso y Ritmo Semanal</h3>
                 {isTargetReached && (
-                  <Badge className="bg-emerald-600 text-white font-bold rounded-full text-2xs animate-pulse">
+                  <Badge className="bg-blue-600 text-white font-bold rounded-full text-2xs animate-pulse">
                     🎉 ¡OBJETIVO ALCANZADO!
                   </Badge>
                 )}
@@ -388,7 +388,7 @@ export function PatientHeaderAlerts({ patient, drugAlertsCount }: PatientHeaderA
                   size="sm"
                   variant="outline"
                   onClick={() => setIsDischargeModalOpen(true)}
-                  className="rounded-2xl text-xs font-bold border-emerald-300 bg-emerald-50/50 text-emerald-800 hover:bg-emerald-100"
+                  className="rounded-2xl text-xs font-bold border-blue-300 bg-blue-50/50 text-blue-800 hover:bg-blue-100"
                 >
                   <FileCheck className="h-3.5 w-3.5 mr-1" />
                   Alta / Cierre
@@ -408,7 +408,7 @@ export function PatientHeaderAlerts({ patient, drugAlertsCount }: PatientHeaderA
               <div className="w-full bg-gray-100 rounded-full h-2.5 overflow-hidden">
                 <div
                   className={`h-2.5 rounded-full transition-all duration-500 ${
-                    progressPct >= 100 ? 'bg-emerald-500' : 'bg-blue-600'
+                    progressPct >= 100 ? 'bg-blue-500' : 'bg-blue-600'
                   }`}
                   style={{ width: `${progressPct}%` }}
                 />
@@ -533,7 +533,7 @@ export function PatientHeaderAlerts({ patient, drugAlertsCount }: PatientHeaderA
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4">
           <div className="bg-white rounded-3xl p-6 max-w-md w-full space-y-4 shadow-xl border border-gray-200">
             <div className="flex items-center gap-3">
-              <div className="p-3 bg-emerald-100 text-emerald-800 rounded-2xl">
+              <div className="p-3 bg-blue-100 text-blue-800 rounded-2xl">
                 <FileCheck className="h-6 w-6" />
               </div>
               <div>
@@ -559,7 +559,7 @@ export function PatientHeaderAlerts({ patient, drugAlertsCount }: PatientHeaderA
                 onChange={(e) => setDischargeNotes(e.target.value)}
                 rows={3}
                 placeholder="Indica las recomendaciones finales, pautas de mantenimiento y valoración del éxito del tratamiento..."
-                className="w-full text-xs p-3 rounded-xl border border-gray-300 focus:outline-none focus:ring-2 focus:ring-emerald-500"
+                className="w-full text-xs p-3 rounded-xl border border-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-500"
               />
             </div>
 
@@ -575,7 +575,7 @@ export function PatientHeaderAlerts({ patient, drugAlertsCount }: PatientHeaderA
                 size="sm"
                 onClick={handleDischarge}
                 disabled={loading}
-                className="bg-emerald-600 hover:bg-emerald-700 text-white font-bold"
+                className="bg-blue-600 hover:bg-blue-700 text-white font-bold"
               >
                 {loading ? 'Tramitando...' : 'Confirmar Alta Clínica'}
               </Button>

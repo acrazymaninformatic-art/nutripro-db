@@ -100,10 +100,10 @@ export function ConfigClient({ userEmail, pendingRequests }: Props) {
     <div className="space-y-6 max-w-4xl">
       {/* Header */}
       <div className="glass-panel p-6 sm:p-7 rounded-3xl border border-slate-200/80 shadow-xs relative overflow-hidden">
-        <div className="absolute top-0 right-0 w-64 h-64 bg-teal-500/5 rounded-full blur-3xl pointer-events-none -mr-16 -mt-16" />
+        <div className="absolute top-0 right-0 w-64 h-64 bg-blue-500/5 rounded-full blur-3xl pointer-events-none -mr-16 -mt-16" />
         <div className="flex items-center gap-3.5">
-          <div className="w-11 h-11 rounded-2xl bg-teal-50 text-teal-700 flex items-center justify-center shrink-0 border border-teal-100 shadow-2xs">
-            <KeyRound className="w-5 h-5 text-teal-600" />
+          <div className="w-11 h-11 rounded-2xl bg-blue-50 text-blue-700 flex items-center justify-center shrink-0 border border-blue-100 shadow-2xs">
+            <KeyRound className="w-5 h-5 text-blue-600" />
           </div>
           <div>
             <h1 className="text-xl sm:text-2xl font-bold text-slate-900 tracking-tight">
@@ -123,7 +123,7 @@ export function ConfigClient({ userEmail, pendingRequests }: Props) {
       <Card className="rounded-3xl border-slate-200/80 shadow-xs overflow-hidden">
         <CardHeader className="bg-slate-50/60 pb-3.5 border-b border-slate-100">
           <CardTitle className="text-base font-bold text-slate-900 flex items-center gap-2">
-            <KeyRound className="w-4 h-4 text-teal-600" />
+            <KeyRound className="w-4 h-4 text-blue-600" />
             <span>Seguridad y Contraseña</span>
           </CardTitle>
           <CardDescription className="text-xs text-slate-500">
@@ -138,8 +138,8 @@ export function ConfigClient({ userEmail, pendingRequests }: Props) {
               </div>
             )}
             {passwordState.success && (
-              <div className="p-3.5 rounded-2xl bg-emerald-50 border border-emerald-200 text-xs text-emerald-800 font-medium flex items-center gap-2">
-                <CheckCircle2 className="w-4 h-4 shrink-0 text-emerald-600" />
+              <div className="p-3.5 rounded-2xl bg-blue-50 border border-blue-200 text-xs text-blue-800 font-medium flex items-center gap-2">
+                <CheckCircle2 className="w-4 h-4 shrink-0 text-blue-600" />
                 <span>{passwordState.success}</span>
               </div>
             )}
@@ -180,7 +180,7 @@ export function ConfigClient({ userEmail, pendingRequests }: Props) {
             <Button
               type="submit"
               disabled={isPendingPassword}
-              className="rounded-2xl bg-teal-600 hover:bg-teal-700 text-white font-bold text-xs gap-2 shadow-xs transition-all active:scale-[0.98] h-10 px-5"
+              className="rounded-2xl bg-blue-600 hover:bg-blue-700 text-white font-bold text-xs gap-2 shadow-xs transition-all active:scale-[0.98] h-10 px-5"
             >
               {isPendingPassword && <Loader2 className="w-3.5 h-3.5 animate-spin" />}
               <span>Actualizar contraseña</span>
@@ -193,7 +193,7 @@ export function ConfigClient({ userEmail, pendingRequests }: Props) {
       <Card className="rounded-3xl border-slate-200/80 shadow-xs overflow-hidden">
         <CardHeader className="bg-slate-50/60 pb-3.5 border-b border-slate-100">
           <CardTitle className="text-base font-bold text-slate-900 flex items-center gap-2">
-            <Download className="w-4 h-4 text-emerald-600" />
+            <Download className="w-4 h-4 text-blue-600" />
             <span>Descarga y Portabilidad de Datos (RGPD Art. 20)</span>
           </CardTitle>
           <CardDescription className="text-xs text-slate-500">
@@ -213,7 +213,7 @@ export function ConfigClient({ userEmail, pendingRequests }: Props) {
             onClick={handleDownloadData}
             disabled={downloading}
             variant="outline"
-            className="rounded-2xl border-emerald-200 text-emerald-800 hover:bg-emerald-50 font-bold text-xs gap-2 shrink-0 h-10 px-4 shadow-2xs transition-all active:scale-[0.98]"
+            className="rounded-2xl border-blue-200 text-blue-800 hover:bg-blue-50 font-bold text-xs gap-2 shrink-0 h-10 px-4 shadow-2xs transition-all active:scale-[0.98]"
           >
             {downloading ? <Loader2 className="w-4 h-4 animate-spin" /> : <FileDown className="w-4 h-4" />}
             <span>Descargar mis datos (.json)</span>
@@ -246,8 +246,8 @@ export function ConfigClient({ userEmail, pendingRequests }: Props) {
         </CardHeader>
         <CardContent className="p-6 space-y-4">
           {erasureSuccess && (
-            <div className="p-3.5 rounded-2xl bg-emerald-50 border border-emerald-200 text-xs text-emerald-800 font-medium flex items-center gap-2">
-              <CheckCircle2 className="w-4 h-4 shrink-0 text-emerald-600" />
+            <div className="p-3.5 rounded-2xl bg-blue-50 border border-blue-200 text-xs text-blue-800 font-medium flex items-center gap-2">
+              <CheckCircle2 className="w-4 h-4 shrink-0 text-blue-600" />
               <span>{erasureSuccess}</span>
             </div>
           )}

@@ -62,8 +62,8 @@ export function DeletePatientButton({
         aria-label="Restaurar de Papelera"
         className={
           iconOnly
-            ? 'w-9 h-9 p-0 rounded-xl border-emerald-300 bg-emerald-50 text-emerald-800 hover:bg-emerald-100 font-bold shadow-2xs flex items-center justify-center transition-all active:scale-[0.96] shrink-0'
-            : 'flex items-center gap-1.5 border-emerald-300 bg-emerald-50 text-emerald-800 hover:bg-emerald-100 font-bold rounded-2xl'
+            ? 'w-9 h-9 p-0 rounded-xl border-blue-300 bg-blue-50 text-blue-800 hover:bg-blue-100 font-bold shadow-2xs flex items-center justify-center transition-all active:scale-[0.96] shrink-0'
+            : 'flex items-center gap-1.5 border-blue-300 bg-blue-50 text-blue-800 hover:bg-blue-100 font-bold rounded-2xl'
         }
       >
         {loading ? <Loader2 className="h-4 w-4 animate-spin" /> : <RotateCcw className="h-4 w-4" />}

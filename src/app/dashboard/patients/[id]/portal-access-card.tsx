@@ -132,7 +132,7 @@ export function PortalAccessCard({
                     variant="outline"
                     className={`text-2xs font-bold rounded-full ${
                       portalAccessEnabled
-                        ? 'bg-emerald-50 text-emerald-800 border-emerald-300'
+                        ? 'bg-blue-50 text-blue-800 border-blue-300'
                         : 'bg-red-50 text-red-800 border-red-300'
                     }`}
                   >
@@ -150,7 +150,7 @@ export function PortalAccessCard({
           <div className="shrink-0">
             {hasAccount ? (
               portalAccessEnabled ? (
-                <span className="inline-flex items-center gap-1.5 text-xs font-semibold text-emerald-700 bg-emerald-50 px-3 py-1 rounded-full border border-emerald-200">
+                <span className="inline-flex items-center gap-1.5 text-xs font-semibold text-blue-700 bg-blue-50 px-3 py-1 rounded-full border border-blue-200">
                   <UserCheck className="w-3.5 h-3.5" />
                   <span>Permitido</span>
                 </span>
@@ -251,7 +251,7 @@ export function PortalAccessCard({
                   size="sm"
                   disabled={loading}
                   onClick={() => handleToggle(true)}
-                  className="rounded-xl border-emerald-300 text-emerald-700 hover:bg-emerald-50 hover:text-emerald-800 font-semibold text-xs gap-1.5"
+                  className="rounded-xl border-blue-300 text-blue-700 hover:bg-blue-50 hover:text-blue-800 font-semibold text-xs gap-1.5"
                 >
                   <Unlock className="w-3.5 h-3.5" />
                   <span>Reactivar acceso al portal</span>
@@ -285,13 +285,13 @@ export function PortalAccessCard({
 
         {/* Display generated one-time link */}
         {inviteUrl && (
-          <div className="p-4 bg-emerald-50 border-2 border-emerald-300 rounded-2xl space-y-2 animate-in fade-in">
+          <div className="p-4 bg-blue-50 border-2 border-blue-300 rounded-2xl space-y-2 animate-in fade-in">
             <div className="flex items-center justify-between">
-              <span className="text-xs font-bold text-emerald-950 flex items-center gap-1.5">
-                <Clock className="w-3.5 h-3.5 text-emerald-700" />
+              <span className="text-xs font-bold text-blue-950 flex items-center gap-1.5">
+                <Clock className="w-3.5 h-3.5 text-blue-700" />
                 <span>Enlace de un solo uso generado (válido por 24 horas):</span>
               </span>
-              <span className="text-3xs font-black uppercase tracking-wider text-emerald-800 bg-emerald-100 px-2 py-0.5 rounded-full">
+              <span className="text-3xs font-black uppercase tracking-wider text-blue-800 bg-blue-100 px-2 py-0.5 rounded-full">
                 Caduca en 24h
               </span>
             </div>
@@ -300,18 +300,18 @@ export function PortalAccessCard({
                 type="text"
                 readOnly
                 value={inviteUrl}
-                className="flex-1 text-xs px-3 py-2 rounded-xl bg-white border border-emerald-300 text-emerald-900 font-mono select-all"
+                className="flex-1 text-xs px-3 py-2 rounded-xl bg-white border border-blue-300 text-blue-900 font-mono select-all"
               />
               <Button
                 size="sm"
                 onClick={handleCopy}
-                className="rounded-xl bg-emerald-700 hover:bg-emerald-800 text-white font-bold text-xs gap-1.5 shrink-0"
+                className="rounded-xl bg-blue-700 hover:bg-blue-800 text-white font-bold text-xs gap-1.5 shrink-0"
               >
                 {copied ? <Check className="w-3.5 h-3.5" /> : <Copy className="w-3.5 h-3.5" />}
                 <span>{copied ? '¡Copiado!' : 'Copiar enlace'}</span>
               </Button>
             </div>
-            <p className="text-3xs text-emerald-800 leading-tight">
+            <p className="text-3xs text-blue-800 leading-tight">
               Se ha enviado un correo automático a la dirección del paciente. Si lo deseas, también puedes copiar este enlace directo para facilitárselo por WhatsApp u otro canal.
             </p>
           </div>

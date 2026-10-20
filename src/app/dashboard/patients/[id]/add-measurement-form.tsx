@@ -135,7 +135,7 @@ export function AddMeasurementForm({
                     variant="outline"
                     className={`font-black rounded-full px-2.5 py-0.5 flex items-center gap-1 ${
                       prevStatus === 'positive'
-                        ? 'bg-emerald-50 text-emerald-800 border-emerald-300'
+                        ? 'bg-blue-50 text-blue-800 border-blue-300'
                         : prevStatus === 'negative'
                         ? 'bg-rose-50 text-rose-800 border-rose-300'
                         : 'bg-gray-100 text-gray-700 border-gray-300'
@@ -157,7 +157,7 @@ export function AddMeasurementForm({
                     variant="outline"
                     className={`font-black rounded-full px-2.5 py-0.5 flex items-center gap-1 ${
                       basalStatus === 'positive'
-                        ? 'bg-emerald-50 text-emerald-800 border-emerald-300'
+                        ? 'bg-blue-50 text-blue-800 border-blue-300'
                         : basalStatus === 'negative'
                         ? 'bg-rose-50 text-rose-800 border-rose-300'
                         : 'bg-gray-100 text-gray-700 border-gray-300'

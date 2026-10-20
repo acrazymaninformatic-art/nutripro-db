@@ -20,7 +20,7 @@ export const dynamic = 'force-dynamic'
 
 const CATEGORY_LABELS: Record<string, { label: string; badgeClass: string }> = {
   ANALYSIS: { label: 'Analítica Clínica', badgeClass: 'bg-blue-100 text-blue-800' },
-  MEDICAL_REPORT: { label: 'Informe Médico', badgeClass: 'bg-emerald-100 text-emerald-800' },
+  MEDICAL_REPORT: { label: 'Informe Médico', badgeClass: 'bg-blue-100 text-blue-800' },
   BODY_COMP: { label: 'Composición Corporal', badgeClass: 'bg-purple-100 text-purple-800' },
   DIET_HISTORY: { label: 'Historial Dietético', badgeClass: 'bg-amber-100 text-amber-800' },
   OTHER: { label: 'Documento General', badgeClass: 'bg-gray-100 text-gray-800' },
@@ -114,7 +114,7 @@ export default async function PacienteDocumentosPage() {
                     <Calendar className="w-3.5 h-3.5 text-blue-600 font-sans" />
                     <span>Consulta del {formatDate(c.date)}</span>
                   </span>
-                  <Badge variant="teal" className="text-3xs font-bold rounded-full">
+                  <Badge variant="default" className="text-3xs font-bold rounded-full">
                     Compartido por Eva
                   </Badge>
                 </div>

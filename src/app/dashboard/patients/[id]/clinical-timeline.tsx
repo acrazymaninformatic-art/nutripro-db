@@ -42,8 +42,8 @@ const TYPE_CONFIG = {
   ANTHROPOMETRY: {
     label: 'Pesaje / Control',
     icon: Scale,
-    color: 'bg-emerald-100 text-emerald-700 border-emerald-200',
-    dotColor: 'bg-emerald-600',
+    color: 'bg-blue-100 text-blue-700 border-blue-200',
+    dotColor: 'bg-blue-600',
   },
   MEAL_PLAN: {
     label: 'Plan Nutricional',
@@ -78,8 +78,8 @@ const TYPE_CONFIG = {
   PROTOCOL: {
     label: 'Protocolo Clínico',
     icon: HeartPulse,
-    color: 'bg-emerald-100 text-emerald-800 border-emerald-300',
-    dotColor: 'bg-emerald-600',
+    color: 'bg-blue-100 text-blue-800 border-blue-300',
+    dotColor: 'bg-blue-600',
   },
   CALCULATOR: {
     label: 'Cálculo Energético & Riesgo',
@@ -188,7 +188,7 @@ export function ClinicalTimeline({ events }: ClinicalTimelineProps) {
                         )}
                         {ev.isShared !== undefined && (
                           <span className={`text-3xs px-2 py-0.5 rounded-full font-bold ${
-                            ev.isShared ? 'bg-emerald-50 text-emerald-700 border border-emerald-200' : 'bg-gray-100 text-gray-500'
+                            ev.isShared ? 'bg-blue-50 text-blue-700 border border-blue-200' : 'bg-gray-100 text-gray-500'
                           }`}>
                             {ev.isShared ? 'Visible en portal' : 'Privado'}
                           </span>

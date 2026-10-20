@@ -68,10 +68,10 @@ export function CuestionariosClient({
     <div className="space-y-6">
       {/* Header */}
       <div className="glass-panel p-6 sm:p-7 rounded-3xl border border-slate-200/80 shadow-xs relative overflow-hidden">
-        <div className="absolute top-0 right-0 w-64 h-64 bg-teal-500/5 rounded-full blur-3xl pointer-events-none -mr-16 -mt-16" />
+        <div className="absolute top-0 right-0 w-64 h-64 bg-blue-500/5 rounded-full blur-3xl pointer-events-none -mr-16 -mt-16" />
         <div className="flex items-center gap-3">
-          <div className="w-11 h-11 rounded-2xl bg-teal-50 text-teal-700 flex items-center justify-center shrink-0 border border-teal-100/80 shadow-2xs">
-            <ClipboardCheck className="w-5 h-5 text-teal-600" />
+          <div className="w-11 h-11 rounded-2xl bg-blue-50 text-blue-700 flex items-center justify-center shrink-0 border border-blue-100/80 shadow-2xs">
+            <ClipboardCheck className="w-5 h-5 text-blue-600" />
           </div>
           <div>
             <h2 className="text-xl font-bold text-slate-900 tracking-tight">
@@ -121,12 +121,12 @@ export function CuestionariosClient({
 
             {/* Aviso Consentimientos Pendientes de Firma */}
             {pendingConsents.map((consent) => (
-              <Card key={consent.id} className="rounded-3xl border-teal-200/90 bg-gradient-to-br from-teal-50/80 via-white to-teal-50/30 shadow-xs p-6 space-y-4 transition-all hover:shadow-md">
+              <Card key={consent.id} className="rounded-3xl border-blue-200/90 bg-gradient-to-br from-blue-50/80 via-white to-blue-50/30 shadow-xs p-6 space-y-4 transition-all hover:shadow-md">
                 <div className="flex items-center justify-between">
-                  <Badge variant="teal" className="text-3xs font-black uppercase tracking-wider">
+                  <Badge variant="default" className="text-3xs font-black uppercase tracking-wider">
                     FIRMA REQUERIDA
                   </Badge>
-                  <span className="text-2xs text-teal-800 font-semibold">Versión {consent.version}</span>
+                  <span className="text-2xs text-blue-800 font-semibold">Versión {consent.version}</span>
                 </div>
                 <div>
                   <h4 className="text-sm font-bold text-slate-900">{consent.title}</h4>
@@ -137,7 +137,7 @@ export function CuestionariosClient({
                 <div className="pt-1">
                   <Button
                     onClick={() => setSigningConsentId(consent.id)}
-                    className="w-full rounded-2xl bg-teal-600 hover:bg-teal-700 text-white font-bold text-xs gap-2 shadow-xs transition-all active:scale-[0.98]"
+                    className="w-full rounded-2xl bg-blue-600 hover:bg-blue-700 text-white font-bold text-xs gap-2 shadow-xs transition-all active:scale-[0.98]"
                   >
                     <PenTool className="w-4 h-4" />
                     <span>Firmar en pantalla</span>
@@ -151,12 +151,12 @@ export function CuestionariosClient({
 
       {/* Estado al día cuando no hay tareas requeridas */}
       {!isAnamnesisPending && pendingConsents.length === 0 && (
-        <div className="glass-panel p-5 sm:p-6 rounded-3xl border border-emerald-100 bg-gradient-to-r from-emerald-50/50 via-white to-white shadow-xs flex items-center gap-4">
-          <div className="w-11 h-11 rounded-2xl bg-emerald-50 text-emerald-700 flex items-center justify-center shrink-0 border border-emerald-200/60 shadow-2xs">
-            <CheckCircle2 className="w-6 h-6 text-emerald-600" />
+        <div className="glass-panel p-5 sm:p-6 rounded-3xl border border-blue-100 bg-gradient-to-r from-blue-50/50 via-white to-white shadow-xs flex items-center gap-4">
+          <div className="w-11 h-11 rounded-2xl bg-blue-50 text-blue-700 flex items-center justify-center shrink-0 border border-blue-200/60 shadow-2xs">
+            <CheckCircle2 className="w-6 h-6 text-blue-600" />
           </div>
           <div>
-            <h3 className="text-sm font-bold text-emerald-950">Todo al día</h3>
+            <h3 className="text-sm font-bold text-blue-950">Todo al día</h3>
             <p className="text-xs text-slate-500 mt-0.5 leading-relaxed">
               No tienes ningún cuestionario ni firma pendiente de completar en este momento. Eva te notificará directamente si necesita que rellenes información antes de tu próxima consulta.
             </p>
@@ -173,7 +173,7 @@ export function CuestionariosClient({
           {isAnamnesisCompleted && (
             <div className="p-4 sm:p-5 flex items-center justify-between text-xs hover:bg-slate-50/50 transition-colors">
               <div className="flex items-center gap-3.5">
-                <div className="w-9 h-9 rounded-xl bg-emerald-50 text-emerald-700 flex items-center justify-center font-bold border border-emerald-100 shadow-2xs">
+                <div className="w-9 h-9 rounded-xl bg-blue-50 text-blue-700 flex items-center justify-center font-bold border border-blue-100 shadow-2xs">
                   <CheckCircle2 className="w-4 h-4" />
                 </div>
                 <div>
@@ -186,7 +186,7 @@ export function CuestionariosClient({
                   </p>
                 </div>
               </div>
-              <Badge variant="success" className="text-2xs font-bold">
+              <Badge variant="default" className="text-2xs font-bold">
                 ✓ Respondido
               </Badge>
             </div>
@@ -196,7 +196,7 @@ export function CuestionariosClient({
           {signedConsents.map((c) => (
             <div key={c.id} className="p-4 sm:p-5 flex items-center justify-between text-xs hover:bg-slate-50/50 transition-colors">
               <div className="flex items-center gap-3.5">
-                <div className="w-9 h-9 rounded-xl bg-teal-50 text-teal-700 flex items-center justify-center font-bold border border-teal-100 shadow-2xs">
+                <div className="w-9 h-9 rounded-xl bg-blue-50 text-blue-700 flex items-center justify-center font-bold border border-blue-100 shadow-2xs">
                   <ShieldCheck className="w-4 h-4" />
                 </div>
                 <div>
@@ -209,7 +209,7 @@ export function CuestionariosClient({
                   </p>
                 </div>
               </div>
-              <Badge variant="teal" className="text-2xs font-bold">
+              <Badge variant="default" className="text-2xs font-bold">
                 ✓ Firmado
               </Badge>
             </div>
@@ -227,8 +227,8 @@ export function CuestionariosClient({
       {signingConsentId && (
         <div className="fixed inset-0 z-50 bg-slate-950/40 backdrop-blur-md flex items-center justify-center p-4">
           <div className="bg-white rounded-3xl p-6 sm:p-8 max-w-md w-full shadow-2xl border border-slate-200/90 animate-in fade-in zoom-in-95 duration-200">
-            <div className="w-12 h-12 rounded-2xl bg-teal-50 text-teal-700 flex items-center justify-center mb-4 border border-teal-100 shadow-2xs">
-              <FileSignature className="w-6 h-6 text-teal-600" />
+            <div className="w-12 h-12 rounded-2xl bg-blue-50 text-blue-700 flex items-center justify-center mb-4 border border-blue-100 shadow-2xs">
+              <FileSignature className="w-6 h-6 text-blue-600" />
             </div>
             <h3 className="text-lg font-bold text-slate-900 tracking-tight">
               Firma de Consentimiento
@@ -249,7 +249,7 @@ export function CuestionariosClient({
                   value={signatureName}
                   onChange={(e) => setSignatureName(e.target.value)}
                   placeholder="Ej: María Gómez Rodríguez"
-                  className="w-full text-xs rounded-xl border border-slate-200 p-3 bg-white font-medium focus:outline-none focus:ring-2 focus:ring-teal-500/20 focus:border-teal-600 transition-all shadow-2xs"
+                  className="w-full text-xs rounded-xl border border-slate-200 p-3 bg-white font-medium focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-600 transition-all shadow-2xs"
                 />
               </div>
 
@@ -265,7 +265,7 @@ export function CuestionariosClient({
                 <Button
                   type="submit"
                   disabled={loading || !signatureName.trim()}
-                  className="rounded-xl bg-teal-600 hover:bg-teal-700 text-white font-bold text-xs h-10 px-5 shadow-xs transition-all active:scale-[0.98]"
+                  className="rounded-xl bg-blue-600 hover:bg-blue-700 text-white font-bold text-xs h-10 px-5 shadow-xs transition-all active:scale-[0.98]"
                 >
                   {loading ? 'Registrando...' : 'Confirmar y Firmar'}
                 </Button>

@@ -234,7 +234,7 @@ export default async function PacienteLayout({
               <MotionToggleButton className="hidden md:flex" />
               <NotificationCenter role="PATIENT" />
               <div className="flex items-center gap-2 text-xs text-slate-700 bg-white/90 border border-slate-200/80 px-3 py-1.5 rounded-full font-semibold shadow-2xs">
-                <div className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
+                <div className="w-2 h-2 rounded-full bg-blue-500 animate-pulse" />
                 <span>{patientName}</span>
               </div>
               <form action={logoutAction} className="md:hidden">

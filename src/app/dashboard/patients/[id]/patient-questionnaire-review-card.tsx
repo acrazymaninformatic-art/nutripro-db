@@ -90,7 +90,7 @@ export function PatientQuestionnaireReviewCard({ patient }: Props) {
                   variant="outline"
                   className={`text-2xs font-extrabold rounded-full ${
                     isCompleted
-                      ? 'bg-emerald-100 text-emerald-800 border-emerald-200'
+                      ? 'bg-blue-100 text-blue-800 border-blue-200'
                       : 'bg-amber-100 text-amber-800 border-amber-200'
                   }`}
                 >
@@ -199,8 +199,8 @@ export function PatientQuestionnaireReviewCard({ patient }: Props) {
 
             {/* 3. Estilo de vida y Objetivos */}
             <div className="py-4 last:pb-0 space-y-2">
-              <span className="text-xs font-extrabold text-emerald-900 flex items-center gap-1.5 uppercase tracking-wider">
-                <Target className="w-3.5 h-3.5 text-emerald-600" />
+              <span className="text-xs font-extrabold text-blue-900 flex items-center gap-1.5 uppercase tracking-wider">
+                <Target className="w-3.5 h-3.5 text-blue-600" />
                 <span>Estilo de Vida, Actividad y Metas</span>
               </span>
               <div className="grid grid-cols-1 md:grid-cols-3 gap-3 text-xs">

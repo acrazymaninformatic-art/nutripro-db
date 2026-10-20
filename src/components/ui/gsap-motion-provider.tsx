@@ -238,8 +238,9 @@ export function GsapMotionProvider({ children }: { children: React.ReactNode }) 
         })
       }
 
-      const bindRevealTargets = (targets: HTMLElement[], hydratedOnly = false) => {
+      const bindRevealTargets = (targets: HTMLElement[], mode: 'immediate' | 'delayed' = 'delayed') => {
         const maxHeight = window.innerHeight * 4
+        const hydratedOnly = mode === 'immediate'
 
         const elements = uniqueElements(
           targets.filter(
@@ -292,9 +293,11 @@ export function GsapMotionProvider({ children }: { children: React.ReactNode }) 
 
         if (motionDisabled) return
 
-        // Bloques ya visibles: entran con un movimiento suave desde su propia
-        // posición, sin saltos.
-        if (visibleElements.length) {
+        // Bloques ya visibles: en el enganche inmediato entran con un
+        // movimiento suave desde su propia posición, sin saltos. En el
+        // enganche diferido los dejamos quietos: ya están en pantalla y
+        // cualquier desplazamiento se perceives como un tirón.
+        if (visibleElements.length && mode === 'immediate') {
           gsap.fromTo(
             visibleElements,
             { y: 10, scale: 0.995 },
@@ -432,7 +435,7 @@ export function GsapMotionProvider({ children }: { children: React.ReactNode }) 
         // En navegación interna el contenido ya está hidratado, así que se
         // engancha de inmediato: así el cambio de pestaña es un movimiento
         // continuo y sin tirones.
-        bindRevealTargets([...revealTargets, ...cardTargets, ...sectionTargets], true)
+        bindRevealTargets([...revealTargets, ...cardTargets, ...sectionTargets], 'immediate')
         scheduleRevealBinding([...revealTargets, ...cardTargets, ...sectionTargets])
 
         if (motionDisabled) {

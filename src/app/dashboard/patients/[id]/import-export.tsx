@@ -243,7 +243,7 @@ export function ImportExportSection({ patientId, patientName }: ImportExportSect
       {/* Action header with Export button */}
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 bg-white p-4 rounded-xl border border-gray-200 shadow-sm">
         <div className="flex items-center gap-3">
-          <div className="h-10 w-10 rounded-lg bg-green-50 text-green-700 flex items-center justify-center border border-green-200">
+          <div className="h-10 w-10 rounded-lg bg-blue-50 text-blue-700 flex items-center justify-center border border-blue-200">
             <FileSpreadsheet className="h-5 w-5" />
           </div>
           <div>
@@ -265,9 +265,9 @@ export function ImportExportSection({ patientId, patientName }: ImportExportSect
           className="inline-flex items-center gap-2 border-gray-300 hover:bg-gray-50 shadow-sm"
         >
           {isExporting ? (
-            <Loader2 className="h-4 w-4 animate-spin text-green-600" />
+            <Loader2 className="h-4 w-4 animate-spin text-blue-600" />
           ) : (
-            <Download className="h-4 w-4 text-green-600" />
+            <Download className="h-4 w-4 text-blue-600" />
           )}
           <span>Exportar Datos del Paciente</span>
         </Button>
@@ -289,7 +289,7 @@ export function ImportExportSection({ patientId, patientName }: ImportExportSect
           <div className="flex items-center justify-between">
             <div className="space-y-1">
               <CardTitle className="text-base font-semibold flex items-center gap-2 text-gray-900">
-                <Upload className="h-4 w-4 text-green-600" />
+                <Upload className="h-4 w-4 text-blue-600" />
                 <span>Importar Datos de Báscula / Bioimpedancia</span>
               </CardTitle>
               <CardDescription className="text-xs text-gray-500">
@@ -355,7 +355,7 @@ export function ImportExportSection({ patientId, patientName }: ImportExportSect
             {/* Parsing loading state */}
             {isParsing && (
               <div className="flex items-center gap-2 text-xs text-gray-500 py-2">
-                <Loader2 className="h-4 w-4 animate-spin text-green-600" />
+                <Loader2 className="h-4 w-4 animate-spin text-blue-600" />
                 <span>Analizando archivo y procesando columnas...</span>
               </div>
             )}
@@ -373,8 +373,8 @@ export function ImportExportSection({ patientId, patientName }: ImportExportSect
 
             {/* Success banner */}
             {successMessage && (
-              <div className="flex items-start gap-2 p-3 text-xs text-green-800 bg-green-50 border border-green-200 rounded-lg">
-                <Check className="h-4 w-4 flex-shrink-0 mt-0.5 text-green-600" />
+              <div className="flex items-start gap-2 p-3 text-xs text-blue-800 bg-blue-50 border border-blue-200 rounded-lg">
+                <Check className="h-4 w-4 flex-shrink-0 mt-0.5 text-blue-600" />
                 <div>
                   <p className="font-medium">Importación completada</p>
                   <p>{successMessage}</p>
@@ -412,7 +412,7 @@ export function ImportExportSection({ patientId, patientName }: ImportExportSect
                       size="sm"
                       onClick={handleConfirmImport}
                       disabled={isImporting}
-                      className="inline-flex items-center gap-1.5 text-xs bg-green-600 hover:bg-green-700 text-white"
+                      className="inline-flex items-center gap-1.5 text-xs bg-blue-600 hover:bg-blue-700 text-white"
                     >
                       {isImporting ? (
                         <>

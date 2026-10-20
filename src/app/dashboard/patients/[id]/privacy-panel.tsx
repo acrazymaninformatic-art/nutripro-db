@@ -97,7 +97,7 @@ export function PrivacyPanel({
                   Revocado el {new Date(consentRevokedAt).toLocaleDateString('es-ES')}
                 </Badge>
               ) : consentAcceptedAt ? (
-                <Badge variant="outline" className="bg-emerald-50 text-emerald-800 border-emerald-200 text-3xs font-black">
+                <Badge variant="outline" className="bg-blue-50 text-blue-800 border-blue-200 text-3xs font-black">
                   ✓ Aceptado el {new Date(consentAcceptedAt).toLocaleDateString('es-ES')}
                 </Badge>
               ) : (
@@ -127,7 +127,7 @@ export function PrivacyPanel({
                 {requests.filter((request) => ['PENDING', 'IN_PROGRESS'].includes(request.status)).slice(0, 3).map((request) => (
                   <div key={request.id} className="flex flex-wrap items-center gap-1.5 pt-1">
                     <span className="text-2xs font-semibold text-slate-700">{request.requestType}</span>
-                    <Button type="button" size="sm" disabled={pending} onClick={() => resolveRequest(request.id, 'COMPLETED')} className="h-7 rounded-lg bg-emerald-600 px-2 text-2xs text-white hover:bg-emerald-700">Completar</Button>
+                    <Button type="button" size="sm" disabled={pending} onClick={() => resolveRequest(request.id, 'COMPLETED')} className="h-7 rounded-lg bg-blue-600 px-2 text-2xs text-white hover:bg-blue-700">Completar</Button>
                     <Button type="button" size="sm" disabled={pending} onClick={() => resolveRequest(request.id, 'REJECTED')} variant="outline" className="h-7 rounded-lg border-rose-200 px-2 text-2xs text-rose-700 hover:bg-rose-50">Rechazar</Button>
                   </div>
                 ))}
@@ -179,8 +179,8 @@ export function PrivacyPanel({
         </p>
 
         {message && (
-          <div role="status" className="rounded-2xl bg-emerald-50 border border-emerald-200/80 p-3.5 text-xs text-emerald-800 font-semibold animate-fade-in flex items-center gap-2">
-            <CheckCircle2 className="w-4 h-4 text-emerald-600 shrink-0" />
+          <div role="status" className="rounded-2xl bg-blue-50 border border-blue-200/80 p-3.5 text-xs text-blue-800 font-semibold animate-fade-in flex items-center gap-2">
+            <CheckCircle2 className="w-4 h-4 text-blue-600 shrink-0" />
             <span>{message}</span>
           </div>
         )}

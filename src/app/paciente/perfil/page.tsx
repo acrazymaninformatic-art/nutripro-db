@@ -81,9 +81,9 @@ export default async function PacientePerfilPage() {
 
       {/* Header Profile Hero */}
       <div className="glass-panel rounded-3xl border border-slate-200/80 p-6 sm:p-7 shadow-xs flex flex-col sm:flex-row sm:items-center justify-between gap-6 relative overflow-hidden">
-        <div className="absolute top-0 right-0 w-64 h-64 bg-teal-500/5 rounded-full blur-3xl pointer-events-none -mr-16 -mt-16" />
+        <div className="absolute top-0 right-0 w-64 h-64 bg-blue-500/5 rounded-full blur-3xl pointer-events-none -mr-16 -mt-16" />
         <div className="flex items-center gap-4">
-          <div className="h-16 w-16 rounded-2xl bg-gradient-to-br from-teal-50 to-teal-100 text-teal-800 flex items-center justify-center text-xl font-bold border border-teal-200/80 shadow-2xs shrink-0">
+          <div className="h-16 w-16 rounded-2xl bg-gradient-to-br from-blue-50 to-blue-100 text-blue-800 flex items-center justify-center text-xl font-bold border border-blue-200/80 shadow-2xs shrink-0">
             {patient.firstName[0]}
             {patient.lastName[0]}
           </div>
@@ -92,7 +92,7 @@ export default async function PacientePerfilPage() {
               <h1 className="text-xl sm:text-2xl font-bold text-slate-900 tracking-tight">
                 {patient.firstName} {patient.lastName}
               </h1>
-              <Badge variant="teal" className="text-2xs font-bold">
+              <Badge variant="default" className="text-2xs font-bold">
                 Modo Consulta (Solo Lectura)
               </Badge>
             </div>
@@ -106,7 +106,7 @@ export default async function PacientePerfilPage() {
           <Badge variant="outline" className="text-xs px-3.5 py-1.5 bg-slate-50 text-slate-700 border-slate-200 rounded-full font-semibold">
             🎯 {objectiveLabel}
           </Badge>
-          <Badge variant="outline" className="text-xs px-3.5 py-1.5 bg-teal-50 text-teal-800 border-teal-200 rounded-full font-semibold">
+          <Badge variant="outline" className="text-xs px-3.5 py-1.5 bg-blue-50 text-blue-800 border-blue-200 rounded-full font-semibold">
             ⚡ {activityLabel}
           </Badge>
         </div>
@@ -118,7 +118,7 @@ export default async function PacientePerfilPage() {
         <Card className="rounded-3xl border-slate-200/80 shadow-xs">
           <CardHeader className="pb-3 border-b border-slate-100">
             <CardTitle className="text-sm font-bold text-slate-900 flex items-center gap-2">
-              <User className="w-4 h-4 text-teal-600" />
+              <User className="w-4 h-4 text-blue-600" />
               <span>Datos Personales</span>
             </CardTitle>
           </CardHeader>
@@ -219,10 +219,10 @@ export default async function PacientePerfilPage() {
       </div>
 
       {/* Nota de confidencialidad */}
-      <Card className="rounded-3xl bg-teal-50/50 border-teal-100/80 p-5 shadow-2xs">
+      <Card className="rounded-3xl bg-blue-50/50 border-blue-100/80 p-5 shadow-2xs">
         <div className="flex items-start gap-3.5">
-          <ShieldCheck className="w-5 h-5 text-teal-600 shrink-0 mt-0.5" />
-          <div className="text-xs text-teal-950 leading-relaxed">
+          <ShieldCheck className="w-5 h-5 text-blue-600 shrink-0 mt-0.5" />
+          <div className="text-xs text-blue-950 leading-relaxed">
             <span className="font-bold block mb-0.5">Expediente Clínico Custodiado</span>
             Tus datos de salud están amparados por el deber de secreto profesional médico-dietético. Para modificar cualquier dato clínico o corregir información personal, coméntalo con Eva Vidal en tu próxima consulta o envía una solicitud desde la sección de configuración.
           </div>

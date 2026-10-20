@@ -275,9 +275,9 @@ export default async function PatientsPage({ searchParams }: PatientsPageProps) 
                             <Link
                               href={`/dashboard/emails?patientId=${patient.id}`}
                               title="Enviar Correo Transaccional"
-                              className="w-8 h-8 rounded-xl border border-emerald-300 bg-emerald-50 text-emerald-700 hover:bg-emerald-100 flex items-center justify-center transition-all active:scale-[0.95] shadow-2xs"
+                              className="w-8 h-8 rounded-xl border border-blue-300 bg-blue-50 text-blue-700 hover:bg-blue-100 flex items-center justify-center transition-all active:scale-[0.95] shadow-2xs"
                             >
-                              <Mail className="h-4 w-4 text-emerald-600" />
+                              <Mail className="h-4 w-4 text-blue-600" />
                             </Link>
                           </div>
                         </td>
@@ -302,11 +302,11 @@ export default async function PatientsPage({ searchParams }: PatientsPageProps) 
                         </td>
                         <td className="px-4 py-4 text-center">
                           {patient.isDischarged ? (
-                            <Badge variant="success" className="text-2xs font-bold">
+                            <Badge variant="default" className="text-2xs font-bold">
                               Alta Clínica
                             </Badge>
                           ) : patient.isActive ? (
-                            <Badge variant="teal" className="text-2xs font-bold">
+                            <Badge variant="default" className="text-2xs font-bold">
                               Activo
                             </Badge>
                           ) : (
@@ -323,7 +323,7 @@ export default async function PatientsPage({ searchParams }: PatientsPageProps) 
                                   type="submit"
                                   size="sm"
                                   variant="outline"
-                                  className="h-8 px-2.5 text-xs font-bold text-emerald-800 bg-emerald-50 hover:bg-emerald-100 border-emerald-300 rounded-xl"
+                                  className="h-8 px-2.5 text-xs font-bold text-blue-800 bg-blue-50 hover:bg-blue-100 border-blue-300 rounded-xl"
                                 >
                                   <RotateCcw className="h-3.5 w-3.5 mr-1" />
                                   Restaurar
@@ -387,9 +387,9 @@ export default async function PatientsPage({ searchParams }: PatientsPageProps) 
                         )}
                       </div>
                       {patient.isDischarged ? (
-                        <Badge variant="success" className="shrink-0 text-2xs font-bold">Alta Clínica</Badge>
+                        <Badge variant="default" className="shrink-0 text-2xs font-bold">Alta Clínica</Badge>
                       ) : patient.isActive ? (
-                        <Badge variant="teal" className="shrink-0 text-2xs font-bold">Activo</Badge>
+                        <Badge variant="default" className="shrink-0 text-2xs font-bold">Activo</Badge>
                       ) : (
                         <Badge variant="warning" className="shrink-0 text-2xs font-bold">En Papelera</Badge>
                       )}
@@ -442,7 +442,7 @@ export default async function PatientsPage({ searchParams }: PatientsPageProps) 
                       </form>
                       <Link href={`/dashboard/emails?patientId=${patient.id}`}>
                         <Button variant="outline" size="sm" className="w-full justify-center rounded-xl text-xs font-bold">
-                          <Mail className="mr-1.5 h-3.5 w-3.5 text-emerald-600" />
+                          <Mail className="mr-1.5 h-3.5 w-3.5 text-blue-600" />
                           Correo
                         </Button>
                       </Link>
@@ -462,7 +462,7 @@ export default async function PatientsPage({ searchParams }: PatientsPageProps) 
                           type="submit"
                           variant="outline"
                           size="sm"
-                          className="w-full justify-center rounded-xl border-emerald-300 bg-emerald-50 text-xs font-bold text-emerald-800 hover:bg-emerald-100"
+                          className="w-full justify-center rounded-xl border-blue-300 bg-blue-50 text-xs font-bold text-blue-800 hover:bg-blue-100"
                         >
                           <RotateCcw className="mr-1.5 h-3.5 w-3.5" />
                           Restaurar paciente

@@ -57,8 +57,8 @@ export function PacienteDesktopNav() {
             className={cn(
               'flex items-center gap-3 px-3.5 py-2.5 rounded-2xl text-xs font-bold transition-all duration-200 group',
               isActive
-                ? 'bg-gradient-to-r from-teal-600 to-teal-700 text-white shadow-xs shadow-teal-700/25'
-                : 'text-slate-600 hover:text-teal-700 hover:bg-teal-50/70'
+                ? 'bg-gradient-to-r from-blue-600 to-blue-700 text-white shadow-xs shadow-blue-700/25'
+                : 'text-slate-600 hover:text-blue-700 hover:bg-blue-50/70'
             )}
           >
             <div
@@ -66,7 +66,7 @@ export function PacienteDesktopNav() {
                 'w-8 h-8 rounded-xl flex items-center justify-center transition-all duration-200',
                 isActive
                   ? 'bg-white/20 text-white'
-                  : 'bg-slate-100 group-hover:bg-teal-100/70 group-hover:text-teal-700 text-slate-500'
+                  : 'bg-slate-100 group-hover:bg-blue-100/70 group-hover:text-blue-700 text-slate-500'
               )}
             >
               <Icon className={cn('w-4 h-4 transition-transform group-hover:scale-110', isActive && 'scale-105')} />
@@ -113,21 +113,21 @@ export function PacienteMobileNav() {
             className={cn(
               'flex flex-col items-center gap-1 py-1 px-3 rounded-2xl transition-all duration-200 relative',
               isActive
-                ? 'text-teal-700 font-bold scale-105'
-                : 'text-slate-500 hover:text-teal-600 font-medium'
+                ? 'text-blue-700 font-bold scale-105'
+                : 'text-slate-500 hover:text-blue-600 font-medium'
             )}
           >
             <div
               className={cn(
                 'p-1 rounded-xl transition-colors',
-                isActive ? 'bg-teal-50 text-teal-700' : 'text-slate-500'
+                isActive ? 'bg-blue-50 text-blue-700' : 'text-slate-500'
               )}
             >
               <Icon className="w-5 h-5" />
             </div>
             <span className="text-[10px] tracking-tight">{item.name}</span>
             {isActive && (
-              <span className="w-1 h-1 rounded-full bg-teal-600 animate-pulse" />
+              <span className="w-1 h-1 rounded-full bg-blue-600 animate-pulse" />
             )}
           </Link>
         )

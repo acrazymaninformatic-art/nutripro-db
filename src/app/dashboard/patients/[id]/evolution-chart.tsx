@@ -247,7 +247,7 @@ export function EvolutionChart({
                   </Badge>
                 )}
 
-                <div className={`flex items-center gap-1 text-xs font-bold ${delta <= 0 ? 'text-emerald-700' : 'text-amber-700'}`}>
+                <div className={`flex items-center gap-1 text-xs font-bold ${delta <= 0 ? 'text-blue-700' : 'text-amber-700'}`}>
                   {delta <= 0 ? <TrendingDown className="h-4 w-4" /> : <TrendingUp className="h-4 w-4" />}
                   <span>
                     {delta > 0 ? `+${delta}` : delta} {info.unit} desde el inicio

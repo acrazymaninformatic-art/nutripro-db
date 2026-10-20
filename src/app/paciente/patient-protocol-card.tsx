@@ -73,18 +73,18 @@ export function PatientProtocolCard({ protocol }: PatientProtocolCardProps) {
 
   return (
     <Card className="rounded-3xl border-slate-200/80 bg-white shadow-xs overflow-hidden">
-      <CardHeader className="bg-gradient-to-r from-teal-50/70 via-emerald-50/40 to-white pb-3.5 border-b border-slate-100 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+      <CardHeader className="bg-gradient-to-r from-blue-50/70 via-blue-50/40 to-white pb-3.5 border-b border-slate-100 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
         <div className="flex items-center gap-3">
-          <div className="w-10 h-10 rounded-2xl bg-teal-50 text-teal-700 flex items-center justify-center shrink-0 border border-teal-100 shadow-2xs">
+          <div className="w-10 h-10 rounded-2xl bg-blue-50 text-blue-700 flex items-center justify-center shrink-0 border border-blue-100 shadow-2xs">
             <HeartPulse className="w-5 h-5" />
           </div>
           <div>
             <div className="flex items-center gap-2">
-              <Badge variant="teal" className="text-3xs font-black uppercase tracking-wider">
+              <Badge variant="default" className="text-3xs font-black uppercase tracking-wider">
                 {def?.badge || 'Protocolo Clínico Activo'}
               </Badge>
               {protocol.currentPhase && (
-                <span className="text-xs font-semibold text-teal-900 bg-teal-100/70 px-2.5 py-0.5 rounded-full border border-teal-200/60">
+                <span className="text-xs font-semibold text-blue-900 bg-blue-100/70 px-2.5 py-0.5 rounded-full border border-blue-200/60">
                   {protocol.currentPhase}
                 </span>
               )}
@@ -98,7 +98,7 @@ export function PatientProtocolCard({ protocol }: PatientProtocolCardProps) {
         <Button
           size="sm"
           onClick={() => setShowLogModal(true)}
-          className="rounded-2xl bg-teal-600 hover:bg-teal-700 text-white font-bold text-xs gap-1.5 shrink-0 shadow-xs transition-all active:scale-[0.98]"
+          className="rounded-2xl bg-blue-600 hover:bg-blue-700 text-white font-bold text-xs gap-1.5 shrink-0 shadow-xs transition-all active:scale-[0.98]"
         >
           <Thermometer className="w-3.5 h-3.5" />
           <span>Anotar síntomas de hoy</span>
@@ -107,21 +107,21 @@ export function PatientProtocolCard({ protocol }: PatientProtocolCardProps) {
 
       <CardContent className="p-5 space-y-4">
         {successMsg && (
-          <div className="p-3 bg-emerald-50 border border-emerald-200 text-emerald-800 text-xs rounded-xl flex items-center gap-2">
-            <CheckCircle2 className="w-4 h-4 text-emerald-600" />
+          <div className="p-3 bg-blue-50 border border-blue-200 text-blue-800 text-xs rounded-xl flex items-center gap-2">
+            <CheckCircle2 className="w-4 h-4 text-blue-600" />
             <span>Registro de síntomas guardado correctamente en tu historial clínico.</span>
           </div>
         )}
 
         {/* Phase guidelines or protocol summary */}
         {currentPhaseDef ? (
-          <div className="p-4 rounded-2xl bg-emerald-50/50 border border-emerald-100/80 text-xs space-y-2">
+          <div className="p-4 rounded-2xl bg-blue-50/50 border border-blue-100/80 text-xs space-y-2">
             <div className="flex items-center justify-between">
-              <span className="font-bold text-emerald-950 text-sm">
+              <span className="font-bold text-blue-950 text-sm">
                 Pautas de la fase: {currentPhaseDef.name}
               </span>
               {currentPhaseDef.durationWeeks && (
-                <span className="text-2xs text-emerald-700 font-semibold bg-emerald-100 px-2 py-0.5 rounded-lg">
+                <span className="text-2xs text-blue-700 font-semibold bg-blue-100 px-2 py-0.5 rounded-lg">
                   Duración aprox: {currentPhaseDef.durationWeeks} semanas
                 </span>
               )}
@@ -183,7 +183,7 @@ export function PatientProtocolCard({ protocol }: PatientProtocolCardProps) {
             className="bg-white rounded-3xl p-6 max-w-md w-full shadow-xl space-y-4 animate-in zoom-in-95"
           >
             <h4 className="text-base font-bold text-gray-900 flex items-center gap-2">
-              <Thermometer className="h-5 w-5 text-teal-600" />
+              <Thermometer className="h-5 w-5 text-blue-600" />
               <span>Diario de Síntomas Digestivos</span>
             </h4>
             <p className="text-xs text-gray-500">
@@ -201,7 +201,7 @@ export function PatientProtocolCard({ protocol }: PatientProtocolCardProps) {
                   max="7"
                   value={bristolScore}
                   onChange={(e) => setBristolScore(parseInt(e.target.value))}
-                  className="w-full accent-teal-600"
+                  className="w-full accent-blue-600"
                 />
                 <div className="flex justify-between text-2xs text-gray-400">
                   <span>1: Estreñimiento</span>
@@ -220,7 +220,7 @@ export function PatientProtocolCard({ protocol }: PatientProtocolCardProps) {
                   max="5"
                   value={bloatingScore}
                   onChange={(e) => setBloatingScore(parseInt(e.target.value))}
-                  className="w-full accent-teal-600"
+                  className="w-full accent-blue-600"
                 />
               </div>
 
@@ -234,7 +234,7 @@ export function PatientProtocolCard({ protocol }: PatientProtocolCardProps) {
                   max="5"
                   value={painScore}
                   onChange={(e) => setPainScore(parseInt(e.target.value))}
-                  className="w-full accent-teal-600"
+                  className="w-full accent-blue-600"
                 />
               </div>
 
@@ -248,7 +248,7 @@ export function PatientProtocolCard({ protocol }: PatientProtocolCardProps) {
                   max="5"
                   value={gasScore}
                   onChange={(e) => setGasScore(parseInt(e.target.value))}
-                  className="w-full accent-teal-600"
+                  className="w-full accent-blue-600"
                 />
               </div>
 
@@ -278,7 +278,7 @@ export function PatientProtocolCard({ protocol }: PatientProtocolCardProps) {
                 type="submit"
                 size="sm"
                 disabled={isSubmitting}
-                className="rounded-xl bg-teal-700 hover:bg-teal-800 text-white text-xs font-semibold"
+                className="rounded-xl bg-blue-700 hover:bg-blue-800 text-white text-xs font-semibold"
               >
                 {isSubmitting ? 'Guardando...' : 'Guardar en mi diario'}
               </Button>

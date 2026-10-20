@@ -423,9 +423,9 @@ export default function NewPatientPage() {
                   <div
                     className={`h-9 w-9 rounded-full flex items-center justify-center font-medium text-xs transition-all duration-200 ${
                       isCurrent
-                        ? 'bg-green-600 text-white ring-4 ring-green-100 shadow-sm'
+                        ? 'bg-blue-600 text-white ring-4 ring-blue-100 shadow-sm'
                         : isPassed
-                        ? 'bg-green-100 text-green-700 hover:bg-green-200'
+                        ? 'bg-blue-100 text-blue-700 hover:bg-blue-200'
                         : 'bg-gray-100 text-gray-500 hover:bg-gray-200'
                     }`}
                   >
@@ -433,7 +433,7 @@ export default function NewPatientPage() {
                   </div>
                   <span
                     className={`text-[11px] font-medium mt-1.5 text-center transition-colors max-w-[85px] leading-tight ${
-                      isCurrent ? 'text-green-700 font-semibold' : 'text-gray-500 group-hover:text-gray-900'
+                      isCurrent ? 'text-blue-700 font-semibold' : 'text-gray-500 group-hover:text-gray-900'
                     }`}
                   >
                     {step.title}
@@ -442,7 +442,7 @@ export default function NewPatientPage() {
                 {idx < STEPS.length - 1 && (
                   <div
                     className={`h-0.5 flex-1 mx-2 transition-colors ${
-                      visitedSteps.has(step.id + 1) || currentStep > step.id ? 'bg-green-300' : 'bg-gray-200'
+                      visitedSteps.has(step.id + 1) || currentStep > step.id ? 'bg-blue-300' : 'bg-gray-200'
                     }`}
                   />
                 )}
@@ -469,7 +469,7 @@ export default function NewPatientPage() {
               <div className="flex items-center justify-between">
                 <div>
                   <CardTitle className="text-lg flex items-center gap-2 text-gray-900">
-                    <User className="h-5 w-5 text-green-600" />
+                    <User className="h-5 w-5 text-blue-600" />
                     <span>Paso 1: Datos Personales</span>
                   </CardTitle>
                   <CardDescription>
@@ -584,7 +584,7 @@ export default function NewPatientPage() {
                         value="FEMALE"
                         checked={sex === 'FEMALE'}
                         onChange={() => setSex('FEMALE')}
-                        className="h-4 w-4 text-green-600 focus:ring-green-500 border-gray-300"
+                        className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300"
                       />
                       <span>Mujer</span>
                     </label>
@@ -595,7 +595,7 @@ export default function NewPatientPage() {
                         value="MALE"
                         checked={sex === 'MALE'}
                         onChange={() => setSex('MALE')}
-                        className="h-4 w-4 text-green-600 focus:ring-green-500 border-gray-300"
+                        className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300"
                       />
                       <span>Hombre</span>
                     </label>
@@ -641,7 +641,7 @@ export default function NewPatientPage() {
               <div className="flex items-center justify-between">
                 <div>
                   <CardTitle className="text-lg flex items-center gap-2 text-gray-900">
-                    <HeartPulse className="h-5 w-5 text-green-600" />
+                    <HeartPulse className="h-5 w-5 text-blue-600" />
                     <span>Paso 2: Historial Clínico</span>
                   </CardTitle>
                   <CardDescription>
@@ -666,7 +666,7 @@ export default function NewPatientPage() {
                         type="checkbox"
                         checked={selectedConditions.includes(cond)}
                         onChange={() => toggleCondition(cond)}
-                        className="rounded border-gray-300 text-green-600 focus:ring-green-500 h-4 w-4"
+                        className="rounded border-gray-300 text-blue-600 focus:ring-blue-500 h-4 w-4"
                       />
                       <span>{cond}</span>
                     </label>
@@ -742,7 +742,7 @@ export default function NewPatientPage() {
               <div className="flex items-center justify-between">
                 <div>
                   <CardTitle className="text-lg flex items-center gap-2 text-gray-900">
-                    <Activity className="h-5 w-5 text-green-600" />
+                    <Activity className="h-5 w-5 text-blue-600" />
                     <span>Paso 3: Sistema Digestivo y Metabolismo</span>
                   </CardTitle>
                   <CardDescription>
@@ -767,7 +767,7 @@ export default function NewPatientPage() {
                         type="checkbox"
                         checked={selectedDigestive.includes(issue)}
                         onChange={() => toggleDigestive(issue)}
-                        className="rounded border-gray-300 text-green-600 focus:ring-green-500 h-4 w-4"
+                        className="rounded border-gray-300 text-blue-600 focus:ring-blue-500 h-4 w-4"
                       />
                       <span>{issue}</span>
                     </label>
@@ -777,9 +777,9 @@ export default function NewPatientPage() {
                       type="checkbox"
                       checked={selectedDigestive.includes('Ninguno')}
                       onChange={() => toggleDigestive('Ninguno')}
-                      className="rounded border-gray-300 text-green-600 focus:ring-green-500 h-4 w-4"
+                      className="rounded border-gray-300 text-blue-600 focus:ring-blue-500 h-4 w-4"
                     />
-                    <span className="font-medium text-green-800">Ninguno</span>
+                    <span className="font-medium text-blue-800">Ninguno</span>
                   </label>
                 </div>
               </div>
@@ -856,7 +856,7 @@ export default function NewPatientPage() {
                     type="checkbox"
                     checked={smoking}
                     onChange={e => setSmoking(e.target.checked)}
-                    className="rounded border-gray-300 text-green-600 focus:ring-green-500 h-4 w-4"
+                    className="rounded border-gray-300 text-blue-600 focus:ring-blue-500 h-4 w-4"
                   />
                   <span>¿Fuma habitualmente o cigarrillos electrónicos?</span>
                 </label>
@@ -872,7 +872,7 @@ export default function NewPatientPage() {
               <div className="flex items-center justify-between">
                 <div>
                   <CardTitle className="text-lg flex items-center gap-2 text-gray-900">
-                    <Sparkles className="h-5 w-5 text-green-600" />
+                    <Sparkles className="h-5 w-5 text-blue-600" />
                     <span>Paso 4: Estilo de Vida y Hábitos</span>
                   </CardTitle>
                   <CardDescription>
@@ -984,7 +984,7 @@ export default function NewPatientPage() {
                     type="checkbox"
                     checked={cooksAtHome}
                     onChange={e => setCooksAtHome(e.target.checked)}
-                    className="rounded border-gray-300 text-green-600 focus:ring-green-500 h-4 w-4"
+                    className="rounded border-gray-300 text-blue-600 focus:ring-blue-500 h-4 w-4"
                   />
                   <span>¿Cocina habitualmente en casa y prepara sus menús?</span>
                 </label>
@@ -1000,7 +1000,7 @@ export default function NewPatientPage() {
               <div className="flex items-center justify-between">
                 <div>
                   <CardTitle className="text-lg flex items-center gap-2 text-gray-900">
-                    <Dumbbell className="h-5 w-5 text-green-600" />
+                    <Dumbbell className="h-5 w-5 text-blue-600" />
                     <span>Paso 5: Actividad Física y Deporte</span>
                   </CardTitle>
                   <CardDescription>
@@ -1056,7 +1056,7 @@ export default function NewPatientPage() {
                         type="checkbox"
                         checked={selectedExercises.includes(ex)}
                         onChange={() => toggleExercise(ex)}
-                        className="rounded border-gray-300 text-green-600 focus:ring-green-500 h-4 w-4"
+                        className="rounded border-gray-300 text-blue-600 focus:ring-blue-500 h-4 w-4"
                       />
                       <span>{ex}</span>
                     </label>
@@ -1137,7 +1137,7 @@ export default function NewPatientPage() {
               <div className="flex items-center justify-between">
                 <div>
                   <CardTitle className="text-lg flex items-center gap-2 text-gray-900">
-                    <Flower2 className="h-5 w-5 text-green-600" />
+                    <Flower2 className="h-5 w-5 text-blue-600" />
                     <span>Paso 6: Salud Femenina y Hormonal</span>
                   </CardTitle>
                   <CardDescription>
@@ -1195,7 +1195,7 @@ export default function NewPatientPage() {
                     type="checkbox"
                     checked={pregnant}
                     onChange={e => setPregnant(e.target.checked)}
-                    className="rounded border-gray-300 text-green-600 focus:ring-green-500 h-4 w-4"
+                    className="rounded border-gray-300 text-blue-600 focus:ring-blue-500 h-4 w-4"
                   />
                   <span>¿Actualmente embarazada?</span>
                 </label>
@@ -1205,7 +1205,7 @@ export default function NewPatientPage() {
                     type="checkbox"
                     checked={breastfeeding}
                     onChange={e => setBreastfeeding(e.target.checked)}
-                    className="rounded border-gray-300 text-green-600 focus:ring-green-500 h-4 w-4"
+                    className="rounded border-gray-300 text-blue-600 focus:ring-blue-500 h-4 w-4"
                   />
                   <span>¿En periodo de lactancia materna?</span>
                 </label>
@@ -1215,7 +1215,7 @@ export default function NewPatientPage() {
                     type="checkbox"
                     checked={hormoneTherapy}
                     onChange={e => setHormoneTherapy(e.target.checked)}
-                    className="rounded border-gray-300 text-green-600 focus:ring-green-500 h-4 w-4"
+                    className="rounded border-gray-300 text-blue-600 focus:ring-blue-500 h-4 w-4"
                   />
                   <span>¿Terapia de reemplazo hormonal u hormonoterapia?</span>
                 </label>
@@ -1232,7 +1232,7 @@ export default function NewPatientPage() {
                 <div className="flex items-center justify-between">
                   <div>
                     <CardTitle className="text-lg flex items-center gap-2 text-gray-900">
-                      <Target className="h-5 w-5 text-green-600" />
+                      <Target className="h-5 w-5 text-blue-600" />
                       <span>Paso 7: Objetivos y Primera Valoración</span>
                     </CardTitle>
                     <CardDescription>
@@ -1244,23 +1244,23 @@ export default function NewPatientPage() {
               </CardHeader>
               <CardContent className="space-y-6">
                 {/* Volcado desde Báscula (InBody / Tanita / SECA / CSV / TXT / JSON) */}
-                <div className="p-4 bg-gradient-to-r from-emerald-50/70 to-teal-50/50 rounded-2xl border border-emerald-200/80 shadow-2xs space-y-3">
+                <div className="p-4 bg-gradient-to-r from-blue-50/70 to-blue-50/50 rounded-2xl border border-blue-200/80 shadow-2xs space-y-3">
                   <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
                     <div className="flex items-center gap-2.5">
-                      <div className="p-2 bg-emerald-100 text-emerald-800 rounded-xl">
+                      <div className="p-2 bg-blue-100 text-blue-800 rounded-xl">
                         <Scale className="h-5 w-5" />
                       </div>
                       <div>
-                        <span className="text-xs font-bold text-emerald-950 block">
+                        <span className="text-xs font-bold text-blue-950 block">
                           Volcar Datos de Báscula Automáticamente
                         </span>
-                        <span className="text-[11px] text-emerald-700 block">
+                        <span className="text-[11px] text-blue-700 block">
                           Compatible con InBody, Tanita, SECA (.csv, .txt, .json)
                         </span>
                       </div>
                     </div>
 
-                    <label className="inline-flex items-center gap-2 px-3.5 py-1.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl text-xs font-bold cursor-pointer transition-colors shadow-2xs shrink-0">
+                    <label className="inline-flex items-center gap-2 px-3.5 py-1.5 bg-blue-600 hover:bg-blue-700 text-white rounded-xl text-xs font-bold cursor-pointer transition-colors shadow-2xs shrink-0">
                       {scaleParsing ? (
                         <>
                           <Loader2 className="h-3.5 w-3.5 animate-spin" />
@@ -1283,7 +1283,7 @@ export default function NewPatientPage() {
                   </div>
 
                   {scaleSuccess && (
-                    <div className="p-2.5 bg-emerald-100/80 border border-emerald-300 rounded-xl text-xs text-emerald-900 font-medium">
+                    <div className="p-2.5 bg-blue-100/80 border border-blue-300 rounded-xl text-xs text-blue-900 font-medium">
                       {scaleSuccess}
                     </div>
                   )}
@@ -1296,12 +1296,12 @@ export default function NewPatientPage() {
                 </div>
 
                 {/* Antropometría Inicial */}
-                <div className="p-4 bg-green-50/50 rounded-xl border border-green-100 space-y-3">
+                <div className="p-4 bg-blue-50/50 rounded-xl border border-blue-100 space-y-3">
                   <div className="flex items-center justify-between">
-                    <Label className="text-sm font-semibold text-green-900 block">
+                    <Label className="text-sm font-semibold text-blue-900 block">
                       Antropometría Inicial (Punto de partida)
                     </Label>
-                    <span className="text-xs text-green-700">* Peso requerido para cálculo de IMC</span>
+                    <span className="text-xs text-blue-700">* Peso requerido para cálculo de IMC</span>
                   </div>
                   <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
                     <div className="space-y-1">
@@ -1538,10 +1538,10 @@ export default function NewPatientPage() {
                   size="sm"
                   onClick={() => handleFinalSubmit()}
                   disabled={loading || !canSubmit}
-                  className="text-xs text-green-700 border-green-200 hover:bg-green-50"
+                  className="text-xs text-blue-700 border-blue-200 hover:bg-blue-50"
                   title="Guardar paciente directamente con los datos ingresados hasta ahora"
                 >
-                  <Check className="h-3.5 w-3.5 mr-1 text-green-600" />
+                  <Check className="h-3.5 w-3.5 mr-1 text-blue-600" />
                   <span>Guardar ya</span>
                 </Button>
               </>
@@ -1551,7 +1551,7 @@ export default function NewPatientPage() {
               <Button
                 type="button"
                 onClick={handleNext}
-                className="bg-green-600 hover:bg-green-700 text-white gap-2 min-w-[120px]"
+                className="bg-blue-600 hover:bg-blue-700 text-white gap-2 min-w-[120px]"
               >
                 <span>Siguiente</span>
                 <ArrowRight className="h-4 w-4" />
@@ -1560,7 +1560,7 @@ export default function NewPatientPage() {
               <Button
                 type="submit"
                 disabled={loading || !canSubmit}
-                className="bg-green-600 hover:bg-green-700 text-white gap-2 min-w-[170px]"
+                className="bg-blue-600 hover:bg-blue-700 text-white gap-2 min-w-[170px]"
               >
                 {loading ? (
                   <>

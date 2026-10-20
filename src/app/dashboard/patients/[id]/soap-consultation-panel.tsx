@@ -283,11 +283,11 @@ export function SoapConsultationPanel({ patientId, consultations }: Props) {
                   onClick={() => setIsShared(!isShared)}
                   className={`flex items-center gap-1.5 text-xs font-semibold px-3 py-1.5 rounded-full border transition-colors ${
                     isShared
-                      ? 'bg-emerald-100 text-emerald-800 border-emerald-300'
+                      ? 'bg-blue-100 text-blue-800 border-blue-300'
                       : 'bg-white text-gray-600 border-gray-300'
                   }`}
                 >
-                  {isShared ? <Eye className="w-3.5 h-3.5 text-emerald-700" /> : <EyeOff className="w-3.5 h-3.5 text-gray-400" />}
+                  {isShared ? <Eye className="w-3.5 h-3.5 text-blue-700" /> : <EyeOff className="w-3.5 h-3.5 text-gray-400" />}
                   <span>{isShared ? 'Publicado: Visible en el portal del paciente' : 'Privado: Solo Eva Vidal (apagado por defecto)'}</span>
                 </button>
               </div>
@@ -510,14 +510,14 @@ export function SoapConsultationPanel({ patientId, consultations }: Props) {
                       onClick={() => handleToggleSharing(c.id, c.isSharedWithPatient)}
                       className={`inline-flex items-center gap-1.5 text-[11px] font-semibold px-2.5 py-0.5 rounded-full border transition-all ${
                         c.isSharedWithPatient
-                          ? 'bg-emerald-50 text-emerald-800 border-emerald-300 hover:bg-emerald-100'
+                          ? 'bg-blue-50 text-blue-800 border-blue-300 hover:bg-blue-100'
                           : 'bg-gray-100 text-gray-700 border-gray-300 hover:bg-gray-200'
                       }`}
                       title="Haz clic para cambiar la visibilidad para el paciente"
                     >
                       {c.isSharedWithPatient ? (
                         <>
-                          <Eye className="w-3 h-3 text-emerald-600" />
+                          <Eye className="w-3 h-3 text-blue-600" />
                           <span>Visible para el paciente</span>
                         </>
                       ) : (

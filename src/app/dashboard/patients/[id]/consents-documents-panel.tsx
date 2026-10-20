@@ -185,7 +185,7 @@ export function ConsentsDocumentsPanel({ patientId, consents, documents }: Props
                         </span>
                       </div>
                       {c.accepted ? (
-                        <p className="text-emerald-700 font-semibold flex items-center gap-1.5 text-2xs">
+                        <p className="text-blue-700 font-semibold flex items-center gap-1.5 text-2xs">
                           <CheckCircle2 className="w-3.5 h-3.5" />
                           Aceptado el {new Date(c.acceptedAt!).toLocaleDateString('es-ES')}
                           {c.signatureData ? ` • (${c.signatureData})` : ''}
@@ -209,7 +209,7 @@ export function ConsentsDocumentsPanel({ patientId, consents, documents }: Props
                           size="sm"
                           disabled={loading}
                           onClick={() => handleAcceptByAdmin(c.id)}
-                          className="bg-emerald-600 hover:bg-emerald-700 text-white text-2xs rounded-xl h-8 font-semibold"
+                          className="bg-blue-600 hover:bg-blue-700 text-white text-2xs rounded-xl h-8 font-semibold"
                         >
                           Firma Presencial
                         </Button>
@@ -351,7 +351,7 @@ export function ConsentsDocumentsPanel({ patientId, consents, documents }: Props
                         onClick={() => handleToggleDocSharing(doc.id, doc.isSharedWithPatient)}
                         className={`p-1.5 rounded-lg border text-2xs font-semibold flex items-center gap-1 transition-colors ${
                           doc.isSharedWithPatient
-                            ? 'bg-emerald-50 text-emerald-700 border-emerald-200'
+                            ? 'bg-blue-50 text-blue-700 border-blue-200'
                             : 'bg-gray-100 text-gray-500 border-gray-200'
                         }`}
                         title={doc.isSharedWithPatient ? 'Visible en portal paciente' : 'Privado (solo profesional)'}

@@ -143,7 +143,7 @@ export function ClinicalScreeningsCard({
                 variant="outline"
                 className={`font-black rounded-full px-2.5 py-0.5 text-2xs ${
                   pregnancyTracking.status === 'Dentro del rango óptimo'
-                    ? 'bg-emerald-100 text-emerald-900 border-emerald-300'
+                    ? 'bg-blue-100 text-blue-900 border-blue-300'
                     : 'bg-amber-100 text-amber-900 border-amber-300'
                 }`}
               >
@@ -225,7 +225,7 @@ export function ClinicalScreeningsCard({
                             ? 'bg-rose-100 text-rose-800 border-rose-300'
                             : isMedium
                             ? 'bg-amber-100 text-amber-800 border-amber-300'
-                            : 'bg-emerald-100 text-emerald-800 border-emerald-300'
+                            : 'bg-blue-100 text-blue-800 border-blue-300'
                         }`}
                       >
                         {sc.resultCategory.replace(/_/g, ' ')}

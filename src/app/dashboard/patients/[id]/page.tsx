@@ -402,7 +402,7 @@ export default async function PatientDetailPage({ params, searchParams }: Patien
                             <span
                               className={`text-xs font-semibold px-2 py-0.5 rounded-full ${
                                 bmiData.category === 'Normal'
-                                  ? 'bg-emerald-100 text-emerald-800'
+                                  ? 'bg-blue-100 text-blue-800'
                                   : bmiData.category === 'Bajo peso'
                                   ? 'bg-amber-100 text-amber-800'
                                   : 'bg-rose-100 text-rose-800'
@@ -445,17 +445,17 @@ export default async function PatientDetailPage({ params, searchParams }: Patien
               </Card>
 
               {/* Card 2: Peso Ideal y Fórmulas Clínicas */}
-              <Card className="rounded-3xl border-t-4 border-t-emerald-600 shadow-sm">
+              <Card className="rounded-3xl border-t-4 border-t-blue-600 shadow-sm">
                 <CardHeader className="pb-2">
                   <CardTitle className="text-sm font-semibold uppercase tracking-wider text-gray-500 flex items-center gap-2">
-                    <HeartPulse className="h-4 w-4 text-emerald-600" />
+                    <HeartPulse className="h-4 w-4 text-blue-600" />
                     <span>Peso Ideal Teórico</span>
                   </CardTitle>
                 </CardHeader>
                 <CardContent className="space-y-3">
-                  <div className="bg-emerald-50 p-3 rounded-2xl border border-emerald-100">
-                    <span className="text-xs text-emerald-700 font-medium block">Rango de Peso Saludable (IMC 18.5 - 24.9)</span>
-                    <span className="text-lg font-bold text-emerald-900">
+                  <div className="bg-blue-50 p-3 rounded-2xl border border-blue-100">
+                    <span className="text-xs text-blue-700 font-medium block">Rango de Peso Saludable (IMC 18.5 - 24.9)</span>
+                    <span className="text-lg font-bold text-blue-900">
                       {(18.5 * Math.pow(patient.heightCm / 100, 2)).toFixed(1)} - {(24.9 * Math.pow(patient.heightCm / 100, 2)).toFixed(1)} kg
                     </span>
                   </div>
@@ -503,8 +503,8 @@ export default async function PatientDetailPage({ params, searchParams }: Patien
                         ))}
                       </div>
                     ) : patient.allergiesStatus === 'NINGUNA_CONOCIDA' ? (
-                      <p className="text-xs text-emerald-800 font-semibold mt-1 flex items-center gap-1.5">
-                        <span className="inline-block w-2 h-2 rounded-full bg-emerald-500"></span>
+                      <p className="text-xs text-blue-800 font-semibold mt-1 flex items-center gap-1.5">
+                        <span className="inline-block w-2 h-2 rounded-full bg-blue-500"></span>
                         <span>✓ Ninguna conocida (confirmado)</span>
                       </p>
                     ) : (
@@ -533,8 +533,8 @@ export default async function PatientDetailPage({ params, searchParams }: Patien
                         ))}
                       </div>
                     ) : patient.intolerancesStatus === 'NINGUNA_CONOCIDA' ? (
-                      <p className="text-xs text-emerald-800 font-semibold mt-1 flex items-center gap-1.5">
-                        <span className="inline-block w-2 h-2 rounded-full bg-emerald-500"></span>
+                      <p className="text-xs text-blue-800 font-semibold mt-1 flex items-center gap-1.5">
+                        <span className="inline-block w-2 h-2 rounded-full bg-blue-500"></span>
                         <span>✓ Ninguna conocida (confirmado)</span>
                       </p>
                     ) : (
@@ -552,8 +552,8 @@ export default async function PatientDetailPage({ params, searchParams }: Patien
                         {patient.currentMedications}
                       </p>
                     ) : patient.medicationsStatus === 'NINGUNA_CONOCIDA' ? (
-                      <p className="text-xs text-emerald-800 font-semibold mt-1 flex items-center gap-1.5">
-                        <span className="inline-block w-2 h-2 rounded-full bg-emerald-500"></span>
+                      <p className="text-xs text-blue-800 font-semibold mt-1 flex items-center gap-1.5">
+                        <span className="inline-block w-2 h-2 rounded-full bg-blue-500"></span>
                         <span>✓ Ninguna conocida (confirmado)</span>
                       </p>
                     ) : (
@@ -571,8 +571,8 @@ export default async function PatientDetailPage({ params, searchParams }: Patien
                         {patient.medicalHistory}
                       </p>
                     ) : patient.pathologiesStatus === 'NINGUNA_CONOCIDA' ? (
-                      <p className="text-xs text-emerald-800 font-semibold mt-1 flex items-center gap-1.5">
-                        <span className="inline-block w-2 h-2 rounded-full bg-emerald-500"></span>
+                      <p className="text-xs text-blue-800 font-semibold mt-1 flex items-center gap-1.5">
+                        <span className="inline-block w-2 h-2 rounded-full bg-blue-500"></span>
                         <span>✓ Ninguno conocido (confirmado)</span>
                       </p>
                     ) : (
@@ -848,7 +848,7 @@ export default async function PatientDetailPage({ params, searchParams }: Patien
                       <div key={log.id} className="p-3 rounded-2xl bg-gray-50/80 border border-gray-200 flex flex-col sm:flex-row sm:items-center justify-between gap-2 text-xs">
                         <div className="flex items-center gap-2.5 flex-wrap">
                           <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-2xs font-bold ${
-                            log.status === 'SENT' ? 'bg-emerald-100 text-emerald-800' : 'bg-red-100 text-red-800'
+                            log.status === 'SENT' ? 'bg-blue-100 text-blue-800' : 'bg-red-100 text-red-800'
                           }`}>
                             {log.status === 'SENT' ? '✓ Enviado' : '✗ Fallido'}
                           </span>

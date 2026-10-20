@@ -235,8 +235,8 @@ export function AltaFormClient({ patient }: Props) {
 
   if (isSubmitted) {
     return (
-      <Card className="rounded-3xl p-8 text-center bg-white border border-emerald-200 shadow-md max-w-xl mx-auto my-12">
-        <div className="w-16 h-16 rounded-3xl bg-emerald-100 text-emerald-700 flex items-center justify-center mx-auto mb-4">
+      <Card className="rounded-3xl p-8 text-center bg-white border border-blue-200 shadow-md max-w-xl mx-auto my-12">
+        <div className="w-16 h-16 rounded-3xl bg-blue-100 text-blue-700 flex items-center justify-center mx-auto mb-4">
           <CheckCircle2 className="w-8 h-8" />
         </div>
         <h2 className="text-2xl font-bold text-gray-900">¡Cuestionario Enviado con Éxito!</h2>
@@ -276,8 +276,8 @@ export function AltaFormClient({ patient }: Props) {
           </div>
 
           {lastAutoSave && (
-            <div className="flex items-center gap-1.5 text-2xs text-emerald-700 bg-emerald-50 px-3 py-1.5 rounded-full border border-emerald-200">
-              <Check className="w-3.5 h-3.5 text-emerald-600" />
+            <div className="flex items-center gap-1.5 text-2xs text-blue-700 bg-blue-50 px-3 py-1.5 rounded-full border border-blue-200">
+              <Check className="w-3.5 h-3.5 text-blue-600" />
               <span>Autoguardado {lastAutoSave}</span>
             </div>
           )}
@@ -308,7 +308,7 @@ export function AltaFormClient({ patient }: Props) {
                     isCurrent
                       ? 'bg-blue-600 text-white shadow-xs ring-2 ring-blue-400/40'
                       : isCompleted
-                      ? 'bg-emerald-100/90 text-emerald-800 hover:bg-emerald-200/80 border border-emerald-200/60'
+                      ? 'bg-blue-100/90 text-blue-800 hover:bg-blue-200/80 border border-blue-200/60'
                       : 'bg-slate-100 text-slate-600 hover:bg-slate-200/70 border border-slate-200/50'
                   }`}
                 >
@@ -317,7 +317,7 @@ export function AltaFormClient({ patient }: Props) {
                       isCurrent
                         ? 'bg-white text-blue-700'
                         : isCompleted
-                        ? 'bg-emerald-600 text-white'
+                        ? 'bg-blue-600 text-white'
                         : 'bg-slate-200 text-slate-700'
                     }`}
                   >
@@ -497,7 +497,7 @@ export function AltaFormClient({ patient }: Props) {
               <div className="space-y-4">
                 <div className="border-b border-gray-100 pb-2">
                   <h3 className="text-sm font-bold text-gray-900 flex items-center gap-2">
-                    <Stethoscope className="w-4 h-4 text-emerald-600" />
+                    <Stethoscope className="w-4 h-4 text-blue-600" />
                     <span>3. Sistema Digestivo y Tránsito Intestinal</span>
                   </h3>
                 </div>
@@ -646,7 +646,7 @@ export function AltaFormClient({ patient }: Props) {
               <div className="space-y-4">
                 <div className="border-b border-gray-100 pb-2">
                   <h3 className="text-sm font-bold text-gray-900 flex items-center gap-2">
-                    <Activity className="w-4 h-4 text-emerald-600" />
+                    <Activity className="w-4 h-4 text-blue-600" />
                     <span>5. Actividad Física y Ejercicio</span>
                   </h3>
                 </div>
@@ -884,7 +884,7 @@ export function AltaFormClient({ patient }: Props) {
                 <Button
                   type="submit"
                   disabled={loading}
-                  className="rounded-2xl bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs px-6 shadow-xs"
+                  className="rounded-2xl bg-blue-600 hover:bg-blue-700 text-white font-bold text-xs px-6 shadow-xs"
                 >
                   {loading ? (
                     <span className="flex items-center gap-1.5">

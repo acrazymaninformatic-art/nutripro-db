@@ -124,16 +124,16 @@ export function PatientClinicalProtocolsCard({
   }
 
   return (
-    <Card className="rounded-3xl border-emerald-200/80 bg-gradient-to-br from-emerald-50/20 via-white to-teal-50/20 shadow-sm overflow-hidden">
-      <CardHeader className="bg-gradient-to-r from-emerald-700 to-teal-800 text-white p-5">
+    <Card className="rounded-3xl border-blue-200/80 bg-gradient-to-br from-blue-50/20 via-white to-blue-50/20 shadow-sm overflow-hidden">
+      <CardHeader className="bg-gradient-to-r from-blue-700 to-blue-800 text-white p-5">
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
           <div className="flex items-center gap-2.5">
             <div className="p-2 rounded-2xl bg-white/10 backdrop-blur-sm border border-white/20">
-              <HeartPulse className="h-5 w-5 text-emerald-200" />
+              <HeartPulse className="h-5 w-5 text-blue-200" />
             </div>
             <div>
               <CardTitle className="text-lg font-bold">Protocolos Clínicos & Evaluación</CardTitle>
-              <CardDescription className="text-emerald-100 text-xs">
+              <CardDescription className="text-blue-100 text-xs">
                 Protocolos metabólicos, digestivos, etapas vitales y cálculos NIH/SCORE2 (Secciones 5.9 y 5.10)
               </CardDescription>
             </div>
@@ -152,9 +152,9 @@ export function PatientClinicalProtocolsCard({
             <Button
               size="sm"
               onClick={() => setIsAssigning(!isAssigning)}
-              className="bg-white text-emerald-900 hover:bg-emerald-50 font-semibold text-xs rounded-xl flex items-center gap-1.5 shadow-sm"
+              className="bg-white text-blue-900 hover:bg-blue-50 font-semibold text-xs rounded-xl flex items-center gap-1.5 shadow-sm"
             >
-              <PlusCircle className="h-3.5 w-3.5 text-emerald-700" />
+              <PlusCircle className="h-3.5 w-3.5 text-blue-700" />
               <span>{isAssigning ? 'Cancelar' : 'Asignar Protocolo'}</span>
             </Button>
           </div>
@@ -166,11 +166,11 @@ export function PatientClinicalProtocolsCard({
         {isAssigning && (
           <form
             onSubmit={handleAssign}
-            className="p-4 rounded-2xl bg-emerald-50/80 border border-emerald-200 space-y-4 animate-in fade-in"
+            className="p-4 rounded-2xl bg-blue-50/80 border border-blue-200 space-y-4 animate-in fade-in"
           >
             <div className="flex items-center justify-between">
-              <h4 className="text-sm font-bold text-emerald-950 flex items-center gap-2">
-                <Layers className="h-4 w-4 text-emerald-700" />
+              <h4 className="text-sm font-bold text-blue-950 flex items-center gap-2">
+                <Layers className="h-4 w-4 text-blue-700" />
                 <span>Asignar Nuevo Protocolo Clínico a {patientName}</span>
               </h4>
             </div>
@@ -239,8 +239,8 @@ export function PatientClinicalProtocolsCard({
             </div>
 
             {selectedDef && (
-              <div className="p-3 bg-white rounded-xl border border-emerald-100 text-xs space-y-1.5 text-gray-700">
-                <p className="font-semibold text-emerald-900">{selectedDef.summary}</p>
+              <div className="p-3 bg-white rounded-xl border border-blue-100 text-xs space-y-1.5 text-gray-700">
+                <p className="font-semibold text-blue-900">{selectedDef.summary}</p>
                 {selectedDef.warnings && selectedDef.warnings.length > 0 && (
                   <p className="text-amber-800 font-medium">⚠️ Advertencia: {selectedDef.warnings[0]}</p>
                 )}
@@ -274,7 +274,7 @@ export function PatientClinicalProtocolsCard({
                 type="submit"
                 disabled={isSubmitting || !selectedProtocolId}
                 size="sm"
-                className="rounded-xl bg-emerald-700 hover:bg-emerald-800 text-white text-xs font-semibold"
+                className="rounded-xl bg-blue-700 hover:bg-blue-800 text-white text-xs font-semibold"
               >
                 {isSubmitting ? 'Guardando...' : 'Confirmar e Iniciar Protocolo'}
               </Button>
@@ -285,7 +285,7 @@ export function PatientClinicalProtocolsCard({
         {/* ACTIVE PROTOCOLS */}
         <div>
           <h4 className="text-xs font-bold uppercase tracking-wider text-gray-500 mb-3 flex items-center gap-1.5">
-            <Activity className="h-4 w-4 text-emerald-600" />
+            <Activity className="h-4 w-4 text-blue-600" />
             <span>Protocolos Clínicos Activos ({activeProtocols.length})</span>
           </h4>
 
@@ -310,11 +310,11 @@ export function PatientClinicalProtocolsCard({
                 return (
                   <div
                     key={record.id}
-                    className="p-4 rounded-2xl bg-white border border-emerald-200/80 shadow-xs space-y-3"
+                    className="p-4 rounded-2xl bg-white border border-blue-200/80 shadow-xs space-y-3"
                   >
                     <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
                       <div className="flex items-center gap-2">
-                        <Badge className="bg-emerald-100 text-emerald-800 border-emerald-300 font-bold text-xs">
+                        <Badge className="bg-blue-100 text-blue-800 border-blue-300 font-bold text-xs">
                           {def?.badge || 'Protocolo Clínico'}
                         </Badge>
                         <h5 className="font-bold text-gray-900 text-sm">{record.title}</h5>
@@ -324,7 +324,7 @@ export function PatientClinicalProtocolsCard({
                           size="sm"
                           variant="ghost"
                           onClick={() => setSymptomModalProtocolId(record.id)}
-                          className="text-xs text-teal-700 hover:text-teal-800 hover:bg-teal-50 h-7 px-2.5 rounded-lg"
+                          className="text-xs text-blue-700 hover:text-blue-800 hover:bg-blue-50 h-7 px-2.5 rounded-lg"
                         >
                           <Thermometer className="h-3.5 w-3.5 mr-1" />
                           <span>+ Registrar Síntomas</span>
@@ -333,7 +333,7 @@ export function PatientClinicalProtocolsCard({
                           size="sm"
                           variant="outline"
                           onClick={() => handleCompleteProtocol(record.id)}
-                          className="text-xs text-gray-600 hover:text-emerald-700 h-7 px-2.5 rounded-lg border-gray-200"
+                          className="text-xs text-gray-600 hover:text-blue-700 h-7 px-2.5 rounded-lg border-gray-200"
                         >
                           <CheckCircle2 className="h-3.5 w-3.5 mr-1" />
                           <span>Finalizar</span>
@@ -344,7 +344,7 @@ export function PatientClinicalProtocolsCard({
                     {record.currentPhase && (
                       <div className="flex flex-wrap items-center gap-2 pt-1 text-xs">
                         <span className="font-semibold text-gray-700">Fase Actual:</span>
-                        <Badge variant="outline" className="bg-teal-50 text-teal-800 border-teal-200 font-medium">
+                        <Badge variant="outline" className="bg-blue-50 text-blue-800 border-blue-200 font-medium">
                           {record.currentPhase}
                         </Badge>
                         {def?.phases && def.phases.length > 1 && (
@@ -356,7 +356,7 @@ export function PatientClinicalProtocolsCard({
                                 <button
                                   key={ph.id}
                                   onClick={() => handlePhaseChange(record.id, ph.name)}
-                                  className="text-2xs font-semibold px-2 py-0.5 rounded bg-gray-100 text-gray-700 hover:bg-emerald-100 hover:text-emerald-800 transition-colors"
+                                  className="text-2xs font-semibold px-2 py-0.5 rounded bg-gray-100 text-gray-700 hover:bg-blue-100 hover:text-blue-800 transition-colors"
                                 >
                                   {ph.name}
                                 </button>
@@ -382,7 +382,7 @@ export function PatientClinicalProtocolsCard({
                           {symptomLogs.slice(-3).reverse().map((log: any, idx: number) => (
                             <span
                               key={idx}
-                              className="px-2 py-1 rounded-lg bg-teal-50 text-teal-900 border border-teal-100 text-2xs flex items-center gap-1"
+                              className="px-2 py-1 rounded-lg bg-blue-50 text-blue-900 border border-blue-100 text-2xs flex items-center gap-1"
                             >
                               <span>Bristol: <strong>{log.bristolScore}</strong></span> ·
                               <span>Distensión: <strong>{log.bloatingScore}/5</strong></span> ·
@@ -455,7 +455,7 @@ export function PatientClinicalProtocolsCard({
         <div className="fixed inset-0 z-50 bg-black/40 backdrop-blur-xs flex items-center justify-center p-4">
           <div className="bg-white rounded-3xl p-6 max-w-md w-full shadow-xl space-y-4 animate-in zoom-in-95">
             <h4 className="text-base font-bold text-gray-900 flex items-center gap-2">
-              <Thermometer className="h-5 w-5 text-teal-600" />
+              <Thermometer className="h-5 w-5 text-blue-600" />
               <span>Registro de Síntomas Digestivos (FODMAP / SIBO)</span>
             </h4>
 
@@ -470,7 +470,7 @@ export function PatientClinicalProtocolsCard({
                   max="7"
                   value={bristolScore}
                   onChange={(e) => setBristolScore(parseInt(e.target.value))}
-                  className="w-full accent-teal-600"
+                  className="w-full accent-blue-600"
                 />
                 <div className="flex justify-between text-2xs text-gray-400">
                   <span>1: Estreñimiento severo</span>
@@ -489,7 +489,7 @@ export function PatientClinicalProtocolsCard({
                   max="5"
                   value={bloatingScore}
                   onChange={(e) => setBloatingScore(parseInt(e.target.value))}
-                  className="w-full accent-teal-600"
+                  className="w-full accent-blue-600"
                 />
               </div>
 
@@ -503,7 +503,7 @@ export function PatientClinicalProtocolsCard({
                   max="5"
                   value={painScore}
                   onChange={(e) => setPainScore(parseInt(e.target.value))}
-                  className="w-full accent-teal-600"
+                  className="w-full accent-blue-600"
                 />
               </div>
 
@@ -517,7 +517,7 @@ export function PatientClinicalProtocolsCard({
                   max="5"
                   value={gasScore}
                   onChange={(e) => setGasScore(parseInt(e.target.value))}
-                  className="w-full accent-teal-600"
+                  className="w-full accent-blue-600"
                 />
               </div>
 
@@ -546,7 +546,7 @@ export function PatientClinicalProtocolsCard({
                 size="sm"
                 onClick={handleSaveSymptomLog}
                 disabled={isSubmitting}
-                className="rounded-xl bg-teal-700 hover:bg-teal-800 text-white text-xs font-semibold"
+                className="rounded-xl bg-blue-700 hover:bg-blue-800 text-white text-xs font-semibold"
               >
                 {isSubmitting ? 'Guardando...' : 'Guardar Registro'}
               </Button>

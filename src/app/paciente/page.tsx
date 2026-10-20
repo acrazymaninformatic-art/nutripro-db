@@ -206,7 +206,7 @@ export default async function PacienteDashboardPage() {
       {/* Welcome Hero Banner */}
       <div className="rounded-3xl bg-gradient-to-br from-slate-900 via-blue-950 to-indigo-950 text-white p-7 sm:p-9 shadow-lg relative overflow-hidden border border-blue-900/40 animate-slide-up">
         <div className="absolute -right-20 -top-20 w-80 h-80 bg-blue-500/15 rounded-full blur-3xl pointer-events-none" />
-        <div className="absolute right-10 -bottom-24 w-72 h-72 bg-teal-500/10 rounded-full blur-3xl pointer-events-none" />
+        <div className="absolute right-10 -bottom-24 w-72 h-72 bg-blue-500/10 rounded-full blur-3xl pointer-events-none" />
         <div className="relative z-10 max-w-2xl">
           <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-white/10 backdrop-blur-md text-blue-200 text-xs font-semibold mb-4 border border-white/10 shadow-2xs animate-float">
             <Sparkles className="w-3.5 h-3.5 text-blue-300" />
@@ -291,7 +291,7 @@ export default async function PacienteDashboardPage() {
             <CardTitle className="text-xs font-bold uppercase tracking-wider text-slate-500">
               Plan Activo
             </CardTitle>
-            <div className="w-9 h-9 rounded-2xl bg-gradient-to-br from-teal-50 to-emerald-100/60 text-teal-700 flex items-center justify-center shadow-2xs">
+            <div className="w-9 h-9 rounded-2xl bg-gradient-to-br from-blue-50 to-blue-100/60 text-blue-700 flex items-center justify-center shadow-2xs">
               <UtensilsCrossed className="w-4.5 h-4.5" />
             </div>
           </CardHeader>
@@ -302,7 +302,7 @@ export default async function PacienteDashboardPage() {
                   {activeMealPlan.name}
                 </div>
                 <div className="mt-1 flex items-center gap-2">
-                  <Badge variant="teal" className="text-[10px] font-bold">
+                  <Badge variant="default" className="text-[10px] font-bold">
                     Activo
                   </Badge>
                   <span className="text-xs text-slate-500 truncate font-medium">
@@ -523,12 +523,12 @@ export default async function PacienteDashboardPage() {
           <Link href="/paciente/cuestionarios" className="group block active:scale-[0.98] transition-transform">
             <Card className="h-full glass-card glass-card-hover rounded-3xl border-slate-200/80">
               <CardHeader>
-                <div className="w-11 h-11 rounded-2xl bg-gradient-to-br from-emerald-50 to-emerald-100/70 text-emerald-700 flex items-center justify-center mb-2 group-hover:bg-emerald-600 group-hover:text-white transition-all shadow-2xs">
+                <div className="w-11 h-11 rounded-2xl bg-gradient-to-br from-blue-50 to-blue-100/70 text-blue-700 flex items-center justify-center mb-2 group-hover:bg-blue-600 group-hover:text-white transition-all shadow-2xs">
                   <ClipboardCheck className="w-5 h-5" />
                 </div>
-                <CardTitle className="text-sm font-bold text-slate-900 group-hover:text-emerald-700 transition-colors flex items-center justify-between">
+                <CardTitle className="text-sm font-bold text-slate-900 group-hover:text-blue-700 transition-colors flex items-center justify-between">
                   <span>Cuestionarios & Firmas</span>
-                  <ChevronRight className="w-4 h-4 text-slate-400 group-hover:translate-x-1 group-hover:text-emerald-700 transition-all" />
+                  <ChevronRight className="w-4 h-4 text-slate-400 group-hover:translate-x-1 group-hover:text-blue-700 transition-all" />
                 </CardTitle>
                 <CardDescription className="text-xs text-slate-500 leading-relaxed font-normal">
                   Anamnesis pre-consulta y consentimientos informados.
