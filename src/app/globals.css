@@ -361,8 +361,21 @@ button, a, input, select, textarea {
 }
 
 ::-webkit-scrollbar-track { background: transparent; }
-::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 9999px; }
-::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
+::-webkit-scrollbar-thumb { background: rgba(148, 163, 184, 0.5); border-radius: 9999px; }
+::-webkit-scrollbar-thumb:hover { background: rgba(100, 116, 139, 0.75); }
+
+/*
+ * Windows 11 / Chrome dibujan el scrollbar SUPERPUESTO sobre el contenido:
+ * el trazo gris se montaba encima de las cards y parecía una línea gris que
+ * "se salía" del contenedor. Reservando el hueco del scrollbar, el trazo
+ * nunca se solapa con el contenido.
+ */
+main,
+[data-gsap-scroll],
+.medical-scrollbar,
+.scrollbar-stable {
+  scrollbar-gutter: stable;
+}
 
 .medical-scrollbar {
   scrollbar-width: thin;
