@@ -87,6 +87,23 @@ function isSafeToMutate(element: HTMLElement) {
   return false
 }
 
+/**
+ * Un bloque queda "bajo el pliegue" si todavía no se ve dentro de su
+ * contenedor de scroll. Solo esos se desplazan beforehand: los que ya están
+ * a la vista se dejan quietos (si los movemos, al cambiar de pestaña se ve
+ * un tirón al aparecer y luego el ascenso).
+ */
+function isBelowFold(element: HTMLElement, scroller: ScrollContainer) {
+  const rect = element.getBoundingClientRect()
+
+  if (scroller === window) {
+    return rect.top > window.innerHeight * 0.92
+  }
+
+  const bounds = (scroller as HTMLElement).getBoundingClientRect()
+  return rect.top > bounds.top + bounds.height * 0.92
+}
+
 export function GsapMotionProvider({ children }: { children: React.ReactNode }) {
   const rootRef = useRef<HTMLDivElement>(null)
   const pathname = usePathname()
@@ -221,7 +238,7 @@ export function GsapMotionProvider({ children }: { children: React.ReactNode }) 
         })
       }
 
-      const bindRevealTargets = (targets: HTMLElement[]) => {
+      const bindRevealTargets = (targets: HTMLElement[], hydratedOnly = false) => {
         const maxHeight = window.innerHeight * 4
 
         const elements = uniqueElements(
@@ -229,7 +246,7 @@ export function GsapMotionProvider({ children }: { children: React.ReactNode }) 
             (element) =>
               !boundRevealElements.has(element) &&
               !isIgnored(element) &&
-              isSafeToMutate(element) &&
+              (hydratedOnly ? hasReactFiber(element) : isSafeToMutate(element)) &&
               element.offsetHeight <= maxHeight &&
               !element.closest(`${MODAL_SELECTOR}, ${OVERLAY_SELECTOR}, .animate-in`)
           )
@@ -237,33 +254,60 @@ export function GsapMotionProvider({ children }: { children: React.ReactNode }) 
 
         if (!elements.length) return
 
-        // Never hide clinical content while waiting for ScrollTrigger. The
-        // entrance is transform-only (no opacity/visibility), so the data is
-        // always readable even if the trigger never fires.
+        // Solo se desplazan los bloques que todavía no se ven: los que ya
+        // están a la vista se dejan en su sitio para que al cambiar de
+        // pestaña no haya un tirón (el bloque aparecía de golpe 22 px más
+        // abajo y luego subía).
+        const groups = new Map<ScrollContainer, HTMLElement[]>()
+        const visibleElements: HTMLElement[] = []
+
         elements.forEach((element) => {
           boundRevealElements.add(element)
 
           if (motionDisabled) {
             settle([element])
-          } else {
+            return
+          }
+
+          const scroller = getScrollContainer(element, root)
+
+          if (isBelowFold(element, scroller)) {
+            // Nunca escondemos el contenido clínico: solo transform, el dato
+            // siempre es legible aunque el trigger no llegue a dispararse.
             gsap.set(element, {
               y: 22,
               scale: 0.975,
               willChange: 'transform',
             })
+
+            const group = groups.get(scroller) || []
+            group.push(element)
+            groups.set(scroller, group)
+            pendingReveals.set(element, scroller)
+            return
           }
+
+          visibleElements.push(element)
         })
 
         if (motionDisabled) return
 
-        const groups = new Map<ScrollContainer, HTMLElement[]>()
-        elements.forEach((element) => {
-          const scroller = getScrollContainer(element, root)
-          const group = groups.get(scroller) || []
-          group.push(element)
-          groups.set(scroller, group)
-          pendingReveals.set(element, scroller)
-        })
+        // Bloques ya visibles: entran con un movimiento suave desde su propia
+        // posición, sin saltos.
+        if (visibleElements.length) {
+          gsap.fromTo(
+            visibleElements,
+            { y: 10, scale: 0.995 },
+            {
+              y: 0,
+              scale: 1,
+              duration: 0.55,
+              ease: 'power2.out',
+              stagger: { each: 0.04, from: 'start' },
+              clearProps: 'transform,willChange',
+            }
+          )
+        }
 
         groups.forEach((group, scroller) => {
           const triggers = ScrollTrigger.batch(group, {
@@ -287,6 +331,13 @@ export function GsapMotionProvider({ children }: { children: React.ReactNode }) 
       // movimiento.
       const runRevealBinding = contextSafe((targets: HTMLElement[]) => {
         bindRevealTargets(targets)
+
+        // Recalculamos las posiciones de los triggers una vez el contenido
+        // está asentado: refrescar antes provocaba saltos de scroll al
+        // cambiar de pestaña.
+        if (!motionDisabled) {
+          requestAnimationFrame(() => ScrollTrigger.refresh())
+        }
       })
 
       // React hidrata el contenido en streaming justo después de insertarlo en
@@ -378,6 +429,10 @@ export function GsapMotionProvider({ children }: { children: React.ReactNode }) 
         // Tarjetas y secciones comparten el mismo motor de entrada: las que ya
         // están en pantalla animan al cargar y el resto al ir haciendo scroll,
         // tanto en escritorio como en móvil.
+        // En navegación interna el contenido ya está hidratado, así que se
+        // engancha de inmediato: así el cambio de pestaña es un movimiento
+        // continuo y sin tirones.
+        bindRevealTargets([...revealTargets, ...cardTargets, ...sectionTargets], true)
         scheduleRevealBinding([...revealTargets, ...cardTargets, ...sectionTargets])
 
         if (motionDisabled) {
@@ -399,11 +454,11 @@ export function GsapMotionProvider({ children }: { children: React.ReactNode }) 
         if (pageTargets.length) {
           gsap.fromTo(
             pageTargets,
-            { autoAlpha: 0, y: 24 },
+            { autoAlpha: 0, y: 14 },
             {
               autoAlpha: 1,
               y: 0,
-              duration: 0.72,
+              duration: 0.45,
               ease: 'power2.out',
               stagger: 0.03,
               clearProps: 'transform,opacity,visibility,willChange',
@@ -642,12 +697,11 @@ export function GsapMotionProvider({ children }: { children: React.ReactNode }) 
       animatePage()
 
       const refreshFrame = requestAnimationFrame(() => {
-        ScrollTrigger.refresh()
         revealVisiblePending()
       })
 
       const safetyTimer = window.setTimeout(() => {
-        ScrollTrigger.refresh()
+        if (pendingReveals.size) ScrollTrigger.refresh()
         // Reintento: el contenido que llegó por streaming puede haberse
         // hidratado después del primer barrido.
         scheduleRevealBinding(collectRevealTargets())

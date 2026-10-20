@@ -29,7 +29,7 @@ export default function RootLayout({
   children: React.ReactNode
 }>) {
   return (
-    <html lang="es" className="h-full">
+    <html lang="es" className="h-full" data-scroll-behavior="smooth">
       <body className={`${inter.variable} ${sora.variable} min-h-full antialiased`}>
         <GsapMotionProvider>{children}</GsapMotionProvider>
       </body>
