@@ -39,17 +39,8 @@ export const metadata: Metadata = {
 }
 
 export const viewport: Viewport = {
-  themeColor: [
-    { media: '(prefers-color-scheme: light)', color: '#f8fafc' },
-    { media: '(prefers-color-scheme: dark)', color: '#0b1120' },
-  ],
+  themeColor: '#f8fafc',
 }
-
-/**
- * Se aplica el tema antes del primer pintado para evitar el destello blanco
- * cuando la persona trabaja en modo oscuro.
- */
-const THEME_SCRIPT = `(function(){try{var k='ev_theme_preference';var p=localStorage.getItem(k);var d=p==='dark'||(p!=='light'&&window.matchMedia('(prefers-color-scheme: dark)').matches);var r=document.documentElement;r.classList.toggle('dark',d);r.style.colorScheme=d?'dark':'light';}catch(e){}})();`
 
 export default function RootLayout({
   children,
@@ -58,9 +49,6 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="es" className="h-full" data-scroll-behavior="smooth" suppressHydrationWarning>
-      <head>
-        <script dangerouslySetInnerHTML={{ __html: THEME_SCRIPT }} />
-      </head>
       <body className={`${inter.variable} ${sora.variable} min-h-full antialiased`}>
         <PwaRegister />
         <GsapMotionProvider>{children}</GsapMotionProvider>

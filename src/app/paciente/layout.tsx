@@ -11,7 +11,6 @@ import { HelpWidget } from './help-widget'
 import { PacienteDesktopNav, PacienteMobileNav } from './paciente-nav'
 import { NotificationCenter } from '@/components/notifications/notification-center'
 import { MotionToggleButton } from '@/components/ui/motion-toggle-button'
-import { ThemeToggleButton } from '@/components/ui/theme-settings-card'
 import { PageMotion } from '@/components/ui/page-motion'
 import { LEGAL_POLICY_VERSION, REQUIRED_PORTAL_CONSENTS } from '@/lib/legal'
 
@@ -221,7 +220,6 @@ export default async function PacienteLayout({
             </div>
 
             <div className="flex items-center gap-2.5">
-              <ThemeToggleButton className="hidden md:flex" />
               <MotionToggleButton className="hidden md:flex" />
               <NotificationCenter role="PATIENT" />
               <div className="flex items-center gap-2 text-xs text-slate-700 bg-white/90 border border-slate-200/80 px-3 py-1.5 rounded-full font-semibold shadow-2xs">

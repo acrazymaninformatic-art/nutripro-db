@@ -7,7 +7,6 @@ import { EmergencyLockdownPanel } from './emergency-lockdown-panel'
 import { FaqEditor } from './faq-editor'
 import { getPortalFaqs } from '@/lib/faq-service'
 import { MotionSettingsCard } from '@/components/ui/motion-settings-card'
-import { ThemeSettingsCard } from '@/components/ui/theme-settings-card'
 
 export const dynamic = 'force-dynamic'
 
@@ -29,9 +28,6 @@ export default async function SettingsPage() {
 
       {/* Preferencias de animación de la interfaz (GSAP) */}
       <MotionSettingsCard />
-
-      {/* Tema claro / oscuro de la interfaz */}
-      <ThemeSettingsCard />
 
       {/* Editor de Preguntas Frecuentes y Textos del Portal (3.10) */}
       <FaqEditor initialFaqs={faqs} />
