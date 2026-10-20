@@ -4,6 +4,7 @@ import { usePathname } from 'next/navigation'
 import { Menu } from 'lucide-react'
 import { CommandPalette } from './command-palette'
 import { NotificationCenter } from '@/components/notifications/notification-center'
+import { MotionToggleButton } from '@/components/ui/motion-toggle-button'
 
 const routeTitles: Record<string, string> = {
   '/dashboard': 'Panel Principal',
@@ -72,6 +73,7 @@ export function Header({ onMenu }: { onMenu?: () => void }) {
       </div>
 
       <div className="flex items-center gap-3">
+        <MotionToggleButton />
         <NotificationCenter role="ADMIN" />
         <CommandPalette />
       </div>
