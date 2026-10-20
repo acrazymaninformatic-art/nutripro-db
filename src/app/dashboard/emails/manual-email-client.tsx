@@ -445,9 +445,9 @@ export function ManualEmailClient({ patients, recentLogs }: Props) {
                           </span>
                         </div>
                         <div className="text-3xs text-slate-500 truncate">{log.subject}</div>
-                        <div className="text-3xs text-slate-400 font-mono flex items-center justify-between">
-                          <span>{log.recipientEmail}</span>
-                          <span>{dateStr}</span>
+                        <div className="text-3xs text-slate-400 font-mono flex items-center justify-between gap-2">
+                          <span className="truncate" title={log.recipientEmail}>{log.recipientEmail}</span>
+                          <span className="whitespace-nowrap shrink-0">{dateStr}</span>
                         </div>
                         {log.errorDetails && (
                           <div className="text-3xs text-rose-600 bg-rose-50 p-1 rounded font-mono">

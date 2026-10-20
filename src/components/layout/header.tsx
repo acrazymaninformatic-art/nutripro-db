@@ -8,13 +8,18 @@ import { NotificationCenter } from '@/components/notifications/notification-cent
 const routeTitles: Record<string, string> = {
   '/dashboard': 'Panel Principal',
   '/dashboard/patients': 'Pacientes',
-  '/dashboard/questionnaires': 'Cuestionarios Pre-Consulta (Anamnesis)',
+  '/dashboard/questionnaires': 'Cuestionarios',
   '/dashboard/foods': 'Alimentos',
   '/dashboard/recipes': 'Recetario Clínico',
   '/dashboard/plans': 'Planes Nutricionales',
-  '/dashboard/appointments': 'Agenda & Citas (Google Calendar)',
-  '/dashboard/calculator': 'Calculadora Nutricional & TMB',
-  '/dashboard/settings': 'Configuración de Consulta',
+  '/dashboard/appointments': 'Agenda & Citas',
+  '/dashboard/emails': 'Envío de Correos',
+  '/dashboard/operations': 'Control de Consulta',
+  '/dashboard/operations/emails': 'Registro de Correos',
+  '/dashboard/calculator': 'Calculadora',
+  '/dashboard/settings': 'Configuración',
+  '/dashboard/anamnesis': 'Anamnesis',
+  '/dashboard/billing': 'Facturación',
 }
 
 function getTitle(pathname: string): string {
@@ -22,9 +27,11 @@ function getTitle(pathname: string): string {
     return routeTitles[pathname]
   }
 
-  // Support subroutes like /dashboard/patients/new
+  // Support subroutes like /dashboard/patients/new. Longest match first so
+  // /dashboard/operations/emails does not resolve to /dashboard/operations.
   const matchedRoute = Object.keys(routeTitles)
     .filter((route) => route !== '/dashboard')
+    .sort((a, b) => b.length - a.length)
     .find((route) => pathname.startsWith(route))
 
   if (matchedRoute) {
@@ -57,6 +64,7 @@ export function Header({ onMenu }: { onMenu?: () => void }) {
           <h1
             className="truncate text-base font-bold tracking-tight text-slate-950 sm:text-lg"
             data-gsap-route-title
+            title={title}
           >
             {title}
           </h1>

@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, useEffect, useCallback } from 'react'
+import { usePathname } from 'next/navigation'
 import {
   HelpCircle,
   X,
@@ -75,6 +76,7 @@ const TOUR_STEPS: TourStep[] = [
 ]
 
 export function HelpWidget() {
+  const pathname = usePathname()
   const [isOpen, setIsOpen] = useState(false)
   const [search, setSearch] = useState('')
   const [selectedCategory, setSelectedCategory] = useState<string>('Todas')
@@ -116,7 +118,11 @@ export function HelpWidget() {
   }, [updateTargetPosition])
 
   useEffect(() => {
-    // Si es la primera visita al portal, abrir el tutorial automáticamente estilo Roblox
+    // El tutorial solo debe abrirse al aterrizar en el inicio del portal. Si
+    // se abre en una ruta interna (plan, citas, documentos…) tapa el contenido
+    // clínico y obliga a cerrarlo antes de poder trabajar.
+    if (pathname !== '/paciente') return
+
     const hasSeenTour = localStorage.getItem('ev_portal_tour_seen')
     if (!hasSeenTour) {
       // Pequeño retardo para dar tiempo a renderizar la navegación
@@ -125,7 +131,7 @@ export function HelpWidget() {
       }, 500)
       return () => clearTimeout(timer)
     }
-  }, [])
+  }, [pathname])
 
   const handleFinishTour = () => {
     localStorage.setItem('ev_portal_tour_seen', 'true')
@@ -281,7 +287,7 @@ export function HelpWidget() {
       )}
 
       {/* Botón flotante de ayuda (Abajo a la derecha, visible en todo el portal - 3.10) */}
-      <div className="fixed bottom-6 right-6 z-40 print:hidden">
+      <div className="fixed bottom-20 right-4 z-40 print:hidden md:bottom-6 md:right-6">
         <button
           type="button"
           onClick={() => setIsOpen(!isOpen)}

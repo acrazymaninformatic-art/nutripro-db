@@ -91,12 +91,12 @@ export default async function EmailsLogPage() {
               <table className="w-full text-left text-xs">
                 <thead className="bg-gray-50/80 text-gray-500 font-semibold border-b border-gray-100 uppercase tracking-wider text-[11px]">
                   <tr>
-                    <th className="py-3 px-4">Estado</th>
-                    <th className="py-3 px-4">Tipo</th>
-                    <th className="py-3 px-4">Destinatario</th>
-                    <th className="py-3 px-4">Asunto</th>
-                    <th className="py-3 px-4">Paciente Relacionado</th>
-                    <th className="py-3 px-4 text-right">Fecha y Hora</th>
+                    <th className="py-3 px-3">Estado</th>
+                    <th className="py-3 px-3">Tipo</th>
+                    <th className="py-3 px-3">Destinatario</th>
+                    <th className="py-3 px-3">Asunto</th>
+                    <th className="py-3 px-3">Paciente Relacionado</th>
+                    <th className="py-3 px-3 text-right">Fecha y Hora</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-gray-100">
@@ -111,7 +111,7 @@ export default async function EmailsLogPage() {
 
                     return (
                       <tr key={log.id} className="hover:bg-slate-50/60 transition-colors">
-                        <td className="py-3 px-4 whitespace-nowrap">
+                        <td className="py-3 px-3 whitespace-nowrap">
                           {isSuccess ? (
                             <span className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full text-xs font-semibold text-emerald-800 bg-emerald-50 border border-emerald-200">
                               <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600" />
@@ -124,20 +124,22 @@ export default async function EmailsLogPage() {
                             </span>
                           )}
                         </td>
-                        <td className="py-3 px-4 whitespace-nowrap">
+                        <td className="py-3 px-3 whitespace-nowrap">
                           <span className={`inline-flex items-center gap-1 px-2.5 py-0.5 rounded-lg text-2xs font-semibold border ${badge.color}`}>
                             <Icon className="w-3 h-3" />
                             {badge.label}
                           </span>
                         </td>
-                        <td className="py-3 px-4">
+                        <td className="py-3 px-3">
                           <p className="font-semibold text-gray-900">{log.recipientName || 'Paciente'}</p>
                           <p className="text-gray-500 font-mono text-2xs">{log.recipientEmail}</p>
                         </td>
-                        <td className="py-3 px-4 max-w-xs truncate text-gray-700 font-medium">
-                          {log.subject}
+                        <td className="py-3 px-3 text-gray-700 font-medium">
+                          <div className="max-w-[240px] truncate" title={log.subject}>
+                            {log.subject}
+                          </div>
                         </td>
-                        <td className="py-3 px-4 whitespace-nowrap">
+                        <td className="py-3 px-3 whitespace-nowrap">
                           {log.patient ? (
                             <Link
                               href={`/dashboard/patients/${log.patient.id}`}
@@ -150,7 +152,7 @@ export default async function EmailsLogPage() {
                             <span className="text-gray-400 italic">No asociado</span>
                           )}
                         </td>
-                        <td className="py-3 px-4 text-right text-gray-500 whitespace-nowrap">
+                        <td className="py-3 px-3 text-right text-gray-500 whitespace-nowrap">
                           {new Date(log.sentAt).toLocaleString('es-ES', {
                             dateStyle: 'short',
                             timeStyle: 'short',

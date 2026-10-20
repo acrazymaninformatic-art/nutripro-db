@@ -507,7 +507,103 @@ export function InstantFoodsBrowser({
             </div>
           ) : (
             <>
-              <div className="overflow-x-auto">
+              {/* Mobile/tablet catalogue cards. The full nutrition table needs
+                  the wide desktop canvas; on smaller screens it hid kcal and
+                  macros behind a horizontal scroll. */}
+              <div className="divide-y divide-gray-100 xl:hidden">
+                {paginatedFoods.map((food) => {
+                  const imageUrl = food.imageUrl || getFoodImage(food as any)
+                  const isSelected = selectedIds.includes(food.id)
+                  return (
+                    <div
+                      key={food.id}
+                      onClick={() => setInspectedFood(food)}
+                      className={`flex cursor-pointer gap-3 p-3 transition-colors ${
+                        isSelected ? 'bg-blue-50/70' : 'hover:bg-blue-50/40'
+                      }`}
+                    >
+                      <button
+                        type="button"
+                        aria-label={isSelected ? `Deseleccionar ${food.name}` : `Seleccionar ${food.name}`}
+                        onClick={(e) => handleToggleSelectRow(e, food.id)}
+                        className="mt-1 shrink-0 text-gray-400 hover:text-gray-700"
+                      >
+                        {isSelected ? (
+                          <CheckSquare className="h-4 w-4 text-blue-600" />
+                        ) : (
+                          <Square className="h-4 w-4" />
+                        )}
+                      </button>
+
+                      <div className="h-12 w-12 shrink-0 overflow-hidden rounded-xl border border-gray-200 bg-blue-50 shadow-2xs">
+                        <FoodImage
+                          src={imageUrl}
+                          alt={food.name}
+                          width={48}
+                          height={48}
+                          className="h-full w-full object-cover"
+                          loading="lazy"
+                        />
+                      </div>
+
+                      <div className="min-w-0 flex-1">
+                        <div className="flex items-start justify-between gap-2">
+                          <div className="min-w-0">
+                            <p className="line-clamp-2 text-sm font-semibold leading-snug text-gray-900">
+                              {food.name}
+                            </p>
+                            <p className="truncate text-[10px] font-medium text-gray-500">
+                              {food.brandName ? `${food.brandName} · ` : ''}
+                              {food.category || 'General'}
+                            </p>
+                          </div>
+                          <button
+                            type="button"
+                            aria-label={food.isFavorite ? `Quitar ${food.name} de favoritos` : `Marcar ${food.name} como favorito`}
+                            onClick={(e) => handleToggleFavorite(e, food.id)}
+                            className="-mr-1 shrink-0 rounded-full p-1.5 transition-colors hover:bg-amber-50"
+                          >
+                            <Star
+                              className={`h-4 w-4 ${
+                                food.isFavorite
+                                  ? 'fill-amber-400 text-amber-400'
+                                  : 'text-gray-300 hover:text-amber-400'
+                              }`}
+                            />
+                          </button>
+                        </div>
+
+                        <div className="mt-2 grid grid-cols-4 gap-1 text-center text-[10px]">
+                          <span className="rounded-lg bg-slate-50 px-1 py-1 font-bold text-gray-800">
+                            {food.calories}
+                            <span className="block text-[8px] font-semibold uppercase tracking-wide text-gray-400">kcal</span>
+                          </span>
+                          <span className="rounded-lg bg-blue-50 px-1 py-1 font-bold text-blue-800">
+                            {food.proteinG}g
+                            <span className="block text-[8px] font-semibold uppercase tracking-wide text-blue-500">Prot</span>
+                          </span>
+                          <span className="rounded-lg bg-amber-50 px-1 py-1 font-bold text-amber-800">
+                            {food.carbsG}g
+                            <span className="block text-[8px] font-semibold uppercase tracking-wide text-amber-600">Carb</span>
+                          </span>
+                          <span className="rounded-lg bg-rose-50 px-1 py-1 font-bold text-rose-800">
+                            {food.fatG}g
+                            <span className="block text-[8px] font-semibold uppercase tracking-wide text-rose-500">Gras</span>
+                          </span>
+                        </div>
+
+                        <div className="mt-1.5 flex flex-wrap items-center gap-1 text-[9px] font-semibold text-gray-500">
+                          <span>Fibra {food.fiberG}g</span>
+                          {food.nutriScore && <span className="rounded bg-emerald-50 px-1.5 py-0.5 text-emerald-700">NS {food.nutriScore}</span>}
+                          {food.novaGroup && <span className="rounded bg-blue-50 px-1.5 py-0.5 text-blue-700">N{food.novaGroup}</span>}
+                        </div>
+                      </div>
+                    </div>
+                  )
+                })}
+              </div>
+
+              <div className="hidden overflow-x-auto xl:block">
                 <table className="w-full text-left text-sm text-gray-600">
                   <thead className="bg-gray-50 border-b border-gray-200 text-xs font-semibold uppercase text-gray-500">
                     <tr>

@@ -550,15 +550,118 @@ export function QuestionnairesClient({
               </Button>
             </div>
           ) : (
-            <div className="overflow-x-auto">
-              <table className="w-full text-left text-sm">
+            <>
+              {/* Mobile/tablet questionnaire cards.
+                  La tabla de 5 columnas dejaba acciones y firma fuera de la
+                  pantalla del móvil; aquí se muestran todos los controles. */}
+              <div className="divide-y divide-gray-100 xl:hidden">
+                {filteredPatients.map((patient) => {
+                  const hasPendingFields = (patient.pendingReviewFieldsCount || 0) > 0
+                  const latestQ = patient.patientQuestionnaires?.[0]
+                  const canReview = latestQ && (latestQ.status === 'COMPLETED' || hasPendingFields)
+
+                  return (
+                    <div
+                      key={patient.id}
+                      className={`space-y-3 p-4 ${
+                        hasPendingFields ? 'border-l-4 border-l-amber-500 bg-amber-50/30' : ''
+                      }`}
+                    >
+                      <div className="flex items-start gap-3">
+                        <div className="flex min-w-0 items-center gap-3">
+                          <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl bg-gray-100 text-sm font-black text-gray-700 shadow-2xs">
+                            {patient.firstName.charAt(0)}
+                            {patient.lastName.charAt(0)}
+                          </div>
+                          <div className="min-w-0">
+                            <Link
+                              href={`/dashboard/patients/${patient.id}`}
+                              className="block break-words text-sm font-bold leading-tight text-gray-900 hover:text-blue-600"
+                            >
+                              {patient.firstName} {patient.lastName}
+                            </Link>
+                            <span
+                              className="mt-0.5 block truncate text-[11px] font-medium text-gray-400"
+                              title={patient.email || patient.phone || undefined}
+                            >
+                              {patient.email || patient.phone || 'Sin datos de contacto'}
+                            </span>
+                          </div>
+                        </div>
+                      </div>
+
+                      <div className="flex flex-wrap items-center gap-2">
+                        {renderQuestionnaireStatusBadge(patient.questionnaireStatus)}
+                        <span className="text-[10px] font-bold uppercase tracking-wider text-gray-400">Firma:</span>
+                        {renderConsentStatusBadge(patient.consentStatus)}
+                        {hasPendingFields && (
+                          <Badge className="animate-pulse whitespace-nowrap rounded-full bg-amber-500 px-2.5 py-0.5 text-3xs font-black text-white shadow-2xs">
+                            {patient.pendingReviewFieldsCount} campos por revisar
+                          </Badge>
+                        )}
+                      </div>
+
+                      <div className="grid grid-cols-2 gap-2">
+                        {canReview && (
+                          <Button
+                            size="sm"
+                            onClick={() => handleOpenReview(patient)}
+                            className="justify-center rounded-xl bg-emerald-600 px-2.5 text-xs font-bold text-white shadow-2xs hover:bg-emerald-700"
+                          >
+                            <Eye className="mr-1.5 h-3.5 w-3.5" />
+                            Revisar
+                          </Button>
+                        )}
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() => {
+                            setSelectedPatient(patient)
+                            setIsTemplateModalOpen(true)
+                          }}
+                          title="Enviar cuestionario al portal del paciente"
+                          className="justify-center rounded-xl border-blue-200 px-2.5 text-xs font-bold text-blue-700 hover:bg-blue-50"
+                        >
+                          <Send className="mr-1.5 h-3.5 w-3.5" />
+                          Enviar
+                        </Button>
+                        {patient.consentStatus !== 'COMPLETED' && (
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={() => handleSendConsent(patient)}
+                            title="Enviar consentimiento al portal para firma"
+                            className="justify-center rounded-xl border-purple-200 px-2.5 text-xs font-bold text-purple-700 hover:bg-purple-50"
+                          >
+                            <FileSignature className="mr-1.5 h-3.5 w-3.5" />
+                            Firma
+                          </Button>
+                        )}
+                        <Link href={`/dashboard/patients/${patient.id}`} className="col-span-2">
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            className="w-full justify-center rounded-xl border-slate-200 px-2.5 text-xs font-bold text-gray-700 hover:bg-slate-50"
+                          >
+                            <FileText className="mr-1.5 h-3.5 w-3.5" />
+                            Abrir ficha
+                          </Button>
+                        </Link>
+                      </div>
+                    </div>
+                  )
+                })}
+              </div>
+
+              <div className="hidden overflow-x-auto xl:block">
+                <table className="w-full text-left text-xs">
                 <thead className="bg-gray-50/80 border-b border-gray-200 text-xs font-black uppercase text-gray-500">
                   <tr>
-                    <th className="px-6 py-3.5">Paciente</th>
-                    <th className="px-6 py-3.5">Estado Cuestionario</th>
-                    <th className="px-6 py-3.5">Estado Firma (Consentimiento)</th>
-                    <th className="px-6 py-3.5">Revisión Ficha</th>
-                    <th className="px-6 py-3.5 text-right">Acciones Eva</th>
+                    <th className="px-4 py-3.5">Paciente</th>
+                    <th className="px-4 py-3.5">Estado Cuestionario</th>
+                    <th className="px-4 py-3.5">Estado Firma (Consentimiento)</th>
+                    <th className="px-4 py-3.5">Revisión Ficha</th>
+                    <th className="min-w-[240px] px-4 py-3.5 text-right">Acciones Eva</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-gray-100">
@@ -577,7 +680,7 @@ export function QuestionnairesClient({
                         }`}
                       >
                         {/* Paciente */}
-                        <td className="px-6 py-4">
+                        <td className="px-4 py-4">
                           <div className="flex items-center gap-3">
                             <div className="w-10 h-10 rounded-2xl bg-gray-100 flex items-center justify-center font-black text-sm text-gray-700 shrink-0 shadow-2xs">
                               {patient.firstName.charAt(0)}
@@ -586,14 +689,14 @@ export function QuestionnairesClient({
                             <div>
                               <Link
                                 href={`/dashboard/patients/${patient.id}`}
-                                className="font-bold text-gray-900 hover:text-blue-600 transition-colors flex items-center gap-1 group"
+                                className="font-bold text-gray-900 hover:text-blue-600 transition-colors flex items-center gap-1 group whitespace-nowrap"
                               >
                                 <span>
                                   {patient.firstName} {patient.lastName}
                                 </span>
                                 <ExternalLink className="h-3 w-3 opacity-0 group-hover:opacity-100 transition-opacity text-blue-500" />
                               </Link>
-                              <span className="text-[11px] text-gray-400 block font-medium">
+                              <span className="text-[11px] text-gray-400 block font-medium max-w-[190px] truncate" title={patient.email || patient.phone || undefined}>
                                 {patient.email || patient.phone || 'Sin datos de contacto'}
                               </span>
                             </div>
@@ -601,7 +704,7 @@ export function QuestionnairesClient({
                         </td>
 
                         {/* Estado Cuestionario (4 fases independientes) */}
-                        <td className="px-6 py-4">
+                        <td className="px-4 py-4">
                           <div className="space-y-1">
                             {renderQuestionnaireStatusBadge(patient.questionnaireStatus)}
                             {latestQ && (
@@ -613,7 +716,7 @@ export function QuestionnairesClient({
                         </td>
 
                         {/* Estado Firma (4 fases independientes) */}
-                        <td className="px-6 py-4">
+                        <td className="px-4 py-4">
                           <div className="space-y-1">
                             {renderConsentStatusBadge(patient.consentStatus)}
                             <p className="text-3xs text-gray-400 block">
@@ -623,10 +726,10 @@ export function QuestionnairesClient({
                         </td>
 
                         {/* N Campos por Revisar (5.4) */}
-                        <td className="px-6 py-4">
+                        <td className="px-4 py-4">
                           {hasPendingFields ? (
                             <div className="space-y-1">
-                              <Badge className="bg-amber-500 text-white font-black text-3xs px-2.5 py-0.5 rounded-full shadow-2xs animate-pulse">
+                              <Badge className="bg-amber-500 text-white font-black text-3xs px-2.5 py-0.5 rounded-full shadow-2xs animate-pulse whitespace-nowrap">
                                 {patient.pendingReviewFieldsCount} campos por revisar
                               </Badge>
                               <span className="text-3xs text-gray-400 block">Esperando confirmación</span>
@@ -637,14 +740,14 @@ export function QuestionnairesClient({
                         </td>
 
                         {/* Acciones */}
-                        <td className="px-6 py-4 text-right">
-                          <div className="flex items-center justify-end gap-2">
+                        <td className="min-w-[240px] px-4 py-4 text-right">
+                          <div className="flex flex-wrap items-center justify-end gap-1.5">
                             {/* Botón de revisión lado a lado */}
                             {canReview && (
                               <Button
                                 size="sm"
                                 onClick={() => handleOpenReview(patient)}
-                                className="rounded-xl font-bold text-xs bg-emerald-600 hover:bg-emerald-700 text-white shadow-2xs flex items-center gap-1.5 px-3"
+                                className="rounded-xl font-bold text-xs bg-emerald-600 hover:bg-emerald-700 text-white shadow-2xs flex items-center gap-1.5 px-2.5 whitespace-nowrap"
                               >
                                 <Eye className="h-3.5 w-3.5" />
                                 <span>Revisar ({patient.pendingReviewFieldsCount || 'Ver'})</span>
@@ -659,10 +762,11 @@ export function QuestionnairesClient({
                                 setSelectedPatient(patient)
                                 setIsTemplateModalOpen(true)
                               }}
-                              className="rounded-xl font-bold text-xs border-blue-200 text-blue-700 hover:bg-blue-50 flex items-center gap-1"
+                              title="Enviar cuestionario al portal del paciente"
+                              className="rounded-xl font-bold text-xs border-blue-200 text-blue-700 hover:bg-blue-50 flex items-center gap-1 px-2.5 whitespace-nowrap"
                             >
                               <Send className="h-3.5 w-3.5" />
-                              <span>Enviar Cuestionario</span>
+                              <span>Enviar</span>
                             </Button>
 
                             {/* Enviar Consentimiento */}
@@ -671,7 +775,7 @@ export function QuestionnairesClient({
                                 variant="outline"
                                 size="sm"
                                 onClick={() => handleSendConsent(patient)}
-                                className="rounded-xl font-bold text-xs border-purple-200 text-purple-700 hover:bg-purple-50 flex items-center gap-1"
+                                className="rounded-xl font-bold text-xs border-purple-200 text-purple-700 hover:bg-purple-50 flex items-center gap-1 px-2.5 whitespace-nowrap"
                                 title="Enviar consentimiento al portal para firma"
                               >
                                 <FileSignature className="h-3.5 w-3.5" />
@@ -684,7 +788,7 @@ export function QuestionnairesClient({
                               <Button
                                 variant="ghost"
                                 size="sm"
-                                className="rounded-xl font-bold text-xs text-gray-500 hover:text-gray-900"
+                                className="rounded-xl font-bold text-xs text-gray-500 hover:text-gray-900 px-2.5 whitespace-nowrap"
                               >
                                 Ficha
                               </Button>
@@ -697,6 +801,7 @@ export function QuestionnairesClient({
                 </tbody>
               </table>
             </div>
+            </>
           )}
         </CardContent>
       </Card>

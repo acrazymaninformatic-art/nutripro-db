@@ -21,6 +21,15 @@ const INTERACTIVE_SELECTOR =
 
 type ScrollContainer = HTMLElement | Window
 
+// GSAP must not write bookkeeping attributes onto React-managed nodes during
+// hydration: React 19 reports those added attributes as hydration mismatches.
+// WeakSets keep the same "animate once" behavior without touching the DOM.
+const boundRevealElements = new WeakSet<HTMLElement>()
+const boundCardElements = new WeakSet<HTMLElement>()
+const boundOverlayElements = new WeakSet<HTMLElement>()
+const boundModalElements = new WeakSet<HTMLElement>()
+const mountedChromeElements = new WeakSet<HTMLElement>()
+
 function getScrollContainer(element: HTMLElement, boundary: HTMLElement): ScrollContainer {
   let parent = element.parentElement
 
@@ -61,6 +70,8 @@ export function GsapMotionProvider({ children }: { children: React.ReactNode }) 
       const pendingDynamicNodes = new Set<HTMLElement>()
 
       const revealBatch = (elements: Element[]) => {
+        if (!elements.length) return
+
         if (reducedMotion) {
           gsap.set(elements, {
             x: 0,
@@ -88,7 +99,7 @@ export function GsapMotionProvider({ children }: { children: React.ReactNode }) 
         const elements = uniqueElements(
           targets.filter(
             (element) =>
-              !element.dataset.gsapBound &&
+              !boundRevealElements.has(element) &&
               !isIgnored(element) &&
               !element.closest(`${MODAL_SELECTOR}, ${OVERLAY_SELECTOR}, .animate-in`)
           )
@@ -100,7 +111,7 @@ export function GsapMotionProvider({ children }: { children: React.ReactNode }) 
         // nested scroller is recalculated late, the data remains readable and
         // only the transform animation is deferred.
         elements.forEach((element) => {
-          element.dataset.gsapBound = 'true'
+          boundRevealElements.add(element)
 
           if (reducedMotion) {
             gsap.set(element, {
@@ -144,13 +155,13 @@ export function GsapMotionProvider({ children }: { children: React.ReactNode }) 
 
       const animateCards = (targets: HTMLElement[]) => {
         const cards = uniqueElements(
-          targets.filter((element) => !element.dataset.gsapCardBound && !isIgnored(element))
+          targets.filter((element) => !boundCardElements.has(element) && !isIgnored(element))
         )
 
         if (!cards.length) return
 
         cards.forEach((card) => {
-          card.dataset.gsapCardBound = 'true'
+          boundCardElements.add(card)
         })
 
         if (reducedMotion) {
@@ -181,18 +192,18 @@ export function GsapMotionProvider({ children }: { children: React.ReactNode }) 
         const pageTargets = Array.from(root.querySelectorAll<HTMLElement>('[data-gsap-page]'))
         const cardTargets = Array.from(root.querySelectorAll<HTMLElement>(CARD_SELECTOR))
         const sidebarTargets = Array.from(root.querySelectorAll<HTMLElement>('[data-gsap-sidebar]'))
-          .filter((element) => !element.dataset.gsapMounted)
+          .filter((element) => !mountedChromeElements.has(element))
         const headerTargets = Array.from(root.querySelectorAll<HTMLElement>('[data-gsap-header]'))
-          .filter((element) => !element.dataset.gsapMounted)
+          .filter((element) => !mountedChromeElements.has(element))
         const bannerTargets = Array.from(root.querySelectorAll<HTMLElement>('[data-gsap-banner]'))
-          .filter((element) => !element.dataset.gsapMounted)
+          .filter((element) => !mountedChromeElements.has(element))
         const routeTitleTargets = Array.from(root.querySelectorAll<HTMLElement>('[data-gsap-route-title]'))
         const activeNavTargets = Array.from(
           root.querySelectorAll<HTMLElement>('[data-gsap-nav-item][aria-current="page"]')
         )
 
         ;[...sidebarTargets, ...headerTargets, ...bannerTargets].forEach((element) => {
-          element.dataset.gsapMounted = 'true'
+          mountedChromeElements.add(element)
         })
 
         const revealTargets = Array.from(root.querySelectorAll<HTMLElement>(AUTO_REVEAL_SELECTOR))
@@ -200,22 +211,23 @@ export function GsapMotionProvider({ children }: { children: React.ReactNode }) 
         animateCards(cardTargets)
 
         if (reducedMotion) {
-          gsap.set(
-            [
-              ...pageTargets,
-              ...sidebarTargets,
-              ...headerTargets,
-              ...bannerTargets,
-              ...routeTitleTargets,
-              ...activeNavTargets,
-            ],
-            {
+          const settledTargets = [
+            ...pageTargets,
+            ...sidebarTargets,
+            ...headerTargets,
+            ...bannerTargets,
+            ...routeTitleTargets,
+            ...activeNavTargets,
+          ]
+
+          if (settledTargets.length) {
+            gsap.set(settledTargets, {
               x: 0,
               y: 0,
               scale: 1,
               clearProps: 'transform,willChange',
-            }
-          )
+            })
+          }
           return
         }
 
@@ -317,17 +329,20 @@ export function GsapMotionProvider({ children }: { children: React.ReactNode }) 
         animateCards(cards)
 
         if (reducedMotion) {
-          gsap.set([...overlays, ...modals], {
-            x: 0,
-            y: 0,
-            scale: 1,
-            clearProps: 'transform,willChange',
-          })
+          const settledTargets = [...overlays, ...modals]
+          if (settledTargets.length) {
+            gsap.set(settledTargets, {
+              x: 0,
+              y: 0,
+              scale: 1,
+              clearProps: 'transform,willChange',
+            })
+          }
         } else {
           overlays
-            .filter((element) => !element.dataset.gsapOverlayBound)
+            .filter((element) => !boundOverlayElements.has(element))
             .forEach((element) => {
-              element.dataset.gsapOverlayBound = 'true'
+              boundOverlayElements.add(element)
               gsap.fromTo(
                 element,
                 { y: -4 },
@@ -341,9 +356,9 @@ export function GsapMotionProvider({ children }: { children: React.ReactNode }) 
             })
 
           modals
-            .filter((element) => !element.dataset.gsapModalBound)
+            .filter((element) => !boundModalElements.has(element))
             .forEach((element) => {
-              element.dataset.gsapModalBound = 'true'
+              boundModalElements.add(element)
               gsap.fromTo(
                 element,
                 { y: 14, scale: 0.985 },

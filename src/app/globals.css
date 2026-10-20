@@ -33,6 +33,20 @@
   --font-mono: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
 }
 
+/*
+ * Tailwind v4 usa currentColor como color de borde por defecto. En una UI
+ * clara eso convierte cualquier `border` sin color explícito en una línea
+ * negra. Fijamos el mismo gris suave que usa el resto del producto; las
+ * utilidades `border-*` e inline styles siguen teniendo prioridad.
+ */
+@layer base {
+  *,
+  ::before,
+  ::after {
+    border-color: #e2e8f0;
+  }
+}
+
 html {
   scroll-behavior: smooth;
 }

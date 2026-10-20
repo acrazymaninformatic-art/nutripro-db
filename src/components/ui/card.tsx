@@ -13,6 +13,7 @@ const Card = React.forwardRef<
     )}
     data-gsap-card
     data-gsap-hover
+    suppressHydrationWarning
     {...props}
   />
 ))

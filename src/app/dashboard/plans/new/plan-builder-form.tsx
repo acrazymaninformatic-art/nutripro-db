@@ -724,9 +724,9 @@ export function PlanBuilderForm({
               </Button>
 
               {selectedPatient && (
-                <Badge variant="default" className="bg-blue-100 text-blue-900 border-0 text-xs py-1 px-2.5 font-bold">
+                <Badge variant="default" className="hidden sm:inline-flex bg-blue-100 text-blue-900 border-0 text-xs py-1 px-2.5 font-bold">
                   <User className="h-3 w-3 mr-1 text-blue-700" />
-                  <span>{selectedPatient.firstName} {selectedPatient.lastName}</span>
+                  <span className="whitespace-nowrap">{selectedPatient.firstName} {selectedPatient.lastName}</span>
                 </Badge>
               )}
             </div>
@@ -833,7 +833,7 @@ export function PlanBuilderForm({
           </div>
 
           {/* Quick Precision Tuners */}
-          <div className="p-2.5 bg-gray-50 border rounded-xl grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-8 gap-2 text-xs">
+          <div className="p-2.5 bg-gray-50 border border-gray-200 rounded-xl grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-5 xl:grid-cols-9 gap-2 text-xs">
             <div>
               <span className="text-[10px] font-semibold text-gray-600 block">Peso (kg)</span>
               <Input
@@ -867,21 +867,21 @@ export function PlanBuilderForm({
               />
             </div>
 
-            <div>
+            <div className="col-span-2 sm:col-span-1">
               <span className="text-[10px] font-semibold text-gray-600 block">Fórmula TMB</span>
               <Select
                 value={calcFormula}
                 onChange={(e) => setCalcFormula(e.target.value as any)}
                 className="h-7 text-xs font-semibold"
               >
-                <option value="katch">Katch-McArdle (Masa Magra)</option>
+                <option value="katch">Katch-McArdle</option>
                 <option value="mifflin">Mifflin-St Jeor</option>
                 <option value="harris">Harris-Benedict</option>
                 <option value="cunningham">Cunningham</option>
               </Select>
             </div>
 
-            <div>
+            <div className="col-span-2 sm:col-span-1">
               <span className="text-[10px] font-semibold text-gray-600 block">Actividad</span>
               <Select
                 value={calcPal.toString()}

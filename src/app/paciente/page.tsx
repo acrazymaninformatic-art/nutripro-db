@@ -409,7 +409,7 @@ export default async function PacienteDashboardPage() {
         </CardHeader>
         <CardContent className="p-5">
           {todayMeals.length > 0 ? (
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-3.5">
+            <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-5 gap-3.5">
               {todayMeals.map((meal) => {
                 const label = MEAL_LABELS[meal.mealType] || meal.mealType
                 return (
@@ -434,13 +434,13 @@ export default async function PacienteDashboardPage() {
                               />
                               <div className="min-w-0 flex-1">
                                 {it.recipe ? (
-                                  <span className="font-bold text-slate-900 block truncate">
+                                  <span className="font-bold text-slate-900 block leading-snug line-clamp-3">
                                     🍳 {it.recipe.name}
                                   </span>
                                 ) : it.food ? (
-                                  <span className="block truncate">
+                                  <span className="block leading-snug">
                                     <strong className="text-slate-800">{it.food.name}</strong>{' '}
-                                    <span className="text-slate-400 font-mono text-[10px]">
+                                    <span className="text-slate-400 font-mono text-[10px] whitespace-nowrap">
                                       ({it.quantityG} {it.food.servingUnit || 'g'})
                                     </span>
                                   </span>
@@ -448,7 +448,7 @@ export default async function PacienteDashboardPage() {
                                   <span>Porción pautada</span>
                                 )}
                                 {it.notes && (
-                                  <p className="text-[10px] text-slate-500 italic truncate">{it.notes}</p>
+                                  <p className="text-[10px] text-slate-500 italic leading-snug line-clamp-2">{it.notes}</p>
                                 )}
                               </div>
                             </li>

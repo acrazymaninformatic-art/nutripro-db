@@ -6,7 +6,7 @@ export function PageMotion({ children }: { children: React.ReactNode }) {
   const pathname = usePathname()
 
   return (
-    <div key={pathname} data-gsap-page>
+    <div key={pathname} data-gsap-page suppressHydrationWarning>
       {children}
     </div>
   )
@@ -26,6 +26,7 @@ export function ScrollReveal({
       className={className}
       data-gsap-reveal
       data-gsap-delay={delay > 0 ? delay : undefined}
+      suppressHydrationWarning
     >
       {children}
     </div>

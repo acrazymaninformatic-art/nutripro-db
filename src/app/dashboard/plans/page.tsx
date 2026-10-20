@@ -13,15 +13,16 @@ export default async function MealPlansPage() {
   return (
     <div className="space-y-6 max-w-7xl mx-auto">
       {/* Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+      <div className="glass-panel p-6 sm:p-7 rounded-3xl border border-slate-200/80 shadow-xs relative overflow-hidden flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+        <div className="absolute top-0 right-0 w-80 h-80 bg-blue-500/5 rounded-full blur-3xl pointer-events-none -mr-20 -mt-20" />
         <div>
-          <h1 className="text-2xl font-bold text-gray-900">Planes Nutricionales</h1>
-          <p className="text-sm text-gray-500">
+          <h1 className="text-2xl font-black text-slate-900 tracking-tight">Planes Nutricionales</h1>
+          <p className="text-xs font-semibold text-slate-500 mt-1">
             Pautas dietéticas semanales y quincenales personalizadas por paciente.
           </p>
         </div>
         <Link href="/dashboard/plans/new">
-          <Button className="flex items-center gap-2">
+          <Button className="flex items-center gap-2 rounded-2xl h-10 px-5 text-xs font-bold bg-blue-600 hover:bg-blue-700 text-white shadow-xs active:scale-[0.98]">
             <Plus className="h-4 w-4" />
             <span>Crear Plan</span>
           </Button>
