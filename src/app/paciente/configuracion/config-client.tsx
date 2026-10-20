@@ -2,6 +2,7 @@
 
 import { useState, useActionState } from 'react'
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from '@/components/ui/card'
+import { MotionSettingsCard } from '@/components/ui/motion-settings-card'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
@@ -114,6 +115,9 @@ export function ConfigClient({ userEmail, pendingRequests }: Props) {
           </div>
         </div>
       </div>
+
+      {/* Preferencias de animación de la interfaz (GSAP) */}
+      <MotionSettingsCard />
 
       {/* 1. Seguridad y Cambio de Contraseña */}
       <Card className="rounded-3xl border-slate-200/80 shadow-xs overflow-hidden">

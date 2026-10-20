@@ -359,11 +359,17 @@ button, a, input, select, textarea {
   scrollbar-color: #cbd5e1 transparent;
 }
 
-/* Animaciones suaves respetando prefers-reduced-motion */
+/* Animaciones suaves respetando prefers-reduced-motion.
+   Si el usuario fuerza las animaciones desde la aplicación
+   (data-motion="on"), las transiciones CSS también se reactivan. */
 @media (prefers-reduced-motion: reduce) {
-  html { scroll-behavior: auto; }
+  html:not([data-motion='on']) {
+    scroll-behavior: auto;
+  }
 
-  *, *::before, *::after {
+  html:not([data-motion='on']) *,
+  html:not([data-motion='on']) *::before,
+  html:not([data-motion='on']) *::after {
     animation-duration: 0.001ms !important;
     animation-iteration-count: 1 !important;
     transition-duration: 0.001ms !important;

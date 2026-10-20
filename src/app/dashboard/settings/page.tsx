@@ -6,6 +6,7 @@ import { SettingsProfileForm } from './settings-profile-form'
 import { EmergencyLockdownPanel } from './emergency-lockdown-panel'
 import { FaqEditor } from './faq-editor'
 import { getPortalFaqs } from '@/lib/faq-service'
+import { MotionSettingsCard } from '@/components/ui/motion-settings-card'
 
 export const dynamic = 'force-dynamic'
 
@@ -24,7 +25,10 @@ export default async function SettingsPage() {
         <div><h1 className="text-2xl font-bold text-gray-900">Configuración de Consulta</h1><p className="text-sm text-gray-500">Perfil profesional de la consulta.</p></div>
       </div>
       <SettingsProfileForm user={user} />
-      
+
+      {/* Preferencias de animación de la interfaz (GSAP) */}
+      <MotionSettingsCard />
+
       {/* Editor de Preguntas Frecuentes y Textos del Portal (3.10) */}
       <FaqEditor initialFaqs={faqs} />
 

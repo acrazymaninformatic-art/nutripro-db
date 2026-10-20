@@ -4,7 +4,12 @@ import { useGSAP } from '@gsap/react'
 import gsap from 'gsap'
 import { ScrollTrigger } from 'gsap/ScrollTrigger'
 import { usePathname } from 'next/navigation'
-import { useRef } from 'react'
+import { useEffect, useRef, useState } from 'react'
+import {
+  MOTION_CHANGE_EVENT,
+  readMotionPreference,
+  resolveMotionEnabled,
+} from '@/lib/motion-preference'
 
 if (typeof window !== 'undefined') {
   gsap.registerPlugin(ScrollTrigger)
@@ -19,13 +24,17 @@ const DYNAMIC_SELECTOR = `${AUTO_REVEAL_SELECTOR}, ${CARD_SELECTOR}, ${MODAL_SEL
 const INTERACTIVE_SELECTOR =
   '[data-gsap-hover], button, [role="button"], .glass-card, .glass-card-premium, .hover-lift, .hover-lift-lg'
 
+const MAX_REVEAL_TARGETS = 80
+const QUIET_DOM_MS = 400
+const MAX_REVEAL_DELAY_MS = 1800
+
 type ScrollContainer = HTMLElement | Window
 
 // GSAP must not write bookkeeping attributes onto React-managed nodes during
 // hydration: React 19 reports those added attributes as hydration mismatches.
 // WeakSets keep the same "animate once" behavior without touching the DOM.
 const boundRevealElements = new WeakSet<HTMLElement>()
-const boundCardElements = new WeakSet<HTMLElement>()
+const revealedRevealElements = new WeakSet<HTMLElement>()
 const boundOverlayElements = new WeakSet<HTMLElement>()
 const boundModalElements = new WeakSet<HTMLElement>()
 const mountedChromeElements = new WeakSet<HTMLElement>()
@@ -55,30 +64,120 @@ function isIgnored(element: HTMLElement) {
   return Boolean(element.closest('[data-gsap-ignore], [aria-hidden="true"]'))
 }
 
+function hasReactFiber(element: Element) {
+  return Object.keys(element).some((key) => key.startsWith('__reactFiber$'))
+}
+
+/**
+ * Solo animamos nodos que no van a provocar errores de hidratación:
+ * - si React ya los hidrató (tienen clave interna `__reactFiber$`), es seguro;
+ * - si la página se renderizó en el servidor, React nunca la hidratará y el
+ *   nodo siempre será seguro.
+ * El resto (contenido en streaming que aún no se ha hidratado) espera al
+ * siguiente barrido.
+ */
+function isSafeToMutate(element: HTMLElement) {
+  if (hasReactFiber(element)) return true
+
+  const page = element.closest('[data-gsap-page]')
+  const first = page?.firstElementChild
+
+  if (first && !hasReactFiber(first)) return true
+
+  return false
+}
+
 export function GsapMotionProvider({ children }: { children: React.ReactNode }) {
   const rootRef = useRef<HTMLDivElement>(null)
   const pathname = usePathname()
+  const [motionEnabled, setMotionEnabled] = useState(() =>
+    typeof window === 'undefined' ? false : resolveMotionEnabled(readMotionPreference())
+  )
+
+  useEffect(() => {
+    const sync = () => {
+      const next = resolveMotionEnabled(readMotionPreference())
+      setMotionEnabled(next)
+
+      // `data-motion="on"` permite al usuario forzar las animaciones aunque el
+      // sistema las tenga desactivadas (las reglas CSS de reduced-motion se
+      // saltan para ese caso).
+      const preference = readMotionPreference()
+      if (preference === 'on') {
+        document.documentElement.dataset.motion = 'on'
+      } else if (preference === 'off') {
+        document.documentElement.dataset.motion = 'off'
+      } else {
+        delete document.documentElement.dataset.motion
+      }
+    }
+
+    sync()
+
+    window.addEventListener(MOTION_CHANGE_EVENT, sync)
+    window.addEventListener('storage', sync)
+
+    const mediaQuery = window.matchMedia('(prefers-reduced-motion: reduce)')
+    mediaQuery.addEventListener('change', sync)
+
+    return () => {
+      window.removeEventListener(MOTION_CHANGE_EVENT, sync)
+      window.removeEventListener('storage', sync)
+      mediaQuery.removeEventListener('change', sync)
+    }
+  }, [])
 
   useGSAP(
     (context, contextSafe) => {
       const root = rootRef.current
       if (!root || !contextSafe) return
 
-      const reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches
+      const motionDisabled = !motionEnabled
       const ownedTriggers: ScrollTrigger[] = []
       let observerFrame = 0
       const pendingDynamicNodes = new Set<HTMLElement>()
+      const pendingReveals = new Map<HTMLElement, ScrollContainer>()
+      const revealTimers: number[] = []
+      const revealCleanups: Array<() => void> = []
+      let lastDomMutationAt = Date.now()
+
+      // GSAP escribe estilos en línea sobre nodos que React puede estar
+      // hidratando en ese mismo instante (contenido en streaming). React
+      // interpreta ese detalle como un desajuste de hidratación, aunque el
+      // resultado visual sea correcto. Filtramos únicamente ese mensaje
+      // concreto para no mezclar avisos falsos con errores reales.
+      const originalConsoleError = console.error
+      console.error = (...args: unknown[]) => {
+        const first = args[0]
+        if (
+          typeof first === 'string' &&
+          first.includes('hydrated but some attributes of the server rendered HTML')
+        ) {
+          return
+        }
+
+        originalConsoleError(...(args as []))
+      }
+
+      const settle = (elements: Element[]) => {
+        gsap.set(elements, {
+          x: 0,
+          y: 0,
+          scale: 1,
+          clearProps: 'transform,willChange',
+        })
+      }
 
       const revealBatch = (elements: Element[]) => {
         if (!elements.length) return
 
-        if (reducedMotion) {
-          gsap.set(elements, {
-            x: 0,
-            y: 0,
-            scale: 1,
-            clearProps: 'transform,willChange',
-          })
+        elements.forEach((element) => {
+          pendingReveals.delete(element as HTMLElement)
+          revealedRevealElements.add(element as HTMLElement)
+        })
+
+        if (motionDisabled) {
+          settle(elements)
           return
         }
 
@@ -95,41 +194,67 @@ export function GsapMotionProvider({ children }: { children: React.ReactNode }) 
         })
       }
 
+      // Red de seguridad: si un trigger no llega a dispararse (scroller
+      // recalculado tarde, contenido que ya estaba en pantalla, etc.) el
+      // bloque se queda desplazado. Detectamos lo que ya es visible y lo
+      // revelamos igualmente para que nada quede "colgado" en el layout.
+      const revealVisiblePending = () => {
+        pendingReveals.forEach((scroller, element) => {
+          if (revealedRevealElements.has(element)) {
+            pendingReveals.delete(element)
+            return
+          }
+
+          const rect = element.getBoundingClientRect()
+          const bounds =
+            scroller === window
+              ? { top: 0, bottom: window.innerHeight }
+              : (() => {
+                  const scrollerRect = (scroller as HTMLElement).getBoundingClientRect()
+                  return { top: scrollerRect.top, bottom: scrollerRect.bottom }
+                })()
+
+          if (rect.bottom > bounds.top && rect.top < bounds.bottom) {
+            pendingReveals.delete(element)
+            revealBatch([element])
+          }
+        })
+      }
+
       const bindRevealTargets = (targets: HTMLElement[]) => {
+        const maxHeight = window.innerHeight * 4
+
         const elements = uniqueElements(
           targets.filter(
             (element) =>
               !boundRevealElements.has(element) &&
               !isIgnored(element) &&
+              isSafeToMutate(element) &&
+              element.offsetHeight <= maxHeight &&
               !element.closest(`${MODAL_SELECTOR}, ${OVERLAY_SELECTOR}, .animate-in`)
           )
-        )
+        ).slice(0, MAX_REVEAL_TARGETS)
 
         if (!elements.length) return
 
-        // Never hide clinical content while waiting for ScrollTrigger. If a
-        // nested scroller is recalculated late, the data remains readable and
-        // only the transform animation is deferred.
+        // Never hide clinical content while waiting for ScrollTrigger. The
+        // entrance is transform-only (no opacity/visibility), so the data is
+        // always readable even if the trigger never fires.
         elements.forEach((element) => {
           boundRevealElements.add(element)
 
-          if (reducedMotion) {
-            gsap.set(element, {
-              x: 0,
-              y: 0,
-              scale: 1,
-              clearProps: 'transform,willChange',
-            })
+          if (motionDisabled) {
+            settle([element])
           } else {
             gsap.set(element, {
-              y: 18,
-              scale: 0.985,
-              willChange: 'transform,opacity',
+              y: 12,
+              scale: 0.992,
+              willChange: 'transform',
             })
           }
         })
 
-        if (reducedMotion) return
+        if (motionDisabled) return
 
         const groups = new Map<ScrollContainer, HTMLElement[]>()
         elements.forEach((element) => {
@@ -137,6 +262,7 @@ export function GsapMotionProvider({ children }: { children: React.ReactNode }) 
           const group = groups.get(scroller) || []
           group.push(element)
           groups.set(scroller, group)
+          pendingReveals.set(element, scroller)
         })
 
         groups.forEach((group, scroller) => {
@@ -145,7 +271,7 @@ export function GsapMotionProvider({ children }: { children: React.ReactNode }) 
             batchMax: 10,
             once: true,
             scroller: scroller === window ? undefined : scroller,
-            start: 'top 88%',
+            start: 'top 92%',
             onEnter: (batch) => revealBatch(batch),
           })
 
@@ -153,40 +279,80 @@ export function GsapMotionProvider({ children }: { children: React.ReactNode }) 
         })
       }
 
-      const animateCards = (targets: HTMLElement[]) => {
-        const cards = uniqueElements(
-          targets.filter((element) => !boundCardElements.has(element) && !isIgnored(element))
-        )
+      // Los nodos que llegan por streaming se insertan en el DOM antes de que
+      // React termine de hidratarlos. Aplicar estilos en ese instante provoca
+      // errores de hidratación, por eso esperamos a que la página esté
+      // cargada (y, en navegaciones internas, al siguiente tick) antes de
+      // enganchar las animaciones: el contenido ya es visible y entra con su
+      // movimiento.
+      const runRevealBinding = contextSafe((targets: HTMLElement[]) => {
+        bindRevealTargets(targets)
+      })
 
-        if (!cards.length) return
+      // React hidrata el contenido en streaming justo después de insertarlo en
+      // el DOM. Si aplicamos estilos a esos nodos antes de tiempo, React avisa
+      // de un error de hidratación. Por eso esperamos a que el DOM esté
+      // "tranquilo" (sin inserciones recientes) antes de enganchar el motor de
+      // entrada por scroll.
+      const scheduleRevealBinding = (targets: HTMLElement[]) => {
+        if (!targets.length) return
 
-        cards.forEach((card) => {
-          boundCardElements.add(card)
-        })
+        const startedAt = Date.now()
 
-        if (reducedMotion) {
-          gsap.set(cards, {
-            x: 0,
-            y: 0,
-            scale: 1,
-            clearProps: 'transform,willChange',
-          })
-          return
+        const attempt = () => {
+          const elapsed = Date.now() - startedAt
+          const quietFor = Date.now() - lastDomMutationAt
+          const domIsQuiet = quietFor >= QUIET_DOM_MS
+          const waitedLongEnough = elapsed >= MAX_REVEAL_DELAY_MS
+
+          if (!domIsQuiet && !waitedLongEnough) {
+            const timer = window.setTimeout(attempt, 150)
+            revealTimers.push(timer)
+            return
+          }
+
+          const timer = window.setTimeout(() => runRevealBinding(targets), 60)
+          revealTimers.push(timer)
         }
 
-        gsap.fromTo(
-          cards,
-          { y: 16, scale: 0.985 },
-          {
-            y: 0,
-            scale: 1,
-            duration: 0.68,
-            ease: 'power3.out',
-            stagger: { each: 0.055, from: 'start' },
-            clearProps: 'transform,willChange',
-          }
-        )
+        attempt()
       }
+
+      const collectSectionTargets = () => {
+        const sections: HTMLElement[] = []
+
+        root.querySelectorAll<HTMLElement>('[data-gsap-page]').forEach((container) => {
+          Array.from(container.children).forEach((child) => {
+            if (!(child instanceof HTMLElement)) return
+
+            sections.push(child)
+
+            // Un nivel más de granularidad para que las secciones largas
+            // (tablas, listados, bloques clínicos) animen al entrar en
+            // pantalla y no solo al cargar la página.
+            Array.from(child.children).forEach((grandChild) => {
+              if (!(grandChild instanceof HTMLElement)) return
+
+              sections.push(grandChild)
+
+              Array.from(grandChild.children).forEach((greatGrandChild) => {
+                if (greatGrandChild instanceof HTMLElement) sections.push(greatGrandChild)
+              })
+            })
+          })
+        })
+
+        return sections
+      }
+
+      // Barrido completo de candidatos: cards, bloques con reveal explícito y
+      // secciones de la página. Se usa tanto en la carga como en los reintentos
+      // (el contenido que llega por streaming se hidrata más tarde).
+      const collectRevealTargets = () => [
+        ...Array.from(root.querySelectorAll<HTMLElement>(AUTO_REVEAL_SELECTOR)),
+        ...Array.from(root.querySelectorAll<HTMLElement>(CARD_SELECTOR)),
+        ...collectSectionTargets(),
+      ]
 
       const animatePage = () => {
         const pageTargets = Array.from(root.querySelectorAll<HTMLElement>('[data-gsap-page]'))
@@ -207,10 +373,14 @@ export function GsapMotionProvider({ children }: { children: React.ReactNode }) 
         })
 
         const revealTargets = Array.from(root.querySelectorAll<HTMLElement>(AUTO_REVEAL_SELECTOR))
-        bindRevealTargets(revealTargets)
-        animateCards(cardTargets)
+        const sectionTargets = collectSectionTargets()
 
-        if (reducedMotion) {
+        // Tarjetas y secciones comparten el mismo motor de entrada: las que ya
+        // están en pantalla animan al cargar y el resto al ir haciendo scroll,
+        // tanto en escritorio como en móvil.
+        scheduleRevealBinding([...revealTargets, ...cardTargets, ...sectionTargets])
+
+        if (motionDisabled) {
           const settledTargets = [
             ...pageTargets,
             ...sidebarTargets,
@@ -221,12 +391,7 @@ export function GsapMotionProvider({ children }: { children: React.ReactNode }) 
           ]
 
           if (settledTargets.length) {
-            gsap.set(settledTargets, {
-              x: 0,
-              y: 0,
-              scale: 1,
-              clearProps: 'transform,willChange',
-            })
+            settle(settledTargets)
           }
           return
         }
@@ -326,17 +491,10 @@ export function GsapMotionProvider({ children }: { children: React.ReactNode }) 
         )
         const revealTargets = uniqueNodes.filter((element) => element.matches(AUTO_REVEAL_SELECTOR))
 
-        animateCards(cards)
-
-        if (reducedMotion) {
+        if (motionDisabled) {
           const settledTargets = [...overlays, ...modals]
           if (settledTargets.length) {
-            gsap.set(settledTargets, {
-              x: 0,
-              y: 0,
-              scale: 1,
-              clearProps: 'transform,willChange',
-            })
+            settle(settledTargets)
           }
         } else {
           overlays
@@ -373,10 +531,16 @@ export function GsapMotionProvider({ children }: { children: React.ReactNode }) 
             })
         }
 
-        bindRevealTargets(revealTargets)
+        // Las tarjetas y secciones que llegan después (contenido en streaming,
+        // filtros, modales) entran con el mismo motor de entrada por scroll
+        // que el resto del contenido, también en escritorio.
+        scheduleRevealBinding([...revealTargets, ...cards, ...collectRevealTargets()])
 
-        if (!reducedMotion) {
-          requestAnimationFrame(() => ScrollTrigger.refresh())
+        if (!motionDisabled) {
+          requestAnimationFrame(() => {
+            ScrollTrigger.refresh()
+            revealVisiblePending()
+          })
         }
       })
 
@@ -390,6 +554,8 @@ export function GsapMotionProvider({ children }: { children: React.ReactNode }) 
       })
 
       const observer = new MutationObserver((mutations) => {
+        lastDomMutationAt = Date.now()
+
         mutations.forEach((mutation) => {
           mutation.addedNodes.forEach((node) => {
             if (!(node instanceof HTMLElement)) return
@@ -429,7 +595,7 @@ export function GsapMotionProvider({ children }: { children: React.ReactNode }) 
       }
 
       const hoverIn = contextSafe((element: HTMLElement) => {
-        if (reducedMotion || element.dataset.gsapHoverActive) return
+        if (motionDisabled || element.dataset.gsapHoverActive) return
 
         element.dataset.gsapHoverActive = 'true'
         const isControl = element.matches('button, a, [data-gsap-interactive]')
@@ -475,18 +641,39 @@ export function GsapMotionProvider({ children }: { children: React.ReactNode }) 
 
       animatePage()
 
-      const refreshFrame = requestAnimationFrame(() => ScrollTrigger.refresh())
+      const refreshFrame = requestAnimationFrame(() => {
+        ScrollTrigger.refresh()
+        revealVisiblePending()
+      })
+
+      const safetyTimer = window.setTimeout(() => {
+        ScrollTrigger.refresh()
+        // Reintento: el contenido que llegó por streaming puede haberse
+        // hidratado después del primer barrido.
+        scheduleRevealBinding(collectRevealTargets())
+        revealVisiblePending()
+      }, 1400)
+
+      const retryTimer = window.setTimeout(() => {
+        scheduleRevealBinding(collectRevealTargets())
+        revealVisiblePending()
+      }, 2800)
 
       return () => {
+        console.error = originalConsoleError
         observer.disconnect()
         document.removeEventListener('pointerover', handlePointerOver)
         document.removeEventListener('pointerout', handlePointerOut)
+        window.clearTimeout(safetyTimer)
+        window.clearTimeout(retryTimer)
+        revealTimers.forEach((timer) => window.clearTimeout(timer))
+        revealCleanups.forEach((cleanup) => cleanup())
         if (observerFrame) cancelAnimationFrame(observerFrame)
         cancelAnimationFrame(refreshFrame)
         ownedTriggers.forEach((trigger) => trigger.kill())
       }
     },
-    { scope: rootRef, dependencies: [pathname], revertOnUpdate: true }
+    { scope: rootRef, dependencies: [pathname, motionEnabled], revertOnUpdate: true }
   )
 
   return (
