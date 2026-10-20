@@ -3,6 +3,7 @@ import Image from 'next/image'
 import { redirect } from 'next/navigation'
 import { getSessionUser, ADMIN_EMAIL } from '@/lib/auth'
 import { LoginForm } from './login-form'
+import { ParticleField } from '@/components/ui/particle-field'
 import { Sparkles, ShieldCheck } from 'lucide-react'
 
 export const dynamic = 'force-dynamic'
@@ -31,6 +32,9 @@ export default async function LoginPage() {
       {/* Decorative ambient blurred orbs */}
       <div className="absolute top-1/4 -left-20 w-80 h-80 bg-blue-400/10 rounded-full blur-3xl pointer-events-none" />
       <div className="absolute bottom-1/4 -right-20 w-80 h-80 bg-teal-400/10 rounded-full blur-3xl pointer-events-none" />
+
+      {/* Campo de partículas en movimiento al pie de la pantalla */}
+      <ParticleField className="pointer-events-none absolute inset-x-0 bottom-0 h-[62%] w-full" />
 
       <section className="w-full max-w-md glass-card-premium rounded-[2rem] p-7 sm:p-10 shadow-2xl border border-white/80 relative z-10 animate-slide-up">
         {/* Brand badge */}
