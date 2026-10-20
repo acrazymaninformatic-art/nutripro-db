@@ -160,12 +160,12 @@ export function PatientContactTools({ patient }: Props) {
     <div className="space-y-4">
       <Card className="rounded-3xl border-gray-200 overflow-hidden shadow-sm">
         <CardHeader className="bg-gradient-to-r from-blue-50/80 via-sky-50/40 to-white border-b border-gray-100 pb-3">
-          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
-            <div className="flex items-center gap-2.5">
+          <div className="flex flex-col gap-3 sm:flex-row sm:flex-wrap sm:items-center sm:justify-between">
+            <div className="flex min-w-0 items-center gap-2.5">
               <div className="p-2.5 bg-blue-600 text-white rounded-2xl shadow-xs">
                 <Mail className="h-5 w-5" />
               </div>
-              <div>
+              <div className="min-w-0">
                 <CardTitle className="text-base font-bold text-gray-900 flex items-center gap-2">
                   <span>Cuestionario de Anamnesis Pre-Consulta</span>
                 </CardTitle>
@@ -176,10 +176,10 @@ export function PatientContactTools({ patient }: Props) {
             </div>
 
             {/* Insignias de Estado del Cuestionario */}
-            <div className="flex items-center gap-2 flex-wrap">
+            <div className="flex w-full flex-wrap items-center gap-2 sm:w-auto">
               {hasCompletedSubmission ? (
-                <div className="flex items-center gap-2">
-                  <Badge className="bg-blue-100 text-blue-900 border-blue-300 font-bold rounded-full px-3 py-1 flex items-center gap-1.5 shadow-2xs">
+                <div className="flex flex-wrap items-center gap-2">
+                  <Badge className="bg-blue-100 text-blue-900 border-blue-300 font-bold rounded-full px-3 py-1 flex items-center gap-1.5 shadow-2xs whitespace-nowrap shrink-0">
                     <CheckCircle2 className="h-3.5 w-3.5 text-blue-600" />
                     <span>Rellenado por la Paciente {completedAt ? `(${formatDate(completedAt)})` : ''}</span>
                   </Badge>
@@ -190,12 +190,12 @@ export function PatientContactTools({ patient }: Props) {
                   />
                 </div>
               ) : status === 'PENDING' ? (
-                <Badge className="bg-amber-100 text-amber-900 border-amber-300 font-bold rounded-full px-3 py-1 flex items-center gap-1.5 shadow-2xs">
+                <Badge className="bg-amber-100 text-amber-900 border-amber-300 font-bold rounded-full px-3 py-1 flex items-center gap-1.5 shadow-2xs whitespace-nowrap shrink-0">
                   <Clock className="h-3.5 w-3.5 text-amber-600" />
                   <span>Pendiente de Respuesta {sentAt ? `(Enviado ${formatDate(sentAt)})` : ''}</span>
                 </Badge>
               ) : (
-                <Badge variant="outline" className="bg-gray-100 text-gray-600 border-gray-300 font-medium rounded-full px-3 py-1 text-2xs">
+                <Badge variant="outline" className="bg-gray-100 text-gray-600 border-gray-300 font-medium rounded-full px-3 py-1 text-2xs whitespace-nowrap shrink-0">
                   No Enviado Aún
                 </Badge>
               )}

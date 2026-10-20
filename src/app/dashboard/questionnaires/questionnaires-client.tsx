@@ -324,8 +324,8 @@ export function QuestionnairesClient({
       {/* Header */}
       <div className="glass-panel p-6 sm:p-7 rounded-3xl border border-slate-200/80 shadow-xs relative overflow-hidden flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div className="absolute top-0 right-0 w-80 h-80 bg-blue-500/5 rounded-full blur-3xl pointer-events-none -mr-20 -mt-20" />
-        <div>
-          <div className="flex items-center gap-2">
+        <div className="min-w-0">
+          <div className="flex flex-wrap items-center gap-2">
             <h1 className="text-2xl font-black text-slate-900 tracking-tight">Control de Cuestionarios y Firmas</h1>
             <Badge variant="medical" className="text-3xs font-black uppercase">
               Módulo 5.4
@@ -337,7 +337,7 @@ export function QuestionnairesClient({
           </p>
         </div>
 
-        <div className="flex items-center gap-2">
+        <div className="flex w-full items-center gap-2 sm:w-auto">
           <Button
             onClick={() => {
               if (patients.length > 0) {
@@ -345,7 +345,7 @@ export function QuestionnairesClient({
                 setIsTemplateModalOpen(true)
               }
             }}
-            className="rounded-2xl bg-blue-600 hover:bg-blue-700 text-white font-bold text-xs gap-2 h-10 px-5 shadow-xs shrink-0 active:scale-[0.98]"
+            className="w-full justify-center rounded-2xl bg-blue-600 px-5 text-xs font-bold text-white shadow-xs hover:bg-blue-700 active:scale-[0.98] sm:w-auto h-10 gap-2 shrink-0"
           >
             <Send className="w-4 h-4" />
             <span>Enviar Cuestionario</span>
@@ -382,7 +382,7 @@ export function QuestionnairesClient({
       )}
 
       {/* Metric Cards Grid: 4 Fases + N Campos por Revisar */}
-      <div className="grid grid-cols-2 lg:grid-cols-5 gap-3.5">
+      <div className="grid grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-3.5">
         {/* Total Pacientes */}
         <Card
           onClick={() => setStatusFilter('ALL')}
@@ -554,7 +554,7 @@ export function QuestionnairesClient({
               {/* Mobile/tablet questionnaire cards.
                   La tabla de 5 columnas dejaba acciones y firma fuera de la
                   pantalla del móvil; aquí se muestran todos los controles. */}
-              <div className="divide-y divide-gray-100 xl:hidden">
+              <div className="grid grid-cols-1 gap-3 p-4 md:grid-cols-2 xl:grid-cols-3 2xl:hidden">
                 {filteredPatients.map((patient) => {
                   const hasPendingFields = (patient.pendingReviewFieldsCount || 0) > 0
                   const latestQ = patient.patientQuestionnaires?.[0]
@@ -563,8 +563,10 @@ export function QuestionnairesClient({
                   return (
                     <div
                       key={patient.id}
-                      className={`space-y-3 p-4 ${
-                        hasPendingFields ? 'border-l-4 border-l-amber-500 bg-amber-50/30' : ''
+                      className={`space-y-3 rounded-3xl border bg-white p-4 shadow-2xs ${
+                        hasPendingFields
+                          ? 'border-amber-200 border-l-4 border-l-amber-500 bg-amber-50/30'
+                          : 'border-gray-200'
                       }`}
                     >
                       <div className="flex items-start gap-3">
@@ -653,7 +655,7 @@ export function QuestionnairesClient({
                 })}
               </div>
 
-              <div className="hidden overflow-x-auto xl:block">
+              <div className="hidden overflow-x-auto 2xl:block">
                 <table className="w-full text-left text-xs">
                 <thead className="bg-gray-50/80 border-b border-gray-200 text-xs font-black uppercase text-gray-500">
                   <tr>

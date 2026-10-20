@@ -77,7 +77,7 @@ export function PatientQuestionnaireReviewCard({ patient }: Props) {
       {/* Action Banner */}
       <Card className="rounded-3xl border-blue-200 bg-gradient-to-br from-blue-50/70 via-white to-white p-6 shadow-xs">
         <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
-          <div className="flex items-start gap-3.5">
+          <div className="flex min-w-0 flex-1 items-start gap-3.5">
             <div className="p-3 bg-blue-600 text-white rounded-2xl shadow-xs shrink-0">
               <ClipboardList className="w-6 h-6" />
             </div>
@@ -105,12 +105,12 @@ export function PatientQuestionnaireReviewCard({ patient }: Props) {
             </div>
           </div>
 
-          <div className="flex items-center gap-2 shrink-0">
+          <div className="flex w-full items-center gap-2 shrink-0 md:w-auto">
             {questionnaireId ? (
               <Button
                 type="button"
                 onClick={() => setIsModalOpen(true)}
-                className="rounded-2xl bg-blue-600 hover:bg-blue-700 text-white font-bold text-xs gap-2 py-5 px-6 shadow-xs btn-tactile hover-lift cursor-pointer"
+                className="w-full justify-center rounded-2xl bg-blue-600 px-6 py-5 text-xs font-bold text-white shadow-xs transition-colors hover:bg-blue-700 md:w-auto btn-tactile hover-lift cursor-pointer"
               >
                 <Sparkles className="w-4 h-4" />
                 <span>Revisar y Validar Campos</span>
@@ -119,7 +119,7 @@ export function PatientQuestionnaireReviewCard({ patient }: Props) {
               <Button
                 type="button"
                 variant="outline"
-                className="rounded-2xl border-slate-200 text-xs font-bold"
+                className="w-full justify-center rounded-2xl border-slate-200 text-xs font-bold md:w-auto"
                 onClick={() => {
                   window.location.href = `/dashboard/questionnaires`
                 }}
