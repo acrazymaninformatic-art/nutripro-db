@@ -10,9 +10,12 @@ import { FOOD_EXCHANGE_GROUPS } from '@/lib/nutrition/exchange-system'
 import { PrePublishChecklistModal } from './pre-publish-checklist-modal'
 import { ExchangeGuide } from '@/components/nutrition/exchange-guide'
 import { ModalPortal } from '@/components/ui/modal-portal'
+import { MenuInfoPanel } from './menu-info/menu-info-panel'
 
 interface PlanViewerProps {
   plan: any
+  menu: any
+  patients: any[]
 }
 
 const MEAL_LABELS: Record<string, string> = {
@@ -101,7 +104,7 @@ function getPreparationTip(foodName: string, category: string | null, customNote
   return 'Cocción saludable a la plancha, al vapor o al horno respetando la porción indicada.'
 }
 
-export function PlanViewer({ plan }: PlanViewerProps) {
+export function PlanViewer({ plan, menu, patients }: PlanViewerProps) {
   const [activeTab, setActiveTab] = useState<'dossier' | 'interactive' | 'grocery' | 'exchanges'>('dossier')
   const [activeDayNumber, setActiveDayNumber] = useState(1)
   const [selectedRecipe, setSelectedRecipe] = useState<ClinicalRecipe | null>(null)
@@ -933,6 +936,11 @@ export function PlanViewer({ plan }: PlanViewerProps) {
           ========================================================================= */}
       {activeTab === 'interactive' && (
         <div className="space-y-5 print:hidden">
+          {/* Panel de informacion del menu (datos, configuracion y pacientes) */}
+          {menu && (
+            <MenuInfoPanel plan={plan} menu={menu} patients={patients || []} />
+          )}
+
           {/* Day Selector Buttons */}
           <div className="grid grid-cols-2 sm:grid-cols-4 md:grid-cols-7 gap-2">
             {plan.days.map((day: any, idx: number) => {
@@ -983,34 +991,95 @@ export function PlanViewer({ plan }: PlanViewerProps) {
                 </div>
               </CardHeader>
               <CardContent className="p-5 space-y-5">
-                {currentDay.meals.map((meal: any) => (
-                  <div key={meal.id} className="border border-gray-200 rounded-2xl overflow-hidden shadow-2xs">
-                    <div className="bg-gradient-to-r from-gray-100 to-gray-50 px-4 py-2.5 border-b border-gray-200 flex items-center justify-between font-bold text-xs uppercase text-gray-800">
-                      <span className="flex items-center gap-1.5">
-                        <span className="w-2 h-2 rounded-full bg-blue-600"></span>
-                        {MEAL_LABELS[meal.mealType] || meal.mealType}
-                      </span>
-                      <span className="text-[11px] font-semibold text-gray-500">{meal.items.length} alimentos</span>
-                    </div>
-                    <div className="divide-y divide-gray-100">
-                      {meal.items.map((it: any) => {
-                        const imageUrl = it.food ? getFoodImage(it.food) : ''
-                        const prepTip = getPreparationTip(it.food?.name || '', it.food?.category || null, it.notes)
-                        const itemRecipe = it.food ? getRecipeForFood(it.food.name, it.food.category) : null
+                {currentDay.meals.map((meal: any) => {
+                  const mealConflicts = (meal.items || [])
+                    .map((item: any) =>
+                      item.food && plan.patient
+                        ? checkPatientAllergenConflict(item.food, plan.patient)
+                        : null
+                    )
+                    .filter(Boolean)
 
-                        return (
-                          <div key={it.id} className="p-3.5 flex items-center gap-3.5 hover:bg-gray-50/50 transition-colors">
-                            <div className="h-11 w-11 rounded-xl overflow-hidden bg-gray-100 border border-gray-200 shrink-0 shadow-2xs">
-                              <img
-                                src={imageUrl}
-                                alt={it.food?.name || 'Alimento'}
-                                className="h-full w-full object-cover"
-                                onError={(e) => {
-                                  e.currentTarget.onerror = null
-                                  e.currentTarget.src = FALLBACK_FOOD_SVG
-                                }}
-                              />
-                            </div>
+                  const conflictLabels = Array.from(
+                    new Set(mealConflicts.map((conflict: any) => conflict.allergenLabel))
+                  )
+                  const conflictDetail = mealConflicts[0]?.alertMessage
+
+                  return (
+                    <div
+                      key={meal.id}
+                      className={`border rounded-2xl overflow-hidden shadow-2xs ${
+                        mealConflicts.length ? 'border-red-300' : 'border-gray-200'
+                      }`}
+                    >
+                      <div
+                        className={`px-4 py-2.5 border-b flex items-center justify-between font-bold text-xs uppercase ${
+                          mealConflicts.length
+                            ? 'bg-red-50 border-red-200 text-red-900'
+                            : 'bg-gradient-to-r from-gray-100 to-gray-50 border-gray-200 text-gray-800'
+                        }`}
+                      >
+                        <span className="flex items-center gap-1.5">
+                          <span
+                            className={`w-2 h-2 rounded-full ${
+                              mealConflicts.length ? 'bg-red-600' : 'bg-blue-600'
+                            }`}
+                          ></span>
+                          {MEAL_LABELS[meal.mealType] || meal.mealType}
+                        </span>
+                        <span className="flex items-center gap-2">
+                          {mealConflicts.length > 0 && (
+                            <span
+                              title={conflictDetail}
+                              className="inline-flex items-center gap-1 rounded-full bg-red-600 px-2 py-0.5 text-[10px] font-black text-white shadow-2xs"
+                            >
+                              <Siren className="h-3 w-3" />
+                              {conflictLabels.join(', ')}
+                            </span>
+                          )}
+                          <span className="text-[11px] font-semibold text-gray-500">
+                            {meal.items.length} alimentos
+                          </span>
+                        </span>
+                      </div>
+                      <div className="divide-y divide-gray-100">
+                        {meal.items.map((it: any) => {
+                          const imageUrl = it.food ? getFoodImage(it.food) : ''
+                          const prepTip = getPreparationTip(
+                            it.food?.name || '',
+                            it.food?.category || null,
+                            it.notes
+                          )
+                          const itemRecipe = it.food
+                            ? getRecipeForFood(it.food.name, it.food.category)
+                            : null
+                          const itemConflict =
+                            it.food && plan.patient
+                              ? checkPatientAllergenConflict(it.food, plan.patient)
+                              : null
+
+                          return (
+                            <div
+                              key={it.id}
+                              className={`p-3.5 flex items-center gap-3.5 transition-colors ${
+                                itemConflict ? 'bg-red-50/50' : 'hover:bg-gray-50/50'
+                              }`}
+                            >
+                              <div
+                                className={`h-11 w-11 rounded-xl overflow-hidden bg-gray-100 border shrink-0 shadow-2xs ${
+                                  itemConflict ? 'border-red-300' : 'border-gray-200'
+                                }`}
+                              >
+                                <img
+                                  src={imageUrl}
+                                  alt={it.food?.name || 'Alimento'}
+                                  className="h-full w-full object-cover"
+                                  onError={(e) => {
+                                    e.currentTarget.onerror = null
+                                    e.currentTarget.src = FALLBACK_FOOD_SVG
+                                  }}
+                                />
+                              </div>
                             <div className="flex-1 min-w-0">
                               <div className="flex items-center gap-2 flex-wrap">
                                 <span className="text-xs font-bold text-gray-900 block truncate">{it.food?.name}</span>
@@ -1038,9 +1107,10 @@ export function PlanViewer({ plan }: PlanViewerProps) {
                           </div>
                         )
                       })}
+                      </div>
                     </div>
-                  </div>
-                ))}
+                  )
+                })}
               </CardContent>
             </Card>
           )}

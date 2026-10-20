@@ -5,6 +5,7 @@ import { PlanViewer } from './plan-viewer'
 import { DeletePlanButton } from './delete-plan-button'
 import { Badge } from '@/components/ui/badge'
 import { ArrowLeft } from 'lucide-react'
+import { getOrCreateMenuConfig, listPatientsForMenu } from './menu-actions'
 
 export const dynamic = 'force-dynamic'
 
@@ -19,6 +20,11 @@ export default async function MealPlanDetailPage({ params }: MealPlanDetailPageP
   if (!plan) {
     notFound()
   }
+
+  const [menu, patients] = await Promise.all([
+    getOrCreateMenuConfig(id),
+    listPatientsForMenu(),
+  ])
 
   return (
     <div className="space-y-5 max-w-6xl mx-auto print:max-w-none print:w-full print:m-0 print:p-0">
@@ -40,7 +46,7 @@ export default async function MealPlanDetailPage({ params }: MealPlanDetailPageP
       </div>
 
       {/* Plan Viewer & Editorial Dossier */}
-      <PlanViewer plan={plan} />
+      <PlanViewer plan={plan} menu={menu} patients={patients} />
     </div>
   )
 }

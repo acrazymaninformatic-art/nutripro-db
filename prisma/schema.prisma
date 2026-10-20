@@ -48,6 +48,7 @@ model User {
   customFoods   Food[]
   absorptionRules AbsorptionInteractionRule[]
   foodMergeLogs FoodDuplicateMergeLog[]
+  menuConfigs   MenuConfig[]
 }
 
 model Patient {
@@ -198,6 +199,7 @@ model Patient {
   appointmentRequests  AppointmentRequest[]
   clinicalProtocols    ClinicalProtocolRecord[]
   calculatorResults    CalculatorResultRecord[]
+  menuAssignments      MenuPatientAssignment[]
 
   @@index([userId])
 }
@@ -641,6 +643,8 @@ model MealPlan {
 
   days           DayPlan[]
 
+  menuConfig     MenuConfig?
+
   @@index([patientId])
   @@index([userId])
 }
@@ -953,3 +957,59 @@ model CalculatorResultRecord {
   @@index([patientId, createdAt])
 }
 
+
+// === INFORMACION DEL MENU (CONFIGURACION CLINICA DE LA PAUTA) ===
+// El "menu" es la configuracion clinica de una pauta: datos, objetivos por
+// dia, reparto por ingesta, pacientes asignados e historial de versiones.
+model MenuConfig {
+  id           String    @id @default(cuid())
+  userId       String
+  user         User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  mealPlanId   String    @unique
+  mealPlan     MealPlan  @relation(fields: [mealPlanId], references: [id], onDelete: Cascade)
+  title        String
+  internalCode String    @unique
+  status       String    @default("DRAFT") // "DRAFT" | "ACTIVE" | "ARCHIVED"
+  startDate    DateTime?
+  endDate      DateTime?
+  internalNotes String?
+  isTemplate   Boolean   @default(false)
+  templateSourceId String?
+  version      Int       @default(1)
+  settingsJson String    @default("{}") // Objetivos, tolerancia, ingestas, keto, micros
+  createdAt    DateTime  @default(now())
+  updatedAt    DateTime  @updatedAt
+
+  versions    MenuConfigVersion[]
+  assignments MenuPatientAssignment[]
+
+  @@index([userId])
+  @@index([status])
+}
+
+model MenuConfigVersion {
+  id            String     @id @default(cuid())
+  menuId        String
+  menu          MenuConfig @relation(fields: [menuId], references: [id], onDelete: Cascade)
+  version       Int
+  snapshotJson  String
+  summary       String?
+  createdAt     DateTime   @default(now())
+
+  @@index([menuId, createdAt])
+}
+
+model MenuPatientAssignment {
+  id          String     @id @default(cuid())
+  menuId      String
+  menu        MenuConfig @relation(fields: [menuId], references: [id], onDelete: Cascade)
+  patientId   String
+  patient     Patient    @relation(fields: [patientId], references: [id], onDelete: Cascade)
+  servings    Float      @default(1)
+  profileJson String     @default("{}") // Peso, altura, edad, sexo, objetivo, alergias...
+  createdAt   DateTime   @default(now())
+  updatedAt   DateTime   @updatedAt
+
+  @@unique([menuId, patientId])
+  @@index([patientId])
+}
