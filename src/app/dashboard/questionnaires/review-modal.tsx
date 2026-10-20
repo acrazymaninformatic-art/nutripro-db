@@ -190,8 +190,8 @@ export function QuestionnaireReviewModal({
       <DialogContent className="max-w-4xl max-h-[92vh] overflow-y-auto rounded-3xl p-6 sm:p-8">
         <DialogHeader className="border-b border-gray-100 pb-4">
           <div className="flex flex-wrap items-center justify-between gap-3">
-            <div>
-              <div className="flex items-center gap-2">
+            <div className="min-w-0">
+              <div className="flex flex-wrap items-center gap-2">
                 <Badge variant="outline" className="bg-blue-50 text-blue-700 border-blue-200 text-3xs font-bold rounded-full">
                   REVISIÓN CLÍNICA
                 </Badge>
@@ -581,8 +581,8 @@ export function QuestionnaireReviewModal({
           </div>
         )}
 
-        <DialogFooter className="border-t border-gray-100 pt-4 flex items-center justify-between">
-          <p className="text-2xs text-gray-400">
+        <DialogFooter className="border-t border-gray-100 pt-4 flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+          <p className="min-w-0 text-2xs text-gray-400">
             Regla de oro: los datos del paciente se escriben en su ficha únicamente cuando Eva los confirma.
           </p>
           <Button

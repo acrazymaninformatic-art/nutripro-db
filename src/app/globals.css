@@ -254,9 +254,15 @@ button, a, input, select, textarea {
   100% { opacity: 1; transform: scale(1) translateY(0); }
 }
 
+/*
+ * Tailwind v4 centra el diálogo con la propiedad `translate`
+ * (`-translate-x-1/2 -translate-y-1/2`), no con `transform`. Si los keyframes
+ * vuelven a aplicar un `translate(-50%, -50%)` en `transform`, el desplazamiento
+ * se duplica y el modal queda cortado por la izquierda y por arriba.
+ */
 @keyframes dialogIn {
-  from { opacity: 0; transform: translate(-50%, -48%) scale(0.96); }
-  to { opacity: 1; transform: translate(-50%, -50%) scale(1); }
+  from { opacity: 0; transform: scale(0.96); }
+  to { opacity: 1; transform: scale(1); }
 }
 
 @keyframes overlayIn {

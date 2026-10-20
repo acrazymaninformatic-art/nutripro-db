@@ -175,7 +175,13 @@ const DialogContent = React.forwardRef<HTMLDivElement, DialogContentProps>(
           role="dialog"
           aria-modal="true"
           className={cn(
-            'fixed left-1/2 top-1/2 z-50 grid w-full max-w-lg -translate-x-1/2 -translate-y-1/2 gap-4 border border-slate-200/90 bg-white p-6 shadow-2xl duration-200 sm:rounded-3xl',
+            // Tailwind v4 centra con la propiedad `translate`; el keyframe
+            // `dialogIn` ya no aplica un translate propio en `transform`.
+            // `flex flex-col` (en lugar de `grid`) evita que una columna
+            // `auto` crezca con el contenido y desborde el panel, y
+            // `max-h` + scroll interno evitan que los modales largos (revisión
+            // de cuestionarios) queden cortados fuera del viewport.
+            'fixed left-1/2 top-1/2 z-50 flex w-[calc(100vw-2rem)] max-w-lg max-h-[calc(100vh-2rem)] flex-col overflow-y-auto overscroll-contain -translate-x-1/2 -translate-y-1/2 gap-4 border border-slate-200/90 bg-white p-6 shadow-2xl duration-200 sm:rounded-3xl',
             'animate-dialog-in',
             className
           )}
