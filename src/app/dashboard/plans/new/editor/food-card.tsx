@@ -1,79 +1,54 @@
 'use client'
 
 import { useEffect, useRef, useState } from 'react'
-import { Check, GripVertical, Minus, Plus, Siren, X } from 'lucide-react'
+import { ArrowLeftRight, Copy, GripVertical, Lock, Minus, Plus, Scissors, Siren, X } from 'lucide-react'
 import { getFoodImage, FALLBACK_FOOD_SVG } from '@/lib/nutrition'
-import { MACRO_CHIP_STYLES, type EditorFood, type EditorItem } from './types'
-
-export type CardSize = 'compact' | 'normal' | 'large'
+import type { EditorFood, EditorItem } from './types'
 
 interface FoodCardProps {
   item: EditorItem
   food: EditorFood | undefined
-  size: CardSize
   conflictLabel?: string | null
   conflictMessage?: string | null
   onChangeQuantity: (grams: number) => void
   onRemove: () => void
   onSwap: () => void
+  onCopy: () => void
+  onCut: () => void
   onDragStart: () => void
   onDragEnd: () => void
   isDragging?: boolean
-  isCompleted?: boolean
-  onToggleComplete?: () => void
-}
-
-const SIZE_CONFIG: Record<
-  CardSize,
-  { photo: string; name: string; chips: string; padding: string; hideChips: boolean }
-> = {
-  compact: { photo: 'aspect-[16/9]', name: 'text-[11px] leading-tight', chips: 'text-[9px]', padding: 'p-1.5', hideChips: true },
-  normal: { photo: 'aspect-[16/9]', name: 'text-xs leading-snug', chips: 'text-[10px]', padding: 'p-2', hideChips: false },
-  large: { photo: 'aspect-[16/9]', name: 'text-[13px] leading-snug', chips: 'text-[11px]', padding: 'p-2.5', hideChips: false },
-}
-
-function Chip({
-  kind,
-  value,
-  suffix,
-}: {
-  kind: keyof typeof MACRO_CHIP_STYLES
-  value: number
-  suffix: string
-}) {
-  return (
-    <span
-      className={`rounded-md border px-1.5 py-0.5 font-black tabular-nums ${MACRO_CHIP_STYLES[kind]} ${MACRO_CHIP_STYLES[kind].includes('text-[11px]') ? '' : ''}`}
-      style={{ fontSize: 'inherit' }}
-    >
-      {value}
-      {suffix}
-    </span>
-  )
+  /** Fuerza el detalle completo (chips y +/−) también en móvil, p. ej. en la hoja del plato. */
+  full?: boolean
+  /** Ingesta bloqueada: no se puede mover, borrar, cambiar ración ni intercambiar. */
+  locked?: boolean
 }
 
 /**
- * Tarjeta de alimento con foto grande 16:9, nombre completo en dos líneas,
- * ración editable con botones +/− y chips de macros en color.
+ * Tarjeta de alimento (tamaño normal): foto 16:9, nombre completo en dos
+ * líneas, ración editable con +/−, chips de macros y acciones integradas.
+ * La alerta de alérgenos se muestra en la propia tarjeta y se despliega al
+ * pulsarla.
  */
 export function FoodCard({
   item,
   food,
-  size,
   conflictLabel,
   conflictMessage,
   onChangeQuantity,
   onRemove,
   onSwap,
+  onCopy,
+  onCut,
   onDragStart,
   onDragEnd,
   isDragging,
-  isCompleted,
-  onToggleComplete,
+  full = false,
+  locked = false,
 }: FoodCardProps) {
-  const config = SIZE_CONFIG[size]
   const [draftGrams, setDraftGrams] = useState<string>(String(item.quantityG))
   const [imageLoaded, setImageLoaded] = useState(false)
+  const [showConflict, setShowConflict] = useState(false)
   const inputRef = useRef<HTMLInputElement>(null)
 
   useEffect(() => {
@@ -103,20 +78,27 @@ export function FoodCard({
   }
 
   const imageUrl = food ? getFoodImage(food) : ''
+
   return (
     <article
-      draggable
+      draggable={!locked}
       onDragStart={onDragStart}
       onDragEnd={onDragEnd}
-      className={`group relative flex flex-col overflow-hidden rounded-2xl border bg-white shadow-sm transition-all ${
+      className={`group relative flex min-w-0 flex-col overflow-hidden rounded-xl border bg-white shadow-sm transition-all ${
         conflictMessage
-          ? 'border-red-400 ring-2 ring-red-200'
-          : 'border-slate-200 hover:border-blue-300 hover:shadow-md'
-      } ${isDragging ? 'opacity-40' : ''} ${isCompleted ? 'ring-2 ring-emerald-300' : ''}`}
-      title={conflictMessage || 'Arrastra para mover a otro día u otra ingesta'}
+          ? 'border-red-400 ring-1 ring-red-200'
+          : locked
+            ? 'border-amber-200'
+            : 'border-slate-200 hover:border-blue-300 hover:shadow-md'
+      } ${isDragging ? 'opacity-40' : ''}`}
+      title={
+        locked
+          ? 'Ingesta bloqueada · desbloquéala en la cabecera para editarla'
+          : conflictMessage || `${food?.name || 'Alimento'} · arrastra para moverlo`
+      }
     >
       {/* Foto 16:9 */}
-      <div className={`relative w-full overflow-hidden bg-slate-100 ${config.photo}`}>
+      <div className="relative aspect-[16/9] w-full shrink-0 overflow-hidden bg-slate-100">
         {!imageLoaded && <div className="absolute inset-0 animate-pulse bg-slate-100" />}
         <img
           src={imageUrl}
@@ -133,66 +115,105 @@ export function FoodCard({
           }`}
         />
 
-        {/* Asa de arrastre */}
-        <span className="absolute left-1 top-1 rounded-md bg-white/85 p-0.5 text-slate-500 opacity-70 transition-opacity group-hover:opacity-100">
-          <GripVertical className="h-3.5 w-3.5" />
+        {/* Asa de arrastre / candado */}
+        <span className="absolute left-0.5 top-0.5 rounded bg-white/80 p-0.5 text-slate-500 opacity-70 transition-opacity group-hover:opacity-100">
+          {locked ? <Lock className="h-3 w-3 text-amber-600" /> : <GripVertical className="h-3 w-3" />}
         </span>
 
         {/* Quitar */}
         <button
           type="button"
           onClick={onRemove}
-          className="absolute right-1 top-1 rounded-md bg-white/90 p-0.5 text-slate-500 transition-colors hover:bg-red-50 hover:text-red-600"
+          disabled={locked}
+          className="absolute right-0.5 top-0.5 rounded bg-white/90 p-0.5 text-slate-500 transition-colors hover:bg-red-50 hover:text-red-600 disabled:cursor-not-allowed disabled:opacity-40"
           aria-label={`Quitar ${food?.name || 'alimento'}`}
         >
-          <X className="h-3.5 w-3.5" />
+          <X className="h-3 w-3" />
         </button>
 
-        {/* Check de completeness */}
-        {onToggleComplete && (
+        {/* Alerta de alérgenos del plato */}
+        {conflictLabel && (
           <button
             type="button"
-            onClick={onToggleComplete}
-            className={`absolute bottom-1 right-1 rounded-md p-0.5 transition-colors ${
-              isCompleted
-                ? 'bg-emerald-500 text-white'
-                : 'bg-white/90 text-slate-400 hover:text-emerald-600'
-            }`}
-            aria-label="Marcar alimento como completado"
+            onClick={() => setShowConflict((value) => !value)}
+            className="absolute bottom-0.5 left-0.5 inline-flex items-center gap-0.5 rounded bg-red-600 px-1 py-0.5 text-[8px] font-black text-white shadow-sm"
+            title={conflictMessage || 'Alérgeno detectado'}
+            aria-label={`Alérgeno detectado: ${conflictLabel}`}
           >
-            <Check className="h-3.5 w-3.5" />
+            <Siren className="h-2.5 w-2.5" />
+            {conflictLabel}
           </button>
         )}
+
+        {/* Acciones */}
+        <div className="absolute bottom-0.5 right-0.5 flex items-center gap-0.5">
+          <button
+            type="button"
+            onClick={onCopy}
+            className="rounded bg-white/90 p-0.5 text-slate-500 transition-colors hover:text-blue-600"
+            title="Copiar alimento"
+            aria-label="Copiar alimento"
+          >
+            <Copy className="h-2.5 w-2.5" />
+          </button>
+          <button
+            type="button"
+            onClick={onCut}
+            disabled={locked}
+            className="rounded bg-white/90 p-0.5 text-slate-500 transition-colors hover:text-amber-600 disabled:cursor-not-allowed disabled:opacity-40"
+            title="Cortar alimento"
+            aria-label="Cortar alimento"
+          >
+            <Scissors className="h-2.5 w-2.5" />
+          </button>
+          <button
+            type="button"
+            onClick={onSwap}
+            disabled={locked}
+            className="rounded bg-white/90 p-0.5 text-slate-500 transition-colors hover:text-emerald-600 disabled:cursor-not-allowed disabled:opacity-40"
+            title="Intercambiar por un equivalente"
+            aria-label="Intercambiar por un equivalente"
+          >
+            <ArrowLeftRight className="h-2.5 w-2.5" />
+          </button>
+        </div>
       </div>
 
       {/* Cuerpo */}
-      <div className={`flex flex-1 flex-col gap-1.5 ${config.padding}`}>
-        <div className="flex items-start gap-1">
-          <p className={`min-w-0 flex-1 font-bold text-slate-900 ${config.name} line-clamp-2`}>
-            {food?.name || 'Alimento'}
+      <div className={`flex min-w-0 flex-1 flex-col ${full ? 'gap-1.5 p-2.5' : 'gap-1 p-1.5'}`}>
+        <p
+          className={`overflow-hidden font-bold leading-[1.25] text-slate-900 ${
+            full ? 'text-[12px]' : 'text-[10px] sm:text-[11px]'
+          }`}
+          style={{ maxHeight: '2.5em' }}
+          title={food?.name || 'Alimento'}
+        >
+          {food?.name || 'Alimento'}
+        </p>
+
+        {showConflict && conflictMessage && (
+          <p className="rounded-md bg-red-50 px-1.5 py-1 text-[8px] font-semibold leading-tight text-red-700">
+            {conflictMessage}
           </p>
-          {conflictLabel && (
-            <span
-              className="mt-0.5 shrink-0 rounded bg-red-600 px-1 py-0.5 text-[9px] font-black text-white"
-              title={conflictMessage ?? undefined}
-            >
-              <Siren className="h-2.5 w-2.5" />
-            </span>
-          )}
-        </div>
+        )}
 
         {/* Gramos editables */}
-        <div className="flex items-center gap-1">
+        <div className="flex items-center gap-0.5">
           <button
             type="button"
             onClick={() => step(-5)}
-            className="flex h-6 w-6 items-center justify-center rounded-lg border border-slate-200 bg-slate-50 text-slate-600 transition-colors hover:border-blue-300 hover:text-blue-700"
+            disabled={locked}
+            className={`${full ? 'flex h-7 w-7' : 'hidden h-5 w-5 sm:flex'} shrink-0 items-center justify-center rounded-md border border-slate-200 bg-slate-50 text-slate-600 transition-colors hover:border-blue-300 hover:text-blue-700 disabled:cursor-not-allowed disabled:opacity-40`}
             aria-label="Reducir ración"
           >
-            <Minus className="h-3 w-3" />
+            <Minus className="h-2.5 w-2.5" />
           </button>
 
-          <label className="flex min-w-0 flex-1 items-center gap-1 rounded-lg border border-slate-200 bg-white px-1.5 py-0.5 focus-within:border-blue-400 focus-within:ring-2 focus-within:ring-blue-500/15">
+          <label
+            className={`flex min-w-0 flex-1 items-center gap-0.5 rounded-md border border-slate-200 bg-white focus-within:border-blue-400 focus-within:ring-1 focus-within:ring-blue-500/15 ${
+              full ? 'px-2 py-1' : 'px-1 py-0.5'
+            }`}
+          >
             <input
               ref={inputRef}
               type="number"
@@ -201,46 +222,52 @@ export function FoodCard({
               value={draftGrams}
               onChange={(event) => setDraftGrams(event.target.value)}
               onBlur={(event) => commitGrams(event.target.value)}
+              disabled={locked}
               onKeyDown={(event) => {
                 if (event.key === 'Enter') {
                   commitGrams((event.target as HTMLInputElement).value)
                   event.currentTarget.blur()
                 }
               }}
-              className="w-full min-w-0 bg-transparent text-[11px] font-black text-slate-800 outline-none"
-              aria-label="Gramos"
+              className={`w-full min-w-0 bg-transparent text-center font-black text-slate-800 outline-none disabled:cursor-not-allowed ${
+                full ? 'text-[12px]' : 'text-[10px]'
+              }`}
+              aria-label={`Gramos de ${food?.name || 'alimento'}`}
             />
-            <span className="shrink-0 text-[10px] font-bold text-slate-400">g</span>
+            <span className="shrink-0 text-[8px] font-bold text-slate-400">g</span>
           </label>
 
           <button
             type="button"
             onClick={() => step(5)}
-            className="flex h-6 w-6 items-center justify-center rounded-lg border border-slate-200 bg-slate-50 text-slate-600 transition-colors hover:border-blue-300 hover:text-blue-700"
+            disabled={locked}
+            className={`${full ? 'flex h-7 w-7' : 'hidden h-5 w-5 sm:flex'} shrink-0 items-center justify-center rounded-md border border-slate-200 bg-slate-50 text-slate-600 transition-colors hover:border-blue-300 hover:text-blue-700 disabled:cursor-not-allowed disabled:opacity-40`}
             aria-label="Aumentar ración"
           >
-            <Plus className="h-3 w-3" />
+            <Plus className="h-2.5 w-2.5" />
           </button>
         </div>
 
         {/* Chips de macros */}
-        {!config.hideChips && (
-          <div className={`flex flex-wrap gap-1 font-bold ${config.chips}`}>
-            <Chip kind="kcal" value={kcal} suffix="kcal" />
-            <Chip kind="carbs" value={carbs} suffix="HC" />
-            <Chip kind="protein" value={protein} suffix="Prot" />
-            <Chip kind="fat" value={fat} suffix="Grasa" />
-            <Chip kind="fiber" value={fiber} suffix="Fibra" />
-          </div>
-        )}
-
-        <button
-          type="button"
-          onClick={onSwap}
-          className="mt-auto text-[10px] font-bold text-slate-400 underline-offset-2 transition-colors hover:text-blue-700 hover:underline"
+        <div
+          className={`${full ? 'flex' : 'hidden sm:flex'} flex-wrap gap-0.5 text-[8px] font-black leading-none sm:text-[9px]`}
         >
-          Intercambiar por equivalente
-        </button>
+          <span className="rounded border border-blue-200 bg-blue-100 px-1 py-0.5 tabular-nums text-blue-800">
+            {kcal} kcal
+          </span>
+          <span className="rounded border border-emerald-200 bg-emerald-100 px-1 py-0.5 tabular-nums text-emerald-800">
+            {carbs} HC
+          </span>
+          <span className="rounded border border-red-200 bg-red-100 px-1 py-0.5 tabular-nums text-red-800">
+            {protein} Prot
+          </span>
+          <span className="rounded border border-amber-200 bg-amber-100 px-1 py-0.5 tabular-nums text-amber-900">
+            {fat} Grasa
+          </span>
+          <span className="rounded border border-purple-200 bg-purple-100 px-1 py-0.5 tabular-nums text-purple-800">
+            {fiber} Fibra
+          </span>
+        </div>
       </div>
     </article>
   )

@@ -3,6 +3,7 @@
 import { prisma } from '@/lib/prisma'
 import { revalidatePath } from 'next/cache'
 import { requireUserId } from '@/lib/auth'
+import type { MenuSettings } from '@/lib/menu-config'
 
 async function getDefaultUserId(): Promise<string> {
   return requireUserId()
@@ -109,6 +110,8 @@ export interface CreateMealPlanInput {
       }[]
     }[]
   }[]
+  /** Configuración del menú (objetivos, tolerancia, reparto, keto, micros). */
+  menuSettings?: MenuSettings
 }
 
 export async function createMealPlan(input: CreateMealPlanInput) {
@@ -180,6 +183,34 @@ export async function createMealPlan(input: CreateMealPlanInput) {
   revalidatePath('/dashboard')
   revalidatePath('/dashboard/plans')
   revalidatePath(`/dashboard/patients/${input.patientId}`)
+
+  // La configuración del panel "Información del menú" se guarda junto a la pauta
+  // para que el detalle muestre exactamente los mismos objetivos y reparto.
+  if (input.menuSettings) {
+    try {
+      await prisma.menuConfig.create({
+        data: {
+          userId,
+          mealPlanId: mealPlan.id,
+          title: input.name,
+          internalCode: `MENU-${mealPlan.id.slice(-8).toUpperCase()}-${Date.now().toString(36).toUpperCase()}`,
+          status: 'DRAFT',
+          startDate: new Date(input.startDate),
+          settingsJson: JSON.stringify(input.menuSettings),
+          versions: {
+            create: {
+              version: 1,
+              snapshotJson: JSON.stringify(input.menuSettings),
+              summary: 'Configuración inicial de la pauta',
+            },
+          },
+        },
+      })
+    } catch (error) {
+      console.error('No se pudo guardar la configuración del menú:', error)
+    }
+  }
+
   return mealPlan
 }
 

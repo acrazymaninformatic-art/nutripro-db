@@ -164,9 +164,9 @@ export function RequirementsView({
       </section>
 
       {/* Anillos + gráfico */}
-      <section className="grid gap-5 lg:grid-cols-2">
-        <div className="rounded-2xl border border-gray-200 bg-white p-4">
-          <div className="grid grid-cols-4 gap-2">
+      <section className="grid min-w-0 gap-4">
+        <div className="min-w-0 overflow-hidden rounded-2xl border border-gray-200 bg-white p-3">
+          <div className="grid grid-cols-4 gap-1.5">
             {macroRings.map((ring) => (
               <ProgressRing
                 key={ring.key}

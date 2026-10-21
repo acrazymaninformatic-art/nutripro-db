@@ -181,13 +181,15 @@ export function AddFoodButton({
       onClick={onClick}
       disabled={disabled}
       aria-label={ariaLabel}
-      className="flex w-full items-center justify-between gap-2 rounded-xl border border-dashed border-slate-300 bg-slate-50/70 px-2.5 py-1.5 text-[10px] font-bold text-slate-600 transition-colors hover:border-blue-400 hover:bg-blue-50 hover:text-blue-700 disabled:opacity-50"
+      className="flex w-full min-w-0 items-center justify-between gap-1 overflow-hidden rounded-lg border border-dashed border-slate-300 bg-slate-50/70 px-1 py-1 text-[9px] font-bold text-slate-600 transition-colors hover:border-blue-400 hover:bg-blue-50 hover:text-blue-700 disabled:opacity-50 sm:px-1.5 sm:text-[10px]"
     >
-      <span className="inline-flex items-center gap-1">
-        <Plus className="h-3 w-3" />
-        Añadir
+      <span className="inline-flex min-w-0 items-center gap-0.5">
+        <Plus className="h-2.5 w-2.5 shrink-0" />
+        <span className="truncate">Añadir</span>
       </span>
-      <span className="font-mono tabular-nums">{Math.round(kcal)} kcal</span>
+      <span className="hidden shrink-0 font-mono tabular-nums sm:inline">
+        {Math.round(kcal)} kcal
+      </span>
     </button>
   )
 }

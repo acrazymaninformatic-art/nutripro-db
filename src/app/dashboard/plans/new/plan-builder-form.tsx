@@ -24,6 +24,7 @@ import {
 import { checkDrugInteractions } from '@/lib/nutrition/drug-interactions'
 import { FOOD_EXCHANGE_GROUPS } from '@/lib/nutrition/exchange-system'
 import { OBJECTIVE_LABELS, type Objective } from '@/types'
+import { defaultMenuSettings, type MenuSettings } from '@/lib/menu-config'
 import { MenuEditor } from './editor/menu-editor'
 import {
   DEFAULT_INGESTA_META,
@@ -247,6 +248,35 @@ export function PlanBuilderForm({
     proteinGPerKg,
     fatGPerKg,
     minCaloricSafetyKcal,
+  ])
+
+  // Configuración del menú (objetivos, tolerancia, reparto, keto). Vive aquí para
+  // que el panel lateral y la pauta guardada compartan exactamente los mismos valores.
+  const [menuSettings, setMenuSettings] = useState<MenuSettings>(() =>
+    defaultMenuSettings({
+      targetKcal: precisionResults.targetKcal,
+      targetProteinG: precisionResults.targetProteinG,
+      targetCarbsG: precisionResults.targetCarbsG,
+      targetFatG: precisionResults.targetFatG,
+    })
+  )
+
+  useEffect(() => {
+    setMenuSettings((current) => ({
+      ...current,
+      dailyTargets: {
+        ...current.dailyTargets,
+        kcal: precisionResults.targetKcal,
+        proteinG: precisionResults.targetProteinG,
+        carbsG: precisionResults.targetCarbsG,
+        fatG: precisionResults.targetFatG,
+      },
+    }))
+  }, [
+    precisionResults.targetKcal,
+    precisionResults.targetProteinG,
+    precisionResults.targetCarbsG,
+    precisionResults.targetFatG,
   ])
 
   // FUNCTION: Trigger automatic plan generation
@@ -479,13 +509,6 @@ export function PlanBuilderForm({
     })
   }
 
-  // --- ACTIONS: RENAME DAY ---
-  function handleRenameDay(index: number, newName: string) {
-    setDayMeta((current) =>
-      current.map((day, dayIndex) => (dayIndex === index ? { ...day, name: newName } : day))
-    )
-  }
-
   // --- ACTIONS: ADD FOOD FROM SEARCH MODAL WITH ALLERGEN INTERCEPTION ---
   function handleSelectFoodForCell(food: FoodOption, bypassWarning = false) {
     if (!modalTarget) return
@@ -559,15 +582,16 @@ export function PlanBuilderForm({
         patientId,
         name: name || `Pauta Semanal de ${selectedPatient?.firstName || 'Paciente'}`,
         startDate,
-        targetKcal: precisionResults.targetKcal,
-        targetProteinG: precisionResults.targetProteinG,
-        targetCarbsG: precisionResults.targetCarbsG,
-        targetFatG: precisionResults.targetFatG,
+        targetKcal: menuSettings.dailyTargets.kcal,
+        targetProteinG: menuSettings.dailyTargets.proteinG,
+        targetCarbsG: menuSettings.dailyTargets.carbsG,
+        targetFatG: menuSettings.dailyTargets.fatG,
         notes: generalNotes,
         hideCaloriesTCA: isTCA,
         isGLP1: isGLP1,
         daysCount: 7,
         daysData,
+        menuSettings,
       })
 
       router.push('/dashboard/plans')
@@ -976,18 +1000,21 @@ export function PlanBuilderForm({
                 allergies: selectedPatient.allergies,
                 intolerances: selectedPatient.intolerances,
                 dietaryPreferences: selectedPatient.dietaryPreferences,
+                objective: selectedPatient.objective,
               }
             : null
         }
         dayMeta={dayMeta}
         ingestaMeta={ingestaMeta}
-        targetKcal={precisionResults.targetKcal}
-        targetProteinG={precisionResults.targetProteinG}
-        targetCarbsG={precisionResults.targetCarbsG}
-        targetFatG={precisionResults.targetFatG}
+        menuSettings={menuSettings}
+        planName={name}
+        planNotes={generalNotes}
         onGridChange={(next) => setGridSchedule(next as never)}
         onDayMetaChange={setDayMeta}
         onIngestaMetaChange={setIngestaMeta}
+        onMenuSettingsChange={setMenuSettings}
+        onPlanNameChange={setName}
+        onPlanNotesChange={setGeneralNotes}
         onSave={() => void savePlan()}
         saving={loading}
       />

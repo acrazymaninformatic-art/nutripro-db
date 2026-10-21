@@ -17,8 +17,9 @@ const SEGMENTS = [
 ] as const
 
 /**
- * Gráfico "Macronutrientes y fibra totales": anillo con el reparto calórico
- * de cada macronutriente y de la fibra, más el detalle en gramos.
+ * Gráfico "Macronutrientes y fibra totales" responsivo: donut con el reparto
+ * calórico y detalle en gramos. Se adapta al ancho disponible sin invadir el
+ * resto de tarjetas del panel.
  */
 export function MacroChart({ proteinG, carbsG, fatG, fiberG }: MacroChartProps) {
   const values: Record<string, number> = { proteinG, carbsG, fatG, fiberG }
@@ -30,6 +31,7 @@ export function MacroChart({ proteinG, carbsG, fatG, fiberG }: MacroChartProps) 
   }
 
   const totalKcal = Object.values(kcal).reduce((sum, value) => sum + value, 0)
+  const size = 132
   const radius = 54
   const stroke = 22
   const circumference = 2 * Math.PI * radius
@@ -37,10 +39,10 @@ export function MacroChart({ proteinG, carbsG, fatG, fiberG }: MacroChartProps) 
   let offset = 0
 
   return (
-    <div className="flex flex-col items-center gap-3 sm:flex-row sm:items-center sm:gap-6">
-      <div className="relative shrink-0" style={{ width: 132, height: 132 }}>
-        <svg width={132} height={132} className="-rotate-90">
-          <circle cx={66} cy={66} r={radius} fill="none" stroke="#f1f5f9" strokeWidth={stroke} />
+    <div className="flex flex-wrap items-center justify-center gap-3">
+      <div className="relative w-full max-w-[116px] shrink-0">
+        <svg viewBox={`0 0 ${size} ${size}`} className="h-auto w-full -rotate-90">
+          <circle cx={size / 2} cy={size / 2} r={radius} fill="none" stroke="#f1f5f9" strokeWidth={stroke} />
           {totalKcal > 0 &&
             SEGMENTS.map((segment) => {
               const segmentKcal = kcal[segment.key]
@@ -49,8 +51,8 @@ export function MacroChart({ proteinG, carbsG, fatG, fiberG }: MacroChartProps) 
               const element = (
                 <circle
                   key={segment.key}
-                  cx={66}
-                  cy={66}
+                  cx={size / 2}
+                  cy={size / 2}
                   r={radius}
                   fill="none"
                   stroke={segment.color}
@@ -65,26 +67,24 @@ export function MacroChart({ proteinG, carbsG, fatG, fiberG }: MacroChartProps) 
             })}
         </svg>
         <div className="absolute inset-0 flex flex-col items-center justify-center">
-          <span className="text-[10px] font-bold uppercase tracking-wider text-gray-400">Total</span>
-          <span className="text-lg font-black text-gray-900 tabular-nums">
-            {Math.round(totalKcal)}
-          </span>
-          <span className="text-[10px] font-semibold text-gray-500">kcal</span>
+          <span className="text-[9px] font-bold uppercase tracking-wider text-gray-400">Total</span>
+          <span className="text-base font-black tabular-nums text-gray-900">{Math.round(totalKcal)}</span>
+          <span className="text-[9px] font-semibold text-gray-500">kcal</span>
         </div>
       </div>
 
-      <ul className="w-full space-y-1.5">
+      <ul className="min-w-[130px] flex-1 space-y-1">
         {SEGMENTS.map((segment) => {
           const grams = values[segment.key]
           const pct = totalKcal > 0 ? (kcal[segment.key] / totalKcal) * 100 : 0
           return (
-            <li key={segment.key} className="flex items-center gap-2 text-[11px]">
-              <span className="h-2.5 w-2.5 shrink-0 rounded-full" style={{ background: segment.color }} />
-              <span className="font-bold text-gray-700">{segment.label}</span>
+            <li key={segment.key} className="flex items-center gap-1.5 text-[10px]">
+              <span className="h-2 w-2 shrink-0 rounded-full" style={{ background: segment.color }} />
+              <span className="truncate font-bold text-gray-700">{segment.label}</span>
               <span className="ml-auto font-mono font-bold tabular-nums text-gray-900">
                 {formatNumber(grams)} g
               </span>
-              <span className="w-10 text-right font-mono text-gray-400 tabular-nums">
+              <span className="w-8 text-right font-mono text-gray-400 tabular-nums">
                 {Math.round(pct)}%
               </span>
             </li>

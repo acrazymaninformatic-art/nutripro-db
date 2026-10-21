@@ -267,9 +267,11 @@ export function distributeEquitably(ingestas: EditorIngestaMeta[]): EditorIngest
 
   return ingestas.map((ingesta) => {
     if (!ingesta.enabled) return { ...ingesta, percent: 0 }
-    const isLast = active.filter((item) => item.label === ingesta.label).length === 1
+
+    const activeIndex = active.findIndex((item) => item.label === ingesta.label)
+    const isLast = activeIndex === active.length - 1
     const percent = isLast ? Math.round((100 - assigned) * 10) / 10 : base
-    assigned += percent
+    assigned = Math.round((assigned + percent) * 10) / 10
     return { ...ingesta, percent }
   })
 }

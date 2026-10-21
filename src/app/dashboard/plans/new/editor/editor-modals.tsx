@@ -1,11 +1,11 @@
 'use client'
 
-import { useMemo, useState } from 'react'
-import { ArrowLeftRight, BookOpen, Check, Search } from 'lucide-react'
+import { useEffect, useMemo, useState } from 'react'
+import { ArrowLeftRight, BookOpen, Check, Search, Lock, Percent, StickyNote, Clock } from 'lucide-react'
 import { ModalPortal } from '@/components/ui/modal-portal'
 import { Button } from '@/components/ui/button'
 import { getFoodImage, FALLBACK_FOOD_SVG } from '@/lib/nutrition'
-import type { EditorFood } from './types'
+import type { EditorFood, EditorIngestaMeta } from './types'
 
 /* ------------------------------------------------------------------ */
 /* Intercambiar un alimento por otro equivalente                      */
@@ -133,6 +133,10 @@ interface NotesModalProps {
 export function NotesModal({ open, title, notes, onClose, onSave }: NotesModalProps) {
   const [draft, setDraft] = useState(notes)
 
+  useEffect(() => {
+    if (open) setDraft(notes)
+  }, [open, notes])
+
   if (!open) return null
 
   return (
@@ -230,6 +234,150 @@ export function TutorialModal({ open, onClose }: { open: boolean; onClose: () =>
               className="h-8 rounded-xl bg-blue-600 text-xs font-bold text-white hover:bg-blue-700"
             >
               Entendido
+            </Button>
+          </footer>
+        </div>
+      </div>
+    </ModalPortal>
+  )
+}
+
+/* ------------------------------------------------------------------ */
+/* Editar ingesta: nombre, hora, reparto, notas y bloqueo             */
+/* ------------------------------------------------------------------ */
+
+interface IngestaEditModalProps {
+  open: boolean
+  ingesta?: EditorIngestaMeta
+  onClose: () => void
+  onSave: (patch: Partial<EditorIngestaMeta>) => void
+}
+
+export function IngestaEditModal({ open, ingesta, onClose, onSave }: IngestaEditModalProps) {
+  const [label, setLabel] = useState('')
+  const [time, setTime] = useState('')
+  const [percent, setPercent] = useState(0)
+  const [notes, setNotes] = useState('')
+  const [locked, setLocked] = useState(false)
+
+  useEffect(() => {
+    if (!open || !ingesta) return
+    setLabel(ingesta.label)
+    setTime(ingesta.time)
+    setPercent(ingesta.percent)
+    setNotes(ingesta.notes)
+    setLocked(ingesta.locked)
+  }, [open, ingesta])
+
+  if (!open || !ingesta) return null
+
+  const inputClass =
+    'h-9 w-full rounded-xl border border-slate-200 bg-white px-3 text-xs font-semibold text-slate-800 outline-none focus:border-blue-400 focus:ring-2 focus:ring-blue-500/15'
+
+  return (
+    <ModalPortal>
+      <div
+        className="fixed inset-0 z-[97] flex items-center justify-center bg-slate-950/60 p-4 backdrop-blur-sm"
+        onClick={onClose}
+      >
+        <div
+          className="w-full max-w-md overflow-hidden rounded-3xl bg-white shadow-2xl"
+          onClick={(event) => event.stopPropagation()}
+        >
+          <header className="border-b border-slate-100 px-5 py-4">
+            <h3 className="text-sm font-black text-slate-900">Editar ingesta</h3>
+            <p className="text-[11px] font-semibold text-slate-500">
+              Nombre, hora y reparto calórico del día. El reparto total debe sumar 100 %.
+            </p>
+          </header>
+
+          <div className="space-y-3 p-5">
+            <label className="block">
+              <span className="mb-1 block text-[10px] font-black uppercase tracking-wider text-slate-400">
+                Nombre
+              </span>
+              <input
+                value={label}
+                readOnly
+                className={`${inputClass} bg-slate-50 text-slate-500`}
+                title="El nombre identifica el tipo de ingesta; edítalo solo si necesitas aclararlo en las notas"
+              />
+            </label>
+
+            <div className="grid grid-cols-2 gap-3">
+              <label className="block">
+                <span className="mb-1 flex items-center gap-1 text-[10px] font-black uppercase tracking-wider text-slate-400">
+                  <Clock className="h-3 w-3" /> Hora
+                </span>
+                <input type="time" value={time} onChange={(event) => setTime(event.target.value)} className={inputClass} />
+              </label>
+
+              <label className="block">
+                <span className="mb-1 flex items-center gap-1 text-[10px] font-black uppercase tracking-wider text-slate-400">
+                  <Percent className="h-3 w-3" /> % del día
+                </span>
+                <input
+                  type="number"
+                  min={0}
+                  max={100}
+                  step="any"
+                  value={percent}
+                  onChange={(event) => setPercent(Number(event.target.value))}
+                  className={inputClass}
+                />
+              </label>
+            </div>
+
+            <label className="block">
+              <span className="mb-1 flex items-center gap-1 text-[10px] font-black uppercase tracking-wider text-slate-400">
+                <StickyNote className="h-3 w-3" /> Notas de la ingesta
+              </span>
+              <textarea
+                value={notes}
+                onChange={(event) => setNotes(event.target.value)}
+                rows={3}
+                placeholder="Ej: tomar antes del entrenamiento"
+                className="w-full rounded-xl border border-slate-200 px-3 py-2 text-xs font-medium text-slate-800 outline-none focus:border-blue-400 focus:ring-2 focus:ring-blue-500/15"
+              />
+            </label>
+
+            <label className="flex items-center gap-2 rounded-xl border border-slate-200 bg-slate-50 px-3 py-2">
+              <input
+                type="checkbox"
+                checked={locked}
+                onChange={(event) => setLocked(event.target.checked)}
+                className="h-4 w-4 rounded border-slate-300"
+              />
+              <Lock className="h-3.5 w-3.5 text-amber-600" />
+              <span className="text-[11px] font-bold text-slate-700">Bloquear esta ingesta</span>
+            </label>
+          </div>
+
+          <footer className="flex justify-end gap-2 border-t border-slate-100 px-5 py-3">
+            <Button
+              type="button"
+              variant="outline"
+              onClick={onClose}
+              className="h-8 rounded-xl border-slate-200 text-xs font-bold"
+            >
+              Cancelar
+            </Button>
+            <Button
+              type="button"
+              onClick={() => {
+                const safePercent = Number.isFinite(percent) ? Math.min(100, Math.max(0, percent)) : ingesta.percent
+                onSave({
+                  label: label.trim() || ingesta.label,
+                  time,
+                  percent: safePercent,
+                  notes,
+                  locked,
+                })
+                onClose()
+              }}
+              className="h-8 rounded-xl bg-blue-600 text-xs font-bold text-white hover:bg-blue-700"
+            >
+              Guardar ingesta
             </Button>
           </footer>
         </div>
