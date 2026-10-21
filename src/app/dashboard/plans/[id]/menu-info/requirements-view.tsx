@@ -84,6 +84,7 @@ export function RequirementsView({
 
   const evaluations = NUTRIENTS.map((nutrient) => ({
     ...nutrient,
+    target: targets[nutrient.key],
     evaluation: evaluateNutrient(totals[nutrient.key], targets[nutrient.key], settings.tolerancePct),
   }))
 
@@ -115,14 +116,24 @@ export function RequirementsView({
                 index > 0 ? 'border-t border-gray-100' : ''
               }`}
             >
-              <StatusDot status={row.evaluation.status} />
-              <span className="text-xs font-bold text-gray-700">{row.label}</span>
-              <span
-                className={`ml-auto font-mono text-xs font-black tabular-nums ${SEMAPHORE_STYLES[row.evaluation.status]}`}
-              >
-                {formatNumber(totals[row.key], row.decimals)} / {formatNumber(targets[row.key], row.decimals)}{' '}
-                {row.unit}
-              </span>
+              {row.target > 0 ? (
+                <>
+                  <StatusDot status={row.evaluation.status} />
+                  <span className="text-xs font-bold text-gray-700">{row.label}</span>
+                  <span
+                    className={`ml-auto font-mono text-xs font-black tabular-nums ${SEMAPHORE_STYLES[row.evaluation.status]}`}
+                  >
+                    {formatNumber(totals[row.key], row.decimals)} / {formatNumber(row.target, row.decimals)}{' '}
+                    {row.unit}
+                  </span>
+                </>
+              ) : (
+                <>
+                  <span className="h-2.5 w-2.5 shrink-0 rounded-full bg-slate-200" />
+                  <span className="text-xs font-bold text-gray-500">{row.label}</span>
+                  <span className="ml-auto text-[11px] font-bold text-gray-400">sin objetivo</span>
+                </>
+              )}
             </div>
           ))}
 
@@ -382,21 +393,31 @@ export function RequirementsView({
                           <span className="w-14 shrink-0 text-[10px] font-black uppercase tracking-wider text-gray-500">
                             {row.key === 'kcal' ? 'KCAL' : row.key === 'proteinG' ? 'PROT' : row.key === 'carbsG' ? 'HC' : row.key === 'fatG' ? 'GRASA' : 'FIBRA'}
                           </span>
-                          <div className="h-2.5 flex-1 overflow-hidden rounded-full bg-gray-100">
-                            <div
-                              className={`h-full rounded-full transition-[width] duration-500 ${barColor}`}
-                              style={{ width: `${pct}%` }}
-                            />
-                          </div>
-                          <span className="w-24 shrink-0 text-right font-mono text-[11px] font-bold tabular-nums text-gray-800">
-                            {formatNumber(row.consumed, row.decimals)} / {formatNumber(row.target, row.decimals)}{' '}
-                            {row.unit}
-                          </span>
+                          {row.target > 0 ? (
+                            <>
+                              <div className="h-2.5 flex-1 overflow-hidden rounded-full bg-gray-100">
+                                <div
+                                  className={`h-full rounded-full transition-[width] duration-500 ${barColor}`}
+                                  style={{ width: `${pct}%` }}
+                                />
+                              </div>
+                              <span className="w-24 shrink-0 text-right font-mono text-[11px] font-bold tabular-nums text-gray-800">
+                                {formatNumber(row.consumed, row.decimals)} / {formatNumber(row.target, row.decimals)}{' '}
+                                {row.unit}
+                              </span>
+                            </>
+                          ) : (
+                            <>
+                              <div className="h-2.5 flex-1 overflow-hidden rounded-full bg-gray-50" />
+                              <span className="w-24 shrink-0 text-right text-[11px] font-bold text-gray-400">
+                                sin objetivo
+                              </span>
+                            </>
+                          )}
                         </div>
                       )
                     })}
                   </div>
-
                   {ingestaMode === 'edit' && (
                     <div className="mt-3 grid gap-2 border-t border-gray-100 pt-3 sm:grid-cols-5">
                       {NUTRIENTS.map((nutrient) => (

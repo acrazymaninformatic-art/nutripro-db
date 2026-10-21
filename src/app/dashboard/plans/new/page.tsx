@@ -30,6 +30,10 @@ export default async function NewMealPlanPage() {
         proteinG: true,
         carbsG: true,
         fatG: true,
+        fiberG: true,
+        sugarG: true,
+        saturatedFatG: true,
+        sodiumMg: true,
       },
     }),
   ])

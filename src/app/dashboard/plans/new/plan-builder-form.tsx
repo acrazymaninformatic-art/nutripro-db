@@ -10,7 +10,7 @@ import { Label } from '@/components/ui/label'
 import { Select } from '@/components/ui/select'
 import { Badge } from '@/components/ui/badge'
 import { Textarea } from '@/components/ui/textarea'
-import { AlertTriangle, ArrowRight, Calculator, CalendarDays, Check, ClipboardPaste, Copy, EyeOff, FileText, Flame, GripVertical, Layers, Lightbulb, Loader2, Pill, Plus, Search, ShieldAlert, Siren, Sparkles, Target, Trash2, User, Wand2, X, Zap } from 'lucide-react'
+import { AlertTriangle, Calculator, Check, EyeOff, FileText, Layers, Loader2, Pill, Search, ShieldAlert, Siren, Sparkles, User, Wand2, X, Zap } from 'lucide-react'
 import {
   getFoodImage,
   generateAutomatedWeeklyPlan,
@@ -18,13 +18,20 @@ import {
   CLINICAL_TEMPLATES,
   buildPlanFromClinicalTemplate,
   checkPatientAllergenConflict,
-  detectAllergensInFood,
   scanPlanForAllergens,
   type PatientAllergenConflict,
 } from '@/lib/nutrition'
 import { checkDrugInteractions } from '@/lib/nutrition/drug-interactions'
 import { FOOD_EXCHANGE_GROUPS } from '@/lib/nutrition/exchange-system'
-import { OBJECTIVE_LABELS, ACTIVITY_LEVEL_LABELS, type Objective, type ActivityLevel } from '@/types'
+import { OBJECTIVE_LABELS, type Objective } from '@/types'
+import { MenuEditor } from './editor/menu-editor'
+import {
+  DEFAULT_INGESTA_META,
+  type EditorDayMeta,
+  type EditorFood,
+  type EditorIngestaMeta,
+} from './editor/types'
+import { buildSampleDayMeta, buildSampleGrid } from './editor/sample-data'
 
 
 interface PatientProfile {
@@ -49,16 +56,7 @@ interface PatientProfile {
   latestBodyFatPct: number | null
 }
 
-interface FoodOption {
-  id: number
-  name: string
-  category: string | null
-  imageUrl: string | null
-  calories: number
-  proteinG: number
-  carbsG: number
-  fatG: number
-}
+type FoodOption = EditorFood
 
 interface GridItem {
   uid: string
@@ -116,8 +114,14 @@ export function PlanBuilderForm({
   const [fatGPerKg, setFatGPerKg] = useState<number>(0.9)
   const [minCaloricSafetyKcal, setMinCaloricSafetyKcal] = useState<number>(1200)
 
-  // 3. EDITABLE DAY NAMES (Column Headers)
-  const [dayNames, setDayNames] = useState<string[]>([...DEFAULT_DAYS])
+  // 3. Cabeceras de día editables (nombre, notas y check de completado)
+  const [dayMeta, setDayMeta] = useState<EditorDayMeta[]>(() =>
+    DEFAULT_DAYS.map((name) => ({ name, notes: '', completed: false }))
+  )
+  const [ingestaMeta, setIngestaMeta] = useState<EditorIngestaMeta[]>(() =>
+    DEFAULT_INGESTA_META.map((ingesta) => ({ ...ingesta }))
+  )
+  const dayNames = useMemo(() => dayMeta.map((day) => day.name), [dayMeta])
 
   // Plan metadata
   const [name, setName] = useState('')
@@ -148,20 +152,9 @@ export function PlanBuilderForm({
     return initial
   })
 
-  // 5. INTERNAL CLIPBOARD FOR COPY/PASTE WITH 1 CLICK
-  const [copiedItem, setCopiedItem] = useState<{ foodId: number; quantityG: number; notes: string } | null>(null)
-  const [copiedItemName, setCopiedItemName] = useState<string>('')
-
   // 6. ADD FOOD MODAL / QUICK SELECTOR
   const [modalTarget, setModalTarget] = useState<{ mealType: string; dayIndex: number } | null>(null)
   const [foodSearchQuery, setFoodSearchQuery] = useState('')
-
-  // 7. DRAG AND DROP STATE
-  const [draggedInfo, setDraggedInfo] = useState<{
-    mealType: string
-    dayIndex: number
-    itemIndex: number
-  } | null>(null)
 
   // 8. ALLERGEN SAFETY VERIFICATION TARGET MODAL
   const [allergenWarningTarget, setAllergenWarningTarget] = useState<{
@@ -488,55 +481,9 @@ export function PlanBuilderForm({
 
   // --- ACTIONS: RENAME DAY ---
   function handleRenameDay(index: number, newName: string) {
-    const updated = [...dayNames]
-    updated[index] = newName
-    setDayNames(updated)
-  }
-
-  // --- ACTIONS: UPDATE FOOD QUANTITY DIRECTLY IN TABLE CELL ---
-  function handleUpdateQuantity(mealType: string, dayIndex: number, itemIndex: number, newGrams: number) {
-    const updated = { ...gridSchedule }
-    const cellItems = [...(updated[mealType]?.[dayIndex] || [])]
-    if (cellItems[itemIndex]) {
-      cellItems[itemIndex] = { ...cellItems[itemIndex], quantityG: newGrams }
-      updated[mealType][dayIndex] = cellItems
-      setGridSchedule(updated)
-    }
-  }
-
-  // --- ACTIONS: REMOVE ITEM FROM CELL ---
-  function handleRemoveItem(mealType: string, dayIndex: number, itemIndex: number) {
-    const updated = { ...gridSchedule }
-    const cellItems = [...(updated[mealType]?.[dayIndex] || [])]
-    cellItems.splice(itemIndex, 1)
-    updated[mealType][dayIndex] = cellItems
-    setGridSchedule(updated)
-  }
-
-  // --- ACTIONS: COPY ITEM TO CLIPBOARD ---
-  function handleCopyItem(item: GridItem) {
-    const food = foodMap.get(item.foodId)
-    setCopiedItem({
-      foodId: item.foodId,
-      quantityG: item.quantityG,
-      notes: item.notes,
-    })
-    setCopiedItemName(food?.name || 'Alimento')
-  }
-
-  // --- ACTIONS: PASTE CLIPBOARD ITEM INTO CELL ---
-  function handlePasteItem(mealType: string, dayIndex: number) {
-    if (!copiedItem) return
-    const updated = { ...gridSchedule }
-    const cellItems = [...(updated[mealType]?.[dayIndex] || [])]
-    cellItems.push({
-      uid: `pasted-${Date.now()}-${Math.random()}`,
-      foodId: copiedItem.foodId,
-      quantityG: copiedItem.quantityG,
-      notes: copiedItem.notes,
-    })
-    updated[mealType][dayIndex] = cellItems
-    setGridSchedule(updated)
+    setDayMeta((current) =>
+      current.map((day, dayIndex) => (dayIndex === index ? { ...day, name: newName } : day))
+    )
   }
 
   // --- ACTIONS: ADD FOOD FROM SEARCH MODAL WITH ALLERGEN INTERCEPTION ---
@@ -573,39 +520,6 @@ export function PlanBuilderForm({
     setAllergenWarningTarget(null)
   }
 
-  // --- ACTIONS: DRAG AND DROP HANDLERS ---
-  function handleDragStart(mealType: string, dayIndex: number, itemIndex: number) {
-    setDraggedInfo({ mealType, dayIndex, itemIndex })
-  }
-
-  function handleDrop(targetMealType: string, targetDayIndex: number) {
-    if (!draggedInfo) return
-    const { mealType: fromMeal, dayIndex: fromDay, itemIndex: fromIdx } = draggedInfo
-
-    if (fromMeal === targetMealType && fromDay === targetDayIndex) {
-      setDraggedInfo(null)
-      return
-    }
-
-    const updated = { ...gridSchedule }
-    const sourceItems = [...(updated[fromMeal]?.[fromDay] || [])]
-    const [movedItem] = sourceItems.splice(fromIdx, 1)
-
-    if (movedItem) {
-      const targetItems = [...(updated[targetMealType]?.[targetDayIndex] || [])]
-      targetItems.push({
-        ...movedItem,
-        uid: `moved-${Date.now()}-${Math.random()}`,
-      })
-
-      updated[fromMeal][fromDay] = sourceItems
-      updated[targetMealType][targetDayIndex] = targetItems
-      setGridSchedule(updated)
-    }
-
-    setDraggedInfo(null)
-  }
-
   // Search filtered foods for modal
   const filteredFoods = useMemo(() => {
     if (!foodSearchQuery.trim()) return foods.slice(0, 30)
@@ -614,8 +528,7 @@ export function PlanBuilderForm({
   }, [foods, foodSearchQuery])
 
   // --- SUBMIT FINAL PLAN ---
-  async function handleSubmit(e: React.FormEvent) {
-    e.preventDefault()
+  async function savePlan() {
     if (!patientId) {
       alert('Por favor selecciona un paciente.')
       return
@@ -666,6 +579,11 @@ export function PlanBuilderForm({
     }
   }
 
+  async function handleSubmit(e: React.FormEvent) {
+    e.preventDefault()
+    await savePlan()
+  }
+
   return (
     <form onSubmit={handleSubmit} noValidate className="space-y-5">
       {/* 1. CALCULADORA DE PRECISIÓN CLÍNICA Y BOTÓN DE GENERACIÓN INTELIGENTE */}
@@ -684,6 +602,23 @@ export function PlanBuilderForm({
 
             {/* ACTION: GENERAR PLAN BASE AUTOMÁTICO */}
             <div className="flex items-center gap-2">
+              <Button
+                type="button"
+                variant="outline"
+                onClick={() => {
+                  setGridSchedule(buildSampleGrid(foods) as never)
+                  setDayMeta(buildSampleDayMeta())
+                  setAutoGenNotice(
+                    'Menú de ejemplo cargado (7 días x 5 ingestas) para probar el editor.'
+                  )
+                }}
+                className="h-8 px-3 flex items-center gap-1.5 text-xs font-bold"
+                title="Carga una semana de ejemplo con alimentos reales del catálogo"
+              >
+                <Layers className="h-3.5 w-3.5" />
+                <span>Cargar ejemplo</span>
+              </Button>
+
               <Button
                 type="button"
                 onClick={handleAutoGeneratePlan}
@@ -988,30 +923,6 @@ export function PlanBuilderForm({
         </CardContent>
       </Card>
 
-      {/* 2. PORTAPAPELES INTERNO CON 1 CLIC (SI HAY ELEMENTO COPIADO) */}
-
-      {copiedItem && (
-        <div className="bg-blue-50 border border-blue-300 rounded-xl p-2.5 flex items-center justify-between text-xs shadow-xs animate-in fade-in">
-          <div className="flex items-center gap-2 text-blue-900 font-semibold">
-            <Copy className="h-4 w-4 text-blue-600" />
-            <span>Alimento en memoria:</span>
-            <span className="font-extrabold underline">{copiedItemName} ({copiedItem.quantityG}g)</span>
-            <span className="text-blue-700 text-[11px]"><ArrowRight className="h-[1em] w-[1em] shrink-0" /> Haz clic en "Pegar" en cualquier celda de la tabla para duplicarlo al instante.</span>
-          </div>
-
-          <Button
-            type="button"
-            variant="ghost"
-            size="sm"
-            onClick={() => setCopiedItem(null)}
-            className="h-6 px-2 text-xs text-gray-500 hover:text-gray-900"
-          >
-            <X className="h-3 w-3 mr-1" />
-            <span>Descartar</span>
-          </Button>
-        </div>
-      )}
-
       {/* 2.5. ALERTA CLÍNICA CRÍTICA DE ALÉRGENOS DEL PACIENTE */}
       {planAllergenConflicts.length > 0 && (
         <div className="bg-red-50 border-2 border-red-500 rounded-3xl p-4 shadow-md space-y-3 animate-in fade-in slide-in-from-top-2">
@@ -1052,289 +963,34 @@ export function PlanBuilderForm({
         </div>
       )}
 
-      {/* 3. LA GRAN TABLA SEMANAL INTERACTIVA (AJUSTADA AL 100% DE LA PANTALLA SIN SCROLL LATERAL) */}
-      <Card className="rounded-3xl shadow-xs border border-gray-200 overflow-hidden">
-        <CardHeader className="py-2.5 px-4 bg-gray-50/80 border-b flex flex-row items-center justify-between">
-          <div className="flex items-center gap-2">
-            <CalendarDays className="h-4 w-4 text-green-600" />
-            <CardTitle className="text-sm font-black text-gray-900">
-              Pauta Semanal en Cuadrícula (7 Días Visibles • Arrastrar y Soltar • Edición Directa de Gramos)
-            </CardTitle>
-          </div>
-
-          <span className="text-[11px] font-semibold text-gray-500 hidden md:inline">
-            <Lightbulb className="h-[1em] w-[1em] shrink-0" /> Haz clic en el nombre de cualquier día para renombrarlo
-          </span>
-        </CardHeader>
-
-        <CardContent className="p-0">
-          <div className="w-full">
-            {/* TABLE-FIXED W-FULL: Guarantees 100% screen fit without horizontal scrolling */}
-            <table className="w-full table-fixed border-collapse text-left">
-              {/* TABLE HEADER: EDITABLE DAY NAMES */}
-              <thead>
-                <tr className="bg-gray-900 text-white border-b border-gray-800 text-xs">
-                  {/* Meal Header Column (Fixed 96px width) */}
-                  <th className="py-2.5 px-1.5 w-24 uppercase font-black text-[10px] tracking-wider text-green-400 bg-black/50 text-center">
-                    Toma
-                  </th>
-
-                  {/* 7 Days Columns: Equal 1/7 width slice each */}
-                  {dayNames.map((dName, dayIdx) => (
-                    <th key={dayIdx} className="py-1.5 px-1 border-l border-gray-800 text-center">
-                      <div className="space-y-0.5">
-                        <input
-                          type="text"
-                          value={dName}
-                          onChange={(e) => handleRenameDay(dayIdx, e.target.value)}
-                          className="w-full text-center font-bold text-xs bg-gray-800/90 hover:bg-gray-800 text-white rounded px-1 py-0.5 focus:bg-white focus:text-gray-900 focus:outline-none focus:ring-1 focus:ring-green-400 transition-colors"
-                          title="Haz clic para cambiar el nombre de este día"
-                        />
-                        <div className="text-[9px] text-gray-400 font-normal">
-                          Día {dayIdx + 1}
-                        </div>
-                      </div>
-                    </th>
-                  ))}
-                </tr>
-              </thead>
-
-              {/* TABLE BODY: MEALS ROWS */}
-              <tbody className="divide-y divide-gray-200 text-xs">
-                {MEAL_TYPES.map((meal) => (
-                  <tr key={meal.type} className="hover:bg-gray-50/30 transition-colors">
-                    {/* Meal Type Label */}
-                    <td className="py-2.5 px-1.5 bg-gray-50 border-r border-gray-200 font-black text-gray-900 uppercase text-[10px] tracking-wider text-center">
-                      <span>{meal.label}</span>
-                    </td>
-
-                    {/* 7 Days Cells for this Meal */}
-                    {dayNames.map((_, dayIdx) => {
-                      const cellItems = gridSchedule[meal.type]?.[dayIdx] || []
-
-                      let cellKcal = 0
-                      cellItems.forEach((it) => {
-                        const food = foodMap.get(it.foodId)
-                        if (food && it.quantityG > 0) {
-                          cellKcal += food.calories * (it.quantityG / 100)
-                        }
-                      })
-
-                      return (
-                        <td
-                          key={dayIdx}
-                          onDragOver={(e) => e.preventDefault()}
-                          onDrop={() => handleDrop(meal.type, dayIdx)}
-                          className="py-1.5 px-1 border-l border-gray-200 align-top bg-white transition-colors hover:bg-green-50/20"
-                        >
-                          <div className="space-y-1 min-h-[75px] flex flex-col justify-between">
-                            {/* Food items inside this cell */}
-                            <div className="space-y-1">
-                              {cellItems.map((it, itIdx) => {
-                                const food = foodMap.get(it.foodId)
-                                const imageUrl = food ? getFoodImage(food) : ''
-                                const kcal = food ? Math.round(food.calories * (it.quantityG / 100)) : 0
-                                const itemConflict = food && selectedPatient ? checkPatientAllergenConflict(food, selectedPatient) : null
-
-                                return (
-                                  <div
-                                    key={it.uid || itIdx}
-                                    draggable={true}
-                                    onDragStart={() => handleDragStart(meal.type, dayIdx, itIdx)}
-                                    className={`p-1 rounded transition-all cursor-grab active:cursor-grabbing group relative ${
-                                      itemConflict
-                                        ? 'bg-red-50/95 border-2 border-red-400 shadow-xs ring-1 ring-red-400'
-                                        : 'bg-gray-50 border border-gray-200 hover:border-green-400 hover:shadow-2xs'
-                                    }`}
-                                    title={itemConflict ? itemConflict.alertMessage : 'Arrastra para mover este alimento a otro día u otra comida'}
-                                  >
-                                    <div className="flex items-center gap-1 min-w-0">
-                                      <GripVertical className="h-2.5 w-2.5 text-gray-400 group-hover:text-green-600 shrink-0" />
-
-                                      {/* Food Photo Thumbnail */}
-                                      <div className={`h-6 w-6 rounded overflow-hidden shrink-0 border ${itemConflict ? 'border-red-300' : 'border-gray-200 bg-gray-200'}`}>
-                                        <img
-                                          src={imageUrl}
-                                          alt={food?.name || 'Alimento'}
-                                          className="h-full w-full object-cover"
-                                          loading="lazy"
-                                          onError={(e) => {
-                                            e.currentTarget.onerror = null
-                                            e.currentTarget.src = FALLBACK_FOOD_SVG
-                                          }}
-                                        />
-                                      </div>
-
-                                      <div className="min-w-0 flex-1">
-                                        <div className="flex items-center gap-1">
-                                          <span className={`font-bold text-[10px] block truncate leading-tight ${itemConflict ? 'text-red-950 font-black' : 'text-gray-900'}`}>
-                                            {food?.name || 'Alimento'}
-                                          </span>
-                                          {itemConflict && (
-                                            <span className="shrink-0 px-1 py-0.2 rounded text-[7.5px] font-black bg-red-600 text-white shadow-2xs">
-                                              <Siren className="h-[1em] w-[1em] shrink-0" /> {itemConflict.allergenLabel}
-                                            </span>
-                                          )}
-                                        </div>
-                                        <div className="flex items-center justify-between mt-0.5">
-                                          {/* Quantity Grams Inline Input */}
-                                          <div className="flex items-center gap-0.5">
-                                            <input
-                                              type="number"
-                                              step="any"
-                                              value={it.quantityG}
-                                              onChange={(e) =>
-                                                handleUpdateQuantity(
-                                                  meal.type,
-                                                  dayIdx,
-                                                  itIdx,
-                                                  parseFloat(e.target.value) || 0
-                                                )
-                                              }
-                                              className="w-10 text-center text-[9px] font-black bg-white border border-gray-300 rounded px-0.5 py-0 focus:outline-none focus:ring-1 focus:ring-green-500"
-                                            />
-                                            <span className="text-[9px] text-gray-400">g</span>
-                                          </div>
-
-                                          <span className="text-[9px] font-bold text-gray-700">
-                                            {kcal}k
-                                          </span>
-                                        </div>
-                                      </div>
-
-                                      {/* Quick Actions (Copy / Remove) */}
-                                      <div className="flex flex-col gap-0.5 shrink-0 opacity-80 group-hover:opacity-100">
-                                        <button
-                                          type="button"
-                                          onClick={() => handleCopyItem(it)}
-                                          className="text-gray-400 hover:text-green-700 p-0.5"
-                                          title="Copiar alimento"
-                                        >
-                                          <Copy className="h-2 w-2" />
-                                        </button>
-                                        <button
-                                          type="button"
-                                          onClick={() => handleRemoveItem(meal.type, dayIdx, itIdx)}
-                                          className="text-gray-400 hover:text-rose-600 p-0.5"
-                                          title="Eliminar alimento"
-                                        >
-                                          <Trash2 className="h-2 w-2" />
-                                        </button>
-                                      </div>
-                                    </div>
-                                  </div>
-                                )
-                              })}
-                            </div>
-
-                            {/* Cell Bottom Controls (Add & Paste) */}
-                            <div className="pt-0.5 flex items-center justify-between border-t border-gray-100 gap-1">
-                              <button
-                                type="button"
-                                onClick={() => {
-                                  setModalTarget({ mealType: meal.type, dayIndex: dayIdx })
-                                  setFoodSearchQuery('')
-                                }}
-                                className="text-[9px] font-bold text-green-700 hover:text-green-800 bg-green-50 hover:bg-green-100 px-1 py-0.5 rounded flex items-center gap-0.5 transition-colors"
-                              >
-                                <Plus className="h-2 w-2" />
-                                <span>Añadir</span>
-                              </button>
-
-                              {copiedItem && (
-                                <button
-                                  type="button"
-                                  onClick={() => handlePasteItem(meal.type, dayIdx)}
-                                  className="text-[9px] font-bold text-blue-800 bg-blue-100 hover:bg-blue-200 px-1 py-0.5 rounded flex items-center gap-0.5 transition-colors"
-                                  title="Pegar alimento copiado aquí"
-                                >
-                                  <ClipboardPaste className="h-2 w-2" />
-                                  <span>Pegar</span>
-                                </button>
-                              )}
-
-                              <span className="text-[9px] font-extrabold text-gray-400 ml-auto">
-                                {Math.round(cellKcal)}k
-                              </span>
-                            </div>
-                          </div>
-                        </td>
-                      )
-                    })}
-                  </tr>
-                ))}
-              </tbody>
-
-              {/* TABLE FOOTER: DAY-BY-DAY TOTALS */}
-              <tfoot>
-                <tr className="bg-gray-100 border-t-2 border-gray-300 text-xs">
-                  <td className="py-2 px-1.5 uppercase font-black text-gray-900 text-center bg-gray-200 text-[10px]">
-                    <div className="flex flex-col items-center gap-1">
-                      <span>Total Día</span>
-                      <button
-                        type="button"
-                        onClick={adjustAllDaysGramsToTarget}
-                        title={`Ajustar proporcionalmente todos los días a ${precisionResults.targetKcal} kcal`}
-                        className="text-[8px] bg-blue-600 hover:bg-blue-700 text-white font-bold px-1.5 py-0.5 rounded shadow-2xs whitespace-nowrap transition-colors"
-                      >
-                        Ajustar Todos
-                      </button>
-                    </div>
-                  </td>
-
-                  {dayTotals.map((tot, dayIdx) => {
-                    const diff = tot.kcal - precisionResults.targetKcal
-                    const isOptimal = Math.abs(diff) <= 50
-                    const isAcceptable = Math.abs(diff) <= 120
-
-                    return (
-                      <td key={dayIdx} className="py-2 px-1 border-l border-gray-300 text-center">
-                        <div className="space-y-0.5">
-                          <div className="flex items-center justify-center gap-0.5 font-black text-xs text-gray-900">
-                            <Flame className={`h-3 w-3 ${isOptimal ? 'text-blue-600' : isAcceptable ? 'text-amber-500' : 'text-rose-600'}`} />
-                            <span>{tot.kcal}</span>
-                            <span className="text-[9px] text-gray-500 font-normal">k</span>
-                          </div>
-
-                          <div className="text-[9px] font-bold text-gray-600">
-                            <span className="text-blue-700">{tot.prot}P</span> •{' '}
-                            <span className="text-amber-700">{tot.carbs}C</span> •{' '}
-                            <span className="text-rose-700">{tot.fat}G</span>
-                          </div>
-
-                          <Badge
-                            variant="default"
-                            className={`text-[8px] py-0 px-1 ${
-                              isOptimal
-                                ? 'bg-blue-100 text-blue-800'
-                                : isAcceptable
-                                ? 'bg-amber-100 text-amber-800'
-                                : 'bg-rose-100 text-rose-800'
-                            }`}
-                          >
-                            {diff === 0 ? 'Meta' : diff > 0 ? `+${diff}` : diff}k
-                          </Badge>
-
-                          <div>
-                            <button
-                              type="button"
-                              onClick={() => adjustDayGramsToTarget(dayIdx)}
-                              title={`Ajustar gramos de este día al objetivo (${precisionResults.targetKcal} kcal)`}
-                              className="mt-0.5 text-[8px] font-bold text-blue-700 hover:text-blue-900 bg-white hover:bg-blue-50 border border-blue-200 px-1 py-0.5 rounded whitespace-nowrap transition-colors"
-                            >
-                              <Target className="h-[1em] w-[1em] shrink-0" /> Ajustar
-                            </button>
-                          </div>
-                        </div>
-                      </td>
-                    )
-                  })}
-                </tr>
-              </tfoot>
-            </table>
-          </div>
-        </CardContent>
-      </Card>
+      {/* 3. EDITOR DE MENÚS (CUADRÍCULA SEMANAL ESTILO TABLERO) */}
+      <MenuEditor
+        grid={gridSchedule as never}
+        foods={foods}
+        patient={
+          selectedPatient
+            ? {
+                id: selectedPatient.id,
+                name: selectedPatient.name,
+                firstName: selectedPatient.firstName,
+                allergies: selectedPatient.allergies,
+                intolerances: selectedPatient.intolerances,
+                dietaryPreferences: selectedPatient.dietaryPreferences,
+              }
+            : null
+        }
+        dayMeta={dayMeta}
+        ingestaMeta={ingestaMeta}
+        targetKcal={precisionResults.targetKcal}
+        targetProteinG={precisionResults.targetProteinG}
+        targetCarbsG={precisionResults.targetCarbsG}
+        targetFatG={precisionResults.targetFatG}
+        onGridChange={(next) => setGridSchedule(next as never)}
+        onDayMetaChange={setDayMeta}
+        onIngestaMetaChange={setIngestaMeta}
+        onSave={() => void savePlan()}
+        saving={loading}
+      />
 
       {/* 4. NOTAS CLÍNICAS Y PAUTAS GENERALES PARA EL PACIENTE */}
       <Card className="shadow-sm">
