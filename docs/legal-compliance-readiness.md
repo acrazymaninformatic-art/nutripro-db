@@ -65,8 +65,7 @@
   `RateLimitCounter` creada, ambas migraciones finalizadas y
   `prisma migrate status` al día.
 - El esquema de producción ya soporta el código actual. El código **se desplegó
-  el 24/10/2026** (hardening `7d50103` y ajuste de caché `c948915`; deployment
-  `nutripro-20l7b8qdu-eva-698a.vercel.app`, alias
+  el 24/10/2026** (hardening `7d50103` y ajuste de caché `c948915`; alias
   `https://nutripro-lyart.vercel.app`). Al desplegarse, las sesiones existentes
   quedaron invalidadas y la administración exigirá enrolar MFA TOTP en el
   siguiente acceso.
