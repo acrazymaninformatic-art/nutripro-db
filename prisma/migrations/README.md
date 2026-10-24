@@ -22,8 +22,8 @@ constraints y valores por defecto; revisa el SQL antes de aplicarlo.
   documentos, 0 fotos, 4 cuestionarios, 3 solicitudes, 64 eventos de auditoría,
   0 huérfanos, FK en `SET NULL`, `RateLimitCounter` creada y defaults de
   `MealPlan` correctos.
-- El código **se desplegó el 24/10/2026** (commit `7d50103`, alias
-  `https://nutripro-lyart.vercel.app`). Al desplegarse, las sesiones existentes
+- El código **se desplegó el 24/10/2026** (hardening `7d50103` y ajuste de caché
+  `c948915`; alias `https://nutripro-lyart.vercel.app`). Al desplegarse, las sesiones existentes
   quedaron invalidadas y la administración exigirá enrolar MFA TOTP. La
   configuración de Supabase Storage sigue pendiente, por lo que las subidas de
   archivos no funcionan todavía.

@@ -65,8 +65,8 @@
   `RateLimitCounter` creada, ambas migraciones finalizadas y
   `prisma migrate status` al día.
 - El esquema de producción ya soporta el código actual. El código **se desplegó
-  el 24/10/2026** (commit `7d50103`, deployment
-  `nutripro-n7togcphj-eva-698a.vercel.app`, alias
+  el 24/10/2026** (hardening `7d50103` y ajuste de caché `c948915`; deployment
+  `nutripro-20l7b8qdu-eva-698a.vercel.app`, alias
   `https://nutripro-lyart.vercel.app`). Al desplegarse, las sesiones existentes
   quedaron invalidadas y la administración exigirá enrolar MFA TOTP en el
   siguiente acceso.
@@ -83,8 +83,9 @@
   MFA.
 - **Smoke test del despliegue (24/10/2026):** `/login` responde 200 con
   `Cache-Control: private, no-cache, no-store` y CSP; `/legal` 200 con CSP;
-  `/dashboard` 307 a login; `/api/private-files/...` 401. No se ha probado el
-  login completo con MFA porque no hay credenciales de una cuenta real. El alias
+  `/dashboard` 307 a login; `/api/private-files/...` y API sin sesión 401 con
+  `Cache-Control: private, no-store`. No se ha probado el login completo con MFA
+  porque no hay credenciales de una cuenta real. El alias
   `nutripro-eva-698a.vercel.app` está protegido por Vercel Authentication.
 - Detalle y política: `docs/data-retention-and-backups.md`.
 

@@ -216,8 +216,8 @@ pendiente.
 
 ## 7. Bloqueo detectado: almacenamiento privado en producción
 
-El código con almacenamiento privado **se desplegó el 24/10/2026** (commit
-`7d50103`). La configuración de Supabase Storage sigue pendiente; el despliegue
+El código con almacenamiento privado **se desplegó el 24/10/2026** (commits
+`7d50103` y `c948915`). La configuración de Supabase Storage sigue pendiente; el despliegue
 no la incluye porque la base tenía 0 archivos y el resto de mejoras de seguridad
 eran prioritarias.
 

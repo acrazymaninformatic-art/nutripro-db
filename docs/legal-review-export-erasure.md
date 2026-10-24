@@ -245,11 +245,11 @@ final de esta sección:
 - **Producción (24/10/2026):** conexión de solo lectura con Prisma (`SELECT 1`)
   correcta; SMTP real verificado por conexión y autenticación (sin enviar
   correos a pacientes); inventario de archivos externos con resultado 0.
-- **Despliegue (24/10/2026):** commit `7d50103` desplegado en Vercel
-  (`https://nutripro-lyart.vercel.app`). Smoke test: `/login` 200 con
-  `no-store` y CSP; `/legal` 200; `/dashboard` 307 a login;
-  `/api/private-files/...` 401. El login completo con MFA no se pudo probar sin
-  credenciales de una cuenta real.
+- **Despliegue (24/10/2026):** hardening `7d50103` y ajuste de caché `c948915`
+  desplegados en Vercel (`https://nutripro-lyart.vercel.app`). Smoke test:
+  `/login` 200 con `no-store` y CSP; `/legal` 200; `/dashboard` 307 a login;
+  `/api/private-files/...` y API sin sesión 401 con `private, no-store`. El
+  login completo con MFA no se pudo probar sin credenciales de una cuenta real.
 - **Supabase Storage:** no se pudo probar porque el proyecto de Vercel no
   define `SUPABASE_URL` ni `SUPABASE_SERVICE_ROLE_KEY`. En producción las
   subidas fallan con un error explícito; es un bloqueo de configuración, no de
