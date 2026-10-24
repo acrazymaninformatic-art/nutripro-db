@@ -64,22 +64,27 @@
   39 tablas, recuentos intactos, 0 huérfanos, FK en `SET NULL`,
   `RateLimitCounter` creada, ambas migraciones finalizadas y
   `prisma migrate status` al día.
-- El esquema de producción ya soporta el código actual. **Al desplegar**, las
-  sesiones existentes quedarán invalidadas y la administración exigirá enrolar
-  MFA TOTP en el siguiente acceso. El despliegue sigue bloqueado por la
-  configuración de Supabase Storage.
-- **Bloqueo crítico:** el proyecto de Vercel no define `SUPABASE_URL` ni
-  `SUPABASE_SERVICE_ROLE_KEY`, por lo que las subidas de documentos, fotos y
-  adjuntos fallan en producción. El endpoint de Storage responde, pero sin la
-  clave no se puede crear ni listar el bucket. La base no contiene archivos
-  (0/0), así que no hay migración pendiente, pero la función no es operativa
-  hasta configurarla.
+- El esquema de producción ya soporta el código actual. El código **se desplegó
+  el 24/10/2026** (commit `7d50103`, deployment
+  `nutripro-n7togcphj-eva-698a.vercel.app`, alias
+  `https://nutripro-lyart.vercel.app`). Al desplegarse, las sesiones existentes
+  quedaron invalidadas y la administración exigirá enrolar MFA TOTP en el
+  siguiente acceso.
+- **Bloqueo crítico de Storage:** el proyecto de Vercel no define
+  `SUPABASE_URL` ni `SUPABASE_SERVICE_ROLE_KEY`, por lo que las subidas de
+  documentos, fotos y adjuntos fallan en producción. El endpoint de Storage
+  responde, pero sin la clave no se puede crear ni listar el bucket. La base no
+  contiene archivos (0/0), así que no hay migración pendiente, pero la función
+  no es operativa hasta configurarla. El despliegue se hizo igualmente porque el
+  resto de mejoras de seguridad son críticas.
 - **`AUTH_SECRET`:** definido en Vercel (producción, preview y desarrollo) el
   24/10/2026, con un valor aleatorio dedicado. Ya no depende de
   `NEXTAUTH_SECRET`; no debe rotarse sin planificar la migración de los secretos
   MFA.
-- **Smoke test:** `https://nutripro-lyart.vercel.app/login` responde 200 con
-  `Cache-Control: private, no-cache, no-store`. El alias
+- **Smoke test del despliegue (24/10/2026):** `/login` responde 200 con
+  `Cache-Control: private, no-cache, no-store` y CSP; `/legal` 200 con CSP;
+  `/dashboard` 307 a login; `/api/private-files/...` 401. No se ha probado el
+  login completo con MFA porque no hay credenciales de una cuenta real. El alias
   `nutripro-eva-698a.vercel.app` está protegido por Vercel Authentication.
 - Detalle y política: `docs/data-retention-and-backups.md`.
 

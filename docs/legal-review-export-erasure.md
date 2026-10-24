@@ -223,10 +223,10 @@ Flujo actual:
    archivos; la entrega de binarios es un proceso aparte.
 7. **CSP:** mantiene `'unsafe-inline'` por los scripts inline de Next; no hay
    nonce.
-8. **Producción:** requiere `AUTH_SECRET` estable, `SUPABASE_URL` y
-   `SUPABASE_SERVICE_ROLE_KEY`; sin ellos el almacenamiento privado no es
-   operativo. **Comprobado el 24/10/2026: no están definidas en Vercel**, por lo
-   que las subidas fallan. Ver `docs/data-retention-and-backups.md` §7.
+8. **Producción:** `AUTH_SECRET` está definido en Vercel desde el 24/10/2026.
+   Siguen faltando `SUPABASE_URL` y `SUPABASE_SERVICE_ROLE_KEY`; sin ellas el
+   almacenamiento privado no es operativo y las subidas fallan. Ver
+   `docs/data-retention-and-backups.md` §7.
 
 ## 7. Verificación técnica
 
@@ -245,6 +245,11 @@ final de esta sección:
 - **Producción (24/10/2026):** conexión de solo lectura con Prisma (`SELECT 1`)
   correcta; SMTP real verificado por conexión y autenticación (sin enviar
   correos a pacientes); inventario de archivos externos con resultado 0.
+- **Despliegue (24/10/2026):** commit `7d50103` desplegado en Vercel
+  (`https://nutripro-lyart.vercel.app`). Smoke test: `/login` 200 con
+  `no-store` y CSP; `/legal` 200; `/dashboard` 307 a login;
+  `/api/private-files/...` 401. El login completo con MFA no se pudo probar sin
+  credenciales de una cuenta real.
 - **Supabase Storage:** no se pudo probar porque el proyecto de Vercel no
   define `SUPABASE_URL` ni `SUPABASE_SERVICE_ROLE_KEY`. En producción las
   subidas fallan con un error explícito; es un bloqueo de configuración, no de
@@ -306,7 +311,8 @@ temporales:
 **Límites de las pruebas aisladas (§7.1):** no cubren SMTP real, Supabase
 Storage real, PostgreSQL de producción, backups ni restauración. Esas
 comprobaciones se hicieron por separado el 24/10/2026 y se detallan en §7 y en
-`docs/data-retention-and-backups.md`. La revisión legal externa sigue pendiente.
+`docs/data-retention-and-backups.md`; el despliegue y su smoke test también
+están en §7. La revisión legal externa sigue pendiente.
 Los datos y bases usados en el entorno aislado eran desechables y se eliminaron
 al terminar.
 
@@ -320,7 +326,8 @@ al terminar.
 3. `data-retention-and-backups.md`: plazos propuestos, backups y restauración.
 4. Textos legales publicados: aviso legal, privacidad, condiciones y cookies.
 5. Evidencia técnica del 24/10/2026: inventario, hashes de backup, restauración
-   verificada, SMTP, baseline y migración de seguridad aplicada.
+   verificada, SMTP, baseline, migración de seguridad aplicada, despliegue y
+   smoke test.
 
 ### 8.2 Decisiones que se solicitan
 
@@ -359,3 +366,27 @@ No ejecutar la supresión definitiva sobre datos reales hasta que esta revisión
 esté cerrada y documentada. Tampoco deben publicitarse subidas de archivos
 mientras falte la configuración de Supabase Storage descrita en
 `data-retention-and-backups.md` §7.
+
+### 8.5 Texto propuesto para el envío
+
+> **Asunto:** Revisión legal de la puesta en producción de EVSoftware (RGPD,
+> historiales y supresión)
+>
+> Hola:
+>
+> Adjunto el paquete de revisión legal de EVSoftware, la aplicación de gestión
+> de la consulta. Incluye el alcance de exportación y supresión, el estado de
+> cumplimiento, la política propuesta de retención y copias, los textos legales
+> publicados y la evidencia técnica del 24/10/2026 (migración, despliegue,
+> smoke test y restauración de una copia).
+>
+> Necesitamos que reviséis especialmente las siete decisiones de la sección 8.2
+> del documento `legal-review-export-erasure.md`: alcance de la exportación,
+> entrega de binarios, conservación frente a supresión, facturas, plazos de
+> auditoría y solicitudes, plazo de backups y representación de menores.
+>
+> No se ejecutará ninguna supresión definitiva sobre datos reales ni se
+> publicitará la subida de archivos hasta cerrar esta revisión y configurar el
+> almacenamiento privado.
+>
+> Gracias.

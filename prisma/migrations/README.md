@@ -22,12 +22,15 @@ constraints y valores por defecto; revisa el SQL antes de aplicarlo.
   documentos, 0 fotos, 4 cuestionarios, 3 solicitudes, 64 eventos de auditoría,
   0 huérfanos, FK en `SET NULL`, `RateLimitCounter` creada y defaults de
   `MealPlan` correctos.
-- El esquema ya soporta el código actual. **Al desplegar el código**, las
-  sesiones existentes se invalidarán y la administración exigirá enrolar MFA
-  TOTP. El despliegue sigue pendiente de la configuración de Supabase Storage.
-- Backups: `pg_dump` pre-baseline (505.653 bytes) y pre-migración (507.058
-  bytes), verificados y restaurados en un PostgreSQL 17.11 aislado con
-  recuentos idénticos. Ver `docs/data-retention-and-backups.md`.
+- El código **se desplegó el 24/10/2026** (commit `7d50103`, alias
+  `https://nutripro-lyart.vercel.app`). Al desplegarse, las sesiones existentes
+  quedaron invalidadas y la administración exigirá enrolar MFA TOTP. La
+  configuración de Supabase Storage sigue pendiente, por lo que las subidas de
+  archivos no funcionan todavía.
+- Backups: `pg_dump` pre-baseline (505.653 bytes, ya destruido) y pre-migración
+  (507.058 bytes, cifrado con EFS AES-256), verificados y restaurados en un
+  PostgreSQL 17.11 aislado con recuentos idénticos. Ver
+  `docs/data-retention-and-backups.md`.
 
 ## Base de datos existente (creada con `db push` o SQL manual)
 

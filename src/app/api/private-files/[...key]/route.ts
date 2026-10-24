@@ -11,8 +11,19 @@ import {
 
 export const dynamic = 'force-dynamic'
 
+function privateTextResponse(body: string, status: number) {
+  return new Response(body, {
+    status,
+    headers: {
+      'Cache-Control': 'private, no-store, max-age=0',
+      'X-Content-Type-Options': 'nosniff',
+      'Referrer-Policy': 'no-referrer',
+    },
+  })
+}
+
 function notFound() {
-  return new Response('Archivo no encontrado.', { status: 404 })
+  return privateTextResponse('Archivo no encontrado.', 404)
 }
 
 export async function GET(
@@ -26,16 +37,15 @@ export async function GET(
   const storageKey = `private://${objectKey}`
   const patientId = objectKey.split('/')[1]
   const user = await getSessionUser()
-  if (!user) return new Response('No autorizado.', { status: 401 })
+  if (!user) return privateTextResponse('No autorizado.', 401)
   if (user.role === 'ADMIN' && (!user.mfaEnabled || user.passwordChangeRequired)) {
-    return new Response('Completa la configuración de seguridad antes de acceder a archivos clínicos.', {
-      status: 403,
-    })
+    return privateTextResponse(
+      'Completa la configuración de seguridad antes de acceder a archivos clínicos.',
+      403
+    )
   }
   if (user.role === 'PATIENT' && user.passwordChangeRequired) {
-    return new Response('Debes cambiar la contraseña antes de acceder a archivos clínicos.', {
-      status: 403,
-    })
+    return privateTextResponse('Debes cambiar la contraseña antes de acceder a archivos clínicos.', 403)
   }
 
   const patient = await prisma.patient.findFirst({
@@ -77,14 +87,15 @@ export async function GET(
         patient.consents.some((consent) => consent.type === requiredConsent.type)
       )
     if (!hasActiveConsent) {
-      return new Response('Debes aceptar los consentimientos vigentes antes de acceder a tus archivos.', {
-        status: 403,
-      })
+      return privateTextResponse(
+        'Debes aceptar los consentimientos vigentes antes de acceder a tus archivos.',
+        403
+      )
     }
     // El aislamiento preventivo también cubre el acceso directo a archivos
     // privados, no solo las páginas del portal.
     if (await isEmergencyLockdownActive()) {
-      return new Response('El portal está temporalmente en aislamiento preventivo.', { status: 403 })
+      return privateTextResponse('El portal está temporalmente en aislamiento preventivo.', 403)
     }
   } else {
     return notFound()

@@ -15,7 +15,7 @@ operaciones indicadas expresamente:
 | --- | --- |
 | Motor y versión | PostgreSQL 17.11 (Supabase, pooler `aws-1-eu-central-1`) |
 | Tamaño de la base | 14 MB |
-| Tablas en `public` | 37 antes del baseline; 38 con `_prisma_migrations` |
+| Tablas en `public` | 39 tras la migración de hardening (37 + `RateLimitCounter` + `_prisma_migrations`) |
 | Pacientes / usuarios | 3 / 3 |
 | Documentos / fotografías | 0 / 0 |
 | Cuestionarios | 4 |
@@ -28,30 +28,41 @@ operaciones indicadas expresamente:
 | Migración `20261021120000_security_hardening` | **Aplicada en producción el 24/10/2026** y verificada: 39 tablas, recuentos intactos, FK `SET NULL`, sin drift |
 | Almacenamiento privado en producción | **No configurado** (ver §7) |
 
-### Copia de seguridad creada y verificada
+### Copia previa al baseline (destruida)
 
 - Formato: `pg_dump` personalizado (`-Fc`), PostgreSQL 17.11.
 - Tamaño: 505.653 bytes; 639 entradas en el índice TOC.
 - SHA-256: `2a6c82171949fb264ffa874fc69ac7992c442e7492a117c505e98bc2b4ca8e0b`.
 - Restauración de prueba: clúster PostgreSQL 17.11 aislado, esquema `public`,
-  `pg_restore --no-owner --no-privileges`.
-- Resultado: 37 tablas y recuentos idénticos al inventario previo (3 pacientes,
-  3 usuarios, 0 documentos, 0 fotos, 4 cuestionarios, 3 solicitudes).
-- La copia se tomó **antes** de marcar el baseline y no incluye
-  `_prisma_migrations`. Es suficiente para revertir la marca del baseline.
-- **La copia contiene datos personales de pacientes.** No debe subirse a Git,
-  compartirse por correo ni dejarse indefinidamente en una carpeta temporal.
-  Debe cifrarse y guardarse en un almacén aprobado, o destruirse una vez
-  confirmado que no se necesita.
+  `pg_restore --no-owner --no-privileges`. Resultado: 37 tablas y recuentos
+  idénticos al inventario previo (3 pacientes, 3 usuarios, 0 documentos, 0
+  fotos, 4 cuestionarios, 3 solicitudes).
+- Se tomó **antes** de marcar el baseline y no incluye `_prisma_migrations`.
+- **Destruida el 24/10/2026** al quedar sustituida por la copia pre-migración,
+  que sí incluye el baseline y fue restaurada y verificada. El archivo se
+  sobrescribió con bytes aleatorios y se borró. El registro de destrucción
+  (fecha, tamaño y hash) se conserva en
+  `%LOCALAPPDATA%\NutriPro\backups\destruction-pre-baseline-2026-10-24.json`.
 
 ### Copia previa a la migración (24/10/2026)
 
 - Volcado `pg_dump` personalizado: 507.058 bytes, 642 entradas TOC.
 - SHA-256: `416f16454e16cffe4b11cb390742e66d6e3c4559ba2c3d4cc74cab8fc28258fc`.
 - Incluye `_prisma_migrations` con el baseline ya marcado.
-- Manifiesto `.sha256.json` junto al volcado.
-- ACL restringida al usuario local.
+- **Ubicación:** `%LOCALAPPDATA%\NutriPro\backups\`, fuera del repositorio y de
+  carpetas sincronizadas con la nube.
+- **Cifrado:** EFS de Windows sobre NTFS, AES-256, ligado a la cuenta local.
+- **ACL:** herencia deshabilitada; solo el usuario local puede leer, escribir y
+  borrar. Manifiesto `.sha256.json` junto al volcado.
+- **Restauración verificada el 24/10/2026:** `pg_restore --schema=public
+  --no-owner --no-privileges` en un PostgreSQL 17.11 aislado. Resultado: 38
+  tablas públicas, 3 pacientes, 3 usuarios, 4 cuestionarios, 3 solicitudes, 64
+  eventos de auditoría, 1 migración y 0 huérfanos.
 - Es la copia de referencia para revertir la migración de hardening.
+- **Limitación:** al no haber agente de recuperación EFS, la copia depende de la
+  cuenta de Windows. Antes de usarla como respaldo de disaster recovery hay que
+  exportar el certificado o moverla a un almacén externo aprobado. Hoy es una
+  copia local de reversión, no una copia offsite.
 
 ### Ensayo de la migración de seguridad
 
@@ -190,17 +201,25 @@ obligación de conservación**.
 | Inventario de solo lectura | 37 tablas, 0 archivos externos |
 | Volcado lógico | 505.653 bytes, 639 entradas TOC |
 | Volcado pre-migración | 507.058 bytes, 642 entradas TOC |
-| Verificación de archivo | SHA-256 correcto en ambos |
+| Verificación de archivo | SHA-256 correcto en ambos antes de destruir el pre-baseline |
 | Restauración aislada | Correcta, recuentos idénticos |
 | Baseline de Prisma | Marcado y verificado |
 | Migración de seguridad | Aplicada en producción y verificada |
 | Integridad de migraciones | Checksums de baseline y hardening coinciden con los archivos |
+| Custodia local | Pre-migración cifrada con EFS AES-256, ACL restringida, fuera del repo |
+| Destrucción del pre-baseline | Sobrescritura con bytes aleatorios y borrado; registro conservado |
 
-Los clústeres temporales se eliminaron al terminar. Se conservan los dos
-volcados indicados en §1, con ACL restringida, a la espera de decidir su
-custodia definitiva.
+Los clústeres temporales se eliminaron al terminar. Se conserva únicamente la
+copia pre-migración cifrada en `%LOCALAPPDATA%\NutriPro\backups\`; la copia
+pre-baseline se destruyó al quedar sustituida. La custodia offsite sigue
+pendiente.
 
 ## 7. Bloqueo detectado: almacenamiento privado en producción
+
+El código con almacenamiento privado **se desplegó el 24/10/2026** (commit
+`7d50103`). La configuración de Supabase Storage sigue pendiente; el despliegue
+no la incluye porque la base tenía 0 archivos y el resto de mejoras de seguridad
+eran prioritarias.
 
 La consulta a las variables de entorno del proyecto de Vercel
 (`nutripro`, producción y resto de entornos) muestra que **no existen**
@@ -229,7 +248,10 @@ que no hay archivos que migrar.
 - [ ] Aprobar los plazos de §2.
 - [ ] Decidir el modelo de retención legal (§2.1).
 - [ ] Verificar plan, retención y PITR de Supabase.
-- [ ] Cifrar y custodiar o destruir los volcados del 24/10/2026.
+- [x] Destruir la copia pre-baseline redundante y cifrar la pre-migración
+      (24/10/2026; EFS AES-256, ACL restringida).
+- [ ] Mover la copia pre-migración a un almacén externo aprobado o exportar el
+      certificado EFS; hoy depende de la cuenta de Windows.
 - [ ] Configurar Supabase Storage y probar una subida real.
 - [x] Aplicar `20261021120000_security_hardening` con `migrate deploy`
       (24/10/2026, verificado).
