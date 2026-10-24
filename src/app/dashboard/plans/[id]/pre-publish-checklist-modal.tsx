@@ -19,6 +19,7 @@ interface Props {
     intolerancesStatus?: string | null
     currentMedications?: string | null
     medicationsStatus?: string | null
+    pathologiesStatus?: string | null
   }
   isPublished?: boolean
   publishedAt?: string | null
@@ -43,13 +44,18 @@ export function PrePublishChecklistModal({
   const [notes, setNotes] = useState('')
   const [published, setPublished] = useState(isPublished)
 
-  const allergiesStatus = patient.allergiesStatus || 'NO_CONSTA'
-  const medicationsStatus = patient.medicationsStatus || 'NO_CONSTA'
+  const unsafeStatuses = [
+    { label: 'alergias', value: patient.allergiesStatus },
+    { label: 'intolerancias', value: patient.intolerancesStatus },
+    { label: 'medicación actual', value: patient.medicationsStatus },
+    { label: 'patologías', value: patient.pathologiesStatus },
+  ].filter(({ value }) => value !== 'CONFIRMED' && value !== 'NINGUNA_CONOCIDA')
 
   const allChecked = Object.values(checks).every(Boolean)
+  const canPublish = allChecked && unsafeStatuses.length === 0
 
   const handlePublish = async () => {
-    if (!allChecked) return
+    if (!canPublish) return
     setLoading(true)
     try {
       await publishMealPlan(planId, notes || undefined)
@@ -104,14 +110,16 @@ export function PrePublishChecklistModal({
         </DialogHeader>
 
         <div className="space-y-4 my-2 text-xs">
-          {/* Advertencia de Estado de Alérgenos si es NO_CONSTA */}
-          {allergiesStatus === 'NO_CONSTA' && (
+          {/* El servidor bloquea la publicación si algún estado clínico no está confirmado. */}
+          {unsafeStatuses.length > 0 && (
             <div className="p-3 bg-amber-50 border border-amber-200 rounded-2xl flex items-start gap-2.5 text-amber-900">
               <AlertTriangle className="w-4 h-4 text-amber-600 shrink-0 mt-0.5" />
               <div>
-                <p className="font-bold">Alergias en estado "NO CONSTA"</p>
+                <p className="font-bold">
+                  Ficha clínica incompleta: {unsafeStatuses.map(({ label }) => label).join(', ')}
+                </p>
                 <p className="text-amber-800/90 text-2xs mt-0.5">
-                  Aún no se ha verificado explícitamente si el paciente tiene alergias. Confirma antes de prescribir el menú.
+                  Estos campos siguen en estado &quot;NO CONSTA&quot;. Confírmalos en la ficha del paciente antes de publicar el menú; el servidor no permitirá la publicación.
                 </p>
               </div>
             </div>
@@ -204,7 +212,7 @@ export function PrePublishChecklistModal({
           </Button>
           <Button
             size="sm"
-            disabled={!allChecked || loading}
+            disabled={!canPublish || loading}
             onClick={handlePublish}
             className="bg-blue-600 hover:bg-blue-700 text-white font-bold text-xs gap-1.5 shadow-sm"
           >

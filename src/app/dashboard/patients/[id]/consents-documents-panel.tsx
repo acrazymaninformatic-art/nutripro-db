@@ -6,6 +6,7 @@ import { Button } from '@/components/ui/button'
 import { ShieldCheck, FileText, CheckCircle2, XCircle, Plus, Eye, EyeOff, Trash2, ExternalLink } from 'lucide-react'
 import { createPatientConsent, acceptPatientConsentByAdmin, revokePatientConsent } from './consent-actions'
 import { addPatientDocument, toggleDocumentSharing, deletePatientDocument } from './document-actions'
+import { isPrivateStorageKey, privateFileHref } from '@/lib/storage/private-file-url'
 
 interface ConsentItem {
   id: string
@@ -275,13 +276,17 @@ export function ConsentsDocumentsPanel({ patientId, consents, documents }: Props
                 </div>
 
                 <div>
-                  <label className="block font-bold text-gray-700 mb-1">URL o enlace al archivo / PDF</label>
+                  <label className="block font-bold text-gray-700 mb-1">Archivo (PDF, JPG, PNG, WEBP, DOCX · máx. 15 MB)</label>
                   <input
-                    name="fileUrl"
+                    name="file"
+                    type="file"
                     required
-                    placeholder="https://... o ruta del archivo"
-                    className="w-full px-3 py-2 rounded-xl border border-blue-200 bg-white"
+                    accept=".pdf,.jpg,.jpeg,.png,.webp,.heic,.heif,.txt,.doc,.docx"
+                    className="w-full px-3 py-2 rounded-xl border border-blue-200 bg-white file:mr-3 file:rounded-lg file:border-0 file:bg-blue-600 file:px-3 file:py-1.5 file:text-xs file:font-semibold file:text-white"
                   />
+                  <p className="mt-1 text-[11px] text-slate-500">
+                    Se guarda en almacenamiento privado. No se admiten enlaces externos nuevos.
+                  </p>
                 </div>
 
                 <div className="flex items-center gap-2 pt-1">
@@ -360,15 +365,24 @@ export function ConsentsDocumentsPanel({ patientId, consents, documents }: Props
                         <span className="hidden sm:inline">{doc.isSharedWithPatient ? 'Visible' : 'Oculto'}</span>
                       </button>
 
-                      <a
-                        href={doc.fileUrl}
-                        target="_blank"
-                        rel="noreferrer"
-                        className="p-1.5 rounded-lg border border-gray-200 text-gray-600 hover:text-blue-600 hover:bg-blue-50 transition-colors"
-                        title="Abrir archivo"
-                      >
-                        <ExternalLink className="w-3.5 h-3.5" />
-                      </a>
+                      {isPrivateStorageKey(doc.fileUrl) ? (
+                        <a
+                          href={privateFileHref(doc.fileUrl)}
+                          target="_blank"
+                          rel="noreferrer"
+                          className="p-1.5 rounded-lg border border-gray-200 text-gray-600 hover:text-blue-600 hover:bg-blue-50 transition-colors"
+                          title="Abrir archivo"
+                        >
+                          <ExternalLink className="w-3.5 h-3.5" />
+                        </a>
+                      ) : (
+                        <span
+                          className="p-1.5 rounded-lg border border-gray-200 text-gray-300"
+                          title="Archivo externo bloqueado: pendiente de migración a almacenamiento privado"
+                        >
+                          <ExternalLink className="w-3.5 h-3.5" />
+                        </span>
+                      )}
 
                       <button
                         type="button"

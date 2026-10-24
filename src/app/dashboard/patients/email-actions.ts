@@ -14,24 +14,48 @@ interface SendAnamnesisEmailActionParams {
   clinicName?: string
 }
 
+function normalizeEmail(value: string): string | null {
+  const email = String(value || '').trim().toLowerCase()
+  if (email.length > 254 || /[\r\n]/.test(email)) return null
+  if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) return null
+  return email
+}
+
 export async function sendAnamnesisEmailAction({
   patientId,
   patientEmail,
-  professionalEmail,
   professionalName,
   clinicName,
 }: SendAnamnesisEmailActionParams) {
   try {
     const userId = await requireUserId()
+    const normalizedEmail = normalizeEmail(patientEmail)
+    if (!normalizedEmail) {
+      return {
+        success: false,
+        message: 'El correo electrónico del paciente no es válido.',
+        anamnesisUrl: '',
+        mailtoUrl: '',
+      }
+    }
+
     const patient = await prisma.patient.findFirst({
-      where: { id: patientId, userId },
+      where: {
+        id: patientId,
+        userId,
+        isActive: true,
+        isHardDeleted: false,
+        consentRevokedAt: null,
+      },
       include: { user: { select: { name: true, email: true, clinicName: true } } },
     })
 
     if (!patient) {
       return {
         success: false,
-        message: 'Paciente no encontrado en el sistema.',
+        message: 'Paciente no encontrado, archivado o sin consentimiento vigente.',
+        anamnesisUrl: '',
+        mailtoUrl: '',
       }
     }
     if (patient.anamnesisStatus === 'COMPLETED') {
@@ -39,19 +63,37 @@ export async function sendAnamnesisEmailAction({
     }
 
     const access = createAnamnesisToken()
-    await prisma.patient.update({
-      where: { id: patientId, userId },
-      data: {
-        email: patientEmail || undefined,
-        anamnesisAccessTokenHash: access.hash,
-        anamnesisAccessTokenExpiresAt: access.expiresAt,
-        ...(patient.anamnesisStatus !== 'COMPLETED'
-          ? {
-              anamnesisStatus: 'PENDING',
-              anamnesisSentAt: new Date(),
-            }
-          : {}),
-      },
+    await prisma.$transaction(async (tx) => {
+      const updated = await tx.patient.updateMany({
+        where: {
+          id: patientId,
+          userId,
+          isActive: true,
+          isHardDeleted: false,
+          consentRevokedAt: null,
+          anamnesisStatus: { not: 'COMPLETED' },
+        },
+        data: {
+          email: normalizedEmail,
+          anamnesisAccessTokenHash: access.hash,
+          anamnesisAccessTokenExpiresAt: access.expiresAt,
+          anamnesisStatus: 'PENDING',
+          anamnesisSentAt: new Date(),
+        },
+      })
+      if (updated.count !== 1) {
+        throw new Error('El expediente cambió de estado antes de generar el enlace.')
+      }
+      await tx.auditLog.create({
+        data: {
+          userId,
+          patientId,
+          action: 'ANAMNESIS_LINK_SENT',
+          entityType: 'PATIENT',
+          entityId: patientId,
+          details: `Enlace de cuestionario generado y enviado a ${normalizedEmail}.`,
+        },
+      })
     })
     revalidatePath(`/dashboard/patients/${patientId}`)
 
@@ -60,18 +102,18 @@ export async function sendAnamnesisEmailAction({
 
     const result = await sendAnamnesisEmail({
       patientName: `${patient.firstName} ${patient.lastName}`,
-      patientEmail,
+      patientEmail: normalizedEmail,
       accessToken: access.token,
       professionalName: patient.user?.name || profName,
       clinicName: patient.user?.clinicName || clinic,
     })
 
     return result
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error('Error in sendAnamnesisEmailAction:', error)
     return {
       success: false,
-      message: `Error al procesar el envío: ${error?.message || 'Error del servidor'}`,
+      message: 'No se pudo procesar el envío. Revisa la configuración de correo e inténtalo de nuevo.',
       anamnesisUrl: '',
       mailtoUrl: '',
     }
@@ -81,24 +123,58 @@ export async function sendAnamnesisEmailAction({
 export async function markAnamnesisSentAction(patientId: string) {
   try {
     const userId = await requireUserId()
-    const patient = await prisma.patient.findFirst({ where: { id: patientId, userId }, select: { id: true } })
-    if (!patient) throw new Error('Paciente no encontrado.')
-    const fullPatient = await prisma.patient.findFirst({ where: { id: patientId, userId }, select: { anamnesisStatus: true } })
-    if (fullPatient?.anamnesisStatus === 'COMPLETED') throw new Error('El cuestionario ya está completado.')
-    const access = createAnamnesisToken()
-    await prisma.patient.update({
-      where: { id: patientId, userId },
-      data: {
-        anamnesisStatus: 'PENDING',
-        anamnesisSentAt: new Date(),
-        anamnesisAccessTokenHash: access.hash,
-        anamnesisAccessTokenExpiresAt: access.expiresAt,
+    const patient = await prisma.patient.findFirst({
+      where: {
+        id: patientId,
+        userId,
+        isActive: true,
+        isHardDeleted: false,
+        consentRevokedAt: null,
       },
+      select: { id: true, anamnesisStatus: true },
+    })
+    if (!patient) throw new Error('Paciente no encontrado, archivado o sin consentimiento vigente.')
+    if (patient.anamnesisStatus === 'COMPLETED') throw new Error('El cuestionario ya está completado.')
+    const access = createAnamnesisToken()
+    await prisma.$transaction(async (tx) => {
+      const updated = await tx.patient.updateMany({
+        where: {
+          id: patientId,
+          userId,
+          isActive: true,
+          isHardDeleted: false,
+          consentRevokedAt: null,
+          anamnesisStatus: { not: 'COMPLETED' },
+        },
+        data: {
+          anamnesisStatus: 'PENDING',
+          anamnesisSentAt: new Date(),
+          anamnesisAccessTokenHash: access.hash,
+          anamnesisAccessTokenExpiresAt: access.expiresAt,
+        },
+      })
+      if (updated.count !== 1) {
+        throw new Error('El expediente cambió de estado antes de generar el enlace.')
+      }
+      await tx.auditLog.create({
+        data: {
+          userId,
+          patientId,
+          action: 'ANAMNESIS_LINK_CREATED',
+          entityType: 'PATIENT',
+          entityId: patientId,
+          details: 'Enlace de cuestionario generado para envío manual.',
+        },
+      })
     })
     revalidatePath(`/dashboard/patients/${patientId}`)
     const baseUrl = process.env.APP_PUBLIC_URL || process.env.NEXTAUTH_URL || ''
     return { success: true, anamnesisUrl: `${baseUrl}/anamnesis?token=${encodeURIComponent(access.token)}` }
-  } catch (error: any) {
-    return { success: false, error: error.message }
+  } catch (error: unknown) {
+    console.error('Error in markAnamnesisSentAction:', error)
+    return {
+      success: false,
+      error: error instanceof Error ? error.message : 'No se pudo generar el enlace.',
+    }
   }
 }

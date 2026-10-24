@@ -39,6 +39,9 @@ prisma/*.db
 prisma/*.db-journal
 *.db
 
+# almacenamiento privado local de desarrollo (nunca debe versionarse)
+/.private-uploads/
+
 # vercel
 .vercel
 

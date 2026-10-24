@@ -11,6 +11,12 @@ import { PrePublishChecklistModal } from './pre-publish-checklist-modal'
 import { ExchangeGuide } from '@/components/nutrition/exchange-guide'
 import { ModalPortal } from '@/components/ui/modal-portal'
 import { MenuInfoPanel } from './menu-info/menu-info-panel'
+import {
+  buildShoppingList,
+  getDayNutrition,
+  getMealItemNutrition,
+  getMealNutrition,
+} from '@/lib/nutrition/plan-nutrition'
 
 interface PlanViewerProps {
   plan: any
@@ -112,30 +118,14 @@ export function PlanViewer({ plan, menu, patients }: PlanViewerProps) {
 
   // Grocery list consolidation categorized by supermarket departments
   const categorizedGrocery = useMemo(() => {
-    const map = new Map<string, { name: string; category: string; quantityG: number; food: any }>()
-
-    plan.days.forEach((day: any) => {
-      day.meals.forEach((meal: any) => {
-        meal.items.forEach((item: any) => {
-          if (item.food) {
-            const key = item.food.name
-            const existing = map.get(key)
-            if (existing) {
-              existing.quantityG += item.quantityG
-            } else {
-              map.set(key, {
-                name: item.food.name,
-                category: item.food.category || 'Otros',
-                quantityG: item.quantityG,
-                food: item.food,
-              })
-            }
-          }
-        })
-      })
-    })
-
-    const items = Array.from(map.values())
+    const items = buildShoppingList(
+      (plan.days || []).flatMap((day: { meals: Parameters<typeof buildShoppingList>[0] }) => day.meals)
+    ).map((entry) => ({
+      name: entry.name,
+      category: entry.category || 'Varios y Despensa',
+      quantityG: Math.round(entry.totalG),
+      food: entry.food,
+    }))
     const categoriesMap: Record<string, typeof items> = {}
 
     items.forEach((item) => {
@@ -145,7 +135,7 @@ export function PlanViewer({ plan, menu, patients }: PlanViewerProps) {
     })
 
     return categoriesMap
-  }, [plan])
+  }, [plan.days])
 
   const totalGroceryCount = useMemo(() => {
     let count = 0
@@ -475,22 +465,11 @@ export function PlanViewer({ plan, menu, patients }: PlanViewerProps) {
               HOJAS 2 A 8: CADA UNO DE LOS 7 DÍAS EN SU PROPIA HOJA A4 DEDICADA
               --------------------------------------------------------------------- */}
           {plan.days.map((day: any, dIdx: number) => {
-            let dayKcal = 0
-            let dayProt = 0
-            let dayCarbs = 0
-            let dayFat = 0
-
-            day.meals.forEach((m: any) => {
-              m.items.forEach((it: any) => {
-                if (it.food && it.quantityG > 0) {
-                  const factor = it.quantityG / 100
-                  dayKcal += it.food.calories * factor
-                  dayProt += it.food.proteinG * factor
-                  dayCarbs += it.food.carbsG * factor
-                  dayFat += it.food.fatG * factor
-                }
-              })
-            })
+            const dayNutrition = getDayNutrition((day.meals || []).flatMap((m: any) => m.items || []))
+            const dayKcal = dayNutrition.kcal
+            const dayProt = dayNutrition.proteinG
+            const dayCarbs = dayNutrition.carbsG
+            const dayFat = dayNutrition.fatG
 
             const pageNumber = dIdx + 2
             const featuredRecipe = getDayFeaturedRecipe(day)
@@ -551,20 +530,11 @@ export function PlanViewer({ plan, menu, patients }: PlanViewerProps) {
                   {/* Las 5 Comidas del Día en Tablas Profesionales */}
                   <div className="space-y-2">
                     {day.meals.map((meal: any) => {
-                      let mealKcal = 0
-                      let mealProt = 0
-                      let mealCarbs = 0
-                      let mealFat = 0
-
-                      meal.items.forEach((it: any) => {
-                        if (it.food && it.quantityG > 0) {
-                          const factor = it.quantityG / 100
-                          mealKcal += it.food.calories * factor
-                          mealProt += it.food.proteinG * factor
-                          mealCarbs += it.food.carbsG * factor
-                          mealFat += it.food.fatG * factor
-                        }
-                      })
+                      const mealNutrition = getMealNutrition(meal.items || [])
+                      const mealKcal = mealNutrition.kcal
+                      const mealProt = mealNutrition.proteinG
+                      const mealCarbs = mealNutrition.carbsG
+                      const mealFat = mealNutrition.fatG
 
                       if (meal.items.length === 0) return null
 
@@ -599,12 +569,20 @@ export function PlanViewer({ plan, menu, patients }: PlanViewerProps) {
                             </thead>
                             <tbody className="divide-y divide-gray-100 text-[11px]">
                               {meal.items.map((it: any) => {
-                                const factor = it.quantityG / 100
-                                const kcal = it.food ? Math.round(it.food.calories * factor) : 0
+                                const itemNutrition = getMealItemNutrition(it)
+                                const kcal = Math.round(itemNutrition.kcal)
+                                const displayGrams = Math.round(itemNutrition.displayQuantityG)
                                 const imageUrl = it.food ? getFoodImage(it.food) : ''
-                                const prepTip = getPreparationTip(it.food?.name || '', it.food?.category || null, it.notes)
+                                const prepTip = getPreparationTip(it.food?.name || it.recipe?.name || '', it.food?.category || null, it.notes)
                                 const itemRecipe = it.food ? getRecipeForFood(it.food.name, it.food.category) : null
-                                const itemConflict = it.food && plan.patient ? checkPatientAllergenConflict(it.food, plan.patient) : null
+                                const itemConflicts = it.food
+                                  ? [checkPatientAllergenConflict(it.food, plan.patient)].filter(Boolean)
+                                  : (it.recipe?.ingredients || [])
+                                      .map((ingredient: any) =>
+                                        ingredient.food ? checkPatientAllergenConflict(ingredient.food, plan.patient) : null
+                                      )
+                                      .filter(Boolean)
+                                const itemConflict = itemConflicts[0] || null
 
                                 return (
                                   <tr key={it.id} className={`hover:bg-gray-50/40 ${itemConflict ? 'bg-red-50/60' : ''}`}>
@@ -627,7 +605,7 @@ export function PlanViewer({ plan, menu, patients }: PlanViewerProps) {
                                     {/* Nombre */}
                                     <td className="py-1 px-2.5 font-bold text-gray-900 align-middle">
                                       <div className="flex items-center gap-1.5 flex-wrap">
-                                        <span className={itemConflict ? 'text-red-950 font-black' : ''}>{it.food?.name || 'Alimento'}</span>
+                                        <span className={itemConflict ? 'text-red-950 font-black' : ''}>{it.food?.name || it.recipe?.name || 'Alimento'}</span>
                                         {itemConflict && (
                                           <span className="inline-flex items-center gap-0.5 text-[8.5px] font-black bg-red-600 text-white px-1.5 py-0.2 rounded shadow-2xs" title={itemConflict.alertMessage}>
                                             <Siren className="h-[1em] w-[1em] shrink-0" /> {itemConflict.allergenLabel}
@@ -650,7 +628,7 @@ export function PlanViewer({ plan, menu, patients }: PlanViewerProps) {
                                     {/* Cantidad en gramos / Ración */}
                                     <td className="py-1 px-2 text-center align-middle">
                                       <span className="inline-block px-2 py-0.5 rounded-full font-black text-[10px] bg-blue-50 text-blue-900 border border-blue-200">
-                                        {hideCaloriesTCA ? '1 ración' : `${it.quantityG} g`}
+                                        {hideCaloriesTCA ? '1 ración' : `${displayGrams} g`}
                                       </span>
                                     </td>
 
@@ -1044,19 +1022,25 @@ export function PlanViewer({ plan, menu, patients }: PlanViewerProps) {
                       </div>
                       <div className="divide-y divide-gray-100">
                         {meal.items.map((it: any) => {
+                          const itemNutrition = getMealItemNutrition(it)
+                          const displayGrams = Math.round(itemNutrition.displayQuantityG)
                           const imageUrl = it.food ? getFoodImage(it.food) : ''
                           const prepTip = getPreparationTip(
-                            it.food?.name || '',
+                            it.food?.name || it.recipe?.name || '',
                             it.food?.category || null,
                             it.notes
                           )
                           const itemRecipe = it.food
                             ? getRecipeForFood(it.food.name, it.food.category)
                             : null
-                          const itemConflict =
-                            it.food && plan.patient
-                              ? checkPatientAllergenConflict(it.food, plan.patient)
-                              : null
+                          const itemConflicts = it.food
+                            ? [checkPatientAllergenConflict(it.food, plan.patient)].filter(Boolean)
+                            : (it.recipe?.ingredients || [])
+                                .map((ingredient: any) =>
+                                  ingredient.food ? checkPatientAllergenConflict(ingredient.food, plan.patient) : null
+                                )
+                                .filter(Boolean)
+                          const itemConflict = itemConflicts[0] || null
 
                           return (
                             <div
@@ -1082,7 +1066,7 @@ export function PlanViewer({ plan, menu, patients }: PlanViewerProps) {
                               </div>
                             <div className="flex-1 min-w-0">
                               <div className="flex items-center gap-2 flex-wrap">
-                                <span className="text-xs font-bold text-gray-900 block truncate">{it.food?.name}</span>
+                                <span className="text-xs font-bold text-gray-900 block truncate">{it.food?.name || it.recipe?.name}</span>
                                 {itemRecipe && (
                                   <button
                                     type="button"
@@ -1098,10 +1082,10 @@ export function PlanViewer({ plan, menu, patients }: PlanViewerProps) {
                             </div>
                             <div className="text-right shrink-0">
                               <span className="text-xs font-black text-blue-800 block bg-blue-50 px-2 py-0.5 rounded-full border border-blue-200">
-                                {it.quantityG} g
+                                {displayGrams} g
                               </span>
                               <span className="text-[10px] text-gray-400 mt-0.5 block">
-                                {it.food ? Math.round(it.food.calories * (it.quantityG / 100)) : 0} kcal
+                                {Math.round(itemNutrition.kcal)} kcal
                               </span>
                             </div>
                           </div>

@@ -10,7 +10,8 @@ interface SendAppointmentEmailParams {
   appointmentDate: Date
   durationMin?: number
   modality?: 'ONLINE' | 'PRESENCIAL' | string
-  notes?: string
+  /** Mensaje breve y explícitamente apto para el paciente. Nunca notas clínicas. */
+  patientMessage?: string
   location?: string
   professionalName?: string
   clinicName?: string
@@ -23,7 +24,7 @@ export function generateAppointmentEmailHtml({
   appointmentDate,
   durationMin = 45,
   modality = 'ONLINE',
-  notes = '',
+  patientMessage = '',
   location = 'Consulta Nutricional Eva Vidal',
   professionalName = 'Eva Vidal',
   clinicName = 'Consulta Nutricional Eva Vidal',
@@ -34,7 +35,8 @@ export function generateAppointmentEmailHtml({
   appointmentDate: Date
   durationMin?: number
   modality?: string
-  notes?: string
+  /** Mensaje breve y explícitamente apto para el paciente. Nunca notas clínicas. */
+  patientMessage?: string
   location?: string
   professionalName?: string
   clinicName?: string
@@ -146,7 +148,7 @@ export function generateAppointmentEmailHtml({
 
                       <!-- Modalidad -->
                       <tr>
-                        <td style="width: 32px; vertical-align: top; ${location && !isOnline ? 'padding-bottom: 16px;' : notes ? 'padding-bottom: 16px;' : ''}">
+                        <td style="width: 32px; vertical-align: top; ${location && !isOnline ? 'padding-bottom: 16px;' : patientMessage ? 'padding-bottom: 16px;' : ''}">
                           <div style="width: 26px; height: 26px; border-radius: 6px; background-color: #e0f2fe; text-align: center; line-height: 26px;">
                             ${isOnline
                               ? `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#0284c7" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="display:inline-block;vertical-align:middle;"><polygon points="23 7 16 12 23 17 23 7"/><rect x="1" y="5" width="15" height="14" rx="2" ry="2"/></svg>`
@@ -154,7 +156,7 @@ export function generateAppointmentEmailHtml({
                             }
                           </div>
                         </td>
-                        <td style="padding-left: 10px; ${location && !isOnline ? 'padding-bottom: 16px;' : notes ? 'padding-bottom: 16px;' : ''}">
+                        <td style="padding-left: 10px; ${location && !isOnline ? 'padding-bottom: 16px;' : patientMessage ? 'padding-bottom: 16px;' : ''}">
                           <div style="font-size: 11px; font-weight: 700; color: #64748b; text-transform: uppercase; letter-spacing: 0.5px;">Modalidad</div>
                           <div style="font-size: 14px; font-weight: 600; color: #0f172a; margin-top: 1px;">
                             ${isOnline ? 'Videollamada Online (recibirás el enlace de Google Meet)' : 'Presencial en Consulta'}
@@ -165,20 +167,20 @@ export function generateAppointmentEmailHtml({
                       <!-- Dirección (si presencial) -->
                       ${location && !isOnline ? `
                       <tr>
-                        <td style="width: 32px; vertical-align: top; ${notes ? 'padding-bottom: 16px;' : ''}">
+                        <td style="width: 32px; vertical-align: top; ${patientMessage ? 'padding-bottom: 16px;' : ''}">
                           <div style="width: 26px; height: 26px; border-radius: 6px; background-color: #e0f2fe; text-align: center; line-height: 26px;">
                             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#0284c7" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="display:inline-block;vertical-align:middle;"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
                           </div>
                         </td>
-                        <td style="padding-left: 10px; ${notes ? 'padding-bottom: 16px;' : ''}">
+                        <td style="padding-left: 10px; ${patientMessage ? 'padding-bottom: 16px;' : ''}">
                           <div style="font-size: 11px; font-weight: 700; color: #64748b; text-transform: uppercase; letter-spacing: 0.5px;">Ubicación</div>
                           <div style="font-size: 14px; font-weight: 600; color: #0f172a; margin-top: 1px;">${location}</div>
                         </td>
                       </tr>
                       ` : ''}
 
-                      <!-- Notas -->
-                      ${notes ? `
+                      <!-- Mensaje para el paciente -->
+                      ${patientMessage ? `
                       <tr>
                         <td style="width: 32px; vertical-align: top;">
                           <div style="width: 26px; height: 26px; border-radius: 6px; background-color: #e0f2fe; text-align: center; line-height: 26px;">
@@ -186,8 +188,8 @@ export function generateAppointmentEmailHtml({
                           </div>
                         </td>
                         <td style="padding-left: 10px;">
-                          <div style="font-size: 11px; font-weight: 700; color: #64748b; text-transform: uppercase; letter-spacing: 0.5px;">Motivo / Observaciones</div>
-                          <div style="font-size: 14px; font-weight: 500; color: #334155; margin-top: 1px;">${notes}</div>
+                          <div style="font-size: 11px; font-weight: 700; color: #64748b; text-transform: uppercase; letter-spacing: 0.5px;">Mensaje</div>
+                          <div style="font-size: 14px; font-weight: 500; color: #334155; margin-top: 1px;">${patientMessage}</div>
                         </td>
                       </tr>
                       ` : ''}
@@ -297,7 +299,7 @@ export async function sendAppointmentEmail({
   appointmentDate,
   durationMin = 45,
   modality = 'ONLINE',
-  notes = '',
+  patientMessage = '',
   location = 'Consulta Nutricional Eva Vidal',
   professionalName = 'Eva Vidal',
   clinicName = 'Consulta Nutricional Eva Vidal',
@@ -305,7 +307,7 @@ export async function sendAppointmentEmail({
 }: SendAppointmentEmailParams) {
   const isOnline = modality.toUpperCase() === 'ONLINE'
   const eventTitle = `Cita de Nutrición: ${patientName} - ${professionalName}`
-  const eventDesc = `Consulta Nutricional con ${professionalName} (${clinicName}).\nModalidad: ${isOnline ? 'Online (Videollamada)' : 'Presencial'}\nNotas: ${notes || 'Consulta programada'}\nContacto: info@evavidalnutricion.com`
+  const eventDesc = `Consulta Nutricional con ${professionalName} (${clinicName}).\nModalidad: ${isOnline ? 'Online (Videollamada)' : 'Presencial'}\nMensaje: ${patientMessage || 'Consulta programada'}\nContacto: info@evavidalnutricion.com`
 
   const googleCalendarUrl = generateGoogleCalendarUrl({
     title: eventTitle,
@@ -329,7 +331,7 @@ export async function sendAppointmentEmail({
     appointmentDate,
     durationMin,
     modality,
-    notes,
+    patientMessage,
     location,
     professionalName,
     clinicName,
@@ -413,7 +415,7 @@ export function generateAppointmentReminderEmailHtml({
   appointmentDate,
   durationMin = 45,
   modality = 'ONLINE',
-  notes = '',
+  patientMessage = '',
   location = 'Consulta Nutricional Eva Vidal',
   professionalName = 'Eva Vidal',
   clinicName = 'Consulta Nutricional Eva Vidal',
@@ -423,7 +425,8 @@ export function generateAppointmentReminderEmailHtml({
   appointmentDate: Date
   durationMin?: number
   modality?: string
-  notes?: string
+  /** Mensaje breve y explícitamente apto para el paciente. Nunca notas clínicas. */
+  patientMessage?: string
   location?: string
   professionalName?: string
   clinicName?: string
@@ -533,7 +536,7 @@ export function generateAppointmentReminderEmailHtml({
 
                       <!-- Modalidad -->
                       <tr>
-                        <td style="width: 32px; vertical-align: top; ${location && !isOnline ? 'padding-bottom: 16px;' : notes ? 'padding-bottom: 16px;' : ''}">
+                        <td style="width: 32px; vertical-align: top; ${location && !isOnline ? 'padding-bottom: 16px;' : patientMessage ? 'padding-bottom: 16px;' : ''}">
                           <div style="width: 26px; height: 26px; border-radius: 6px; background-color: #e0f2fe; text-align: center; line-height: 26px;">
                             ${isOnline
                               ? `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#0284c7" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="display:inline-block;vertical-align:middle;"><polygon points="23 7 16 12 23 17 23 7"/><rect x="1" y="5" width="15" height="14" rx="2" ry="2"/></svg>`
@@ -541,7 +544,7 @@ export function generateAppointmentReminderEmailHtml({
                             }
                           </div>
                         </td>
-                        <td style="padding-left: 10px; ${location && !isOnline ? 'padding-bottom: 16px;' : notes ? 'padding-bottom: 16px;' : ''}">
+                        <td style="padding-left: 10px; ${location && !isOnline ? 'padding-bottom: 16px;' : patientMessage ? 'padding-bottom: 16px;' : ''}">
                           <div style="font-size: 11px; font-weight: 700; color: #64748b; text-transform: uppercase; letter-spacing: 0.5px;">Modalidad</div>
                           <div style="font-size: 14px; font-weight: 600; color: #0f172a; margin-top: 1px;">
                             ${isOnline ? 'Videollamada Online (enlace de Google Meet en tu calendario)' : 'Presencial en Consulta'}
@@ -552,20 +555,20 @@ export function generateAppointmentReminderEmailHtml({
                       <!-- Ubicación (si presencial) -->
                       ${location && !isOnline ? `
                       <tr>
-                        <td style="width: 32px; vertical-align: top; ${notes ? 'padding-bottom: 16px;' : ''}">
+                        <td style="width: 32px; vertical-align: top; ${patientMessage ? 'padding-bottom: 16px;' : ''}">
                           <div style="width: 26px; height: 26px; border-radius: 6px; background-color: #e0f2fe; text-align: center; line-height: 26px;">
                             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#0284c7" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="display:inline-block;vertical-align:middle;"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
                           </div>
                         </td>
-                        <td style="padding-left: 10px; ${notes ? 'padding-bottom: 16px;' : ''}">
+                        <td style="padding-left: 10px; ${patientMessage ? 'padding-bottom: 16px;' : ''}">
                           <div style="font-size: 11px; font-weight: 700; color: #64748b; text-transform: uppercase; letter-spacing: 0.5px;">Ubicación</div>
                           <div style="font-size: 14px; font-weight: 600; color: #0f172a; margin-top: 1px;">${location}</div>
                         </td>
                       </tr>
                       ` : ''}
 
-                      <!-- Notas -->
-                      ${notes ? `
+                      <!-- Mensaje para el paciente -->
+                      ${patientMessage ? `
                       <tr>
                         <td style="width: 32px; vertical-align: top;">
                           <div style="width: 26px; height: 26px; border-radius: 6px; background-color: #e0f2fe; text-align: center; line-height: 26px;">
@@ -573,8 +576,8 @@ export function generateAppointmentReminderEmailHtml({
                           </div>
                         </td>
                         <td style="padding-left: 10px;">
-                          <div style="font-size: 11px; font-weight: 700; color: #64748b; text-transform: uppercase; letter-spacing: 0.5px;">Observaciones</div>
-                          <div style="font-size: 14px; font-weight: 500; color: #334155; margin-top: 1px;">${notes}</div>
+                          <div style="font-size: 11px; font-weight: 700; color: #64748b; text-transform: uppercase; letter-spacing: 0.5px;">Mensaje</div>
+                          <div style="font-size: 14px; font-weight: 500; color: #334155; margin-top: 1px;">${patientMessage}</div>
                         </td>
                       </tr>
                       ` : ''}
@@ -676,14 +679,14 @@ export async function sendAppointmentReminderEmail({
   appointmentDate,
   durationMin = 45,
   modality = 'ONLINE',
-  notes = '',
+  patientMessage = '',
   location = 'Consulta Nutricional Eva Vidal',
   professionalName = 'Eva Vidal',
   clinicName = 'Consulta Nutricional Eva Vidal',
 }: SendAppointmentEmailParams) {
   const isOnline = modality.toUpperCase() === 'ONLINE'
   const eventTitle = `Cita de Nutrición: ${patientName} - ${professionalName}`
-  const eventDesc = `Consulta Nutricional con ${professionalName} (${clinicName}).\nModalidad: ${isOnline ? 'Online (Videollamada)' : 'Presencial'}\nNotas: ${notes || 'Consulta programada'}\nContacto: info@evavidalnutricion.com`
+  const eventDesc = `Consulta Nutricional con ${professionalName} (${clinicName}).\nModalidad: ${isOnline ? 'Online (Videollamada)' : 'Presencial'}\nMensaje: ${patientMessage || 'Consulta programada'}\nContacto: info@evavidalnutricion.com`
 
   const googleCalendarUrl = generateGoogleCalendarUrl({
     title: eventTitle,
@@ -707,7 +710,7 @@ export async function sendAppointmentReminderEmail({
     appointmentDate,
     durationMin,
     modality,
-    notes,
+    patientMessage,
     location,
     professionalName,
     clinicName,

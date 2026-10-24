@@ -10,6 +10,7 @@ import Link from 'next/link'
 import { getFoodImage, FALLBACK_FOOD_SVG } from '@/lib/nutrition'
 import { PlanDossierPdf } from '@/components/nutrition/plan-dossier-pdf'
 import { ModalPortal } from '@/components/ui/modal-portal'
+import { buildShoppingList, getMealItemNutrition } from '@/lib/nutrition/plan-nutrition'
 
 interface FoodItem {
   id: number
@@ -106,7 +107,6 @@ interface PlanData {
 
 interface Props {
   plan: PlanData
-  visibleRecipes?: RecipeItem[]
 }
 
 const MEAL_LABELS: Record<string, string> = {
@@ -168,7 +168,7 @@ function getPreparationTip(foodName: string, category?: string | null, customNot
   return 'Preparar respetando las cantidades pautadas. Cocinado saludable al vapor, horno o plancha.'
 }
 
-export function PlanClient({ plan, visibleRecipes }: Props) {
+export function PlanClient({ plan }: Props) {
   const currentJsDay = new Date().getDay()
   const todayDayNumber = currentJsDay === 0 ? 7 : currentJsDay
 
@@ -209,7 +209,7 @@ export function PlanClient({ plan, visibleRecipes }: Props) {
     return ' Despensa, Conservas y Condimentos'
   }
 
-  // Collect all unique recipes from plan and visible catalog
+  // Recetario del portal: solo recetas que forman parte del plan compartido.
   const recipeMap = new Map<string, RecipeItem>()
   plan.days.forEach((d) => {
     d.meals.forEach((m) => {
@@ -220,13 +220,6 @@ export function PlanClient({ plan, visibleRecipes }: Props) {
       })
     })
   })
-  if (visibleRecipes) {
-    visibleRecipes.forEach((r) => {
-      if (!recipeMap.has(r.id)) {
-        recipeMap.set(r.id, r)
-      }
-    })
-  }
   const allRecipeCards = Array.from(recipeMap.values())
 
   const filteredRecipes = allRecipeCards.filter((r) => {
@@ -241,25 +234,14 @@ export function PlanClient({ plan, visibleRecipes }: Props) {
   const currentSelectedDay =
     plan.days.find((d) => d.dayNumber === selectedDayNumber) || plan.days[0]
 
-  // Compute shopping list grouped by supermarket aisles
+  // Compute shopping list grouped by supermarket aisles. Las recetas se
+  // expanden a sus ingredientes reales para no comprar "platos".
   const shoppingItemsByCategory: Record<string, Array<{ name: string; totalG: number }>> = {}
-  plan.days.forEach((day) => {
-    day.meals.forEach((meal) => {
-      meal.items.forEach((item) => {
-        const name = item.food?.name || item.recipe?.name || 'Alimento'
-        const aisle = getSupermarketAisle(item.food?.category)
-        if (!shoppingItemsByCategory[aisle]) {
-          shoppingItemsByCategory[aisle] = []
-        }
-        const existing = shoppingItemsByCategory[aisle].find((x) => x.name === name)
-        if (existing) {
-          existing.totalG += Math.round(item.quantityG)
-        } else {
-          shoppingItemsByCategory[aisle].push({ name, totalG: Math.round(item.quantityG) })
-        }
-      })
-    })
-  })
+  for (const entry of buildShoppingList(plan.days.flatMap((day) => day.meals))) {
+    const aisle = getSupermarketAisle(entry.category)
+    if (!shoppingItemsByCategory[aisle]) shoppingItemsByCategory[aisle] = []
+    shoppingItemsByCategory[aisle].push({ name: entry.name, totalG: Math.round(entry.totalG) })
+  }
 
   return (
     <div>
@@ -441,12 +423,12 @@ export function PlanClient({ plan, visibleRecipes }: Props) {
                 let mealFat = 0
 
                 meal.items.forEach((it) => {
-                  if (it.food && it.quantityG > 0) {
-                    const factor = it.quantityG / (it.food.servingSize || 100)
-                    mealKcal += it.food.calories * factor
-                    mealProt += it.food.proteinG * factor
-                    mealCarbs += it.food.carbsG * factor
-                    mealFat += it.food.fatG * factor
+                  if (it.quantityG > 0 && (it.food || it.recipe)) {
+                    const nutrition = getMealItemNutrition(it)
+                    mealKcal += nutrition.kcal
+                    mealProt += nutrition.proteinG
+                    mealCarbs += nutrition.carbsG
+                    mealFat += nutrition.fatG
                   }
                 })
 

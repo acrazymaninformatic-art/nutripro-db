@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, useTransition } from 'react'
+import { useRouter } from 'next/navigation'
 import { AlertTriangle, Check, CheckCircle2, Download, FileWarning, ShieldCheck, ShieldOff } from 'lucide-react'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
@@ -29,6 +30,7 @@ export function PrivacyPanel({
 }: Props) {
   const [message, setMessage] = useState<string | null>(null)
   const [pending, startTransition] = useTransition()
+  const router = useRouter()
 
   const request = (type: 'EXPORT' | 'ERASURE') =>
     startTransition(async () => {
@@ -54,14 +56,40 @@ export function PrivacyPanel({
   }
 
   const resolveRequest = (requestId: string, status: 'COMPLETED' | 'REJECTED') => {
-    const notes = window.prompt(status === 'COMPLETED' ? 'Nota de resolución (opcional):' : 'Motivo de rechazo (opcional):')
+    const target = requests.find((item) => item.id === requestId)
+    const isErasure = target?.requestType === 'ERASURE' && status === 'COMPLETED'
+    if (isErasure && !window.confirm(
+      'La supresión definitiva es irreversible. Confirma que has revisado legalmente la solicitud y que procede ejecutarla.'
+    )) return
+
+    const notes = window.prompt(
+      isErasure
+        ? 'Documenta la base jurídica y el alcance de la supresión (obligatorio):'
+        : status === 'COMPLETED'
+          ? 'Nota de resolución (opcional):'
+          : 'Motivo de rechazo (opcional):'
+    )
     if (notes === null) return
+    if (isErasure && !notes.trim()) {
+      setMessage('Debes documentar la revisión legal antes de ejecutar la supresión.')
+      return
+    }
+
     startTransition(async () => {
       try {
-        const result = await resolveDataSubjectRequest(requestId, status, notes)
+        const result = await resolveDataSubjectRequest(requestId, status, notes, isErasure)
+        if (result.patientDeleted) {
+          // El expediente ya no existe: navegar a su ficha produciría un 404.
+          router.replace('/dashboard/patients?notice=patient-erased')
+          return
+        }
         setMessage(result.message)
+        router.refresh()
       } catch (error: any) {
         setMessage(error?.message || 'No se pudo actualizar la solicitud.')
+        // Tras abortar una supresión la solicitud vuelve a PENDING en servidor;
+        // refrescamos para que el panel no muestre un estado obsoleto.
+        router.refresh()
       }
     })
   }

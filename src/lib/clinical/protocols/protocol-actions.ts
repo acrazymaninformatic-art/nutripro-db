@@ -1,9 +1,16 @@
 'use server'
 
+import { randomUUID } from 'node:crypto'
+import { cookies } from 'next/headers'
 import { prisma } from '@/lib/prisma'
 import { revalidatePath } from 'next/cache'
-import { requireUserId, requireUser } from '@/lib/auth'
+import { requireAdmin, requirePatient, requireUserId, requireUser } from '@/lib/auth'
 import { CLINICAL_PROTOCOLS, parseCGMData } from './protocols-registry'
+
+function boundedScore(value: unknown, min: number, max: number, fallback: number): number {
+  const numeric = typeof value === 'number' && Number.isFinite(value) ? Math.round(value) : fallback
+  return Math.min(max, Math.max(min, numeric))
+}
 
 export async function getPatientProtocolsAction(patientId: string) {
   const userId = await requireUserId()
@@ -40,17 +47,28 @@ export async function assignProtocolAction({
   if (!patient) throw new Error('Paciente no encontrado')
 
   const def = CLINICAL_PROTOCOLS.find((p) => p.id === protocolId)
-  const title = def ? def.name : protocolId
+  if (!def) throw new Error('Protocolo clínico no reconocido.')
+  const phaseIds = (def.phases || []).map((phase) => phase.id)
+  if (initialPhase && !phaseIds.includes(initialPhase)) {
+    throw new Error('La fase inicial no pertenece al protocolo seleccionado.')
+  }
+  if (parameters && (typeof parameters !== 'object' || Array.isArray(parameters))) {
+    throw new Error('Los parámetros del protocolo no son válidos.')
+  }
+  const parametersJson = JSON.stringify(parameters || {})
+  if (parametersJson.length > 100_000) throw new Error('Los parámetros del protocolo son demasiado extensos.')
+  const safeNotes = String(notes || '').trim().slice(0, 10_000) || null
+  const title = def.name
 
   const record = await prisma.clinicalProtocolRecord.create({
     data: {
       patientId,
       type: protocolId,
       title,
-      phase: initialPhase || def?.phases?.[0]?.id || null,
-      parametersJson: JSON.stringify(parameters),
+      phase: initialPhase || def.phases?.[0]?.id || null,
+      parametersJson,
       symptomLogJson: '[]',
-      notes: notes || null,
+      notes: safeNotes,
       status: 'ACTIVE',
       startDate: new Date(),
     },
@@ -86,11 +104,16 @@ export async function updateProtocolPhaseAction({
   })
   if (!current) throw new Error('Registro de protocolo no encontrado.')
 
+  const def = CLINICAL_PROTOCOLS.find((protocol) => protocol.id === current.type)
+  if (!def) throw new Error('Protocolo clínico no reconocido.')
+  const phaseIds = (def.phases || []).map((phase) => phase.id)
+  if (!phaseIds.includes(newPhase)) throw new Error('La fase no pertenece al protocolo.')
+
   const updated = await prisma.clinicalProtocolRecord.update({
     where: { id: recordId },
     data: {
       phase: newPhase,
-      notes: notes !== undefined ? notes : current.notes,
+      notes: notes !== undefined ? String(notes).trim().slice(0, 10_000) : current.notes,
     },
   })
 
@@ -113,35 +136,102 @@ export async function addSymptomLogAction({
     notes?: string
   }
 }) {
-  const user = await requireUser()
-  const current = await prisma.clinicalProtocolRecord.findUnique({
-    where: { id: recordId },
+  if (!log || typeof log !== 'object') throw new Error('Registro de síntomas no válido.')
+
+  const sessionUser = await requireUser()
+  const previewPatientId = (await cookies()).get('evsoftware_preview_patient_id')?.value
+  if (sessionUser.role === 'ADMIN' && previewPatientId) {
+    throw new Error('Modo vista previa de solo lectura (Eva Vidal). No se pueden registrar síntomas.')
+  }
+
+  let actorUserId: string
+  let scopedPatientId: string | null = null
+  if (sessionUser.role === 'PATIENT') {
+    const patientSession = await requirePatient()
+    if (!patientSession.patientId) throw new Error('Paciente no identificado.')
+    actorUserId = patientSession.user.id
+    scopedPatientId = patientSession.patientId
+  } else if (sessionUser.role === 'ADMIN') {
+    const admin = await requireAdmin()
+    actorUserId = admin.id
+  } else {
+    throw new Error('No autorizado para modificar este protocolo.')
+  }
+
+  const current = await prisma.clinicalProtocolRecord.findFirst({
+    where: scopedPatientId
+      ? { id: recordId, patientId: scopedPatientId }
+      : {
+          id: recordId,
+          patient: { userId: actorUserId, isActive: true, isHardDeleted: false },
+        },
+    select: { id: true, patientId: true },
   })
   if (!current) throw new Error('Registro de protocolo no encontrado')
 
-  // IDOR check: if caller is a patient, they can only write to their own record
-  if (user.role === 'PATIENT' && user.patientId !== current.patientId) {
-    throw new Error('No autorizado para modificar este protocolo')
-  }
-
-  let logs: Array<Record<string, unknown>> = []
-  try {
-    logs = JSON.parse(current.symptomLogJson || '[]')
-  } catch {
-    logs = []
-  }
-
-  logs.unshift({
-    id: `sym-${Date.now()}`,
-    ...log,
+  const parsedDate = new Date(log.date)
+  const safeDate = Number.isNaN(parsedDate.getTime()) ? new Date() : parsedDate
+  const safeLog = {
+    id: randomUUID(),
+    date: safeDate.toISOString(),
+    bristolScale: boundedScore(log.bristolScale, 1, 7, 4),
+    bloatingScore: boundedScore(log.bloatingScore, 0, 10, 0),
+    painScore: boundedScore(log.painScore, 0, 10, 0),
+    gasScore: boundedScore(log.gasScore, 0, 10, 0),
+    ...(typeof log.suspectedFood === 'string' && log.suspectedFood.trim()
+      ? { suspectedFood: log.suspectedFood.trim().slice(0, 200) }
+      : {}),
+    ...(typeof log.notes === 'string' && log.notes.trim()
+      ? { notes: log.notes.trim().slice(0, 2000) }
+      : {}),
     recordedAt: new Date().toISOString(),
-  })
+  }
 
-  const updated = await prisma.clinicalProtocolRecord.update({
-    where: { id: recordId },
-    data: {
-      symptomLogJson: JSON.stringify(logs),
-    },
+  // El diario vive en una columna JSON. Sin un bloqueo de fila, dos registros
+  // simultáneos podrían leer el mismo array y el último UPDATE borraría el
+  // anterior. Se bloquea la fila y se relee dentro de la transacción.
+  const updated = await prisma.$transaction(async (tx) => {
+    await tx.$queryRaw`SELECT "id" FROM "ClinicalProtocolRecord" WHERE "id" = ${current.id} FOR UPDATE`
+
+    const fresh = await tx.clinicalProtocolRecord.findFirst({
+      where: scopedPatientId
+        ? { id: current.id, patientId: scopedPatientId }
+        : {
+            id: current.id,
+            patient: { userId: actorUserId, isActive: true, isHardDeleted: false },
+          },
+      select: { id: true, patientId: true, symptomLogJson: true },
+    })
+    if (!fresh) throw new Error('Registro de protocolo no encontrado')
+
+    let logs: Array<Record<string, unknown>> = []
+    try {
+      const parsed: unknown = JSON.parse(fresh.symptomLogJson || '[]')
+      if (Array.isArray(parsed)) logs = parsed.slice(0, 199)
+    } catch {
+      logs = []
+    }
+    logs.unshift(safeLog)
+
+    const record = await tx.clinicalProtocolRecord.update({
+      where: { id: fresh.id },
+      data: {
+        symptomLogJson: JSON.stringify(logs),
+      },
+      // No devolver al portal las notas clínicas internas del protocolo.
+      select: { id: true, symptomLogJson: true },
+    })
+    await tx.auditLog.create({
+      data: {
+        userId: actorUserId,
+        patientId: fresh.patientId,
+        action: 'SYMPTOM_LOG_ADDED',
+        entityType: 'CLINICAL_PROTOCOL',
+        entityId: fresh.id,
+        details: `Registro de síntomas añadido (Bristol ${safeLog.bristolScale}/7, hinchazón ${safeLog.bloatingScore}/10, dolor ${safeLog.painScore}/10, gases ${safeLog.gasScore}/10).`,
+      },
+    })
+    return record
   })
 
   revalidatePath(`/dashboard/patients/${current.patientId}`)
@@ -165,7 +255,16 @@ export async function importCGMReadingsAction({
   })
   if (!patient) throw new Error('Paciente no encontrado')
 
+  if (
+    !Array.isArray(glucoseReadings) ||
+    glucoseReadings.length === 0 ||
+    glucoseReadings.length > 10_000 ||
+    glucoseReadings.some((value) => !Number.isFinite(value) || value < 20 || value > 600)
+  ) {
+    throw new Error('Las lecturas de glucosa deben ser números entre 20 y 600 mg/dL.')
+  }
   const analysis = parseCGMData(glucoseReadings)
+  const safeNotes = String(notes || '').trim().slice(0, 10_000) || analysis.assessment
 
   const record = await prisma.clinicalProtocolRecord.create({
     data: {
@@ -173,7 +272,7 @@ export async function importCGMReadingsAction({
       type: 'DIABETES_CGM',
       title: 'Informe de Glucemia Continua (CGM FreeStyle/Dexcom)',
       parametersJson: JSON.stringify(analysis),
-      notes: notes || analysis.assessment,
+      notes: safeNotes,
       status: 'ACTIVE',
     },
   })
@@ -197,6 +296,7 @@ export async function updateProtocolStatusAction(
   recordId: string,
   status: 'ACTIVE' | 'COMPLETED' | 'PAUSED'
 ) {
+  if (!['ACTIVE', 'COMPLETED', 'PAUSED'].includes(status)) throw new Error('Estado de protocolo no válido.')
   const userId = await requireUserId()
   const current = await prisma.clinicalProtocolRecord.findFirst({
     where: { id: recordId, patient: { userId } },

@@ -14,7 +14,6 @@ import { ClinicalProgressCard } from './clinical-progress-card'
 import { PrivacyPanel } from './privacy-panel'
 import { SoapConsultationPanel } from './soap-consultation-panel'
 import { ConsentsDocumentsPanel } from './consents-documents-panel'
-import { HardDeleteModal } from './hard-delete-modal'
 import { checkDrugInteractions } from '@/lib/nutrition/drug-interactions'
 import { AlertTriangle, ArrowLeft, ArrowRight, Bell, Calendar, CalendarPlus, Check, Eye, FileText, HeartPulse, History, Mail, Pill, Scale, ShieldAlert, Siren, Sparkles, Stethoscope, Target, Zap } from 'lucide-react'
 import {
@@ -204,7 +203,6 @@ export default async function PatientDetailPage({ params, searchParams }: Patien
             patientName={`${patient.firstName} ${patient.lastName}`}
             isActive={patient.isActive}
           />
-          <HardDeleteModal patientId={patient.id} patientName={`${patient.firstName} ${patient.lastName}`} />
         </div>
       </div>
 

@@ -127,7 +127,7 @@ export function RecipeForm({ foods }: { foods: FoodItem[] }) {
       router.refresh()
     } catch (err) {
       console.error(err)
-      alert('Error al guardar la receta.')
+      alert(err instanceof Error ? err.message : 'Error al guardar la receta.')
       setLoading(false)
     }
   }

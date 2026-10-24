@@ -17,7 +17,6 @@ interface AppointmentItem {
   typeColor?: string | null
   status: string
   location?: string | null
-  notes?: string | null
   meetUrl?: string | null
 }
 
@@ -280,12 +279,6 @@ export function CitasClient({ appointments, pendingRequests = [] }: Props) {
                           )
                         })()}
                       </div>
-                    )}
-
-                    {app.notes && (
-                      <p className="text-2xs text-gray-500 italic bg-gray-50/70 p-2 rounded-lg">
-                        {app.notes}
-                      </p>
                     )}
 
                     {/* Acciones de solicitud de cambio o cancelación */}

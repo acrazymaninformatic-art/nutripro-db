@@ -157,15 +157,8 @@ export function MenuEditor({
 
   const [past, setPast] = useState<Snapshot[]>([])
   const [future, setFuture] = useState<Snapshot[]>([])
-  const [lastSavedAt, setLastSavedAt] = useState<number | null>(null)
-  const [now, setNow] = useState(() => Date.now())
 
   const gridRef = useRef<HTMLDivElement>(null)
-
-  useEffect(() => {
-    const interval = setInterval(() => setNow(Date.now()), 1000)
-    return () => clearInterval(interval)
-  }, [])
 
   useEffect(() => {
     if (!panelOpen) return
@@ -177,24 +170,9 @@ export function MenuEditor({
   }, [panelOpen])
 
   /* ---------------------------------------------------------------- */
-  /* Autoguardado local (borrador)                                    */
+  /* El borrador clínico vive solo en memoria y se guarda en servidor    */
+  /* con el botón explícito. No se usa localStorage.                    */
   /* ---------------------------------------------------------------- */
-
-  useEffect(() => {
-    const timer = setTimeout(() => {
-      try {
-        window.localStorage.setItem(
-          `ev_menu_draft_${patient?.id || 'sin-paciente'}`,
-          JSON.stringify({ grid, dayMeta, ingestaMeta, settings: menuSettings, at: Date.now() })
-        )
-        setLastSavedAt(Date.now())
-      } catch {
-        // Almacenamiento no disponible: se sigue trabajando en memoria.
-      }
-    }, 1200)
-
-    return () => clearTimeout(timer)
-  }, [grid, dayMeta, ingestaMeta, menuSettings, patient?.id])
 
   /* ---------------------------------------------------------------- */
   /* Historial: deshacer / rehacer                                     */
@@ -493,13 +471,7 @@ export function MenuEditor({
     }
   }
 
-  const saveLabelText = useMemo(() => {
-    if (!lastSavedAt) return 'Borrador sin guardar'
-    const seconds = Math.max(0, Math.round((now - lastSavedAt) / 1000))
-    if (seconds < 5) return 'Guardado ahora'
-    if (seconds < 60) return `Guardado hace ${seconds} s`
-    return `Guardado hace ${Math.round(seconds / 60)} min`
-  }, [lastSavedAt, now])
+  const saveLabelText = saving ? 'Guardando en servidor…' : 'Cambios sin guardar en servidor'
 
   const editingIngesta = ingestaMeta.find((ingesta) => ingesta.label === ingestaEditTarget)
 

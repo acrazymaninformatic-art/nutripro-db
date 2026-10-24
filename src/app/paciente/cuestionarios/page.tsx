@@ -7,11 +7,7 @@ export const dynamic = 'force-dynamic'
 export default async function PacienteCuestionariosPage() {
   const { patientId: authPatientId, isAdminPreview } = await requirePatient()
 
-  let patientId = authPatientId
-  if (!patientId && isAdminPreview) {
-    const firstPatient = await prisma.patient.findFirst({ select: { id: true } })
-    patientId = firstPatient?.id || null
-  }
+  const patientId = authPatientId
 
   const patient = patientId
     ? await prisma.patient.findUnique({
@@ -20,6 +16,10 @@ export default async function PacienteCuestionariosPage() {
           anamnesisStatus: true,
           anamnesisCompletedAt: true,
           consents: {
+            where: {
+              revokedAt: null,
+              status: { in: ['SENT', 'IN_PROGRESS', 'COMPLETED'] },
+            },
             orderBy: { createdAt: 'desc' },
             select: {
               id: true,

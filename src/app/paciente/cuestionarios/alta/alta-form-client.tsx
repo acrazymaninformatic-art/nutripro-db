@@ -9,7 +9,12 @@ import { Textarea } from '@/components/ui/textarea'
 import { Badge } from '@/components/ui/badge'
 import { Activity, AlertTriangle, ArrowLeft, ArrowRight, Baby, Check, CheckCircle2, HeartPulse, Loader2, Moon, Paperclip, Stethoscope, Target, Upload, User, X } from 'lucide-react'
 import Link from 'next/link'
-import { submitPortalAnamnesisAction, saveQuestionnaireDraftAction } from '../../actions'
+import {
+  submitPortalAnamnesisAction,
+  savePortalAnamnesisDraftAction,
+  uploadQuestionnaireAttachmentAction,
+  deleteQuestionnaireAttachmentAction,
+} from '../../actions'
 
 interface Props {
   patient: {
@@ -25,9 +30,10 @@ interface Props {
     foodAversions?: string | null
     shortTermGoal?: string | null
   }
+  initialDraft?: Record<string, any> | null
 }
 
-export function AltaFormClient({ patient }: Props) {
+export function AltaFormClient({ patient, initialDraft = null }: Props) {
   const isFemale = patient.sex === 'FEMALE'
   // Si no es mujer, el paso 6 (salud femenina) se oculta según la especificación 5.4
   const stepsList = isFemale
@@ -61,58 +67,131 @@ export function AltaFormClient({ patient }: Props) {
   const [isBreastfeeding, setIsBreastfeeding] = useState(false)
 
   // Attachments state (5.4: analíticas PDF o fotos)
-  const [attachments, setAttachments] = useState<Array<{ name: string; url: string; type: string }>>([])
+  const [attachments, setAttachments] = useState<
+    Array<{ id: string; name: string; url: string; type: string }>
+  >([])
   const [uploadName, setUploadName] = useState('')
-  const [uploadUrl, setUploadUrl] = useState('')
+  const [uploadFile, setUploadFile] = useState<File | null>(null)
   const [uploadType, setUploadType] = useState('ANALYSIS_PDF')
   const [showAttachModal, setShowAttachModal] = useState(false)
+  const [uploading, setUploading] = useState(false)
 
   // Autosave state (5.4)
   const [lastAutoSave, setLastAutoSave] = useState<string | null>(null)
   const formRef = useRef<HTMLFormElement>(null)
 
-  // Autoguardado en borrador cada 30 segundos si hay cambios
+  // Restaura el borrador guardado en el servidor y purga cualquier clave
+  // clínica antigua que hubiera quedado en localStorage.
   useEffect(() => {
-    const timer = setInterval(() => {
-      if (formRef.current && !isSubmitted) {
-        const fd = new FormData(formRef.current)
-        const entries: Record<string, any> = {}
-        fd.forEach((val, key) => {
-          entries[key] = val
-        })
-        entries.isGLP1Treatment = isGLP1
-        entries.pregnant = isPregnant
-        entries.breastfeeding = isBreastfeeding
-        entries.attachments = attachments
+    try {
+      localStorage.removeItem('evsoftware_anamnesis_draft')
+    } catch {
+      // localStorage puede estar bloqueado.
+    }
+    if (!initialDraft || !formRef.current) return
 
-        // Guardar borrador en localStorage como fallback inmediato
-        try {
-          localStorage.setItem(`evsoftware_anamnesis_draft`, JSON.stringify(entries))
-          setLastAutoSave(new Date().toLocaleTimeString('es-ES', { hour: '2-digit', minute: '2-digit' }))
-        } catch (e) {}
+    const form = formRef.current
+    Object.entries(initialDraft).forEach(([key, value]) => {
+      if (key === 'attachments' || value === undefined || value === null) return
+      const element = form.elements.namedItem(key)
+      if (!element) return
+      if (element instanceof RadioNodeList) {
+        Array.from(element).forEach((radio) => {
+          if (radio instanceof HTMLInputElement) radio.checked = radio.value === String(value)
+        })
+        return
+      }
+      if (
+        element instanceof HTMLInputElement ||
+        element instanceof HTMLTextAreaElement ||
+        element instanceof HTMLSelectElement
+      ) {
+        if (element instanceof HTMLInputElement && (element.type === 'checkbox' || element.type === 'radio')) {
+          element.checked = element.value === String(value) || value === true
+        } else {
+          element.value = String(value)
+        }
+      }
+    })
+    setIsGLP1(Boolean(initialDraft.isGLP1Treatment))
+    setIsPregnant(Boolean(initialDraft.pregnant))
+    setIsBreastfeeding(Boolean(initialDraft.breastfeeding))
+    if (Array.isArray(initialDraft.attachments)) {
+      setAttachments(
+        initialDraft.attachments.filter(
+          (attachment: any) =>
+            attachment && typeof attachment.id === 'string' && typeof attachment.name === 'string'
+        )
+      )
+    }
+  }, [initialDraft])
+
+  // Autoguardado en servidor cada 25 segundos. Nunca se escriben datos
+  // clínicos en localStorage.
+  useEffect(() => {
+    const timer = setInterval(async () => {
+      if (!formRef.current || isSubmitted) return
+      const fd = new FormData(formRef.current)
+      const entries: Record<string, any> = {}
+      fd.forEach((val, key) => {
+        entries[key] = val
+      })
+      entries.isGLP1Treatment = isGLP1
+      entries.pregnant = isPregnant
+      entries.breastfeeding = isBreastfeeding
+      entries.attachments = attachments
+
+      try {
+        const result = await savePortalAnamnesisDraftAction(entries)
+        if (result.savedAt) {
+          setLastAutoSave(
+            new Date(result.savedAt).toLocaleTimeString('es-ES', { hour: '2-digit', minute: '2-digit' })
+          )
+        }
+      } catch {
+        // El autoguardado no debe interrumpir el formulario; se reintentará.
       }
     }, 25000)
 
     return () => clearInterval(timer)
   }, [isGLP1, isPregnant, isBreastfeeding, attachments, isSubmitted])
 
-  const handleAddAttachment = () => {
-    if (!uploadName.trim()) return
-    setAttachments((prev) => [
-      ...prev,
-      {
-        name: uploadName.trim(),
-        url: uploadUrl.trim() || 'data:application/pdf;base64,sample',
-        type: uploadType,
-      },
-    ])
-    setUploadName('')
-    setUploadUrl('')
-    setShowAttachModal(false)
+  const handleAddAttachment = async () => {
+    if (!uploadFile) {
+      setError('Selecciona un archivo PDF, JPG, PNG, WEBP, HEIC, DOC o DOCX.')
+      return
+    }
+    setUploading(true)
+    setError(null)
+    try {
+      const formData = new FormData()
+      formData.set('file', uploadFile)
+      formData.set('type', uploadType)
+      formData.set('title', uploadName.trim())
+      const uploaded = await uploadQuestionnaireAttachmentAction(formData)
+      setAttachments((prev) => [
+        ...prev,
+        { id: uploaded.id, name: uploaded.name, url: uploaded.url, type: uploaded.type },
+      ])
+      setUploadName('')
+      setUploadFile(null)
+      setShowAttachModal(false)
+    } catch (err: any) {
+      setError(err?.message || 'No se pudo subir el archivo al almacenamiento privado.')
+    } finally {
+      setUploading(false)
+    }
   }
 
-  const handleRemoveAttachment = (index: number) => {
-    setAttachments((prev) => prev.filter((_, i) => i !== index))
+  const handleRemoveAttachment = async (index: number) => {
+    const attachment = attachments[index]
+    if (!attachment) return
+    try {
+      await deleteQuestionnaireAttachmentAction(attachment.id)
+      setAttachments((prev) => prev.filter((_, i) => i !== index))
+    } catch (err: any) {
+      setError(err?.message || 'No se pudo eliminar el adjunto.')
+    }
   }
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
@@ -193,13 +272,9 @@ export function AltaFormClient({ patient }: Props) {
         dietDuration: formData.get('dietDuration') as string,
         additionalNotes: formData.get('additionalNotes') as string,
 
-        // Adjuntos
-        attachments,
+        // Adjuntos privados ya registrados en el expediente
+        attachments: attachments.map((attachment) => ({ id: attachment.id, name: attachment.name, url: '', type: attachment.type })),
       })
-
-      try {
-        localStorage.removeItem('evsoftware_anamnesis_draft')
-      } catch (e) {}
 
       setIsSubmitted(true)
     } catch (err: any) {
@@ -880,14 +955,26 @@ export function AltaFormClient({ patient }: Props) {
       {showAttachModal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4">
           <div className="bg-white rounded-3xl p-6 max-w-sm w-full space-y-4 shadow-xl">
-            <h4 className="text-sm font-bold text-gray-900">Adjuntar Analítica o Informe (PDF / Foto)</h4>
+            <h4 className="text-sm font-bold text-gray-900">Adjuntar analítica o informe (PDF / Foto)</h4>
             <div className="space-y-3 text-xs">
               <div>
-                <Label className="text-xs font-bold">Nombre descriptivo del documento</Label>
+                <Label className="text-xs font-bold">Archivo (máx. 15 MB)</Label>
+                <Input
+                  type="file"
+                  accept=".pdf,.jpg,.jpeg,.png,.webp,.heic,.heif,.txt,.doc,.docx"
+                  onChange={(event) => setUploadFile(event.target.files?.[0] || null)}
+                  className="rounded-xl mt-1 text-xs file:text-xs"
+                />
+                <p className="mt-1 text-2xs text-gray-500">
+                  El archivo se guarda en almacenamiento privado. No se admiten enlaces externos.
+                </p>
+              </div>
+              <div>
+                <Label className="text-xs font-bold">Nombre descriptivo del documento (opcional)</Label>
                 <Input
                   value={uploadName}
                   onChange={(e) => setUploadName(e.target.value)}
-                  placeholder="Ej: Analítica sangre septiembre 2026.pdf"
+                  placeholder="Ej: Analítica sangre septiembre 2026"
                   className="rounded-xl mt-1 text-xs"
                 />
               </div>
@@ -906,11 +993,25 @@ export function AltaFormClient({ patient }: Props) {
               </div>
             </div>
             <div className="flex items-center justify-end gap-2 pt-2">
-              <Button size="sm" variant="ghost" onClick={() => setShowAttachModal(false)} className="rounded-xl text-xs">
+              <Button
+                type="button"
+                size="sm"
+                variant="ghost"
+                onClick={() => setShowAttachModal(false)}
+                className="rounded-xl text-xs"
+                disabled={uploading}
+              >
                 Cancelar
               </Button>
-              <Button size="sm" onClick={handleAddAttachment} className="rounded-xl bg-blue-600 text-white text-xs font-bold">
-                Añadir al formulario
+              <Button
+                type="button"
+                size="sm"
+                onClick={handleAddAttachment}
+                disabled={uploading || !uploadFile}
+                className="rounded-xl bg-blue-600 text-white text-xs font-bold gap-1.5"
+              >
+                {uploading && <Loader2 className="w-3.5 h-3.5 animate-spin" />}
+                {uploading ? 'Subiendo...' : 'Subir al expediente'}
               </Button>
             </div>
           </div>

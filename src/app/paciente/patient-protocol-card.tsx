@@ -9,8 +9,16 @@ import { CLINICAL_PROTOCOLS } from '@/lib/clinical/protocols/protocols-registry'
 import { addSymptomLogAction } from '@/lib/clinical/protocols/protocol-actions'
 import { ModalPortal } from '@/components/ui/modal-portal'
 
+interface PatientProtocol {
+  id: string
+  type: string
+  currentPhase?: string | null
+  title: string
+  symptomLogJson?: string | null
+}
+
 interface PatientProtocolCardProps {
-  protocol: any
+  protocol: PatientProtocol
 }
 
 export function PatientProtocolCard({ protocol }: PatientProtocolCardProps) {
@@ -132,13 +140,6 @@ export function PatientProtocolCard({ protocol }: PatientProtocolCardProps) {
             {def.summary}
           </p>
         ) : null}
-
-        {protocol.notes && (
-          <div className="text-xs bg-amber-50/60 p-3 rounded-2xl border border-amber-100 text-amber-950">
-            <span className="font-bold block mb-0.5">Indicaciones de Eva Vidal:</span>
-            <span>{protocol.notes}</span>
-          </div>
-        )}
 
         {/* Recent logs */}
         {symptomLogs.length > 0 && (

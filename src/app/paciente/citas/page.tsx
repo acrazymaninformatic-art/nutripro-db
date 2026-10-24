@@ -7,11 +7,7 @@ export const dynamic = 'force-dynamic'
 export default async function PacienteCitasPage() {
   const { patientId: authPatientId, isAdminPreview } = await requirePatient()
 
-  let patientId = authPatientId
-  if (!patientId && isAdminPreview) {
-    const firstPatient = await prisma.patient.findFirst({ select: { id: true } })
-    patientId = firstPatient?.id || null
-  }
+  const patientId = authPatientId
 
   const [appointments, requests] = await Promise.all([
     patientId
@@ -27,7 +23,8 @@ export default async function PacienteCitasPage() {
             typeColor: true,
             status: true,
             location: true,
-            notes: true,
+            // Las notas de la cita son internas de la consulta. El paciente
+            // conserva sus propias notas en AppointmentRequest.patientNotes.
             meetUrl: true,
           },
         })

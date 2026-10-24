@@ -21,7 +21,7 @@ export async function getNotificationsAction(role: 'ADMIN' | 'PATIENT'): Promise
 
     // 1. Solicitudes de cita pendientes de aprobación
     const pendingAppointments = await prisma.appointmentRequest.findMany({
-      where: { status: 'PENDING' },
+      where: { status: 'PENDING', patient: { userId: admin.id } },
       include: {
         patient: {
           select: { id: true, firstName: true, lastName: true },
@@ -48,6 +48,7 @@ export async function getNotificationsAction(role: 'ADMIN' | 'PATIENT'): Promise
       where: {
         status: 'COMPLETED',
         pendingFieldsCount: { gt: 0 },
+        patient: { userId: admin.id },
       },
       include: {
         patient: {

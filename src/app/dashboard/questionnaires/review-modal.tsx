@@ -22,6 +22,13 @@ import {
   reopenQuestionnaireAction,
 } from './actions'
 import { INTAKE_STEPS, type IntakeFieldDefinition } from '@/lib/clinical/intake-catalog'
+import { isPrivateStorageKey, privateFileHref } from '@/lib/storage/private-file-url'
+
+function attachmentHref(url: string): string | null {
+  // Los adjuntos clínicos solo se sirven desde el almacenamiento privado.
+  // Una URL externa antigua no se enlaza para no eludir el control de acceso.
+  return isPrivateStorageKey(url) ? privateFileHref(url) : null
+}
 
 interface Props {
   patientId: string
@@ -539,22 +546,35 @@ export function QuestionnaireReviewModal({
                   <span>Documentos y Analíticas Adjuntadas por el Paciente ({attachments.length})</span>
                 </h4>
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                  {attachments.map((att, idx) => (
-                    <div key={idx} className="p-3 rounded-2xl bg-gray-50 border border-gray-200 flex items-center justify-between gap-3 text-xs">
-                      <div className="truncate">
-                        <p className="font-bold text-gray-900 truncate">{att.name}</p>
-                        <p className="text-2xs text-gray-500 uppercase">{att.type}</p>
+                  {attachments.map((att, idx) => {
+                    const href = attachmentHref(att.url)
+                    return (
+                      <div key={idx} className="p-3 rounded-2xl bg-gray-50 border border-gray-200 flex items-center justify-between gap-3 text-xs">
+                        <div className="truncate">
+                          <p className="font-bold text-gray-900 truncate">{att.name}</p>
+                          <p className="text-2xs text-gray-500 uppercase">{att.type}</p>
+                        </div>
+                        {href ? (
+                          <a
+                            href={href}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="p-2 rounded-xl bg-white border border-gray-200 text-blue-600 hover:bg-blue-50 shrink-0"
+                            aria-label={`Abrir ${att.name}`}
+                          >
+                            <Download className="w-4 h-4" />
+                          </a>
+                        ) : (
+                          <span
+                            className="p-2 rounded-xl bg-gray-100 border border-gray-200 text-gray-400 shrink-0"
+                            title="Archivo no disponible"
+                          >
+                            <Download className="w-4 h-4" />
+                          </span>
+                        )}
                       </div>
-                      <a
-                        href={att.url}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="p-2 rounded-xl bg-white border border-gray-200 text-blue-600 hover:bg-blue-50 shrink-0"
-                      >
-                        <Download className="w-4 h-4" />
-                      </a>
-                    </div>
-                  ))}
+                    )
+                  })}
                 </div>
               </div>
             )}

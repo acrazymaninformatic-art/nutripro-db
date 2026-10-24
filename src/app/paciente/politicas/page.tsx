@@ -11,7 +11,10 @@ import { LEGAL_POLICY_VERSION, REQUIRED_PORTAL_CONSENTS } from '@/lib/legal'
 export const dynamic = 'force-dynamic'
 
 export default async function PoliticasPage() {
-  const { patientId, isAdminPreview } = await requirePatient()
+  const { patientId, isAdminPreview } = await requirePatient({
+    allowPendingConsent: true,
+    allowPasswordChangePending: true,
+  })
   let hasAcceptedCurrentVersion = false
 
   if (patientId) {
@@ -21,7 +24,7 @@ export default async function PoliticasPage() {
         select: { consentAcceptedAt: true, consentPolicyVersion: true },
       }),
       prisma.patientConsent.findMany({
-        where: { patientId, type: { in: REQUIRED_PORTAL_CONSENTS.map((consent) => consent.type) }, version: LEGAL_POLICY_VERSION, accepted: true, revokedAt: null },
+        where: { patientId, type: { in: REQUIRED_PORTAL_CONSENTS.map((consent) => consent.type) }, version: LEGAL_POLICY_VERSION, accepted: true, revokedAt: null, status: 'COMPLETED' },
         select: { type: true },
       }),
     ])
@@ -58,14 +61,21 @@ export default async function PoliticasPage() {
               <div><h4 className="font-bold text-slate-900 text-sm mb-1.5 flex items-center gap-2"><FileText className="w-4 h-4 text-blue-600" />4. Cookies técnicas</h4><p>Solo se utilizan cookies necesarias para la sesión segura y la vista previa profesional. No se usan cookies publicitarias ni analítica de perfiles.</p><Link className="mt-1 inline-flex items-center gap-1 font-bold text-blue-700 underline" href="/cookies" target="_blank">Leer política de cookies <ExternalLink className="h-3 w-3" /></Link></div>
             </div>
 
-            <form action={acceptPatientPoliciesAction} className="space-y-3">
-              <label className="flex items-start gap-3 rounded-2xl border border-slate-200 bg-white p-3.5 text-xs leading-5 text-slate-700"><input name="privacyNoticeAccepted" type="checkbox" required className="mt-0.5 h-4 w-4 accent-blue-600" /><span>He leído la <strong>información de privacidad</strong> y sé cómo ejercer mis derechos. *</span></label>
-              <label className="flex items-start gap-3 rounded-2xl border border-slate-200 bg-white p-3.5 text-xs leading-5 text-slate-700"><input name="portalTermsAccepted" type="checkbox" required className="mt-0.5 h-4 w-4 accent-blue-600" /><span>Acepto las <strong>condiciones de uso del portal</strong> y entiendo que no es un servicio de urgencias. *</span></label>
-              <label className="flex items-start gap-3 rounded-2xl border border-slate-200 bg-white p-3.5 text-xs leading-5 text-slate-700"><input name="healthDataConsentAccepted" type="checkbox" required className="mt-0.5 h-4 w-4 accent-blue-600" /><span>Confirmo que he recibido la información sobre el <strong>tratamiento de mis datos de salud</strong> para la atención nutricional. *</span></label>
+            {isAdminPreview ? (
+              <div className="rounded-2xl border border-amber-200 bg-amber-50 p-4 text-xs leading-5 text-amber-900 flex items-start gap-3">
+                <Lock className="w-4 h-4 text-amber-700 mt-0.5 shrink-0" />
+                <span>Vista previa de solo lectura. La aceptación de políticas está deshabilitada.</span>
+              </div>
+            ) : (
+              <form action={acceptPatientPoliciesAction} className="space-y-3">
+                <label className="flex items-start gap-3 rounded-2xl border border-slate-200 bg-white p-3.5 text-xs leading-5 text-slate-700"><input name="privacyNoticeAccepted" type="checkbox" required className="mt-0.5 h-4 w-4 accent-blue-600" /><span>He leído la <strong>información de privacidad</strong> y sé cómo ejercer mis derechos. *</span></label>
+                <label className="flex items-start gap-3 rounded-2xl border border-slate-200 bg-white p-3.5 text-xs leading-5 text-slate-700"><input name="portalTermsAccepted" type="checkbox" required className="mt-0.5 h-4 w-4 accent-blue-600" /><span>Acepto las <strong>condiciones de uso del portal</strong> y entiendo que no es un servicio de urgencias. *</span></label>
+                <label className="flex items-start gap-3 rounded-2xl border border-slate-200 bg-white p-3.5 text-xs leading-5 text-slate-700"><input name="healthDataConsentAccepted" type="checkbox" required className="mt-0.5 h-4 w-4 accent-blue-600" /><span>Confirmo que he recibido la información sobre el <strong>tratamiento de mis datos de salud</strong> para la atención nutricional. *</span></label>
 
-              <div className="p-3.5 bg-blue-50/70 border border-blue-200/80 rounded-2xl text-xs text-blue-950 flex items-start gap-3"><CheckCircle2 className="w-4 h-4 text-blue-600 mt-0.5 shrink-0" /><span>La aceptación quedará registrada con la versión {LEGAL_POLICY_VERSION}, fecha y datos técnicos mínimos para demostrar la trazabilidad. No implica aceptar comunicaciones comerciales.</span></div>
-              <Button type="submit" className="w-full h-12 rounded-2xl bg-blue-600 hover:bg-blue-700 text-white font-bold text-sm shadow-md shadow-blue-700/20 transition-all flex items-center justify-center gap-2 active:scale-[0.98]"><CheckCircle2 className="w-5 h-5" /><span>Aceptar y entrar al portal</span></Button>
-            </form>
+                <div className="p-3.5 bg-blue-50/70 border border-blue-200/80 rounded-2xl text-xs text-blue-950 flex items-start gap-3"><CheckCircle2 className="w-4 h-4 text-blue-600 mt-0.5 shrink-0" /><span>La aceptación quedará registrada con la versión {LEGAL_POLICY_VERSION}, fecha y datos técnicos mínimos para demostrar la trazabilidad. No implica aceptar comunicaciones comerciales.</span></div>
+                <Button type="submit" className="w-full h-12 rounded-2xl bg-blue-600 hover:bg-blue-700 text-white font-bold text-sm shadow-md shadow-blue-700/20 transition-all flex items-center justify-center gap-2 active:scale-[0.98]"><CheckCircle2 className="w-5 h-5" /><span>Aceptar y entrar al portal</span></Button>
+              </form>
+            )}
           </CardContent>
         </Card>
       </div>

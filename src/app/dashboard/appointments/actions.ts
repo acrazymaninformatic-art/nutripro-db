@@ -14,6 +14,46 @@ import { createSecureLinkToken } from '@/lib/secure-link-token'
 import { getPublicAppUrl } from '@/lib/password-reset-token'
 import { APPOINTMENT_TYPE_CONFIG } from '@/types'
 
+const APPOINTMENT_STATUS_VALUES = new Set(['CONFIRMED', 'COMPLETED', 'CANCELLED'])
+const APPOINTMENT_TYPE_VALUES = new Set(Object.keys(APPOINTMENT_TYPE_CONFIG))
+const AGENDA_BLOCK_REASONS = new Set(['VACACIONES', 'FORMACION', 'FESTIVO', 'PERSONAL', 'OTRO'])
+const BOOKABLE_PATIENT_FILTER = {
+  isActive: true,
+  isHardDeleted: false,
+  consentRevokedAt: null,
+} as const
+
+function optionalText(value: unknown, maxLength: number): string | null {
+  if (typeof value !== 'string') return null
+  const trimmed = value.trim()
+  return trimmed ? trimmed.slice(0, maxLength) : null
+}
+
+function requiredText(value: unknown, label: string, maxLength: number): string {
+  const trimmed = typeof value === 'string' ? value.trim() : ''
+  if (!trimmed) throw new Error(`${label} es obligatorio.`)
+  if (trimmed.length > maxLength) throw new Error(`${label} no puede superar ${maxLength} caracteres.`)
+  return trimmed
+}
+
+async function claimReminder(appointmentId: string): Promise<boolean> {
+  const claimed = await prisma.appointment.updateMany({
+    where: { id: appointmentId, status: 'CONFIRMED', reminderSent: false },
+    data: { reminderSent: true, reminderSentAt: new Date() },
+  })
+  return claimed.count === 1
+}
+
+async function releaseReminder(appointmentId: string): Promise<void> {
+  try {
+    await prisma.appointment.updateMany({
+      where: { id: appointmentId, status: 'CONFIRMED' },
+      data: { reminderSent: false, reminderSentAt: null },
+    })
+  } catch (error) {
+    console.error('No se pudo liberar el recordatorio para reintentarlo:', error)
+  }
+}
 
 export interface CreateAppointmentInput {
   patientId: string
@@ -57,46 +97,102 @@ export async function getPatientAppointments(patientId: string) {
 
 export async function createAppointment(input: CreateAppointmentInput) {
   const userId = await requireUserId()
-  const patient = await prisma.patient.findFirst({ where: { id: input.patientId, userId } })
+  if (!input || typeof input !== 'object') {
+    throw new Error('Los datos de la cita no son válidos.')
+  }
+  if (typeof input.patientId !== 'string' || !input.patientId) {
+    throw new Error('Paciente no encontrado.')
+  }
+
+  const patient = await prisma.patient.findFirst({
+    where: {
+      id: input.patientId,
+      userId,
+      ...BOOKABLE_PATIENT_FILTER,
+    },
+  })
 
   if (!patient) {
-    throw new Error('Paciente no encontrado')
+    throw new Error('Paciente no encontrado o sin consentimiento vigente para agendar una cita.')
+  }
+
+  if (input.appointmentType !== undefined && !APPOINTMENT_TYPE_VALUES.has(input.appointmentType)) {
+    throw new Error('El tipo de cita no es válido.')
+  }
+  if (input.modality !== undefined && input.modality !== 'ONLINE' && input.modality !== 'PRESENCIAL') {
+    throw new Error('La modalidad de la cita no es válida.')
+  }
+  if (typeof input.date !== 'string' || !input.date.trim()) {
+    throw new Error('La fecha de la cita no es válida.')
+  }
+  if (input.sendEmailNotification !== undefined && typeof input.sendEmailNotification !== 'boolean') {
+    throw new Error('El indicador de envío de correo no es válido.')
   }
 
   const appointmentDate = new Date(input.date)
   const appointmentType = input.appointmentType || (input.modality === 'ONLINE' ? 'ONLINE' : 'REVISION')
   const typeConfig = APPOINTMENT_TYPE_CONFIG[appointmentType] || APPOINTMENT_TYPE_CONFIG.REVISION
-  const durationMin = input.durationMin || typeConfig.durationMin
+  const durationMin = input.durationMin ?? typeConfig.durationMin
+  if (!Number.isInteger(durationMin) || durationMin < 15 || durationMin > 240) {
+    throw new Error('La duración debe estar entre 15 y 240 minutos.')
+  }
   const modality = input.modality || (appointmentType === 'ONLINE' ? 'ONLINE' : 'PRESENCIAL')
-  const typeColor = input.typeColor || typeConfig.color
+  const typeColor = optionalText(input.typeColor, 40) || typeConfig.color
+  const notes = optionalText(input.notes, 5_000)
+  const location =
+    optionalText(input.location, 200) ||
+    (modality === 'ONLINE' ? 'Videollamada Google Meet' : 'Consulta Nutricional Eva Vidal')
 
-  // 5.5 Videollamada en las citas online: enlace válido de Google Meet
+  // 5.5 Videollamada en las citas online: solo se aceptan enlaces HTTPS de
+  // Google Meet. Un enlace arbitrario podría convertir la cita en un vector
+  // de phishing para el paciente.
+  const requestedMeetUrl = optionalText(input.meetUrl, 500)
+  if (requestedMeetUrl) {
+    let parsed: URL
+    try {
+      parsed = new URL(requestedMeetUrl)
+    } catch {
+      throw new Error('El enlace de la videollamada no es válido.')
+    }
+    if (parsed.protocol !== 'https:' || parsed.hostname !== 'meet.google.com') {
+      throw new Error('El enlace de la videollamada debe ser de Google Meet.')
+    }
+  }
   const meetUrl = modality === 'ONLINE'
-    ? (input.meetUrl?.trim() || process.env.GOOGLE_MEET_URL || process.env.NEXT_PUBLIC_GOOGLE_MEET_URL || 'https://meet.google.com/new')
+    ? (requestedMeetUrl || process.env.GOOGLE_MEET_URL || process.env.NEXT_PUBLIC_GOOGLE_MEET_URL || 'https://meet.google.com/new')
     : null
 
-  const location = input.location || (modality === 'ONLINE' ? 'Videollamada Google Meet' : 'Consulta Nutricional Eva Vidal')
   const reschedule = createSecureLinkToken(30 * 24 * 60 * 60 * 1000)
 
   const appointment = await prisma.$transaction(async (tx) => {
     await tx.$executeRaw`SELECT pg_advisory_xact_lock(hashtext(${`appointments:${userId}`}))`
     await ensureAppointmentSlotAvailable({ userId, start: appointmentDate, durationMin, client: tx })
-    return tx.appointment.create({
+    const created = await tx.appointment.create({
       data: {
-        patientId: input.patientId,
+        patientId: patient.id,
         date: appointmentDate,
         durationMin,
         modality,
         appointmentType,
         typeColor,
         meetUrl,
-        notes: input.notes || null,
+        notes,
         location,
         rescheduleTokenHash: reschedule.hash,
         rescheduleTokenExpiresAt: reschedule.expiresAt,
         status: 'CONFIRMED',
       },
     })
+    await tx.auditLog.create({
+      data: {
+        userId,
+        patientId: patient.id,
+        action: 'APPOINTMENT_CREATED',
+        entityType: 'Appointment',
+        entityId: created.id,
+      },
+    })
+    return created
   })
 
   if (input.sendEmailNotification && patient.email) {
@@ -106,7 +202,8 @@ export async function createAppointment(input: CreateAppointmentInput) {
       appointmentDate,
       durationMin,
       modality,
-      notes: input.notes,
+      // Las notas de la cita son internas: nunca se incluyen en el correo
+      // ni en el evento de calendario que recibe el paciente.
       location,
       professionalName: 'Eva Vidal',
       clinicName: 'Consulta Nutricional Eva Vidal',
@@ -120,16 +217,6 @@ export async function createAppointment(input: CreateAppointmentInput) {
     }
   }
 
-  await prisma.auditLog.create({
-    data: {
-      userId,
-      patientId: patient.id,
-      action: 'APPOINTMENT_CREATED',
-      entityType: 'Appointment',
-      entityId: appointment.id,
-    },
-  })
-
   revalidatePath('/dashboard/appointments')
   revalidatePath(`/dashboard/patients/${input.patientId}`)
   revalidatePath('/paciente/citas')
@@ -138,16 +225,32 @@ export async function createAppointment(input: CreateAppointmentInput) {
 
 export async function updateAppointmentStatus(id: string, status: 'CONFIRMED' | 'COMPLETED' | 'CANCELLED') {
   const userId = await requireUserId()
+  if (!APPOINTMENT_STATUS_VALUES.has(status)) {
+    throw new Error('El estado de la cita no es válido.')
+  }
   const existing = await prisma.appointment.findFirst({
     where: { id, patient: { userId } },
-    select: { id: true, date: true, durationMin: true },
+    select: { id: true, patientId: true, date: true, durationMin: true, status: true },
   })
 
   if (!existing) throw new Error('Cita no encontrada.')
 
-  const updated = await prisma.appointment.update({
-    where: { id },
-    data: { status },
+  const updated = await prisma.$transaction(async (tx) => {
+    const appointment = await tx.appointment.update({
+      where: { id },
+      data: { status },
+    })
+    await tx.auditLog.create({
+      data: {
+        userId,
+        patientId: existing.patientId,
+        action: 'APPOINTMENT_STATUS_CHANGED',
+        entityType: 'Appointment',
+        entityId: id,
+        details: `Estado cambiado de ${existing.status} a ${status}.`,
+      },
+    })
+    return appointment
   })
 
   // 5.5 Lista de espera: al cancelarse una cita, le sale quién esperaba para ofrecérselo
@@ -176,18 +279,44 @@ export async function updateAppointmentStatus(id: string, status: 'CONFIRMED' | 
 
 export async function deleteAppointment(id: string) {
   const userId = await requireUserId()
-  if (!await prisma.appointment.findFirst({ where: { id, patient: { userId } }, select: { id: true } })) throw new Error('Cita no encontrada.')
-  const deleted = await prisma.appointment.delete({
-    where: { id },
+  const existing = await prisma.appointment.findFirst({
+    where: { id, patient: { userId } },
+    select: { id: true, patientId: true },
+  })
+  if (!existing) throw new Error('Cita no encontrada.')
+
+  const deleted = await prisma.$transaction(async (tx) => {
+    const appointment = await tx.appointment.delete({ where: { id } })
+    await tx.auditLog.create({
+      data: {
+        userId,
+        patientId: existing.patientId,
+        action: 'APPOINTMENT_DELETED',
+        entityType: 'Appointment',
+        entityId: id,
+        details: 'Cita eliminada manualmente desde la agenda.',
+      },
+    })
+    return appointment
   })
   revalidatePath('/dashboard/appointments')
+  revalidatePath(`/dashboard/patients/${existing.patientId}`)
   return deleted
 }
 
 export async function resendAppointmentEmail(id: string) {
   const userId = await requireUserId()
   const appointment = await prisma.appointment.findFirst({
-    where: { id, patient: { userId } },
+    where: {
+      id,
+      status: 'CONFIRMED',
+      date: { gt: new Date() },
+      patient: {
+        userId,
+        email: { not: null },
+        ...BOOKABLE_PATIENT_FILTER,
+      },
+    },
     include: { patient: true },
   })
 
@@ -203,19 +332,29 @@ export async function resendAppointmentEmail(id: string) {
     appointmentDate: appointment.date,
     durationMin: appointment.durationMin,
     modality: appointment.modality,
-    notes: appointment.notes || '',
     location: appointment.location || '',
     rescheduleUrl: `${getPublicAppUrl()}/reschedule?token=${encodeURIComponent(reschedule.token)}`,
   })
 
   if (res.success) {
-    await prisma.appointment.update({
-      where: { id },
-      data: {
-        emailSent: true,
-        emailSentAt: new Date(),
-      },
-    })
+    await prisma.$transaction([
+      prisma.appointment.update({
+        where: { id },
+        data: {
+          emailSent: true,
+          emailSentAt: new Date(),
+        },
+      }),
+      prisma.auditLog.create({
+        data: {
+          userId,
+          patientId: appointment.patientId,
+          action: 'APPOINTMENT_EMAIL_RESENT',
+          entityType: 'Appointment',
+          entityId: id,
+        },
+      }),
+    ])
   }
 
   revalidatePath('/dashboard/appointments')
@@ -225,7 +364,16 @@ export async function resendAppointmentEmail(id: string) {
 export async function sendAppointmentReminder(id: string) {
   const userId = await requireUserId()
   const appointment = await prisma.appointment.findFirst({
-    where: { id, patient: { userId } },
+    where: {
+      id,
+      status: 'CONFIRMED',
+      date: { gt: new Date() },
+      patient: {
+        userId,
+        email: { not: null },
+        ...BOOKABLE_PATIENT_FILTER,
+      },
+    },
     include: { patient: true },
   })
 
@@ -239,20 +387,30 @@ export async function sendAppointmentReminder(id: string) {
     appointmentDate: appointment.date,
     durationMin: appointment.durationMin,
     modality: appointment.modality,
-    notes: appointment.notes || '',
     location: appointment.location || '',
     professionalName: 'Eva Vidal',
     clinicName: 'Consulta Nutricional Eva Vidal',
   })
 
   if (res.success) {
-    await prisma.appointment.update({
-      where: { id },
-      data: {
-        reminderSent: true,
-        reminderSentAt: new Date(),
-      },
-    })
+    await prisma.$transaction([
+      prisma.appointment.update({
+        where: { id },
+        data: {
+          reminderSent: true,
+          reminderSentAt: new Date(),
+        },
+      }),
+      prisma.auditLog.create({
+        data: {
+          userId,
+          patientId: appointment.patientId,
+          action: 'APPOINTMENT_REMINDER_SENT',
+          entityType: 'Appointment',
+          entityId: id,
+        },
+      }),
+    ])
   }
 
   revalidatePath('/dashboard/appointments')
@@ -281,6 +439,7 @@ export async function sendUpcomingReminders24h() {
       patient: {
         ...(userId ? { userId } : {}),
         email: { not: null },
+        ...BOOKABLE_PATIENT_FILTER,
       },
     },
     include: {
@@ -293,30 +452,32 @@ export async function sendUpcomingReminders24h() {
 
   for (const app of upcomingAppointments) {
     if (!app.patient.email) continue
+    // Reclamar el envío de forma atómica evita duplicados si el cron y una
+    // carga del panel coinciden en el tiempo.
+    if (!(await claimReminder(app.id))) continue
 
-    const res = await sendAppointmentReminderEmail({
-      patientName: `${app.patient.firstName} ${app.patient.lastName}`,
-      patientEmail: app.patient.email,
-      appointmentDate: app.date,
-      durationMin: app.durationMin,
-      modality: app.modality,
-      notes: app.notes || '',
-      location: app.location || '',
-      professionalName: 'Eva Vidal',
-      clinicName: 'Consulta Nutricional Eva Vidal',
-    })
-
-    if (res.success) {
-      await prisma.appointment.update({
-        where: { id: app.id },
-        data: {
-          reminderSent: true,
-          reminderSentAt: new Date(),
-        },
+    try {
+      const res = await sendAppointmentReminderEmail({
+        patientName: `${app.patient.firstName} ${app.patient.lastName}`,
+        patientEmail: app.patient.email,
+        appointmentDate: app.date,
+        durationMin: app.durationMin,
+        modality: app.modality,
+        location: app.location || '',
+        professionalName: 'Eva Vidal',
+        clinicName: 'Consulta Nutricional Eva Vidal',
       })
-      sentCount++
-    } else {
-      errors.push(`Error en ${app.patient.firstName}: ${res.message}`)
+
+      if (res.success) {
+        sentCount++
+      } else {
+        await releaseReminder(app.id)
+        errors.push(`Error en ${app.patient.firstName}: ${res.message}`)
+      }
+    } catch (error) {
+      await releaseReminder(app.id)
+      errors.push(`Error en ${app.patient.firstName}: no se pudo enviar el recordatorio.`)
+      console.error(`Error sending reminder for appointment ${app.id}:`, error)
     }
   }
 
@@ -350,6 +511,7 @@ export async function autoProcessDueReminders() {
         patient: {
           userId,
           email: { not: null },
+          ...BOOKABLE_PATIENT_FILTER,
         },
       },
       include: {
@@ -362,6 +524,7 @@ export async function autoProcessDueReminders() {
     let sentCount = 0
     for (const app of dueAppointments) {
       if (!app.patient.email) continue
+      if (!(await claimReminder(app.id))) continue
 
       try {
         const res = await sendAppointmentReminderEmail({
@@ -370,23 +533,18 @@ export async function autoProcessDueReminders() {
           appointmentDate: app.date,
           durationMin: app.durationMin,
           modality: app.modality,
-          notes: app.notes || '',
           location: app.location || '',
           professionalName: 'Eva Vidal',
           clinicName: 'Consulta Nutricional Eva Vidal',
         })
 
         if (res.success) {
-          await prisma.appointment.update({
-            where: { id: app.id },
-            data: {
-              reminderSent: true,
-              reminderSentAt: new Date(),
-            },
-          })
           sentCount++
+        } else {
+          await releaseReminder(app.id)
         }
       } catch (e) {
+        await releaseReminder(app.id)
         console.error(`Error auto-sending reminder for appointment ${app.id}:`, e)
       }
     }
@@ -419,22 +577,33 @@ export async function createAgendaBlockAction(input: {
   notes?: string
 }) {
   const userId = await requireUserId()
+  if (!input || typeof input !== 'object') throw new Error('Los datos del bloqueo no son válidos.')
+  const title = requiredText(input.title, 'El título del bloqueo', 150)
   const start = new Date(input.startDateTime)
   const end = new Date(input.endDateTime)
-
+  if (Number.isNaN(start.getTime()) || Number.isNaN(end.getTime())) {
+    throw new Error('Las fechas del bloqueo no son válidas.')
+  }
   if (end <= start) {
     throw new Error('La fecha y hora de fin debe ser posterior al inicio.')
+  }
+  if (input.allDay !== undefined && typeof input.allDay !== 'boolean') {
+    throw new Error('El indicador de día completo no es válido.')
+  }
+  const reason = input.reason === undefined ? 'OTRO' : input.reason
+  if (!AGENDA_BLOCK_REASONS.has(reason)) {
+    throw new Error('El motivo del bloqueo no es válido.')
   }
 
   const block = await prisma.agendaBlock.create({
     data: {
       userId,
-      title: input.title,
-      reason: input.reason || 'OTRO',
+      title,
+      reason,
       startDateTime: start,
       endDateTime: end,
-      allDay: Boolean(input.allDay),
-      notes: input.notes || null,
+      allDay: input.allDay === true,
+      notes: optionalText(input.notes, 2_000),
     },
   })
 
@@ -463,6 +632,12 @@ export async function getSuggestedAvailableSlotsAction(
   daysAhead: number = 14
 ) {
   const userId = await requireUserId()
+  if (!Number.isInteger(durationMin) || durationMin < 15 || durationMin > 240) {
+    throw new Error('La duración debe estar entre 15 y 240 minutos.')
+  }
+  if (!Number.isInteger(daysAhead) || daysAhead < 1 || daysAhead > 60) {
+    throw new Error('El horizonte de búsqueda debe estar entre 1 y 60 días.')
+  }
   const now = new Date()
 
   // Franjas de consulta estándar de Eva:
@@ -614,73 +789,119 @@ export async function assignSlotToAppointmentRequestAction(
   adminNotes?: string
 ) {
   const userId = await requireUserId()
+  if (typeof requestId !== 'string' || !requestId) throw new Error('Solicitud de cita no encontrada.')
+
   const req = await prisma.appointmentRequest.findFirst({
-    where: { id: requestId, patient: { userId } },
+    where: {
+      id: requestId,
+      status: 'PENDING',
+      patient: { userId, ...BOOKABLE_PATIENT_FILTER },
+    },
     include: { patient: true, appointment: true },
   })
 
-  if (!req) throw new Error('Solicitud de cita no encontrada.')
+  if (!req) throw new Error('Solicitud de cita no encontrada o ya resuelta.')
 
   const targetDate = new Date(scheduledDateStr)
-  const duration = durationMin || 45
-  const modality = req.modality || 'ONLINE'
-  const typeConfig = APPOINTMENT_TYPE_CONFIG[req.appointmentType] || APPOINTMENT_TYPE_CONFIG.REVISION
-
-  // Generar Meet URL válido para cita online
-  const meetUrl = modality === 'ONLINE'
-    ? (req.appointment?.meetUrl && !req.appointment.meetUrl.includes('meet.google.com/evv-')
-        ? req.appointment.meetUrl
-        : (process.env.GOOGLE_MEET_URL || process.env.NEXT_PUBLIC_GOOGLE_MEET_URL || 'https://meet.google.com/new'))
-    : null
-
-  let appointmentId = req.appointmentId
-
-  if (appointmentId && req.appointment) {
-    // Actualizar cita existente (de solicitud inicial o cambio de fecha)
-    await prisma.appointment.update({
-      where: { id: appointmentId },
-      data: {
-        date: targetDate,
-        durationMin: duration,
-        status: 'CONFIRMED',
-        modality,
-        meetUrl,
-        typeColor: typeConfig.color,
-        notes: adminNotes ? `${req.appointment.notes || ''}\n[EVA]: ${adminNotes}`.trim() : req.appointment.notes,
-      },
-    })
-  } else {
-    // Crear cita nueva definitiva
-    const created = await prisma.appointment.create({
-      data: {
-        patientId: req.patientId,
-        date: targetDate,
-        durationMin: duration,
-        modality,
-        appointmentType: req.appointmentType,
-        typeColor: typeConfig.color,
-        meetUrl,
-        status: 'CONFIRMED',
-        notes: adminNotes || req.patientNotes || null,
-        location: modality === 'ONLINE' ? 'Videollamada Google Meet' : 'Consulta Nutricional Eva Vidal',
-      },
-    })
-    appointmentId = created.id
+  const duration = durationMin ?? 45
+  if (!Number.isInteger(duration) || duration < 15 || duration > 240) {
+    throw new Error('La duración debe estar entre 15 y 240 minutos.')
   }
+  const adminNote = optionalText(adminNotes, 2_000)
+  const modality: 'ONLINE' | 'PRESENCIAL' = req.modality === 'PRESENCIAL' ? 'PRESENCIAL' : 'ONLINE'
+  const requestedType = (
+    APPOINTMENT_TYPE_VALUES.has(req.appointmentType) ? req.appointmentType : 'REVISION'
+  ) as keyof typeof APPOINTMENT_TYPE_CONFIG
+  const typeConfig = APPOINTMENT_TYPE_CONFIG[requestedType]
+  const meetUrl = modality === 'ONLINE'
+    ? (process.env.GOOGLE_MEET_URL || process.env.NEXT_PUBLIC_GOOGLE_MEET_URL || 'https://meet.google.com/new')
+    : null
+  const location = modality === 'ONLINE' ? 'Videollamada Google Meet' : 'Consulta Nutricional Eva Vidal'
+  const reschedule = createSecureLinkToken(30 * 24 * 60 * 60 * 1000)
 
-  // Marcar solicitud como ACEPTADA
-  await prisma.appointmentRequest.update({
-    where: { id: requestId },
-    data: {
-      status: 'ACCEPTED',
-      resolvedAt: new Date(),
-      proposedDate: targetDate,
-      adminNotes: adminNotes || null,
-      appointmentId,
-    },
+  const appointmentId = await prisma.$transaction(async (tx) => {
+    await tx.$executeRaw`SELECT pg_advisory_xact_lock(hashtext(${`appointments:${userId}`}))`
+    await ensureAppointmentSlotAvailable({
+      userId,
+      start: targetDate,
+      durationMin: duration,
+      excludeAppointmentId: req.appointmentId || undefined,
+      client: tx,
+    })
+
+    let nextAppointmentId = req.appointmentId
+    if (nextAppointmentId && req.appointment) {
+      const updated = await tx.appointment.updateMany({
+        where: { id: nextAppointmentId, patientId: req.patientId },
+        data: {
+          date: targetDate,
+          durationMin: duration,
+          status: 'CONFIRMED',
+          modality,
+          appointmentType: requestedType,
+          meetUrl,
+          typeColor: typeConfig.color,
+          location,
+          reminderSent: false,
+          reminderSentAt: null,
+          rescheduleTokenHash: reschedule.hash,
+          rescheduleTokenExpiresAt: reschedule.expiresAt,
+          notes: adminNote
+            ? `${req.appointment.notes || ''}\n[EVA]: ${adminNote}`.trim()
+            : req.appointment.notes,
+        },
+      })
+      if (updated.count !== 1) {
+        throw new Error('La cita vinculada a la solicitud ya no está disponible.')
+      }
+    } else {
+      const created = await tx.appointment.create({
+        data: {
+          patientId: req.patientId,
+          date: targetDate,
+          durationMin: duration,
+          modality,
+          appointmentType: requestedType,
+          typeColor: typeConfig.color,
+          meetUrl,
+          status: 'CONFIRMED',
+          notes: adminNote,
+          location,
+          rescheduleTokenHash: reschedule.hash,
+          rescheduleTokenExpiresAt: reschedule.expiresAt,
+        },
+      })
+      nextAppointmentId = created.id
+    }
+
+    const resolved = await tx.appointmentRequest.updateMany({
+      where: { id: requestId, status: 'PENDING' },
+      data: {
+        status: 'ACCEPTED',
+        resolvedAt: new Date(),
+        proposedDate: targetDate,
+        adminNotes: adminNote,
+        appointmentId: nextAppointmentId,
+      },
+    })
+    if (resolved.count !== 1) {
+      throw new Error('La solicitud ya había sido resuelta por otra persona.')
+    }
+
+    await tx.auditLog.create({
+      data: {
+        userId,
+        patientId: req.patientId,
+        action: 'APPOINTMENT_REQUEST_SLOT_ASSIGNED',
+        entityType: 'AppointmentRequest',
+        entityId: requestId,
+        details: `Solicitud aceptada y cita ${nextAppointmentId} confirmada para ${targetDate.toISOString()}.`,
+      },
+    })
+    return nextAppointmentId
   })
 
-  // Enviar correo al paciente con la fecha y hora confirmada
+  // Enviar correo al paciente con la fecha y hora confirmada.
   if (req.patient.email) {
     await sendAppointmentEmail({
       patientName: `${req.patient.firstName} ${req.patient.lastName}`,
@@ -688,10 +909,10 @@ export async function assignSlotToAppointmentRequestAction(
       appointmentDate: targetDate,
       durationMin: duration,
       modality,
-      notes: adminNotes || 'Eva Vidal ha confirmado tu cita.',
       location: modality === 'ONLINE' ? (meetUrl || 'Videollamada Google Meet') : 'Consulta Nutricional Eva Vidal',
       professionalName: 'Eva Vidal',
       clinicName: 'Consulta Nutricional Eva Vidal',
+      rescheduleUrl: `${getPublicAppUrl()}/reschedule?token=${encodeURIComponent(reschedule.token)}`,
     }).catch((e) => console.error('Error enviando confirmación de cita:', e))
   }
 
@@ -711,37 +932,53 @@ export async function resolveAppointmentRequestAction(
   notes?: string
 ) {
   const userId = await requireUserId()
+  if (decision !== 'ACCEPT_CANCEL' && decision !== 'REJECT') {
+    throw new Error('La decisión sobre la solicitud no es válida.')
+  }
   const req = await prisma.appointmentRequest.findFirst({
-    where: { id: requestId, patient: { userId } },
+    where: { id: requestId, status: 'PENDING', patient: { userId } },
     include: { appointment: true, patient: true },
   })
 
-  if (!req) throw new Error('Solicitud no encontrada.')
+  if (!req) throw new Error('Solicitud no encontrada o ya resuelta.')
 
-  if (decision === 'ACCEPT_CANCEL' && req.appointmentId) {
-    await prisma.appointment.update({
-      where: { id: req.appointmentId },
-      data: { status: 'CANCELLED' },
-    })
+  const safeNotes = optionalText(notes, 2_000)
+  await prisma.$transaction(async (tx) => {
+    if (decision === 'ACCEPT_CANCEL' && req.appointmentId) {
+      await tx.appointment.updateMany({
+        where: { id: req.appointmentId, patientId: req.patientId },
+        data: { status: 'CANCELLED' },
+      })
+    }
 
-    await prisma.appointmentRequest.update({
-      where: { id: requestId },
+    const resolved = await tx.appointmentRequest.updateMany({
+      where: { id: requestId, status: 'PENDING' },
       data: {
-        status: 'ACCEPTED',
+        status: decision === 'ACCEPT_CANCEL' ? 'ACCEPTED' : 'REJECTED',
         resolvedAt: new Date(),
-        adminNotes: notes || 'Cancelación aceptada por Eva.',
+        adminNotes:
+          safeNotes ||
+          (decision === 'ACCEPT_CANCEL' ? 'Cancelación aceptada por Eva.' : 'Solicitud no aceptada.'),
       },
     })
-  } else {
-    await prisma.appointmentRequest.update({
-      where: { id: requestId },
+    if (resolved.count !== 1) {
+      throw new Error('La solicitud ya había sido resuelta por otra persona.')
+    }
+
+    await tx.auditLog.create({
       data: {
-        status: 'REJECTED',
-        resolvedAt: new Date(),
-        adminNotes: notes || 'Solicitud no aceptada.',
+        userId,
+        patientId: req.patientId,
+        action: 'APPOINTMENT_REQUEST_RESOLVED',
+        entityType: 'AppointmentRequest',
+        entityId: requestId,
+        details:
+          decision === 'ACCEPT_CANCEL'
+            ? 'Solicitud de cancelación aceptada.'
+            : 'Solicitud de cancelación o cambio rechazada.',
       },
     })
-  }
+  })
 
   revalidatePath('/dashboard/appointments')
   revalidatePath('/paciente/citas')
@@ -757,37 +994,63 @@ export async function offerSlotToWaitlistPatientAction(
   durationMin: number = 45
 ) {
   const userId = await requireUserId()
+  if (!Number.isInteger(durationMin) || durationMin < 15 || durationMin > 240) {
+    throw new Error('La duración debe estar entre 15 y 240 minutos.')
+  }
+  const date = new Date(appointmentDateStr)
   const entry = await prisma.waitlistEntry.findFirst({
-    where: { id: waitlistEntryId, userId },
+    where: {
+      id: waitlistEntryId,
+      userId,
+      status: 'WAITING',
+      patient: BOOKABLE_PATIENT_FILTER,
+    },
     include: { patient: true },
   })
 
-  if (!entry) throw new Error('Registro de lista de espera no encontrado.')
+  if (!entry) throw new Error('Registro de lista de espera no encontrado o ya asignado.')
 
-  const date = new Date(appointmentDateStr)
+  const meetUrl = process.env.GOOGLE_MEET_URL || process.env.NEXT_PUBLIC_GOOGLE_MEET_URL || 'https://meet.google.com/new'
+  const reschedule = createSecureLinkToken(30 * 24 * 60 * 60 * 1000)
 
-  // Crear cita confirmada para el paciente de la lista de espera
-  const app = await prisma.appointment.create({
-    data: {
-      patientId: entry.patientId,
-      date,
-      durationMin,
-      modality: 'ONLINE',
-      appointmentType: 'REVISION',
-      typeColor: '#16a34a',
-      meetUrl: process.env.GOOGLE_MEET_URL || process.env.NEXT_PUBLIC_GOOGLE_MEET_URL || 'https://meet.google.com/new',
-      status: 'CONFIRMED',
-      notes: `Asignado desde lista de espera tras cancelación.`,
-    },
+  const appointmentId = await prisma.$transaction(async (tx) => {
+    await tx.$executeRaw`SELECT pg_advisory_xact_lock(hashtext(${`appointments:${userId}`}))`
+    await ensureAppointmentSlotAvailable({ userId, start: date, durationMin, client: tx })
+    const app = await tx.appointment.create({
+      data: {
+        patientId: entry.patientId,
+        date,
+        durationMin,
+        modality: 'ONLINE',
+        appointmentType: 'REVISION',
+        typeColor: '#16a34a',
+        meetUrl,
+        status: 'CONFIRMED',
+        notes: 'Asignado desde lista de espera tras cancelación.',
+        rescheduleTokenHash: reschedule.hash,
+        rescheduleTokenExpiresAt: reschedule.expiresAt,
+      },
+    })
+    const booked = await tx.waitlistEntry.updateMany({
+      where: { id: waitlistEntryId, userId, status: 'WAITING' },
+      data: { status: 'BOOKED' },
+    })
+    if (booked.count !== 1) {
+      throw new Error('El registro de lista de espera ya había sido asignado.')
+    }
+    await tx.auditLog.create({
+      data: {
+        userId,
+        patientId: entry.patientId,
+        action: 'WAITLIST_SLOT_ASSIGNED',
+        entityType: 'Appointment',
+        entityId: app.id,
+        details: 'Hueco asignado a paciente en lista de espera.',
+      },
+    })
+    return app.id
   })
 
-  // Marcar lista de espera como BOOKED
-  await prisma.waitlistEntry.update({
-    where: { id: waitlistEntryId },
-    data: { status: 'BOOKED' },
-  })
-
-  // Notificar por correo
   if (entry.patient.email) {
     await sendAppointmentEmail({
       patientName: `${entry.patient.firstName} ${entry.patient.lastName}`,
@@ -795,16 +1058,17 @@ export async function offerSlotToWaitlistPatientAction(
       appointmentDate: date,
       durationMin,
       modality: 'ONLINE',
-      notes: '¡Se ha liberado un hueco de consulta y te lo hemos asignado!',
+      patientMessage: '¡Se ha liberado un hueco de consulta y te lo hemos asignado!',
       location: 'Videollamada Google Meet',
       professionalName: 'Eva Vidal',
       clinicName: 'Consulta Nutricional Eva Vidal',
+      rescheduleUrl: `${getPublicAppUrl()}/reschedule?token=${encodeURIComponent(reschedule.token)}`,
     }).catch((e) => console.error('Error enviando notificación a lista de espera:', e))
   }
 
   revalidatePath('/dashboard/appointments')
   revalidatePath(`/dashboard/patients/${entry.patientId}`)
-  return { success: true, appointmentId: app.id }
+  return { success: true, appointmentId }
 }
 
 

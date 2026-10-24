@@ -33,6 +33,14 @@ model User {
   phone         String?
   address       String?
   sessionRevokedAt DateTime? // Invalidates all existing sessions when set (e.g. portal access blocked)
+  sessionVersion Int       @default(0) // Incremented on password change/reset to invalidate signed sessions
+  mfaEnabled    Boolean   @default(false)
+  mfaSecret     String?
+  mfaEnrollmentSecret String?
+  mfaEnrollmentExpiresAt DateTime?
+  mfaRecoveryCodesHash String? // JSON array of SHA-256 hashes (one-time recovery codes)
+  mfaEnrolledAt DateTime?
+  mfaLastVerifiedAt DateTime?
   createdAt     DateTime   @default(now())
   updatedAt     DateTime   @updatedAt
 
@@ -439,12 +447,14 @@ model DataSubjectRequest {
   id          String   @id @default(cuid())
   userId      String
   user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
-  patientId   String
-  patient     Patient  @relation(fields: [patientId], references: [id], onDelete: Cascade)
+  patientId   String?
+  patient     Patient? @relation(fields: [patientId], references: [id], onDelete: SetNull)
   requestType String   // EXPORT | ERASURE | RECTIFICATION | ACCESS | RESTRICTION | OPPOSITION
   status      String   @default("PENDING") // PENDING | IN_PROGRESS | COMPLETED | REJECTED
   notes       String?
   completedAt DateTime?
+  legalReviewedAt DateTime?
+  legalReviewedBy String?
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
 
@@ -454,8 +464,10 @@ model DataSubjectRequest {
 
 model AuditLog {
   id         String   @id @default(cuid())
-  userId     String
-  user       User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  userId     String?
+  // La trazabilidad de auditoría debe sobrevivir al borrado de la cuenta que
+  // originó el evento. El identificador se conserva en entityId/details.
+  user       User?    @relation(fields: [userId], references: [id], onDelete: SetNull)
   patientId  String?
   patient    Patient? @relation(fields: [patientId], references: [id], onDelete: SetNull)
   action     String
@@ -608,12 +620,12 @@ model MealPlan {
   notes          String?
   hideCaloriesTCA Boolean  @default(false)
   isGLP1         Boolean   @default(false)
-  status         String    @default("PUBLISHED") // "DRAFT" | "PUBLISHED" | "ARCHIVED"
+  status         String    @default("DRAFT") // "DRAFT" | "PUBLISHED" | "ARCHIVED"
   publishedAt    DateTime?
   publishedBy    String?
-  checklistPassed Boolean  @default(true)
+  checklistPassed Boolean  @default(false)
   clinicalChecklistNotes String?
-  isSharedWithPatient Boolean @default(true)
+  isSharedWithPatient Boolean @default(false)
   isActive       Boolean   @default(true)
 
   // === 5.8 PLANES: MODELOS AVANZADOS, FASES, GESTIÓN Y SALIDAS ===
@@ -1012,4 +1024,15 @@ model MenuPatientAssignment {
 
   @@unique([menuId, patientId])
   @@index([patientId])
+}
+
+// Contador atómico de ventanas de limitación de frecuencia. Se guarda en base
+// de datos para que el límite sea compartido entre instancias serverless.
+model RateLimitCounter {
+  key         String   @id
+  windowStart DateTime
+  count       Int      @default(0)
+  updatedAt   DateTime @updatedAt
+
+  @@index([windowStart])
 }

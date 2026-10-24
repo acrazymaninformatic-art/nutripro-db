@@ -17,16 +17,19 @@ export async function getFoods(
   pageSize: number = 40
 ) {
   const userId = await requireUserId()
+  const safePage = Number.isFinite(page) ? Math.max(1, Math.floor(page)) : 1
+  const safePageSize = Number.isFinite(pageSize) ? Math.min(200, Math.max(1, Math.floor(pageSize))) : 40
+  const searchTerm = typeof search === 'string' ? search.trim().slice(0, 100) : ''
   const where: any = { AND: [foodScope(userId)] }
 
-  if (search && search.trim() !== '') {
+  if (searchTerm) {
     where.AND.push({ name: {
-      contains: search.trim(),
+      contains: searchTerm,
     } })
   }
 
   if (category && category !== 'ALL') {
-    where.AND.push({ category })
+    where.AND.push({ category: String(category).slice(0, 100) })
   }
 
   const [total, foods] = await Promise.all([
@@ -34,17 +37,17 @@ export async function getFoods(
     prisma.food.findMany({
       where,
       orderBy: { name: 'asc' },
-      skip: Math.max(0, (page - 1) * pageSize),
-      take: pageSize,
+      skip: (safePage - 1) * safePageSize,
+      take: safePageSize,
     }),
   ])
 
   return {
     foods,
     total,
-    page,
-    pageSize,
-    totalPages: Math.max(1, Math.ceil(total / pageSize)),
+    page: safePage,
+    pageSize: safePageSize,
+    totalPages: Math.max(1, Math.ceil(total / safePageSize)),
   }
 }
 
@@ -159,35 +162,49 @@ export async function mergeDuplicateFoods(primaryFoodId: number, duplicateFoodId
   if (!primary || !duplicate) {
     throw new Error('Uno o ambos alimentos a fusionar no existen.')
   }
+  // Los alimentos globales son compartidos por toda la instalación. Fusionar
+  // o borrar uno de ellos alteraría recetas y planes ajenos al profesional.
+  if (primary.userId !== userId || duplicate.userId !== userId) {
+    throw new Error('Solo puedes fusionar alimentos propios; los alimentos globales son de solo lectura.')
+  }
 
-  // Reassign RecipeIngredient items from duplicate to primary
-  const reassignRecipes = await prisma.recipeIngredient.updateMany({
-    where: { foodId: duplicateFoodId },
-    data: { foodId: primaryFoodId },
-  })
+  // La reasignación, la auditoría y el borrado forman una sola operación. Si
+  // algo falla, no queda un duplicado a medio fusionar ni referencias movidas.
+  const counts = await prisma.$transaction(async (tx) => {
+    const reassignRecipes = await tx.recipeIngredient.updateMany({
+      where: { foodId: duplicateFoodId, recipe: { userId } },
+      data: { foodId: primaryFoodId },
+    })
 
-  // Reassign MealItem items from duplicate to primary
-  const reassignMeals = await prisma.mealItem.updateMany({
-    where: { foodId: duplicateFoodId },
-    data: { foodId: primaryFoodId },
-  })
+    const reassignMeals = await tx.mealItem.updateMany({
+      where: {
+        foodId: duplicateFoodId,
+        meal: { dayPlan: { mealPlan: { userId } } },
+      },
+      data: { foodId: primaryFoodId },
+    })
 
-  // Record audit merge log
-  await prisma.foodDuplicateMergeLog.create({
-    data: {
-      userId,
-      primaryFoodId,
-      mergedFoodId: duplicateFoodId,
-      primaryFoodName: primary.name,
-      mergedFoodName: duplicate.name,
-      mergedRecipeItemsCount: reassignRecipes.count,
-      mergedMealItemsCount: reassignMeals.count,
-    },
-  })
+    await tx.foodDuplicateMergeLog.create({
+      data: {
+        userId,
+        primaryFoodId,
+        mergedFoodId: duplicateFoodId,
+        primaryFoodName: primary.name,
+        mergedFoodName: duplicate.name,
+        mergedRecipeItemsCount: reassignRecipes.count,
+        mergedMealItemsCount: reassignMeals.count,
+      },
+    })
 
-  // Safely delete duplicate food
-  await prisma.food.delete({
-    where: { id: duplicateFoodId },
+    const deleted = await tx.food.deleteMany({
+      where: { id: duplicateFoodId, userId },
+    })
+    if (deleted.count !== 1) throw new Error('El alimento duplicado ha cambiado. Recarga e inténtalo de nuevo.')
+
+    return {
+      recipes: reassignRecipes.count,
+      meals: reassignMeals.count,
+    }
   })
 
   revalidatePath('/dashboard/foods')
@@ -198,8 +215,8 @@ export async function mergeDuplicateFoods(primaryFoodId: number, duplicateFoodId
     success: true,
     mergedName: duplicate.name,
     primaryName: primary.name,
-    reassignedRecipes: reassignRecipes.count,
-    reassignedMeals: reassignMeals.count,
+    reassignedRecipes: counts.recipes,
+    reassignedMeals: counts.meals,
   }
 }
 
@@ -213,16 +230,57 @@ export async function bulkUpdateFoods(
   }
 ) {
   const userId = await requireUserId()
-  if (!foodIds || foodIds.length === 0) return { updatedCount: 0 }
+  if (!updates || typeof updates !== 'object') {
+    throw new Error('Los cambios del catálogo no son válidos.')
+  }
+  if (
+    !Array.isArray(foodIds) ||
+    foodIds.length === 0 ||
+    foodIds.length > 500 ||
+    foodIds.some((id) => !Number.isInteger(id) || id <= 0)
+  ) {
+    return { updatedCount: 0 }
+  }
 
-  const dataToUpdate: any = {}
-  if (updates.category) dataToUpdate.category = updates.category
+  const dataToUpdate: {
+    category?: string
+    isFavorite?: boolean
+    isPrivate?: boolean
+    dietaryTagsJson?: string
+  } = {}
+  if (updates.category !== undefined) {
+    const category = String(updates.category).trim().slice(0, 100)
+    if (!category) throw new Error('La categoría no es válida.')
+    dataToUpdate.category = category
+  }
   if (typeof updates.isFavorite === 'boolean') dataToUpdate.isFavorite = updates.isFavorite
   if (typeof updates.isPrivate === 'boolean') dataToUpdate.isPrivate = updates.isPrivate
-  if (updates.dietaryTags) dataToUpdate.dietaryTagsJson = JSON.stringify(updates.dietaryTags)
+  if (updates.dietaryTags !== undefined) {
+    if (
+      !Array.isArray(updates.dietaryTags) ||
+      updates.dietaryTags.length > 100 ||
+      updates.dietaryTags.some((tag) => typeof tag !== 'string' || tag.length > 100)
+    ) {
+      throw new Error('Las etiquetas dietéticas no son válidas.')
+    }
+    dataToUpdate.dietaryTagsJson = JSON.stringify(updates.dietaryTags)
+  }
+
+  if (Object.keys(dataToUpdate).length === 0) return { updatedCount: 0 }
+
+  // Los campos clínicos y de catálogo (categoría, privacidad, etiquetas) solo
+  // se pueden modificar en alimentos propios. El favorito es una preferencia
+  // cosmética y puede aplicarse también a los alimentos globales.
+  const touchesSharedFields =
+    dataToUpdate.category !== undefined ||
+    dataToUpdate.isPrivate !== undefined ||
+    dataToUpdate.dietaryTagsJson !== undefined
+  const where = touchesSharedFields
+    ? { AND: [{ userId }, { id: { in: foodIds } }] }
+    : { AND: [foodScope(userId), { id: { in: foodIds } }] }
 
   const result = await prisma.food.updateMany({
-    where: { AND: [foodScope(userId), { id: { in: foodIds } }] },
+    where,
     data: dataToUpdate,
   })
 
@@ -230,50 +288,113 @@ export async function bulkUpdateFoods(
   return { updatedCount: result.count }
 }
 
+function readNumericField(
+  formData: FormData,
+  field: string,
+  options: { min?: number; max?: number; fallback?: number } = {}
+): number {
+  const raw = formData.get(field)
+  if (raw === null || String(raw).trim() === '') return options.fallback ?? 0
+  const value = Number(String(raw).trim().replace(',', '.'))
+  const min = options.min ?? 0
+  const max = options.max ?? 1_000_000
+  if (!Number.isFinite(value) || value < min || value > max) {
+    throw new Error(`El campo "${field}" no contiene un número válido.`)
+  }
+  return value
+}
+
+function readOptionalNumericField(
+  formData: FormData,
+  field: string,
+  options: { min?: number; max?: number } = {}
+): number | null {
+  const raw = formData.get(field)
+  if (raw === null || String(raw).trim() === '') return null
+  return readNumericField(formData, field, options)
+}
+
+function readStringArrayField(formData: FormData, field: string): string[] {
+  const raw = formData.get(field)
+  if (!raw) return []
+  let parsed: unknown
+  try {
+    parsed = JSON.parse(String(raw))
+  } catch {
+    throw new Error(`El campo "${field}" no contiene una lista válida.`)
+  }
+  if (!Array.isArray(parsed) || parsed.length > 100) {
+    throw new Error(`El campo "${field}" no contiene una lista válida.`)
+  }
+  if (parsed.some((value) => typeof value !== 'string' || value.length > 100)) {
+    throw new Error(`El campo "${field}" contiene valores no válidos.`)
+  }
+  return parsed
+}
+
+function readJsonArrayField(formData: FormData, field: string): unknown[] {
+  const raw = formData.get(field)
+  if (!raw) return []
+  let parsed: unknown
+  try {
+    parsed = JSON.parse(String(raw))
+  } catch {
+    throw new Error(`El campo "${field}" no contiene una lista válida.`)
+  }
+  if (!Array.isArray(parsed) || parsed.length > 100) {
+    throw new Error(`El campo "${field}" no contiene una lista válida.`)
+  }
+  return parsed
+}
+
 export async function createFood(formData: FormData) {
   const userId = await requireUserId()
-  const name = formData.get('name') as string
-  const category = (formData.get('category') as string) || 'Otros'
-  const servingSize = parseFloat(formData.get('servingSize') as string) || 100
-  const calories = parseFloat(formData.get('calories') as string) || 0
-  const proteinG = parseFloat(formData.get('proteinG') as string) || 0
-  const carbsG = parseFloat(formData.get('carbsG') as string) || 0
-  const fatG = parseFloat(formData.get('fatG') as string) || 0
-  const fiberG = parseFloat(formData.get('fiberG') as string) || 0
-  const sodiumMg = parseFloat(formData.get('sodiumMg') as string) || 0
+  const name = String(formData.get('name') || '').trim()
+  if (name.length < 2 || name.length > 200) throw new Error('El nombre del alimento debe tener entre 2 y 200 caracteres.')
+  const category = String(formData.get('category') || 'Otros').trim().slice(0, 100) || 'Otros'
+  const servingSize = readNumericField(formData, 'servingSize', { min: 1, max: 100_000, fallback: 100 })
+  const calories = readNumericField(formData, 'calories', { max: 100_000 })
+  const proteinG = readNumericField(formData, 'proteinG', { max: 100_000 })
+  const carbsG = readNumericField(formData, 'carbsG', { max: 100_000 })
+  const fatG = readNumericField(formData, 'fatG', { max: 100_000 })
+  const fiberG = readNumericField(formData, 'fiberG', { max: 100_000 })
+  const sodiumMg = readNumericField(formData, 'sodiumMg', { max: 1_000_000 })
 
   // 5.6 Extras
-  const potassiumMg = parseFloat(formData.get('potassiumMg') as string) || 0
-  const calciumMg = parseFloat(formData.get('calciumMg') as string) || 0
-  const ironMg = parseFloat(formData.get('ironMg') as string) || 0
-  const magnesiumMg = parseFloat(formData.get('magnesiumMg') as string) || 0
-  const zincMg = parseFloat(formData.get('zincMg') as string) || 0
-  const iodineUg = parseFloat(formData.get('iodineUg') as string) || 0
-  const omega3G = parseFloat(formData.get('omega3G') as string) || 0
-  const addedSugarsG = parseFloat(formData.get('addedSugarsG') as string) || 0
-  const solubleFiberG = parseFloat(formData.get('solubleFiberG') as string) || 0
-  const insolubleFiberG = parseFloat(formData.get('insolubleFiberG') as string) || 0
-  const glycemicIndex = formData.get('glycemicIndex') ? parseFloat(formData.get('glycemicIndex') as string) : null
-  const glycemicLoad = formData.get('glycemicLoad') ? parseFloat(formData.get('glycemicLoad') as string) : null
-  const fodmapCategory = (formData.get('fodmapCategory') as string) || null
-  const purinesMg = parseFloat(formData.get('purinesMg') as string) || 0
-  const oxalatesMg = parseFloat(formData.get('oxalatesMg') as string) || 0
-  const nutriScore = (formData.get('nutriScore') as string) || null
-  const novaGroup = formData.get('novaGroup') ? parseInt(formData.get('novaGroup') as string) : null
-  const cookedConversionFactor = formData.get('cookedConversionFactor') ? parseFloat(formData.get('cookedConversionFactor') as string) : null
-  const ediblePartPercentage = formData.get('ediblePartPercentage') ? parseFloat(formData.get('ediblePartPercentage') as string) : 100
-  const barcode = (formData.get('barcode') as string) || null
-  const brandName = (formData.get('brandName') as string) || null
-  const dataSource = (formData.get('dataSource') as string) || 'PROPIO'
+  const potassiumMg = readNumericField(formData, 'potassiumMg', { max: 1_000_000 })
+  const calciumMg = readNumericField(formData, 'calciumMg', { max: 1_000_000 })
+  const ironMg = readNumericField(formData, 'ironMg', { max: 100_000 })
+  const magnesiumMg = readNumericField(formData, 'magnesiumMg', { max: 1_000_000 })
+  const zincMg = readNumericField(formData, 'zincMg', { max: 100_000 })
+  const iodineUg = readNumericField(formData, 'iodineUg', { max: 100_000 })
+  const omega3G = readNumericField(formData, 'omega3G', { max: 100_000 })
+  const addedSugarsG = readNumericField(formData, 'addedSugarsG', { max: 100_000 })
+  const solubleFiberG = readNumericField(formData, 'solubleFiberG', { max: 100_000 })
+  const insolubleFiberG = readNumericField(formData, 'insolubleFiberG', { max: 100_000 })
+  const glycemicIndex = readOptionalNumericField(formData, 'glycemicIndex', { max: 100 })
+  const glycemicLoad = readOptionalNumericField(formData, 'glycemicLoad', { max: 1_000 })
+  const fodmapCategory = String(formData.get('fodmapCategory') || '').trim().slice(0, 100) || null
+  const purinesMg = readNumericField(formData, 'purinesMg', { max: 100_000 })
+  const oxalatesMg = readNumericField(formData, 'oxalatesMg', { max: 100_000 })
+  const nutriScore = String(formData.get('nutriScore') || '').trim().slice(0, 10) || null
+  const novaGroup = readOptionalNumericField(formData, 'novaGroup', { min: 1, max: 4 })
+  if (novaGroup !== null && !Number.isInteger(novaGroup)) {
+    throw new Error('El grupo NOVA debe ser un número entero entre 1 y 4.')
+  }
+  const cookedConversionFactor = readOptionalNumericField(formData, 'cookedConversionFactor', { min: 0.1, max: 10 })
+  const ediblePartPercentage = readOptionalNumericField(formData, 'ediblePartPercentage', { max: 100 }) ?? 100
+  const barcode = String(formData.get('barcode') || '').trim().slice(0, 64) || null
+  const brandName = String(formData.get('brandName') || '').trim().slice(0, 200) || null
+  const dataSource = String(formData.get('dataSource') || 'PROPIO').trim().slice(0, 50) || 'PROPIO'
   const isSupplement = formData.get('isSupplement') === 'true'
-  const supplementDose = (formData.get('supplementDose') as string) || null
-  const pricePerKg = formData.get('pricePerKg') ? parseFloat(formData.get('pricePerKg') as string) : null
-  const carbonFootprintKgCo2 = formData.get('carbonFootprintKgCo2') ? parseFloat(formData.get('carbonFootprintKgCo2') as string) : null
-  const waterFootprintLiters = formData.get('waterFootprintLiters') ? parseFloat(formData.get('waterFootprintLiters') as string) : null
+  const supplementDose = String(formData.get('supplementDose') || '').trim().slice(0, 200) || null
+  const pricePerKg = readOptionalNumericField(formData, 'pricePerKg', { max: 1_000_000_000 })
+  const carbonFootprintKgCo2 = readOptionalNumericField(formData, 'carbonFootprintKgCo2', { max: 1_000_000_000 })
+  const waterFootprintLiters = readOptionalNumericField(formData, 'waterFootprintLiters', { max: 1_000_000_000 })
 
-  const allergensRaw = formData.get('allergensJson') as string
-  const dietaryTagsRaw = formData.get('dietaryTagsJson') as string
-  const householdMeasuresRaw = formData.get('householdMeasuresJson') as string
+  const allergens = readStringArrayField(formData, 'allergensJson')
+  const dietaryTags = readStringArrayField(formData, 'dietaryTagsJson')
+  const householdMeasures = readJsonArrayField(formData, 'householdMeasuresJson')
 
   const food = await prisma.food.create({
     data: {
@@ -315,9 +436,9 @@ export async function createFood(formData: FormData) {
       pricePerKg,
       carbonFootprintKgCo2,
       waterFootprintLiters,
-      allergensJson: allergensRaw || '[]',
-      dietaryTagsJson: dietaryTagsRaw || '[]',
-      householdMeasuresJson: householdMeasuresRaw || '[]',
+      allergensJson: JSON.stringify(allergens),
+      dietaryTagsJson: JSON.stringify(dietaryTags),
+      householdMeasuresJson: JSON.stringify(householdMeasures),
       source: 'custom',
     },
   })

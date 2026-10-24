@@ -13,6 +13,7 @@ import {
 } from 'lucide-react'
 import { getMealPlan, getMealPlans } from '../actions'
 import { analyzeWeeklyPlan, type PlanMealAnalysisInput } from '@/lib/clinical/plan-analysis'
+import { expandMealItem } from '@/lib/nutrition/plan-nutrition'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
@@ -31,31 +32,30 @@ function buildAnalysis(plan: Awaited<ReturnType<typeof getMealPlan>>): PlanMealA
     mealType: 'DIARIO',
     items: day.meals.flatMap((meal) =>
       meal.items
-        .filter((item) => item.food && !item.isAlternative)
-        .map((item) => {
-          const food = item.food!
-          const factor = item.quantityG / 100
-          return {
-            name: food.name,
-            category: food.category,
-            quantityG: item.quantityG,
-            calories: food.calories * factor,
-            proteinG: food.proteinG * factor,
-            carbsG: food.carbsG * factor,
-            fatG: food.fatG * factor,
-            fiberG: (food.fiberG || 0) * factor,
-            sodiumMg: (food.sodiumMg || 0) * factor,
-            potassiumMg: (food.potassiumMg || 0) * factor,
-            calciumMg: (food.calciumMg || 0) * factor,
-            ironMg: (food.ironMg || 0) * factor,
-            magnesiumMg: (food.magnesiumMg || 0) * factor,
-            zincMg: (food.zincMg || 0) * factor,
-            vitaminCMg: (food.vitaminCMg || 0) * factor,
-            folateUg: (food.folateUg || 0) * factor,
-            novaGroup: food.novaGroup,
-            pricePerKg: food.pricePerKg,
-          }
-        })
+        .filter((item) => !item.isAlternative)
+        .flatMap((item) =>
+          expandMealItem(item).map((expanded) => ({
+            name: expanded.food.name,
+            category: expanded.food.category ?? null,
+            quantityG: expanded.quantityG,
+            // `analyzeWeeklyPlan` espera valores por 100 g y aplica la escala.
+            calories: expanded.food.calories,
+            proteinG: expanded.food.proteinG,
+            carbsG: expanded.food.carbsG,
+            fatG: expanded.food.fatG,
+            fiberG: expanded.food.fiberG || 0,
+            sodiumMg: expanded.food.sodiumMg || 0,
+            potassiumMg: expanded.food.potassiumMg || 0,
+            calciumMg: expanded.food.calciumMg || 0,
+            ironMg: expanded.food.ironMg || 0,
+            magnesiumMg: expanded.food.magnesiumMg || 0,
+            zincMg: expanded.food.zincMg || 0,
+            vitaminCMg: expanded.food.vitaminCMg || 0,
+            folateUg: expanded.food.folateUg || 0,
+            novaGroup: expanded.food.novaGroup,
+            pricePerKg: expanded.food.pricePerKg,
+          }))
+        )
     ),
   }))
 }

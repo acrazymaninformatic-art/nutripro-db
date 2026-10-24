@@ -21,15 +21,12 @@ export default async function PacienteLayout({
 }: {
   children: React.ReactNode
 }) {
-  const { user, patientId: authPatientId, isAdminPreview } = await requirePatient()
+  const { user, patientId: authPatientId, isAdminPreview } = await requirePatient({
+    allowPendingConsent: true,
+    allowPasswordChangePending: true,
+  })
 
-  let patientId = authPatientId
-  if (!patientId && isAdminPreview) {
-    const firstPatient = await prisma.patient.findFirst({
-      select: { id: true, firstName: true, lastName: true },
-    })
-    patientId = firstPatient?.id || null
-  }
+  const patientId = authPatientId
 
   let patientName = user.name || 'Paciente'
   let consentAccepted = true
@@ -42,8 +39,9 @@ export default async function PacienteLayout({
         lastName: true,
         consentAcceptedAt: true,
         consentPolicyVersion: true,
+        consentRevokedAt: true,
         consents: {
-          where: { type: { in: REQUIRED_PORTAL_CONSENTS.map((consent) => consent.type) }, version: LEGAL_POLICY_VERSION, accepted: true, revokedAt: null },
+          where: { type: { in: REQUIRED_PORTAL_CONSENTS.map((consent) => consent.type) }, version: LEGAL_POLICY_VERSION, accepted: true, revokedAt: null, status: 'COMPLETED' },
           select: { type: true },
         },
       },
@@ -51,6 +49,7 @@ export default async function PacienteLayout({
     if (patient) {
       patientName = `${patient.firstName} ${patient.lastName}`.trim()
       consentAccepted = Boolean(
+        !patient.consentRevokedAt &&
         patient.consentAcceptedAt &&
         patient.consentPolicyVersion === LEGAL_POLICY_VERSION &&
         REQUIRED_PORTAL_CONSENTS.every((requiredConsent) => patient.consents.some((consent) => consent.type === requiredConsent.type))
@@ -98,6 +97,10 @@ export default async function PacienteLayout({
         </main>
       </div>
     )
+  }
+
+  if (user.passwordChangeRequired && !isAdminPreview && pathname && !pathname.includes('/paciente/configuracion')) {
+    redirect('/paciente/configuracion?passwordChangeRequired=1')
   }
 
   return (

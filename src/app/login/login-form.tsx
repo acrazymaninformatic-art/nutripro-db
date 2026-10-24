@@ -47,6 +47,24 @@ export function LoginForm() {
         />
       </div>
 
+      <div className="space-y-1.5">
+        <label htmlFor="totp" className="block text-xs font-bold text-slate-700">
+          Verificación en dos pasos <span className="font-medium text-slate-400">(solo administración)</span>
+        </label>
+        <input
+          id="totp"
+          name="totp"
+          type="text"
+          inputMode="numeric"
+          autoComplete="one-time-code"
+          placeholder="123 456 o código de recuperación"
+          className="w-full rounded-2xl border border-slate-200/90 bg-white/90 px-3.5 py-3 text-sm font-medium text-slate-900 shadow-[0_2px_8px_-6px_rgba(15,23,42,.32)] outline-none transition-[border-color,box-shadow,background-color] duration-200 placeholder:text-slate-400 hover:border-slate-300 focus:border-blue-500 focus:bg-white focus:ring-4 focus:ring-blue-500/10"
+        />
+        <p className="text-[11px] leading-relaxed text-slate-500">
+          Si eres profesional y has activado TOTP, introduce el código de 6 dígitos de tu aplicación autenticadora.
+        </p>
+      </div>
+
       {state?.error && (
         <div role="alert" className="p-3 rounded-2xl bg-rose-50 border border-rose-200 text-xs font-semibold text-rose-700 animate-shake">
           {state.error}

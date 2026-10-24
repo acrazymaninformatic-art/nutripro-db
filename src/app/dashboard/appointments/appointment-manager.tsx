@@ -1158,7 +1158,7 @@ export function AppointmentManager({
                   title: `Cita Nutrición: ${app.patient.firstName} ${app.patient.lastName} - Eva Vidal`,
                   startDate: appDate,
                   durationMin: app.durationMin,
-                  description: `Consulta Nutricional con Eva Vidal.\nModalidad: ${app.modality}\nNotas: ${app.notes || 'Consulta'}\nContacto: info@evavidalnutricion.com`,
+                  description: `Consulta Nutricional con Eva Vidal.\nModalidad: ${app.modality}\nContacto: info@evavidalnutricion.com`,
                   location: isOnline ? 'Online / Google Meet' : app.location || 'Consulta Nutricional Eva Vidal',
                 })
 
@@ -1758,7 +1758,7 @@ export function AppointmentManager({
                   title: `Cita Nutrición: ${selectedAppointment.patient.firstName} ${selectedAppointment.patient.lastName} - Eva Vidal`,
                   startDate: appDate,
                   durationMin: selectedAppointment.durationMin,
-                  description: `Consulta Nutricional con Eva Vidal.\nModalidad: ${selectedAppointment.modality}\nNotas: ${selectedAppointment.notes || 'Consulta'}\nContacto: info@evavidalnutricion.com`,
+                  description: `Consulta Nutricional con Eva Vidal.\nModalidad: ${selectedAppointment.modality}\nContacto: info@evavidalnutricion.com`,
                   location: isOnline ? 'Online / Google Meet' : selectedAppointment.location || 'Consulta Nutricional Eva Vidal',
                 })
                 return (

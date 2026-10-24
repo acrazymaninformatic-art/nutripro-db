@@ -79,6 +79,9 @@ export const AUDIT_ACTION_LABELS: Record<string, string> = {
   EMERGENCY_LOCKDOWN_ACTIVATED: 'Bloqueo de emergencia activado',
   EMERGENCY_LOCKDOWN_DEACTIVATED: 'Bloqueo de emergencia desactivado',
   RGPD_EXPORT_REQUESTED: 'Solicitud de exportación',
+  RGPD_ERASURE_REQUESTED: 'Solicitud de supresión',
+  RGPD_ERASURE_EXECUTED: 'Supresión ejecutada',
+  RGPD_ERASURE_FAILED: 'Supresión abortada',
 }
 
 export function auditActionLabel(action: string) {

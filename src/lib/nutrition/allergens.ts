@@ -382,12 +382,57 @@ function normalizeText(text: string): string {
     .trim()
 }
 
+const DECLARED_TERM_STOPWORDS = new Set([
+  'alergia',
+  'alergias',
+  'alergico',
+  'alergica',
+  'intolerancia',
+  'intolerancias',
+  'intolerante',
+  'ninguna',
+  'ninguno',
+  'conocida',
+  'conocido',
+  'consta',
+  'sin',
+  'leve',
+  'moderada',
+  'grave',
+  'severa',
+])
+
+/**
+ * Extrae términos concretos de una lista libre de alergias o intolerancias
+ * ("alergia al kiwi, melocotón") para poder detectar también alimentos que no
+ * pertenecen a los 14 alérgenos oficiales. Es deliberadamente conservador:
+ * solo compara términos de tres o más caracteres y descarta conectores.
+ */
+function extractDeclaredTerms(raw: string): string[] {
+  return raw
+    .split(/[,;/\n]+|\s+y\s+/i)
+    .map((part) =>
+      normalizeText(part)
+        .replace(/^(alergias?|alergicos?|alergicas?|intolerancias?|intolerantes?)\s+(a\s+|al\s+|a\s+la\s+|a\s+los\s+|a\s+las\s+)?/, '')
+        .trim()
+    )
+    .filter((term) => term.length >= 3 && !DECLARED_TERM_STOPWORDS.has(term))
+}
+
+function foodMatchesDeclaredTerm(foodNorm: string, term: string): boolean {
+  if (!/^[a-z0-9]+$/.test(term)) return foodNorm.includes(term)
+  const escaped = term.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
+  return new RegExp(`(^|[^a-z0-9])${escaped}(?:s|es)?([^a-z0-9]|$)`).test(foodNorm)
+}
+
 /**
  * Detects which allergens are present in a given food by analyzing its name and category.
  */
 export function detectAllergensInFood(food: {
   name: string
   category?: string | null
+  /** Lista explícita de alérgenos declarados en la ficha del alimento. */
+  allergensJson?: string | null
 }): DetectedFoodAllergen[] {
   const foodNorm = normalizeText(food.name)
   const categoryNorm = food.category ? normalizeText(food.category) : ''
@@ -448,14 +493,137 @@ export function detectAllergensInFood(food: {
     }
   }
 
+  // Alérgenos declarados de forma estructurada en la ficha del alimento.
+  // Tienen prioridad sobre la inferencia por nombre y no se saltan por una
+  // etiqueta "sin..." del nombre comercial.
+  if (food.allergensJson) {
+    try {
+      const declared = JSON.parse(food.allergensJson)
+      if (Array.isArray(declared)) {
+        for (const token of declared) {
+          if (typeof token !== 'string' || !token.trim()) continue
+          const tokenNorm = normalizeText(token)
+          const allergen = OFFICIAL_ALLERGENS.find((candidate) => {
+            const identifiers = [candidate.id, candidate.name, candidate.label, ...candidate.keywords]
+            return identifiers.some((identifier) => {
+              const normalized = normalizeText(identifier)
+              return tokenNorm === normalized || tokenNorm.includes(normalized)
+            })
+          })
+          if (allergen && !detected.some((item) => item.allergenId === allergen.id)) {
+            detected.push({
+              allergenId: allergen.id,
+              label: allergen.label,
+              icon: allergen.icon,
+              matchedKeyword: `Ficha del alimento: ${token}`,
+            })
+          }
+        }
+      }
+    } catch {
+      // Un JSON corrupto no debe silenciar el resto de comprobaciones.
+    }
+  }
+
   return detected
+}
+
+export interface PlanAllergenConflict {
+  dayNumber: number
+  mealType: string
+  foodName: string
+  recipeName?: string
+  conflict: PatientAllergenConflict
+}
+
+interface PlanForAllergenScan {
+  days: Array<{
+    dayNumber: number
+    meals: Array<{
+      mealType: string
+      items: Array<{
+        food?: { name: string; category?: string | null; allergensJson?: string | null } | null
+        recipe?: {
+          name: string
+          ingredients?: Array<{
+            quantityG: number
+            food?: { name: string; category?: string | null; allergensJson?: string | null } | null
+          }> | null
+        } | null
+      }>
+    }>
+  }>
+}
+
+/**
+ * Recorre un plan completo (incluidas recetas y alternativas) y devuelve todos
+ * los conflictos detectados. Se usa como bloqueo duro en la publicación.
+ */
+export function scanPlanForAllergenConflicts(
+  plan: PlanForAllergenScan,
+  patient: {
+    allergies?: string | null
+    intolerances?: string | null
+    firstName?: string
+    lastName?: string
+  }
+): PlanAllergenConflict[] {
+  const conflicts: PlanAllergenConflict[] = []
+  for (const day of plan.days) {
+    for (const meal of day.meals) {
+      for (const item of meal.items) {
+        if (item.food) {
+          const conflict = checkPatientAllergenConflict(item.food, patient)
+          if (conflict) {
+            conflicts.push({
+              dayNumber: day.dayNumber,
+              mealType: meal.mealType,
+              foodName: item.food.name,
+              conflict,
+            })
+          }
+          continue
+        }
+        if (item.recipe) {
+          const ingredients = item.recipe.ingredients || []
+          if (ingredients.length === 0) {
+            const conflict = checkPatientAllergenConflict({ name: item.recipe.name }, patient)
+            if (conflict) {
+              conflicts.push({
+                dayNumber: day.dayNumber,
+                mealType: meal.mealType,
+                foodName: item.recipe.name,
+                recipeName: item.recipe.name,
+                conflict,
+              })
+            }
+            continue
+          }
+          for (const ingredient of ingredients) {
+            if (!ingredient.food) continue
+            const conflict = checkPatientAllergenConflict(ingredient.food, patient)
+            if (conflict) {
+              conflicts.push({
+                dayNumber: day.dayNumber,
+                mealType: meal.mealType,
+                foodName: ingredient.food.name,
+                recipeName: item.recipe.name,
+                conflict,
+              })
+            }
+          }
+        }
+      }
+    }
+  }
+  return conflicts
 }
 
 /**
  * Checks if a food conflicts with a patient's documented allergies or intolerances.
  */
 export function checkPatientAllergenConflict(
-  food: { name: string; category?: string | null },
+  food: { name: string; category?: string | null; allergensJson?: string | null },
   patient?: {
     allergies?: string | null
     intolerances?: string | null
@@ -475,8 +643,6 @@ export function checkPatientAllergenConflict(
 
   // Detect allergens in food
   const foodAllergens = detectAllergensInFood(food)
-  if (foodAllergens.length === 0) return null
-
   const allergiesNorm = normalizeText(rawAllergies)
   const intolerancesNorm = normalizeText(rawIntolerances)
 
@@ -515,6 +681,13 @@ export function checkPatientAllergenConflict(
     SULFITOS: ['sulfito', 'vino'],
     ALTRAMUCES: ['altramuz'],
   }
+
+  // Los términos que ya cubre el catálogo oficial se resuelven con su lógica
+  // de excepciones seguras ("sin gluten", "sin lactosa") y no deben volver a
+  // marcarse por la vía genérica.
+  const officialPatientTerms = new Set(
+    Object.values(patientTermMap).flat().map((term) => normalizeText(term))
+  )
 
   for (const foodAllergen of foodAllergens) {
     const allergenTerms = patientTermMap[foodAllergen.allergenId] || [
@@ -555,6 +728,44 @@ export function checkPatientAllergenConflict(
           alertMessage: `El paciente ${patientName} presenta INTOLERANCIA clínica a ${foodAllergen.label}. El alimento "${food.name}" contiene ${foodAllergen.matchedKeyword} y puede provocar sintomatología digestiva o inflamatoria.`,
         }
       }
+    }
+  }
+
+  // 3. Alergias o intolerancias declaradas que no forman parte del catálogo
+  // oficial de 14 alérgenos (kiwi, melocotón, chía...). Sin esta comprobación
+  // un plan podría publicarse con un alimento clínicamente incompatible.
+  const declaredFoodName = normalizeText(food.name)
+  const declaredAllergyTerm = extractDeclaredTerms(rawAllergies).find(
+    (term) => !officialPatientTerms.has(term) && foodMatchesDeclaredTerm(declaredFoodName, term)
+  )
+  if (declaredAllergyTerm) {
+    return {
+      hasConflict: true,
+      allergenId: 'DECLARED_ALLERGY',
+      allergenLabel: declaredAllergyTerm,
+      allergenIcon: 'AlertTriangle',
+      severity: 'CRITICAL_ALLERGY',
+      matchedPatientTerm: declaredAllergyTerm,
+      matchedFoodTerm: food.name,
+      alertTitle: ` ALERTA CRÍTICA: ALERGIA DECLARADA A ${declaredAllergyTerm.toUpperCase()}`,
+      alertMessage: `El paciente ${patientName} tiene registrada una alergia a "${declaredAllergyTerm}". El alimento "${food.name}" coincide con ese término. Revisa la ficha y sustituye el alimento antes de publicar.`,
+    }
+  }
+
+  const declaredIntoleranceTerm = extractDeclaredTerms(rawIntolerances).find(
+    (term) => !officialPatientTerms.has(term) && foodMatchesDeclaredTerm(declaredFoodName, term)
+  )
+  if (declaredIntoleranceTerm) {
+    return {
+      hasConflict: true,
+      allergenId: 'DECLARED_INTOLERANCE',
+      allergenLabel: declaredIntoleranceTerm,
+      allergenIcon: 'AlertTriangle',
+      severity: 'INTOLERANCE',
+      matchedPatientTerm: declaredIntoleranceTerm,
+      matchedFoodTerm: food.name,
+      alertTitle: ` INTOLERANCIA DECLARADA: ${declaredIntoleranceTerm.toUpperCase()}`,
+      alertMessage: `El paciente ${patientName} tiene registrada una intolerancia a "${declaredIntoleranceTerm}". El alimento "${food.name}" coincide con ese término. Revisa la ficha y sustituye el alimento antes de publicar.`,
     }
   }
 

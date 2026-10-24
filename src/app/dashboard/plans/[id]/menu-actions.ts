@@ -11,8 +11,30 @@ import {
   type MenuStatus,
 } from '@/lib/menu-config'
 import { duplicateMealPlan } from '../actions'
+import { validateMenuSettings } from '@/lib/menu-settings-validation'
 
 const MAX_VERSIONS = 60
+const MENU_STATUSES = new Set<MenuStatus>(['DRAFT', 'ACTIVE', 'ARCHIVED'])
+
+function requireFiniteNumber(value: unknown, label: string, min: number, max: number): number {
+  const numeric = typeof value === 'number' ? value : Number(value)
+  if (!Number.isFinite(numeric) || numeric < min || numeric > max) {
+    throw new Error(`El campo "${label}" no contiene un valor válido.`)
+  }
+  return numeric
+}
+
+function assertMenuObject(value: unknown, label: string): asserts value is Record<string, unknown> {
+  if (!value || typeof value !== 'object' || Array.isArray(value)) {
+    throw new Error(`${label} no es válido.`)
+  }
+}
+
+function serializedJson(value: unknown, label: string, maxLength: number): string {
+  const serialized = JSON.stringify(value)
+  if (serialized.length > maxLength) throw new Error(`${label} es demasiado extenso.`)
+  return serialized
+}
 
 export interface MenuConfigDTO {
   id: string
@@ -186,6 +208,8 @@ export async function saveMenuSettings(
 ): Promise<{ savedAt: string; version: number }> {
   await requireUserId()
   const plan = await loadMenu(planId)
+  const validatedSettings = validateMenuSettings(settings)
+  const settingsJson = serializedJson(validatedSettings, 'La configuración del menú', 200_000)
 
   const menu = await prisma.menuConfig.findUnique({
     where: { mealPlanId: plan.id },
@@ -199,7 +223,7 @@ export async function saveMenuSettings(
     prisma.menuConfig.update({
       where: { id: menu.id },
       data: {
-        settingsJson: JSON.stringify(settings),
+        settingsJson,
         version: nextVersion,
       },
     }),
@@ -207,8 +231,8 @@ export async function saveMenuSettings(
       data: {
         menuId: menu.id,
         version: nextVersion,
-        snapshotJson: JSON.stringify(settings),
-        summary: summary || 'Autoguardado',
+        snapshotJson: settingsJson,
+        summary: String(summary || 'Autoguardado').trim().slice(0, 200) || 'Autoguardado',
       },
     }),
   ])
@@ -245,6 +269,45 @@ export async function saveMenuData(
 ): Promise<{ savedAt: string }> {
   await requireUserId()
   const plan = await loadMenu(planId)
+  if (!data || typeof data !== 'object' || Array.isArray(data)) {
+    throw new Error('Los datos del menú no son válidos.')
+  }
+  if (data.status !== undefined && (typeof data.status !== 'string' || !MENU_STATUSES.has(data.status))) {
+    throw new Error('Estado del menú no válido.')
+  }
+  if (data.isTemplate !== undefined && typeof data.isTemplate !== 'boolean') {
+    throw new Error('El indicador de plantilla no es válido.')
+  }
+  if (data.title !== undefined && typeof data.title !== 'string') {
+    throw new Error('El título del menú no es válido.')
+  }
+  if (data.internalNotes !== undefined && data.internalNotes !== null && typeof data.internalNotes !== 'string') {
+    throw new Error('Las notas internas del menú no son válidas.')
+  }
+  if (data.startDate !== undefined && data.startDate !== null && typeof data.startDate !== 'string') {
+    throw new Error('La fecha de inicio del menú no es válida.')
+  }
+  if (data.endDate !== undefined && data.endDate !== null && typeof data.endDate !== 'string') {
+    throw new Error('La fecha de fin del menú no es válida.')
+  }
+  const title = data.title !== undefined
+    ? data.title.trim().slice(0, 200) || 'Menú sin título'
+    : undefined
+  const internalNotes = data.internalNotes !== undefined
+    ? (data.internalNotes === null ? null : data.internalNotes.trim().slice(0, 5_000) || null)
+    : undefined
+  const parseMenuDate = (value: string | null | undefined, label: string): Date | null => {
+    if (value === undefined) throw new Error('Fecha no válida.')
+    if (value === null || String(value).trim() === '') return null
+    const date = new Date(value)
+    if (Number.isNaN(date.getTime())) throw new Error(`La ${label} del menú no es válida.`)
+    return date
+  }
+  const startDate = data.startDate !== undefined ? parseMenuDate(data.startDate, 'fecha de inicio') : undefined
+  const endDate = data.endDate !== undefined ? parseMenuDate(data.endDate, 'fecha de fin') : undefined
+  if (startDate && endDate && startDate.getTime() > endDate.getTime()) {
+    throw new Error('La fecha de inicio no puede ser posterior a la fecha de fin.')
+  }
 
   const menu = await prisma.menuConfig.findUnique({
     where: { mealPlanId: plan.id },
@@ -255,13 +318,11 @@ export async function saveMenuData(
   await prisma.menuConfig.update({
     where: { id: menu.id },
     data: {
-      ...(data.title !== undefined ? { title: data.title.trim() || 'Menú sin título' } : {}),
+      ...(title !== undefined ? { title } : {}),
       ...(data.status !== undefined ? { status: data.status } : {}),
-      ...(data.startDate !== undefined
-        ? { startDate: data.startDate ? new Date(data.startDate) : null }
-        : {}),
-      ...(data.endDate !== undefined ? { endDate: data.endDate ? new Date(data.endDate) : null } : {}),
-      ...(data.internalNotes !== undefined ? { internalNotes: data.internalNotes } : {}),
+      ...(startDate !== undefined ? { startDate } : {}),
+      ...(endDate !== undefined ? { endDate } : {}),
+      ...(internalNotes !== undefined ? { internalNotes } : {}),
       ...(data.isTemplate !== undefined ? { isTemplate: data.isTemplate } : {}),
     },
   })
@@ -388,7 +449,7 @@ export async function listPatientsForMenu(): Promise<PatientOption[]> {
   const userId = await requireUserId()
 
   const patients = await prisma.patient.findMany({
-    where: { userId },
+    where: { userId, isActive: true, isHardDeleted: false },
     orderBy: { lastName: 'asc' },
     select: {
       id: true,
@@ -431,22 +492,25 @@ export async function assignPatientToMenu(
   if (!menu) throw new Error('El menú no está inicializado.')
 
   const patient = await prisma.patient.findFirst({
-    where: { id: patientId, userId },
+    where: { id: patientId, userId, isActive: true, isHardDeleted: false },
     select: { id: true },
   })
-  if (!patient) throw new Error('Paciente no encontrado.')
+  if (!patient) throw new Error('Paciente no encontrado o archivado.')
+  const safeServings = requireFiniteNumber(servings, 'raciones', 0.1, 100)
+  assertMenuObject(profile, 'El perfil del paciente')
+  const profileJson = serializedJson(profile, 'El perfil del paciente', 20_000)
 
   await prisma.menuPatientAssignment.upsert({
     where: { menuId_patientId: { menuId: menu.id, patientId } },
     create: {
       menuId: menu.id,
       patientId,
-      servings: servings > 0 ? servings : 1,
-      profileJson: JSON.stringify(profile || {}),
+      servings: safeServings,
+      profileJson,
     },
     update: {
-      servings: servings > 0 ? servings : 1,
-      profileJson: JSON.stringify(profile || {}),
+      servings: safeServings,
+      profileJson,
     },
   })
 
@@ -487,10 +551,11 @@ export async function updateMenuPatientServings(
     select: { id: true },
   })
   if (!menu) throw new Error('El menú no está inicializado.')
+  const safeServings = requireFiniteNumber(servings, 'raciones', 0.1, 100)
 
   await prisma.menuPatientAssignment.updateMany({
     where: { menuId: menu.id, patientId },
-    data: { servings: servings > 0 ? servings : 1 },
+    data: { servings: safeServings },
   })
 
   revalidatePath(`/dashboard/plans/${planId}`)

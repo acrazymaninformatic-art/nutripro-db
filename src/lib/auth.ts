@@ -11,30 +11,41 @@ import {
   createSessionTokenPayload,
   type SessionPayload,
 } from '@/lib/session-token'
+import { LEGAL_POLICY_VERSION, REQUIRED_PORTAL_CONSENTS } from '@/lib/legal'
 
 export const ADMIN_EMAIL = (process.env.ADMIN_EMAIL || 'info@evavidalnutricion.com').trim().toLowerCase()
 
 export async function createSession(
-  userOrId: string | { id: string; role?: string; email?: string; patientId?: string | null }
+  userOrId:
+    | string
+    | {
+        id: string
+        role?: string
+        email?: string
+        patientId?: string | null
+        sessionVersion?: number
+      }
 ) {
   const userId = typeof userOrId === 'string' ? userOrId : userOrId.id
   let role = typeof userOrId === 'string' ? undefined : userOrId.role
   let email = typeof userOrId === 'string' ? undefined : userOrId.email
   let patientId = typeof userOrId === 'string' ? undefined : userOrId.patientId
+  let sessionVersion = typeof userOrId === 'string' ? undefined : userOrId.sessionVersion
 
-  if (!role || !email) {
+  if (!role || !email || sessionVersion === undefined) {
     const dbUser = await prisma.user.findUnique({
       where: { id: userId },
-      select: { role: true, email: true, patientId: true },
+      select: { role: true, email: true, patientId: true, sessionVersion: true },
     })
     if (dbUser) {
       role = dbUser.role
       email = dbUser.email
       patientId = dbUser.patientId
+      sessionVersion = dbUser.sessionVersion
     }
   }
 
-  const payload = createSessionTokenPayload({ userId, role, email, patientId })
+  const payload = createSessionTokenPayload({ userId, role, email, patientId, sessionVersion })
   const secure = process.env.NODE_ENV === 'production'
   ;(await cookies()).set(SESSION_COOKIE, `${payload}.${signSessionPayload(payload)}`, {
     httpOnly: true,
@@ -61,8 +72,11 @@ export async function isEmergencyLockdownActive(): Promise<boolean> {
       },
     })
     return !!lockdown
-  } catch {
-    return false
+  } catch (error) {
+    // Ante una duda técnica no se puede garantizar el aislamiento: se falla
+    // cerrado para el portal y se deja rastro para que la profesional lo vea.
+    console.error('No se pudo comprobar el aislamiento de emergencia; se bloquea el acceso al portal:', error)
+    return true
   }
 }
 
@@ -88,11 +102,17 @@ export async function getSessionUser() {
       phone: true,
       address: true,
       sessionRevokedAt: true,
+      sessionVersion: true,
+      passwordChangeRequired: true,
+      mfaEnabled: true,
+      mfaEnrolledAt: true,
       patientAccount: {
         select: {
           id: true,
           portalAccessEnabled: true,
           isHardDeleted: true,
+          isActive: true,
+          consentRevokedAt: true,
         },
       },
     },
@@ -104,13 +124,18 @@ export async function getSessionUser() {
     return null
   }
 
-  // Ensure role and email match the cryptographically signed session token
+  // Ensure role, email and credential version match the signed session token
   if (session.role && user.role !== session.role) return null
   if (session.email && user.email.toLowerCase() !== session.email.toLowerCase()) return null
+  if (session.sessionVersion === undefined || session.sessionVersion !== user.sessionVersion) return null
 
-  // Immediate session termination if patient is suspended or deleted
+  // Immediate session termination if patient is suspended, deleted or inactive
   if (user.role === 'PATIENT') {
-    if (user.patientAccount?.portalAccessEnabled === false || user.patientAccount?.isHardDeleted) {
+    if (
+      user.patientAccount?.portalAccessEnabled === false ||
+      user.patientAccount?.isHardDeleted ||
+      user.patientAccount?.isActive === false
+    ) {
       return null
     }
   }
@@ -124,9 +149,17 @@ export async function requireUser() {
   return user
 }
 
-export async function requireAdmin() {
+export interface RequireAdminOptions {
+  /**
+   * Permite unicamente la configuracion mientras el administrador no ha
+   * completado el alta de MFA o debe cambiar la contrasena.
+   */
+  allowPendingSetup?: boolean
+}
+
+export async function requireAdmin(options: RequireAdminOptions = {}) {
   const user = await getSessionUser()
-  const isAdminEmail = user && (user.email.toLowerCase() === ADMIN_EMAIL || user.email.toLowerCase() === 'info@evavidalnutricion.com')
+  const isAdminEmail = Boolean(user && user.email.toLowerCase() === ADMIN_EMAIL)
   if (!user || user.role !== 'ADMIN' || !isAdminEmail) {
     if (user) {
       // Alerta y auditoría inmutable de intento de acceso no autorizado a administración (3.6.1 y 3.6.9)
@@ -146,19 +179,60 @@ export async function requireAdmin() {
     }
     notFound()
   }
+
+  // Sin MFA o con cambio de contrasena pendiente no se puede ejecutar ninguna
+  // accion clinica. Solo las pantallas y acciones de configuracion lo permiten.
+  if ((!user.mfaEnabled || user.passwordChangeRequired) && !options.allowPendingSetup) {
+    notFound()
+  }
   return user
 }
 
-export async function requirePatient() {
+export interface RequirePatientOptions {
+  /**
+   * Permite acceder a la pantalla y a las acciones de firma de consentimientos
+   * aunque el paciente todavía no haya aceptado la versión vigente. El resto
+   * de acciones clínicas queda bloqueado.
+   */
+  allowPendingConsent?: boolean
+  /**
+   * Permite acceder únicamente a la configuración para completar el cambio de
+   * contraseña obligatorio. Sin esta opción, cualquier acción clínica redirige
+   * a la pantalla de cambio de contraseña.
+   */
+  allowPasswordChangePending?: boolean
+}
+
+export async function requirePatient(options: RequirePatientOptions = {}) {
   const user = await requireUser()
-  const isAdminUser = user.role === 'ADMIN' && (user.email.toLowerCase() === ADMIN_EMAIL || user.email.toLowerCase() === 'info@evavidalnutricion.com')
+  const isAdminUser = user.role === 'ADMIN' && user.email.toLowerCase() === ADMIN_EMAIL
   if (isAdminUser) {
-    // Vista previa de solo lectura generada por el servidor para Eva Vidal (3.5)
+    // La vista previa solo puede abrirse tras completar MFA y elegir un
+    // paciente propio. El servidor verifica ambas cosas; la cookie no basta.
+    if (!user.mfaEnabled || user.passwordChangeRequired) {
+      redirect('/dashboard/settings?mfa=required')
+    }
+
     const cookieStore = await cookies()
     const previewPatientId = cookieStore.get('evsoftware_preview_patient_id')?.value
+    if (!previewPatientId) {
+      redirect('/dashboard/patients')
+    }
+
+    const previewPatient = await prisma.patient.findFirst({
+      where: { id: previewPatientId, userId: user.id, isActive: true, isHardDeleted: false },
+      select: { id: true },
+    })
+    if (!previewPatient) {
+      // No se puede borrar la cookie durante el render: Next.js solo permite
+      // modificarla en Server Actions o Route Handlers. El siguiente inicio de
+      // vista previa la sobrescribe y, mientras tanto, no concede acceso.
+      redirect('/dashboard/patients')
+    }
+
     return {
       user,
-      patientId: previewPatientId || user.patientId || null,
+      patientId: previewPatient.id,
       isAdminPreview: true,
     }
   }
@@ -173,8 +247,49 @@ export async function requirePatient() {
     redirect('/login')
   }
 
-  if (user.patientAccount?.portalAccessEnabled === false || user.patientAccount?.isHardDeleted) {
+  if (
+    user.patientAccount?.portalAccessEnabled === false ||
+    user.patientAccount?.isHardDeleted ||
+    user.patientAccount?.isActive === false
+  ) {
     redirect('/login')
+  }
+
+  if (!options.allowPendingConsent) {
+    const patient = await prisma.patient.findUnique({
+      where: { id: user.patientId },
+      select: {
+        consentRevokedAt: true,
+        consentAcceptedAt: true,
+        consentPolicyVersion: true,
+        consents: {
+          where: {
+            type: { in: REQUIRED_PORTAL_CONSENTS.map((consent) => consent.type) },
+            version: LEGAL_POLICY_VERSION,
+            accepted: true,
+            revokedAt: null,
+            status: 'COMPLETED',
+          },
+          select: { type: true },
+        },
+      },
+    })
+    const hasActiveConsents = Boolean(
+      patient &&
+        !patient.consentRevokedAt &&
+        patient.consentAcceptedAt &&
+        patient.consentPolicyVersion === LEGAL_POLICY_VERSION &&
+        REQUIRED_PORTAL_CONSENTS.every((requiredConsent) =>
+          patient.consents.some((consent) => consent.type === requiredConsent.type)
+        )
+    )
+    if (!hasActiveConsents) {
+      redirect('/paciente/politicas')
+    }
+  }
+
+  if (user.passwordChangeRequired && !options.allowPasswordChangePending) {
+    redirect('/paciente/configuracion?passwordChangeRequired=1')
   }
 
   return { user, patientId: user.patientId, isAdminPreview: false }

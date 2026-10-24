@@ -1,10 +1,11 @@
 import Link from 'next/link'
 import { requirePatient } from '@/lib/auth'
 import { prisma } from '@/lib/prisma'
-import { Card, CardHeader, CardTitle, CardDescription, CardContent } from '@/components/ui/card'
+import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { FileText, FolderOpen, ArrowLeft, Calendar, Download, MessageSquare } from 'lucide-react'
+import { isPrivateStorageKey, privateFileHref } from '@/lib/storage/private-file-url'
 
 export const dynamic = 'force-dynamic'
 
@@ -27,11 +28,7 @@ function formatDate(date: Date | string): string {
 export default async function PacienteDocumentosPage() {
   const { user, patientId: authPatientId, isAdminPreview } = await requirePatient()
 
-  let patientId = authPatientId
-  if (!patientId && isAdminPreview) {
-    const firstPatient = await prisma.patient.findFirst({ select: { id: true } })
-    patientId = firstPatient?.id || null
-  }
+  const patientId = authPatientId
 
   const [documents, consultations] = await Promise.all([
     patientId
@@ -53,12 +50,17 @@ export default async function PacienteDocumentosPage() {
           select: {
             id: true,
             date: true,
-            notes: true,
-            planNotes: true,
+            // Solo el resumen redactado para el paciente. Las notas SOAP y
+            // el plan clínico interno nunca se envían al portal.
+            patientSummary: true,
           },
         })
       : [],
   ])
+
+  const sharedConsultationSummaries = consultations.filter((consultation) =>
+    Boolean(consultation.patientSummary?.trim())
+  )
 
   return (
     <div className="space-y-6">
@@ -88,16 +90,16 @@ export default async function PacienteDocumentosPage() {
         </div>
       </div>
 
-      {/* NOTAS DE CONSULTA PARA EL PACIENTE (PDF pág 3 y 8) */}
-      {consultations.length > 0 && (
+      {/* Resúmenes redactados expresamente para el paciente */}
+      {sharedConsultationSummaries.length > 0 && (
         <div className="space-y-3">
           <h2 className="text-xs font-extrabold text-slate-700 uppercase tracking-wider flex items-center gap-1.5">
             <MessageSquare className="w-4 h-4 text-blue-600" />
-            <span>Notas Clínicas de Consulta para el Paciente ({consultations.length})</span>
+            <span>Resúmenes de consulta compartidos ({sharedConsultationSummaries.length})</span>
           </h2>
 
           <div className="space-y-3">
-            {consultations.map((c) => (
+            {sharedConsultationSummaries.map((c) => (
               <Card key={c.id} className="glass-card rounded-3xl border-blue-100/90 bg-white shadow-2xs p-5">
                 <div className="flex items-center justify-between border-b border-slate-100 pb-2.5 mb-3">
                   <span className="text-xs font-extrabold text-blue-950 flex items-center gap-1.5 font-mono">
@@ -109,7 +111,7 @@ export default async function PacienteDocumentosPage() {
                   </Badge>
                 </div>
                 <p className="text-xs text-slate-700 leading-relaxed whitespace-pre-wrap font-normal">
-                  {c.planNotes || c.notes}
+                  {c.patientSummary}
                 </p>
               </Card>
             ))}
@@ -139,6 +141,7 @@ export default async function PacienteDocumentosPage() {
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
             {documents.map((doc) => {
               const docName = doc.title || doc.fileName || 'Documento'
+              const fileHref = privateFileHref(doc.fileUrl)
               const catInfo = CATEGORY_LABELS[doc.category] || {
                 label: doc.category || 'Documento',
                 badgeClass: 'bg-slate-100 text-slate-800',
@@ -169,11 +172,6 @@ export default async function PacienteDocumentosPage() {
                       {docName}
                     </CardTitle>
 
-                    {doc.notes && (
-                      <CardDescription className="text-xs text-gray-500 line-clamp-2 mt-1">
-                        {doc.notes}
-                      </CardDescription>
-                    )}
                   </CardHeader>
 
                   <CardContent className="pt-0">
@@ -185,15 +183,22 @@ export default async function PacienteDocumentosPage() {
                     </div>
 
                     <div className="mt-3">
-                      <a
-                        href={doc.fileUrl}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="inline-flex items-center justify-center w-full gap-2 px-4 py-2.5 rounded-2xl bg-blue-50 text-blue-700 hover:bg-blue-600 hover:text-white font-bold text-xs transition-all shadow-2xs"
-                      >
-                        <Download className="w-3.5 h-3.5" />
-                        <span>Ver / Descargar</span>
-                      </a>
+                      {fileHref && isPrivateStorageKey(doc.fileUrl) ? (
+                        <a
+                          href={fileHref}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="inline-flex items-center justify-center w-full gap-2 px-4 py-2.5 rounded-2xl bg-blue-50 text-blue-700 hover:bg-blue-600 hover:text-white font-bold text-xs transition-all shadow-2xs"
+                        >
+                          <Download className="w-3.5 h-3.5" />
+                          <span>Ver / Descargar</span>
+                        </a>
+                      ) : (
+                        <span className="inline-flex items-center justify-center w-full gap-2 px-4 py-2.5 rounded-2xl bg-slate-100 text-slate-500 font-bold text-xs">
+                          <Download className="w-3.5 h-3.5" />
+                          <span>Pendiente de migración segura</span>
+                        </span>
+                      )}
                     </div>
                   </CardContent>
                 </Card>

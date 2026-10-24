@@ -11,6 +11,12 @@ import {
   checkPatientAllergenConflict,
 } from '@/lib/nutrition'
 import { FOOD_EXCHANGE_GROUPS } from '@/lib/nutrition/exchange-system'
+import {
+  buildShoppingList,
+  getDayNutrition,
+  getMealItemNutrition,
+  getMealNutrition,
+} from '@/lib/nutrition/plan-nutrition'
 
 export interface PlanDossierPdfProps {
   plan: any
@@ -116,30 +122,14 @@ export function PlanDossierPdf({ plan, hideCaloriesTCA: hideCaloriesTCAProp, cla
   }
 
   const categorizedGrocery = useMemo(() => {
-    const map = new Map<string, { name: string; category: string; quantityG: number; food: any }>()
-
-    ;(plan.days || []).forEach((day: any) => {
-      ;(day.meals || []).forEach((meal: any) => {
-        ;(meal.items || []).forEach((item: any) => {
-          if (item.food) {
-            const key = item.food.name
-            const existing = map.get(key)
-            if (existing) {
-              existing.quantityG += item.quantityG
-            } else {
-              map.set(key, {
-                name: item.food.name,
-                category: item.food.category || 'Otros',
-                quantityG: item.quantityG,
-                food: item.food,
-              })
-            }
-          }
-        })
-      })
-    })
-
-    const items = Array.from(map.values())
+    const items = buildShoppingList(
+      (plan.days || []).flatMap((day: { meals: Parameters<typeof buildShoppingList>[0] }) => day.meals)
+    ).map((entry) => ({
+      name: entry.name,
+      category: entry.category || 'Varios y Despensa',
+      quantityG: Math.round(entry.totalG),
+      food: entry.food,
+    }))
     const categoriesMap: Record<string, typeof items> = {}
 
     items.forEach((item) => {
@@ -149,7 +139,7 @@ export function PlanDossierPdf({ plan, hideCaloriesTCA: hideCaloriesTCAProp, cla
     })
 
     return categoriesMap
-  }, [plan])
+  }, [plan.days])
 
   const totalGroceryCount = useMemo(() => {
     let count = 0
@@ -346,22 +336,11 @@ export function PlanDossierPdf({ plan, hideCaloriesTCA: hideCaloriesTCAProp, cla
           HOJAS 2 A 8: CADA UNO DE LOS 7 DÍAS EN SU PROPIA HOJA A4 DEDICADA
           --------------------------------------------------------------------- */}
       {(plan.days || []).map((day: any, dIdx: number) => {
-        let dayKcal = 0
-        let dayProt = 0
-        let dayCarbs = 0
-        let dayFat = 0
-
-        ;(day.meals || []).forEach((m: any) => {
-          ;(m.items || []).forEach((it: any) => {
-            if (it.food && it.quantityG > 0) {
-              const factor = it.quantityG / 100
-              dayKcal += it.food.calories * factor
-              dayProt += it.food.proteinG * factor
-              dayCarbs += it.food.carbsG * factor
-              dayFat += it.food.fatG * factor
-            }
-          })
-        })
+        const dayNutrition = getDayNutrition((day.meals || []).flatMap((m: any) => m.items || []))
+        const dayKcal = dayNutrition.kcal
+        const dayProt = dayNutrition.proteinG
+        const dayCarbs = dayNutrition.carbsG
+        const dayFat = dayNutrition.fatG
 
         const pageNumber = dIdx + 2
         const featuredRecipe = getDayFeaturedRecipe(day)
@@ -421,20 +400,11 @@ export function PlanDossierPdf({ plan, hideCaloriesTCA: hideCaloriesTCAProp, cla
               {/* Las 5 Comidas del Día en Tablas Profesionales */}
               <div className="space-y-2">
                 {(day.meals || []).map((meal: any) => {
-                  let mealKcal = 0
-                  let mealProt = 0
-                  let mealCarbs = 0
-                  let mealFat = 0
-
-                  ;(meal.items || []).forEach((it: any) => {
-                    if (it.food && it.quantityG > 0) {
-                      const factor = it.quantityG / 100
-                      mealKcal += it.food.calories * factor
-                      mealProt += it.food.proteinG * factor
-                      mealCarbs += it.food.carbsG * factor
-                      mealFat += it.food.fatG * factor
-                    }
-                  })
+                  const mealNutrition = getMealNutrition(meal.items || [])
+                  const mealKcal = mealNutrition.kcal
+                  const mealProt = mealNutrition.proteinG
+                  const mealCarbs = mealNutrition.carbsG
+                  const mealFat = mealNutrition.fatG
 
                   if (!meal.items || meal.items.length === 0) return null
 
@@ -467,12 +437,20 @@ export function PlanDossierPdf({ plan, hideCaloriesTCA: hideCaloriesTCAProp, cla
                         </thead>
                         <tbody className="divide-y divide-gray-100 text-[11px]">
                           {(meal.items || []).map((it: any) => {
-                            const factor = it.quantityG / 100
-                            const kcal = it.food ? Math.round(it.food.calories * factor) : 0
+                            const itemNutrition = getMealItemNutrition(it)
+                            const kcal = Math.round(itemNutrition.kcal)
+                            const displayGrams = Math.round(itemNutrition.displayQuantityG)
                             const imageUrl = it.food ? getFoodImage(it.food) : ''
-                            const prepTip = getPreparationTip(it.food?.name || '', it.food?.category || null, it.notes)
+                            const prepTip = getPreparationTip(it.food?.name || it.recipe?.name || '', it.food?.category || null, it.notes)
                             const itemRecipe = it.food ? getRecipeForFood(it.food.name, it.food.category) : null
-                            const itemConflict = it.food && patient ? checkPatientAllergenConflict(it.food, patient as any) : null
+                            const itemConflicts = it.food
+                              ? [checkPatientAllergenConflict(it.food, patient as any)].filter(Boolean)
+                              : (it.recipe?.ingredients || [])
+                                  .map((ingredient: any) =>
+                                    ingredient.food ? checkPatientAllergenConflict(ingredient.food, patient as any) : null
+                                  )
+                                  .filter(Boolean)
+                            const itemConflict = itemConflicts[0] || null
 
                             return (
                               <tr key={it.id} className={`hover:bg-gray-50/40 ${itemConflict ? 'bg-red-50/60' : ''}`}>
@@ -493,10 +471,10 @@ export function PlanDossierPdf({ plan, hideCaloriesTCA: hideCaloriesTCAProp, cla
 
                                 <td className="py-1 px-2.5 align-middle">
                                   <div className="font-extrabold text-gray-900 leading-snug">
-                                    {it.food?.name || 'Alimento no especificado'}
+                                    {it.food?.name || it.recipe?.name || 'Alimento no especificado'}
                                   </div>
                                   <div className="text-[10px] text-gray-500 flex items-center gap-1.5 flex-wrap">
-                                    <span>{it.food?.category || 'General'}</span>
+                                    <span>{it.food?.category || (it.recipe ? 'Receta' : 'General')}</span>
                                     {itemConflict && (
                                       <span className="text-red-700 font-black bg-red-100 px-1 rounded text-[9px]">
                                         <AlertTriangle className="h-[1em] w-[1em] shrink-0" /> Alérgeno: {itemConflict.allergenLabel}
@@ -512,7 +490,7 @@ export function PlanDossierPdf({ plan, hideCaloriesTCA: hideCaloriesTCAProp, cla
 
                                 <td className="py-1 px-2 text-center align-middle">
                                   <span className="font-black text-gray-950 text-xs block">
-                                    {it.quantityG} g
+                                    {displayGrams} g
                                   </span>
                                   {it.portionMeasureName && (
                                     <span className="text-[9px] text-gray-500 block leading-tight">

@@ -11,11 +11,7 @@ export const dynamic = 'force-dynamic'
 export default async function PacientePerfilPage() {
   const { user, patientId: authPatientId, isAdminPreview } = await requirePatient()
 
-  let patientId = authPatientId
-  if (!patientId && isAdminPreview) {
-    const firstPatient = await prisma.patient.findFirst({ select: { id: true } })
-    patientId = firstPatient?.id || null
-  }
+  const patientId = authPatientId
 
   const patient = patientId
     ? await prisma.patient.findUnique({

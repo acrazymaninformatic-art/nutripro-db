@@ -5,12 +5,13 @@ import { redirect } from 'next/navigation'
 import { revalidatePath } from 'next/cache'
 import { prisma } from '@/lib/prisma'
 import { requireAdmin, requireUserId } from '@/lib/auth'
+import { isMinorAtDate } from '@/lib/patient-age'
 
 export async function startPatientPreview(patientId: string) {
   const admin = await requireAdmin()
 
   const patient = await prisma.patient.findFirst({
-    where: { id: patientId, userId: admin.id },
+    where: { id: patientId, userId: admin.id, isActive: true, isHardDeleted: false },
     select: { id: true, firstName: true, lastName: true },
   })
 
@@ -158,6 +159,9 @@ export async function duplicatePatient(patientId: string) {
   })
 
   if (!source) throw new Error('Paciente no encontrado.')
+  if (isMinorAtDate(source.birthDate)) {
+    throw new Error('No se puede duplicar la ficha de un menor sin un nuevo consentimiento del representante legal.')
+  }
 
   const copy = await prisma.patient.create({
     data: {

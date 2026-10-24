@@ -1,6 +1,7 @@
 'use client'
 
-import { useState, useActionState } from 'react'
+import { useEffect, useState, useActionState } from 'react'
+import { useRouter } from 'next/navigation'
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from '@/components/ui/card'
 import { MotionSettingsCard } from '@/components/ui/motion-settings-card'
 import { PwaCard } from '@/components/ui/pwa-card'
@@ -19,6 +20,7 @@ import {
 
 interface Props {
   userEmail: string
+  passwordChangeRequired?: boolean
   pendingRequests: Array<{
     id: string
     requestType: string
@@ -27,17 +29,22 @@ interface Props {
   }>
 }
 
-export function ConfigClient({ userEmail, pendingRequests }: Props) {
+export function ConfigClient({ userEmail, passwordChangeRequired = false, pendingRequests }: Props) {
   const [passwordState, formAction, isPendingPassword] = useActionState<ChangePasswordState, FormData>(
     changePasswordAction,
     {}
   )
+  const router = useRouter()
   const [downloading, setDownloading] = useState(false)
   const [erasureLoading, setErasureLoading] = useState(false)
   const [erasureSuccess, setErasureSuccess] = useState<string | null>(null)
   const [showErasureConfirm, setShowErasureConfirm] = useState(false)
   const [erasureNotes, setErasureNotes] = useState('')
   const [rightsLoading, setRightsLoading] = useState(false)
+
+  useEffect(() => {
+    if (passwordState.success) router.refresh()
+  }, [passwordState.success, router])
 
   const handleDownloadData = async () => {
     setDownloading(true)
@@ -107,11 +114,25 @@ export function ConfigClient({ userEmail, pendingRequests }: Props) {
         </div>
       </div>
 
-      {/* Preferencias de animación de la interfaz (GSAP) */}
-      <MotionSettingsCard />
+      {passwordChangeRequired && (
+        <div className="p-4 rounded-2xl bg-amber-50 border border-amber-200 text-sm text-amber-950 flex items-start gap-2.5">
+          <AlertTriangle className="w-4 h-4 mt-0.5 shrink-0 text-amber-700" />
+          <p>
+            Por seguridad, debes cambiar tu contraseña antes de acceder al resto del portal. El resto de opciones
+            se habilitará automáticamente al completar el cambio.
+          </p>
+        </div>
+      )}
 
-      {/* Instalación de la app y avisos en el móvil */}
-      <PwaCard />
+      {!passwordChangeRequired && (
+        <>
+          {/* Preferencias de animación de la interfaz (GSAP) */}
+          <MotionSettingsCard />
+
+          {/* Instalación de la app y avisos en el móvil */}
+          <PwaCard />
+        </>
+      )}
 
       {/* 1. Seguridad y Cambio de Contraseña */}
       <Card className="rounded-3xl border-slate-200/80 shadow-xs overflow-hidden">
@@ -183,6 +204,8 @@ export function ConfigClient({ userEmail, pendingRequests }: Props) {
         </CardContent>
       </Card>
 
+      {!passwordChangeRequired && (
+        <>
       {/* 2. Descarga de Datos (Portabilidad RGPD Art. 20) */}
       <Card className="rounded-3xl border-slate-200/80 shadow-xs overflow-hidden">
         <CardHeader className="bg-slate-50/60 pb-3.5 border-b border-slate-100">
@@ -304,6 +327,8 @@ export function ConfigClient({ userEmail, pendingRequests }: Props) {
           )}
         </CardContent>
       </Card>
+        </>
+      )}
     </div>
   )
 }

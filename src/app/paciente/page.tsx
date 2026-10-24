@@ -39,11 +39,7 @@ function formatDateTime(date: Date | string | null | undefined): string {
 export default async function PacienteDashboardPage() {
   const { user, patientId: authPatientId, isAdminPreview } = await requirePatient()
 
-  let patientId = authPatientId
-  if (!patientId && isAdminPreview) {
-    const firstPatient = await prisma.patient.findFirst({ select: { id: true } })
-    patientId = firstPatient?.id || null
-  }
+  const patientId = authPatientId
 
   let firstName = user.name || 'Paciente'
   let lastAnthropometry: { date: Date; weightKg: number } | null = null
@@ -52,7 +48,13 @@ export default async function PacienteDashboardPage() {
   let nextAppointment: { date: Date; modality: string; location: string | null } | null = null
   let hasPendingAnamnesis = false
   let pendingConsentsCount = 0
-  let activeProtocol: any = null
+  let activeProtocol: {
+    id: string
+    type: string
+    currentPhase: string | null
+    title: string
+    symptomLogJson: string
+  } | null = null
 
   if (patientId) {
     const [patientData, anthropometry, mealPlan, docsCount, appointment, consents, protocol] = await Promise.all([
@@ -105,18 +107,27 @@ export default async function PacienteDashboardPage() {
       }),
       prisma.patientConsent.findMany({
         where: { patientId, type: { in: REQUIRED_PORTAL_CONSENTS.map((consent) => consent.type) }, version: LEGAL_POLICY_VERSION },
-        select: { type: true, accepted: true, revokedAt: true },
+        select: { type: true, accepted: true, revokedAt: true, status: true },
       }),
       prisma.clinicalProtocolRecord.findFirst({
         where: { patientId, status: 'ACTIVE' },
         orderBy: { createdAt: 'desc' },
+        // Las notas clínicas del protocolo son internas. El portal solo
+        // necesita la fase, el título y el diario que registra el paciente.
+        select: {
+          id: true,
+          type: true,
+          phase: true,
+          title: true,
+          symptomLogJson: true,
+        },
       }),
     ])
 
     const hasAcceptedCurrentPolicies = Boolean(
       patientData?.consentAcceptedAt &&
       patientData.consentPolicyVersion === LEGAL_POLICY_VERSION &&
-      REQUIRED_PORTAL_CONSENTS.every((requiredConsent) => consents.some((consent) => consent.type === requiredConsent.type && consent.accepted && !consent.revokedAt))
+      REQUIRED_PORTAL_CONSENTS.every((requiredConsent) => consents.some((consent) => consent.type === requiredConsent.type && consent.accepted && consent.status === 'COMPLETED' && !consent.revokedAt))
     )
     if (!isAdminPreview && !hasAcceptedCurrentPolicies) {
       redirect('/paciente/politicas')
@@ -126,12 +137,22 @@ export default async function PacienteDashboardPage() {
       firstName = patientData.firstName
     }
     hasPendingAnamnesis = patientData?.anamnesisStatus === 'PENDING' || patientData?.anamnesisStatus === 'SENT'
-    pendingConsentsCount = REQUIRED_PORTAL_CONSENTS.filter((requiredConsent) => !consents.some((consent) => consent.type === requiredConsent.type && consent.accepted && !consent.revokedAt)).length
+    pendingConsentsCount = REQUIRED_PORTAL_CONSENTS.filter((requiredConsent) => !consents.some((consent) => consent.type === requiredConsent.type && consent.accepted && consent.status === 'COMPLETED' && !consent.revokedAt)).length
     lastAnthropometry = anthropometry
     activeMealPlan = mealPlan
     documentCount = docsCount
     nextAppointment = appointment
+    // DTO mínimo: el componente de cliente no necesita el JSON de parámetros
+    // clínicos ni el resto del registro. La fase real se guarda en `phase`.
     activeProtocol = protocol
+      ? {
+          id: protocol.id,
+          type: protocol.type,
+          currentPhase: protocol.phase,
+          title: protocol.title,
+          symptomLogJson: protocol.symptomLogJson,
+        }
+      : null
 
     // Fallback: If no appointment, check future consultation
     if (!nextAppointment) {

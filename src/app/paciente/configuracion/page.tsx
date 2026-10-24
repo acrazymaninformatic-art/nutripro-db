@@ -5,13 +5,11 @@ import { ConfigClient } from './config-client'
 export const dynamic = 'force-dynamic'
 
 export default async function PacienteConfiguracionPage() {
-  const { user, patientId: authPatientId, isAdminPreview } = await requirePatient()
+  const { user, patientId: authPatientId, isAdminPreview } = await requirePatient({
+    allowPasswordChangePending: true,
+  })
 
-  let patientId = authPatientId
-  if (!patientId && isAdminPreview) {
-    const firstPatient = await prisma.patient.findFirst({ select: { id: true } })
-    patientId = firstPatient?.id || null
-  }
+  const patientId = authPatientId
 
   const requests = patientId
     ? await prisma.dataSubjectRequest.findMany({
@@ -30,6 +28,7 @@ export default async function PacienteConfiguracionPage() {
   return (
     <ConfigClient
       userEmail={user.email}
+      passwordChangeRequired={user.passwordChangeRequired}
       pendingRequests={requests.map((r) => ({
         ...r,
         createdAt: r.createdAt.toISOString(),

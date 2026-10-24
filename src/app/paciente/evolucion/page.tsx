@@ -20,11 +20,7 @@ function formatDate(date: Date | string): string {
 export default async function PacienteEvolucionPage() {
   const { user, patientId: authPatientId, isAdminPreview } = await requirePatient()
 
-  let patientId = authPatientId
-  if (!patientId && isAdminPreview) {
-    const firstPatient = await prisma.patient.findFirst({ select: { id: true } })
-    patientId = firstPatient?.id || null
-  }
+  const patientId = authPatientId
 
   const measurements = patientId
     ? await prisma.anthropometry.findMany({
@@ -33,6 +29,17 @@ export default async function PacienteEvolucionPage() {
           isPublishedToPatient: true,
         },
         orderBy: { date: 'desc' },
+        // Las observaciones de la sesión son notas clínicas internas.
+        select: {
+          id: true,
+          date: true,
+          weightKg: true,
+          bodyFatPct: true,
+          muscleMassKg: true,
+          waistCm: true,
+          hipCm: true,
+          visceralFat: true,
+        },
       })
     : []
 
@@ -229,7 +236,6 @@ export default async function PacienteEvolucionPage() {
                     <th scope="col" className="px-5 py-3">Masa Muscular</th>
                     <th scope="col" className="px-5 py-3">Cintura</th>
                     <th scope="col" className="px-5 py-3">Cadera</th>
-                    <th scope="col" className="px-5 py-3">Notas</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-gray-100 bg-white">
@@ -269,9 +275,6 @@ export default async function PacienteEvolucionPage() {
                         </td>
                         <td className="px-5 py-3.5 text-gray-700 whitespace-nowrap">
                           {m.hipCm != null ? `${m.hipCm} cm` : '-'}
-                        </td>
-                        <td className="px-5 py-3.5 text-gray-500 max-w-xs text-[11px] truncate" title={m.notes || ''}>
-                          {m.notes || '-'}
                         </td>
                       </tr>
                     )

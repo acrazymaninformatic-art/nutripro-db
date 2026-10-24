@@ -8,20 +8,43 @@ import { requireAdmin } from '@/lib/auth'
 import { createPortalInviteToken, getPublicAppUrl } from '@/lib/password-reset-token'
 import { sendPatientPortalWelcomeEmail } from '@/lib/email/password-reset-email'
 import { logEmailSent } from '@/lib/email/log-email'
+import { isMinorAtDate } from '@/lib/patient-age'
+
+function assertMinorGuardianConsent(patient: {
+  birthDate: Date
+  guardianName: string | null
+  guardianRelationship: string | null
+  guardianConsentAt: Date | null
+}) {
+  if (
+    isMinorAtDate(patient.birthDate) &&
+    (!patient.guardianName || !patient.guardianRelationship || !patient.guardianConsentAt)
+  ) {
+    throw new Error(
+      'El paciente es menor de edad y falta la constancia del representante legal. Complétala en la ficha antes de activar el portal.'
+    )
+  }
+}
 
 export async function createPortalAccount(patientId: string) {
   const admin = await requireAdmin()
 
   const patient = await prisma.patient.findFirst({
-    where: { id: patientId, userId: admin.id },
+    where: { id: patientId, userId: admin.id, isActive: true, isHardDeleted: false },
     include: { portalUser: true },
   })
 
   if (!patient) {
     throw new Error('Paciente no encontrado.')
   }
+  assertMinorGuardianConsent(patient)
 
-  if (!patient.email || !patient.email.includes('@')) {
+  if (
+    !patient.email ||
+    patient.email.length > 254 ||
+    /[\r\n]/.test(patient.email) ||
+    !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(patient.email.trim())
+  ) {
     throw new Error('El paciente debe tener un correo electrónico válido registrado para crear acceso al portal.')
   }
 
@@ -35,6 +58,9 @@ export async function createPortalAccount(patientId: string) {
   const { token, hash, expiresAt } = createPortalInviteToken(24)
 
   if (portalUser) {
+    if (portalUser.role === 'ADMIN') {
+      throw new Error('Este correo pertenece a una cuenta profesional. Usa un correo distinto para el portal del paciente.')
+    }
     if (portalUser.patientId && portalUser.patientId !== patient.id) {
       throw new Error('Este correo ya está asociado a otro expediente de paciente.')
     }
@@ -48,6 +74,8 @@ export async function createPortalAccount(patientId: string) {
         passwordResetTokenHash: hash,
         passwordResetExpiresAt: expiresAt,
         passwordResetRequestedAt: new Date(),
+        sessionRevokedAt: null,
+        sessionVersion: { increment: 1 },
       },
     })
   } else {
@@ -138,15 +166,26 @@ export async function createPortalAccount(patientId: string) {
 
 export async function togglePortalAccess(patientId: string, enabled: boolean) {
   const admin = await requireAdmin()
+  if (typeof enabled !== 'boolean') throw new Error('El estado del portal no es válido.')
 
   const patient = await prisma.patient.findFirst({
-    where: { id: patientId, userId: admin.id },
-    select: { id: true, firstName: true, lastName: true, email: true },
+    where: { id: patientId, userId: admin.id, isActive: true, isHardDeleted: false },
+    select: {
+      id: true,
+      firstName: true,
+      lastName: true,
+      email: true,
+      birthDate: true,
+      guardianName: true,
+      guardianRelationship: true,
+      guardianConsentAt: true,
+    },
   })
 
   if (!patient) {
     throw new Error('Paciente no encontrado.')
   }
+  if (enabled) assertMinorGuardianConsent(patient)
 
   // Invalidate all existing sessions immediately when blocking access
   const portalUser = await prisma.user.findFirst({
@@ -154,27 +193,37 @@ export async function togglePortalAccess(patientId: string, enabled: boolean) {
     select: { id: true },
   })
 
-  await prisma.patient.update({
-    where: { id: patient.id },
-    data: { portalAccessEnabled: enabled },
-  })
-
-  if (portalUser && !enabled) {
-    await prisma.user.update({
-      where: { id: portalUser.id },
-      data: { sessionRevokedAt: new Date() },
+  await prisma.$transaction(async (tx) => {
+    await tx.patient.update({
+      where: { id: patient.id },
+      data: { portalAccessEnabled: enabled },
     })
-  }
 
-  await prisma.auditLog.create({
-    data: {
-      userId: admin.id,
-      patientId: patient.id,
-      action: enabled ? 'REACTIVATE_PORTAL_ACCESS' : 'SUSPEND_PORTAL_ACCESS',
-      entityType: 'PATIENT',
-      entityId: patient.id,
-      details: `Acceso al portal ${enabled ? 'reactivado' : 'suspendido al instante (cierre de sesiones)'} por Eva`,
-    },
+    if (portalUser) {
+      await tx.user.update({
+        where: { id: portalUser.id },
+        data: enabled
+          ? { sessionRevokedAt: null, sessionVersion: { increment: 1 } }
+          : {
+              sessionRevokedAt: new Date(),
+              sessionVersion: { increment: 1 },
+              passwordResetTokenHash: null,
+              passwordResetExpiresAt: null,
+              passwordResetRequestedAt: null,
+            },
+      })
+    }
+
+    await tx.auditLog.create({
+      data: {
+        userId: admin.id,
+        patientId: patient.id,
+        action: enabled ? 'REACTIVATE_PORTAL_ACCESS' : 'SUSPEND_PORTAL_ACCESS',
+        entityType: 'PATIENT',
+        entityId: patient.id,
+        details: `Acceso al portal ${enabled ? 'reactivado' : 'suspendido al instante (cierre de sesiones)'} por Eva`,
+      },
+    })
   })
 
   revalidatePath(`/dashboard/patients/${patientId}`)
@@ -191,12 +240,19 @@ export async function generateNewPortalInviteLink(patientId: string) {
   const admin = await requireAdmin()
 
   const patient = await prisma.patient.findFirst({
-    where: { id: patientId, userId: admin.id },
+    where: { id: patientId, userId: admin.id, isActive: true, isHardDeleted: false },
     include: { portalUser: true },
   })
 
   if (!patient) throw new Error('Paciente no encontrado.')
+  if (!patient.portalAccessEnabled) {
+    throw new Error('El acceso al portal está suspendido. Reactívalo antes de generar una nueva invitación.')
+  }
+  assertMinorGuardianConsent(patient)
   if (!patient.portalUser) throw new Error('El paciente aún no tiene cuenta de portal creada.')
+  if (patient.portalUser.role === 'ADMIN') {
+    throw new Error('La cuenta vinculada es profesional y no puede recibir una invitación de portal.')
+  }
 
   const { token, hash, expiresAt } = createPortalInviteToken(24)
 
@@ -207,6 +263,10 @@ export async function generateNewPortalInviteLink(patientId: string) {
       passwordResetTokenHash: hash,
       passwordResetExpiresAt: expiresAt,
       passwordResetRequestedAt: new Date(),
+      // Invalida las sesiones antiguas sin marcar la cuenta como revocada:
+      // la cuenta debe poder iniciar sesión con la nueva contraseña.
+      sessionVersion: { increment: 1 },
+      sessionRevokedAt: null,
     },
   })
 

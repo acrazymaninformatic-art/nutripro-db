@@ -36,7 +36,14 @@ export default async function AnamnesisPage({ searchParams }: Props) {
   }
 
   const patient = await prisma.patient.findFirst({
-    where: { anamnesisAccessTokenHash: hashAnamnesisToken(token), anamnesisAccessTokenExpiresAt: { gt: new Date() } },
+    where: {
+      anamnesisAccessTokenHash: hashAnamnesisToken(token),
+      anamnesisAccessTokenExpiresAt: { gt: new Date() },
+      isActive: true,
+      isHardDeleted: false,
+      portalAccessEnabled: true,
+      consentRevokedAt: null,
+    },
     include: {
       anamnesisSubmissions: {
         select: { id: true, submittedAt: true },

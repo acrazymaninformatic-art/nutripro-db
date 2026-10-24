@@ -8,7 +8,23 @@ export const metadata: Metadata = { title: 'Reprogramar cita · Eva Vidal Nutric
 
 export default async function ReschedulePage({ searchParams }: { searchParams: Promise<{ token?: string }> }) {
   const { token = '' } = await searchParams
-  const appointment = token ? await prisma.appointment.findFirst({ where: { rescheduleTokenHash: hashSecureLinkToken(token), rescheduleTokenExpiresAt: { gt: new Date() }, status: 'CONFIRMED', date: { gt: new Date() } }, select: { date: true, durationMin: true, modality: true } }) : null
+  const appointment = token
+    ? await prisma.appointment.findFirst({
+        where: {
+          rescheduleTokenHash: hashSecureLinkToken(token),
+          rescheduleTokenExpiresAt: { gt: new Date() },
+          status: 'CONFIRMED',
+          date: { gt: new Date() },
+          patient: {
+            isActive: true,
+            isHardDeleted: false,
+            portalAccessEnabled: true,
+            consentRevokedAt: null,
+          },
+        },
+        select: { date: true, durationMin: true, modality: true },
+      })
+    : null
   return (
     <main className="relative flex min-h-screen items-center justify-center overflow-hidden bg-ambient-eva px-4 py-12">
       <div className="pointer-events-none absolute -left-24 top-1/4 h-72 w-72 rounded-full bg-blue-400/10 blur-3xl" />

@@ -1,6 +1,5 @@
 import 'server-only'
 import nodemailer from 'nodemailer'
-import { prisma } from '@/lib/prisma'
 import { logEmailSent } from './log-email'
 
 export interface SendManualEmailParams {
@@ -135,9 +134,22 @@ export async function sendManualEmail({
   patientId,
 }: SendManualEmailParams) {
   const email = recipientEmail.trim().toLowerCase()
-  if (!email || !email.includes('@')) {
+  if (
+    !email ||
+    email.length > 254 ||
+    /[\r\n]/.test(email) ||
+    !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)
+  ) {
     throw new Error('Dirección de correo electrónico no válida.')
   }
+  const safeSubject = subject.trim()
+  if (!safeSubject || safeSubject.length > 200 || /[\r\n]/.test(safeSubject)) {
+    throw new Error('El asunto del correo no es válido.')
+  }
+  if (message.length > 20_000) {
+    throw new Error('El mensaje no puede superar 20.000 caracteres.')
+  }
+  const safeRecipientName = (recipientName || '').trim().slice(0, 120)
 
   const smtpHost = process.env.SMTP_HOST
   const smtpPort = process.env.SMTP_PORT ? Number(process.env.SMTP_PORT) : 465
@@ -164,8 +176,8 @@ export async function sendManualEmail({
   })
 
   const html = generateManualEmailHtml({
-    recipientName: recipientName || '',
-    subject,
+    recipientName: safeRecipientName,
+    subject: safeSubject,
     message,
   })
 
@@ -174,16 +186,16 @@ export async function sendManualEmail({
       from: `"${smtpFromName}" <${smtpFrom}>`,
       replyTo: smtpFrom,
       to: email,
-      subject,
+      subject: safeSubject,
       text: message,
       html,
     })
 
     await logEmailSent({
       recipientEmail: email,
-      recipientName: recipientName || null,
+      recipientName: safeRecipientName || null,
       patientId: patientId || null,
-      subject,
+      subject: safeSubject,
       type: 'MANUAL',
       status: 'SENT',
     })
@@ -195,9 +207,9 @@ export async function sendManualEmail({
 
     await logEmailSent({
       recipientEmail: email,
-      recipientName: recipientName || null,
+      recipientName: safeRecipientName || null,
       patientId: patientId || null,
-      subject,
+      subject: safeSubject,
       type: 'MANUAL',
       status: 'FAILED',
       errorDetails: errorMsg,

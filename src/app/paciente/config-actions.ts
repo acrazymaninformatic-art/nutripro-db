@@ -1,9 +1,12 @@
 'use server'
 
 import bcrypt from 'bcryptjs'
+import { headers } from 'next/headers'
 import { prisma } from '@/lib/prisma'
-import { requirePatient } from '@/lib/auth'
+import { createSession, requirePatient } from '@/lib/auth'
 import { revalidatePath } from 'next/cache'
+import { getForwardedClientAddress } from '@/lib/legal'
+import { consumeRateLimit, rateLimitKey } from '@/lib/rate-limit'
 
 export interface ChangePasswordState {
   error?: string
@@ -11,14 +14,14 @@ export interface ChangePasswordState {
 }
 
 function isValidPassword(p: string): boolean {
-  return p.length >= 12 && /[a-z]/.test(p) && /[A-Z]/.test(p) && /\d/.test(p)
+  return p.length >= 14 && /[a-z]/.test(p) && /[A-Z]/.test(p) && /\d/.test(p)
 }
 
 export async function changePasswordAction(
   _prevState: ChangePasswordState | undefined,
   formData: FormData
 ): Promise<ChangePasswordState> {
-  const { user, isAdminPreview } = await requirePatient()
+  const { user, isAdminPreview } = await requirePatient({ allowPasswordChangePending: true })
   if (isAdminPreview) return { error: 'Modo vista previa de solo lectura (Eva Vidal). No se puede modificar la contraseña del paciente.' }
   const currentPassword = String(formData.get('currentPassword') || '')
   const newPassword = String(formData.get('newPassword') || '')
@@ -29,11 +32,27 @@ export async function changePasswordAction(
   }
 
   if (!isValidPassword(newPassword)) {
-    return { error: 'La nueva contraseña debe tener al menos 12 caracteres, mayúscula, minúscula y número.' }
+    return { error: 'La nueva contraseña debe tener al menos 14 caracteres, mayúscula, minúscula y número.' }
   }
 
   if (newPassword !== confirmPassword) {
     return { error: 'La nueva contraseña y su confirmación no coinciden.' }
+  }
+
+  const headerList = await headers()
+  const ip = getForwardedClientAddress(
+    headerList.get('x-forwarded-for') || headerList.get('x-real-ip') || headerList.get('cf-connecting-ip')
+  )
+  // El límite se consume antes de comprobar la contraseña actual: si no,
+  // una sesión robada permitiría probar contraseñas sin restricción.
+  const limit = await consumeRateLimit({
+    key: rateLimitKey('change-password-user', user.id),
+    limit: 5,
+    windowMs: 15 * 60 * 1000,
+    failClosed: true,
+  })
+  if (!limit.allowed) {
+    return { error: `Demasiados intentos. Espera ${limit.retryAfterSeconds} segundos antes de volver a intentarlo.` }
   }
 
   const dbUser = await prisma.user.findUnique({
@@ -47,33 +66,54 @@ export async function changePasswordAction(
 
   const newHash = await bcrypt.hash(newPassword, 12)
 
-  await prisma.user.update({
-    where: { id: user.id },
-    data: {
-      passwordHash: newHash,
-      passwordChangeRequired: false,
-    },
+  // La versión se obtiene del UPDATE para que la sesión reemitida coincida con
+  // la base de datos incluso si otra petición incrementó el contador.
+  const newSessionVersion = await prisma.$transaction(async (tx) => {
+    const updated = await tx.user.update({
+      where: { id: user.id },
+      data: {
+        passwordHash: newHash,
+        passwordChangeRequired: false,
+        // Un cambio de contraseña invalida cualquier enlace de reseteo que
+        // siguiera pendiente, para que no pueda reutilizarse posteriormente.
+        passwordResetTokenHash: null,
+        passwordResetExpiresAt: null,
+        passwordResetRequestedAt: null,
+        sessionVersion: { increment: 1 },
+      },
+      select: { sessionVersion: true },
+    })
+    await tx.auditLog.create({
+      data: {
+        userId: user.id,
+        patientId: dbUser.patientId,
+        action: 'PASSWORD_CHANGE',
+        entityType: 'USER',
+        entityId: user.id,
+        details: `El paciente actualizó su contraseña desde la configuración del portal. Sesiones anteriores invalidadas. IP: ${ip}.`,
+      },
+    })
+    return updated.sessionVersion
   })
 
-  await prisma.auditLog.create({
-    data: {
-      userId: user.id,
-      patientId: dbUser.patientId,
-      action: 'PASSWORD_CHANGE',
-      entityType: 'USER',
-      entityId: user.id,
-      details: 'El paciente actualizó su contraseña desde la configuración del portal',
-    },
+  // Se reemite solo la sesión actual; cualquier cookie robada o sesión previa
+  // queda invalidada por el incremento de sessionVersion.
+  await createSession({
+    id: user.id,
+    role: user.role,
+    email: user.email,
+    patientId: user.patientId,
+    sessionVersion: newSessionVersion,
   })
 
-  return { success: 'Contraseña actualizada correctamente.' }
+  return { success: 'Contraseña actualizada correctamente. Las demás sesiones han sido cerradas.' }
 }
 
 async function createPatientDataSubjectRequest(
   requestType: 'ERASURE' | 'ACCESS' | 'RECTIFICATION' | 'RESTRICTION' | 'OPPOSITION' | 'EXPORT',
   notes?: string
 ): Promise<{ success: boolean; message: string }> {
-  const { patientId, isAdminPreview } = await requirePatient()
+  const { user, patientId, isAdminPreview } = await requirePatient()
   if (isAdminPreview) {
     return {
       success: false,
@@ -88,6 +128,7 @@ async function createPatientDataSubjectRequest(
   })
 
   if (!patient) throw new Error('Expediente no encontrado')
+  const safeNotes = typeof notes === 'string' ? notes.trim().slice(0, 2000) : ''
 
   const existingRequest = await prisma.dataSubjectRequest.findFirst({
     where: { userId: patient.userId, patientId: patient.id, requestType, status: { in: ['PENDING', 'IN_PROGRESS'] } },
@@ -97,25 +138,29 @@ async function createPatientDataSubjectRequest(
     return { success: true, message: 'Ya existe una solicitud abierta de este tipo. La consulta la tramitará dentro del plazo legal.' }
   }
 
-  await prisma.dataSubjectRequest.create({
-    data: {
-      userId: patient.userId,
-      patientId: patient.id,
-      requestType,
-      status: 'PENDING',
-      notes: notes || `Solicitud ${requestType} tramitada por el paciente desde su portal.`,
-    },
-  })
+  await prisma.$transaction(async (tx) => {
+    await tx.dataSubjectRequest.create({
+      data: {
+        userId: patient.userId,
+        patientId: patient.id,
+        requestType,
+        status: 'PENDING',
+        notes: safeNotes || `Solicitud ${requestType} tramitada por el paciente desde su portal.`,
+      },
+    })
 
-  await prisma.auditLog.create({
-    data: {
-      userId: patient.userId,
-      patientId: patient.id,
-      action: `DATA_${requestType}_REQUEST`,
-      entityType: 'PATIENT',
-      entityId: patient.id,
-      details: `Solicitud de derechos ${requestType} registrada por el paciente conforme al RGPD.`,
-    },
+    await tx.auditLog.create({
+      data: {
+        // La solicitud pertenece al expediente de la profesional, pero la
+        // auditoría debe identificar a la persona que la ha enviado.
+        userId: user.id,
+        patientId: patient.id,
+        action: `DATA_${requestType}_REQUEST`,
+        entityType: 'PATIENT',
+        entityId: patient.id,
+        details: `Solicitud de derechos ${requestType} registrada por el paciente conforme al RGPD.`,
+      },
+    })
   })
 
   revalidatePath('/paciente/configuracion')
@@ -138,7 +183,8 @@ export async function requestDataRectificationAction(notes?: string) {
 }
 
 export async function exportPatientDataAction(): Promise<{ dataJson: string; fileName: string }> {
-  const { patientId } = await requirePatient()
+  const { user, patientId, isAdminPreview } = await requirePatient()
+  if (isAdminPreview) throw new Error('Modo vista previa de solo lectura (Eva Vidal).')
   if (!patientId) throw new Error('Paciente no identificado')
 
   const patient = await prisma.patient.findUnique({
@@ -221,6 +267,19 @@ export async function exportPatientDataAction(): Promise<{ dataJson: string; fil
 
   const cleanName = `${patient.firstName}_${patient.lastName}`.toLowerCase().replace(/[^a-z0-9]/g, '_')
   const fileName = `mis_datos_salud_${cleanName}_${new Date().toISOString().split('T')[0]}.json`
+
+  // La exportación de datos de salud debe quedar trazada aunque la solicite
+  // el propio paciente desde el portal (RGPD Art. 15 y 20).
+  await prisma.auditLog.create({
+    data: {
+      userId: user.id,
+      patientId,
+      action: 'PATIENT_DATA_EXPORTED_SELF_SERVICE',
+      entityType: 'PATIENT',
+      entityId: patientId,
+      details: `Exportación de datos solicitada por el paciente desde el portal. Antropometrías: ${patient.anthropometries.length}; planes: ${patient.mealPlans.length}; citas: ${patient.appointments.length}; consentimientos: ${patient.consents.length}; cuestionarios: ${patient.anamnesisSubmissions.length}.`,
+    },
+  })
 
   return {
     dataJson: JSON.stringify(exportPayload, null, 2),

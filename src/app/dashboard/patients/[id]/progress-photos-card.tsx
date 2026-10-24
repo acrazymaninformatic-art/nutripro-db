@@ -8,6 +8,7 @@ import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Camera, Plus, ArrowRightLeft } from 'lucide-react'
 import { saveProgressPhoto, deleteProgressPhoto } from '../actions'
+import { isPrivateStorageKey, privateFileHref } from '@/lib/storage/private-file-url'
 
 interface ProgressPhotosCardProps {
   patientId: string
@@ -23,7 +24,7 @@ interface ProgressPhotosCardProps {
 
 export function ProgressPhotosCard({ patientId, photos }: ProgressPhotosCardProps) {
   const [isOpen, setIsOpen] = useState(false)
-  const [photoUrl, setPhotoUrl] = useState('')
+  const [photoFile, setPhotoFile] = useState<File | null>(null)
   const [label, setLabel] = useState('Frontal')
   const [notes, setNotes] = useState('')
   const [consentGiven, setConsentGiven] = useState(false)
@@ -42,16 +43,20 @@ export function ProgressPhotosCard({ patientId, photos }: ProgressPhotosCardProp
       alert('Es obligatorio registrar el consentimiento específico del paciente.')
       return
     }
+    if (!photoFile) {
+      alert('Selecciona una fotografía para guardarla.')
+      return
+    }
     setLoading(true)
     try {
       await saveProgressPhoto(patientId, {
-        photoUrl,
+        file: photoFile,
         label,
         notes,
         consentGiven,
       })
       setIsOpen(false)
-      setPhotoUrl('')
+      setPhotoFile(null)
       setNotes('')
       setConsentGiven(false)
     } catch (err: any) {
@@ -109,15 +114,16 @@ export function ProgressPhotosCard({ patientId, photos }: ProgressPhotosCardProp
 
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
               <div className="space-y-1 sm:col-span-2">
-                <Label htmlFor="photoUrl" className="text-xs">URL o Enlace de la Fotografía *</Label>
+                <Label htmlFor="photoFile" className="text-xs">Fotografía (JPG, PNG, WEBP · máx. 15 MB) *</Label>
                 <Input
-                  id="photoUrl"
-                  value={photoUrl}
-                  onChange={(e) => setPhotoUrl(e.target.value)}
-                  placeholder="https://... o ruta de almacenamiento seguro"
-                  className="rounded-xl text-xs bg-white"
+                  id="photoFile"
+                  type="file"
+                  accept="image/jpeg,image/png,image/webp,image/heic,image/heif"
+                  onChange={(e) => setPhotoFile(e.target.files?.[0] || null)}
+                  className="rounded-xl text-xs bg-white file:mr-3 file:rounded-lg file:border-0 file:bg-blue-600 file:px-3 file:py-1.5 file:text-xs file:font-semibold file:text-white"
                   required
                 />
+                <p className="text-2xs text-slate-500">Se almacena en un bucket privado y se sirve con sesión autenticada.</p>
               </div>
 
               <div className="space-y-1">
@@ -217,8 +223,8 @@ export function ProgressPhotosCard({ patientId, photos }: ProgressPhotosCardProp
                     <Badge variant="outline" className="text-3xs font-bold">{beforePhoto.label}</Badge>
                   </div>
                   <div className="aspect-3/4 rounded-xl bg-gray-200 overflow-hidden relative border flex items-center justify-center">
-                    {beforePhoto.photoUrl ? (
-                      <img src={beforePhoto.photoUrl} alt="Antes" className="w-full h-full object-cover" />
+                    {isPrivateStorageKey(beforePhoto.photoUrl) ? (
+                      <img src={privateFileHref(beforePhoto.photoUrl)} alt="Antes" className="w-full h-full object-cover" />
                     ) : (
                       <Camera className="h-10 w-10 text-gray-400" />
                     )}
@@ -235,8 +241,8 @@ export function ProgressPhotosCard({ patientId, photos }: ProgressPhotosCardProp
                     <Badge variant="outline" className="text-3xs font-bold bg-white text-blue-800 border-blue-300">{afterPhoto.label}</Badge>
                   </div>
                   <div className="aspect-3/4 rounded-xl bg-gray-200 overflow-hidden relative border border-blue-200 flex items-center justify-center">
-                    {afterPhoto.photoUrl ? (
-                      <img src={afterPhoto.photoUrl} alt="Después" className="w-full h-full object-cover" />
+                    {isPrivateStorageKey(afterPhoto.photoUrl) ? (
+                      <img src={privateFileHref(afterPhoto.photoUrl)} alt="Después" className="w-full h-full object-cover" />
                     ) : (
                       <Camera className="h-10 w-10 text-blue-400" />
                     )}
@@ -253,8 +259,8 @@ export function ProgressPhotosCard({ patientId, photos }: ProgressPhotosCardProp
               <Badge variant="outline" className="text-3xs font-bold">{photos[0].label}</Badge>
             </div>
             <div className="aspect-3/4 rounded-xl bg-gray-200 overflow-hidden relative flex items-center justify-center">
-              {photos[0].photoUrl ? (
-                <img src={photos[0].photoUrl} alt="Foto de seguimiento" className="w-full h-full object-cover" />
+              {isPrivateStorageKey(photos[0].photoUrl) ? (
+                <img src={privateFileHref(photos[0].photoUrl)} alt="Foto de seguimiento" className="w-full h-full object-cover" />
               ) : (
                 <Camera className="h-8 w-8 text-gray-400" />
               )}

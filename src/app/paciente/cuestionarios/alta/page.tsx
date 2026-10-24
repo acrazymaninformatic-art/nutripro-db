@@ -8,11 +8,7 @@ export const dynamic = 'force-dynamic'
 export default async function PacienteAltaPage() {
   const { patientId: authPatientId, isAdminPreview } = await requirePatient()
 
-  let patientId = authPatientId
-  if (!patientId && isAdminPreview) {
-    const firstPatient = await prisma.patient.findFirst({ select: { id: true } })
-    patientId = firstPatient?.id || null
-  }
+  const patientId = authPatientId
 
   if (!patientId) {
     redirect('/paciente')
@@ -45,9 +41,26 @@ export default async function PacienteAltaPage() {
     redirect('/paciente/cuestionarios')
   }
 
+  const questionnaire = await prisma.patientQuestionnaire.findFirst({
+    where: { patientId, type: 'ALTA' },
+    orderBy: { createdAt: 'desc' },
+    select: { draftAnswersJson: true },
+  })
+
+  let initialDraft: Record<string, any> | null = null
+  if (questionnaire?.draftAnswersJson) {
+    try {
+      const parsed = JSON.parse(questionnaire.draftAnswersJson)
+      if (parsed && typeof parsed === 'object' && !Array.isArray(parsed)) initialDraft = parsed
+    } catch {
+      initialDraft = null
+    }
+  }
+
   return (
     <div className="py-4">
       <AltaFormClient
+        initialDraft={initialDraft}
         patient={{
           firstName: patient.firstName,
           lastName: patient.lastName,

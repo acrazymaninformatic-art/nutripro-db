@@ -26,7 +26,7 @@ export function AddFoodDialog({ categories }: { categories: string[] }) {
       router.refresh()
     } catch (err) {
       console.error(err)
-      alert('Error al registrar el alimento')
+      alert(err instanceof Error ? err.message : 'Error al registrar el alimento')
     } finally {
       setLoading(false)
     }

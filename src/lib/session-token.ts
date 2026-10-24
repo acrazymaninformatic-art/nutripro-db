@@ -18,6 +18,8 @@ export interface SessionPayload {
   role?: string
   email?: string
   patientId?: string | null
+  /** Versión de credenciales; un cambio de contraseña invalida las sesiones anteriores. */
+  sessionVersion?: number
 }
 
 export function createSessionTokenPayload(data: SessionPayload, ttlSeconds = SESSION_TTL_SECONDS): string {
@@ -30,16 +32,12 @@ export function verifySessionToken(token: string | undefined): (SessionPayload &
   const [payload, signature] = token.split('.')
   if (!payload || !signature) return null
 
-  // Constant-time comparison: always compare equal-length buffers to prevent timing attacks.
-  // HMAC-SHA256 output is fixed-length (32 bytes -> 44 base64url chars), so pad shorter buffers.
+  // La firma HMAC-SHA256 tiene una longitud fija. Rechazar longitudes distintas
+  // antes de comparar evita comparaciones ambiguas con relleno.
   const expected = Buffer.from(signSessionPayload(payload))
   const received = Buffer.from(signature)
-  const len = Math.max(expected.length, received.length)
-  const expectedPadded = Buffer.alloc(len, 0)
-  const receivedPadded = Buffer.alloc(len, 0)
-  expected.copy(expectedPadded)
-  received.copy(receivedPadded)
-  if (!timingSafeEqual(expectedPadded, receivedPadded)) return null
+  if (expected.length !== received.length) return null
+  if (!timingSafeEqual(expected, received)) return null
 
   try {
     const parsed = JSON.parse(Buffer.from(payload, 'base64url').toString('utf8')) as SessionPayload & { expiresAt?: number }
@@ -49,6 +47,7 @@ export function verifySessionToken(token: string | undefined): (SessionPayload &
       role: parsed.role,
       email: parsed.email,
       patientId: parsed.patientId,
+      sessionVersion: parsed.sessionVersion,
       expiresAt: parsed.expiresAt,
     }
   } catch {

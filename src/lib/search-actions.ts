@@ -53,7 +53,10 @@ export async function searchEverything(query: string): Promise<GlobalSearchResul
       select: { id: true, name: true, category: true, servings: true },
     }),
     prisma.food.findMany({
-      where: { name: { contains: term, mode: 'insensitive' } },
+      where: {
+        name: { contains: term, mode: 'insensitive' },
+        OR: [{ userId: null, isPrivate: false }, { userId }],
+      },
       take: 5,
       select: { id: true, name: true, category: true, calories: true },
     }),

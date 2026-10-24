@@ -3,7 +3,7 @@ import { getPatients, restorePatient } from './actions'
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
-import { UserPlus, Users, ArrowRight, Eye, Phone, Mail, Trash2, RotateCcw, Calendar, CalendarPlus, FileText } from 'lucide-react'
+import { UserPlus, Users, ArrowRight, Eye, Phone, Mail, Trash2, RotateCcw, Calendar, CalendarPlus, FileText, ShieldCheck } from 'lucide-react'
 import { OBJECTIVE_LABELS, type Objective } from '@/types'
 import { startPatientPreview } from './preview-actions'
 import { PatientFilters } from './patient-filters'
@@ -22,6 +22,7 @@ interface PatientsPageProps {
     objetivo?: string
     visita?: string
     riesgo?: string
+    notice?: string
   }>
 }
 
@@ -120,6 +121,19 @@ export default async function PatientsPage({ searchParams }: PatientsPageProps) 
           </Button>
         </Link>
       </div>
+
+      {params?.notice === 'patient-erased' && (
+        <div
+          role="status"
+          className="flex items-start gap-3 rounded-2xl border border-emerald-200 bg-emerald-50 px-4 py-3 text-emerald-900"
+        >
+          <ShieldCheck className="mt-0.5 h-4 w-4 shrink-0 text-emerald-600" aria-hidden="true" />
+          <p className="text-xs font-semibold leading-relaxed">
+            Expediente suprimido definitivamente. Los datos clínicos y los archivos privados se han eliminado; la
+            trazabilidad de la supresión se conserva en auditoría.
+          </p>
+        </div>
+      )}
 
       {/* Tabs Filter: Activos vs Papelera + Filtro por Etiquetas Privadas (5.2) */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-1">

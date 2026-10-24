@@ -11,11 +11,7 @@ export const dynamic = 'force-dynamic'
 export default async function PacientePlanPage() {
   const { patientId: authPatientId, isAdminPreview } = await requirePatient()
 
-  let patientId = authPatientId
-  if (!patientId && isAdminPreview) {
-    const firstPatient = await prisma.patient.findFirst({ select: { id: true } })
-    patientId = firstPatient?.id || null
-  }
+  const patientId = authPatientId
 
   const plan = patientId
     ? await prisma.mealPlan.findFirst({
@@ -99,18 +95,9 @@ export default async function PacientePlanPage() {
     })
   }
 
-  const clinicRecipes = await prisma.recipe.findMany({
-    orderBy: { name: 'asc' },
-    take: 40,
-    include: {
-      ingredients: {
-        include: {
-          food: true,
-        },
-      },
-    },
-  })
-
+  // El recetario del portal se construye únicamente con las recetas incluidas
+  // en el plan compartido. No se consulta el catálogo completo de la clínica:
+  // podría contener recetas de otros pacientes o de otros profesionales.
   return (
     <PlanClient
       plan={{
@@ -211,38 +198,6 @@ export default async function PacientePlanPage() {
           })),
         })),
       }}
-      visibleRecipes={clinicRecipes.map((r) => ({
-        id: r.id,
-        name: r.name,
-        instructions: r.instructions,
-        servings: r.servings,
-        prepTimeMin: r.prepTimeMin,
-        cookTimeMin: r.cookTimeMin,
-        difficulty: r.difficulty,
-        imageUrl: r.imageUrl || null,
-        equipmentJson: r.equipmentJson,
-        dietaryTagsJson: r.dietaryTagsJson,
-        isBatchCooking: r.isBatchCooking,
-        isFreezable: r.isFreezable,
-        ingredients: r.ingredients.map((ing) => ({
-          id: ing.id,
-          quantityG: ing.quantityG,
-          notes: ing.notes,
-          food: ing.food
-            ? {
-                id: ing.food.id,
-                name: ing.food.name,
-                category: ing.food.category,
-                calories: ing.food.calories,
-                proteinG: ing.food.proteinG,
-                carbsG: ing.food.carbsG,
-                fatG: ing.food.fatG,
-                servingSize: ing.food.servingSize,
-                servingUnit: ing.food.servingUnit,
-              }
-            : null,
-        })),
-      }))}
     />
   )
 }
