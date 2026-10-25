@@ -119,7 +119,7 @@ const DialogOverlay = React.forwardRef<
     <div
       ref={ref}
       className={cn(
-        'fixed inset-0 z-50 bg-slate-950/50 backdrop-blur-sm transition-opacity duration-200 animate-overlay-in',
+        'fixed inset-0 z-50 bg-slate-950/60 transition-opacity duration-200 animate-overlay-in',
         className
       )}
       data-gsap-overlay

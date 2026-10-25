@@ -1153,7 +1153,7 @@ export function PlanBuilderForm({
 
       {/* 5.5. MODAL DE CONFIRMACIÓN CLÍNICA ANTE ALÉRGENOS DEL PACIENTE */}
       {allergenWarningTarget && (
-        <div className="fixed inset-0 bg-red-950/70 z-[70] flex items-center justify-center p-4 backdrop-blur-xs animate-in fade-in">
+        <div className="fixed inset-0 bg-red-950/80 z-[70] flex items-center justify-center p-4 animate-in fade-in">
           <div className="bg-white rounded-3xl shadow-2xl max-w-md w-full p-6 border-2 border-red-500 animate-in zoom-in-95 space-y-4">
             <div className="w-14 h-14 rounded-2xl bg-red-100 text-red-600 flex items-center justify-center mx-auto border border-red-200 shadow-inner">
               <ShieldAlert className="w-8 h-8" />
@@ -1207,7 +1207,7 @@ export function PlanBuilderForm({
 
       {/* MODAL SISTEMA DE INTERCAMBIOS (CESNID / SEEDO) */}
       {showExchangesModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-xs p-4">
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 p-4">
           <div className="bg-white rounded-3xl max-w-3xl w-full max-h-[85vh] overflow-hidden flex flex-col shadow-2xl border border-gray-200">
             <div className="p-4 bg-blue-50 border-b flex items-center justify-between">
               <div className="flex items-center gap-2">

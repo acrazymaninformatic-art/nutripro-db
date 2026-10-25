@@ -835,12 +835,86 @@ export function generateAutomatedWeeklyPlan(
       })
     }
 
+    const scaledBreakfast = scalePortions(bItems)
+    const scaledMidMorning = scalePortions(mmItems)
+    const scaledLunch = scalePortions(lItems)
+    const scaledSnack = scalePortions(sItems)
+    const scaledDinner = scalePortions(dItems)
+
+    // Ajuste fino clínico: absorbe la desviación producida por el acotado de raciones discretas
+    // (ej. huevos en unidades enteras o pan en rebanadas) usando los carbohidratos/aceites base
+    const allScaledItems = [
+      ...scaledBreakfast,
+      ...scaledMidMorning,
+      ...scaledLunch,
+      ...scaledSnack,
+      ...scaledDinner,
+    ]
+
+    let dayKcal = 0
+    allScaledItems.forEach((it) => {
+      const food = allFoods.find((f) => f.id === it.foodId)
+      if (food) dayKcal += food.calories * (it.quantityG / 100)
+    })
+
+    let diffKcal = target - dayKcal
+    if (Math.abs(diffKcal) > 25) {
+      const adjustable = allScaledItems.filter((it) => {
+        const food = allFoods.find((f) => f.id === it.foodId)
+        if (!food) return false
+        const norm = food.name.toLowerCase()
+        const cat = (food.category || '').toLowerCase()
+        return (
+          cat.includes('cereal') ||
+          cat.includes('grano') ||
+          cat.includes('tubérculo') ||
+          cat.includes('aceite') ||
+          cat.includes('legumbre') ||
+          norm.includes('arroz') ||
+          norm.includes('pasta') ||
+          norm.includes('patata') ||
+          norm.includes('avena') ||
+          norm.includes('pan') ||
+          norm.includes('aceite') ||
+          norm.includes('quinoa') ||
+          norm.includes('garbanzo') ||
+          norm.includes('lenteja')
+        )
+      })
+
+      let iterations = 0
+      while (Math.abs(diffKcal) > 25 && iterations < 15 && adjustable.length > 0) {
+        iterations++
+        for (const it of adjustable) {
+          if (Math.abs(diffKcal) <= 25) break
+          const food = allFoods.find((f) => f.id === it.foodId)!
+          const isOil = (food.category || '').toLowerCase().includes('aceite') || food.name.toLowerCase().includes('aceite')
+          const stepG = isOil ? 2.5 : 10
+          const kcalPerStep = (food.calories * stepG) / 100
+
+          if (diffKcal > 0) {
+            const maxCap = isOil ? 20 : 300
+            if (it.quantityG + stepG <= maxCap) {
+              it.quantityG += stepG
+              diffKcal -= kcalPerStep
+            }
+          } else {
+            const minCap = isOil ? 5 : 20
+            if (it.quantityG - stepG >= minCap) {
+              it.quantityG -= stepG
+              diffKcal += kcalPerStep
+            }
+          }
+        }
+      }
+    }
+
     weeklySchedule[d] = {
-      BREAKFAST: scalePortions(bItems),
-      MID_MORNING: scalePortions(mmItems),
-      LUNCH: scalePortions(lItems),
-      SNACK: scalePortions(sItems),
-      DINNER: scalePortions(dItems),
+      BREAKFAST: scaledBreakfast,
+      MID_MORNING: scaledMidMorning,
+      LUNCH: scaledLunch,
+      SNACK: scaledSnack,
+      DINNER: scaledDinner,
     }
   }
 

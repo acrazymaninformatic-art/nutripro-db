@@ -644,7 +644,7 @@ export function MenuEditor({
           >
             {/* Cabecera anclada superior (INGESTA + 7 DÍAS) */}
             <div
-              className="sticky top-0 z-30 mb-1.5 grid min-w-[620px] lg:min-w-0 gap-1.5 rounded-xl bg-slate-100/95 p-1 backdrop-blur-sm shadow-xs"
+              className="sticky top-0 z-30 mb-1.5 grid min-w-[620px] lg:min-w-0 gap-1.5 rounded-xl bg-slate-100 p-1 shadow-xs"
               style={{ gridTemplateColumns: 'clamp(55px, 6vw, 105px) repeat(7, minmax(0, 1fr))' }}
             >
               {/* Esquina */}
@@ -937,7 +937,7 @@ export function MenuEditor({
           return (
             <ModalPortal>
               <div
-                className="fixed inset-0 z-[80] flex items-end bg-slate-950/60 backdrop-blur-sm sm:hidden"
+                className="fixed inset-0 z-[80] flex items-end bg-slate-950/70 sm:hidden"
                 onClick={() => setMobileMealTarget(null)}
                 role="presentation"
               >
@@ -1053,7 +1053,7 @@ export function MenuEditor({
 
       {/* Copiar día: elegir destino */}
       {copyDayTarget !== null && (
-        <div className="fixed inset-0 z-[99] flex items-center justify-center bg-slate-950/60 p-4 backdrop-blur-sm">
+        <div className="fixed inset-0 z-[99] flex items-center justify-center bg-slate-950/70 p-4">
           <div className="w-full max-w-md rounded-3xl bg-white p-5 shadow-2xl">
             <h3 className="text-sm font-black text-slate-900">
               Copiar {dayMeta[copyDayTarget]?.name} a…

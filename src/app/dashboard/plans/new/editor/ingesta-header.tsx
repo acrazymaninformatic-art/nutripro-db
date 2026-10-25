@@ -73,7 +73,7 @@ export function IngestaHeader({
         <button
           type="button"
           onClick={onEdit}
-          className="inline-flex w-full items-center justify-center gap-1 rounded bg-white/25 px-1 py-0.5 text-[8px] font-black text-white backdrop-blur-sm transition-colors hover:bg-white/40"
+          className="inline-flex w-full items-center justify-center gap-1 rounded bg-white/25 px-1 py-0.5 text-[8px] font-black text-white transition-colors hover:bg-white/40"
           title="Editar ingesta en el panel lateral"
         >
           <Edit3 className="h-2.5 w-2.5 shrink-0" />

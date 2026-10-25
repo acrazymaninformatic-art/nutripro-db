@@ -48,7 +48,7 @@ export function SwapFoodModal({ open, current, foods, onClose, onSwap }: SwapFoo
   return (
     <ModalPortal>
       <div
-        className="fixed inset-0 z-[96] flex items-center justify-center bg-slate-950/60 p-4 backdrop-blur-sm"
+        className="fixed inset-0 z-[96] flex items-center justify-center bg-slate-950/70 p-4"
         onClick={onClose}
       >
         <div
@@ -142,7 +142,7 @@ export function NotesModal({ open, title, notes, onClose, onSave }: NotesModalPr
   return (
     <ModalPortal>
       <div
-        className="fixed inset-0 z-[97] flex items-center justify-center bg-slate-950/60 p-4 backdrop-blur-sm"
+        className="fixed inset-0 z-[97] flex items-center justify-center bg-slate-950/70 p-4"
         onClick={onClose}
       >
         <div
@@ -206,7 +206,7 @@ export function TutorialModal({ open, onClose }: { open: boolean; onClose: () =>
   return (
     <ModalPortal>
       <div
-        className="fixed inset-0 z-[98] flex items-center justify-center bg-slate-950/60 p-4 backdrop-blur-sm"
+        className="fixed inset-0 z-[98] flex items-center justify-center bg-slate-950/70 p-4"
         onClick={onClose}
       >
         <div
@@ -277,7 +277,7 @@ export function IngestaEditModal({ open, ingesta, onClose, onSave }: IngestaEdit
   return (
     <ModalPortal>
       <div
-        className="fixed inset-0 z-[97] flex items-center justify-center bg-slate-950/60 p-4 backdrop-blur-sm"
+        className="fixed inset-0 z-[97] flex items-center justify-center bg-slate-950/70 p-4"
         onClick={onClose}
       >
         <div
