@@ -52,6 +52,17 @@ html {
 }
 
 /*
+ * Eliminación absoluta de artefactos visuales y ruido de subpíxel (puntitos blancos)
+ * producidos por el motor de renderizado Skia/GPU al procesar filtros de desenfoque.
+ */
+*,
+*::before,
+*::after {
+  backdrop-filter: none !important;
+  -webkit-backdrop-filter: none !important;
+}
+
+/*
  * Modales de contenido alto (citas, protocolos, recetas, cuestionarios...):
  * se centran cuando caben en pantalla y, cuando no, el panel hace scroll
  * interno para que el modal nunca quede cortado por arriba ni por abajo.
@@ -126,17 +137,13 @@ button, a, input, select, textarea {
    ===================================================================== */
 
 .glass-panel {
-  background: rgba(255, 255, 255, 0.85);
-  backdrop-filter: blur(16px);
-  -webkit-backdrop-filter: blur(16px);
-  border: 1px solid rgba(226, 232, 240, 0.8);
+  background: #ffffff;
+  border: 1px solid rgba(226, 232, 240, 0.9);
 }
 
 .glass-nav {
-  background: rgba(255, 255, 255, 0.92);
-  backdrop-filter: blur(16px);
-  -webkit-backdrop-filter: blur(16px);
-  border-top: 1px solid rgba(226, 232, 240, 0.85);
+  background: #ffffff;
+  border-top: 1px solid rgba(226, 232, 240, 0.9);
 }
 
 .glass-card {
@@ -153,28 +160,18 @@ button, a, input, select, textarea {
 }
 
 .glass-card-premium {
-  background: rgba(255, 255, 255, 0.92);
-  backdrop-filter: blur(14px);
-  -webkit-backdrop-filter: blur(14px);
+  background: #ffffff;
   border: 1px solid rgba(226, 232, 240, 0.9);
   box-shadow: 0 1px 3px 0 rgba(15, 23, 42, 0.03), 0 8px 24px -4px rgba(15, 23, 42, 0.04);
   transition: transform 0.28s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.28s cubic-bezier(0.16, 1, 0.3, 1), border-color 0.28s ease;
 }
 
 .bg-ambient-eva {
-  background-color: #f6f9fc;
-  background-image:
-    radial-gradient(at 10% 10%, rgba(2, 132, 199, 0.055) 0px, transparent 50%),
-    radial-gradient(at 90% 10%, rgba(99, 102, 241, 0.04) 0px, transparent 50%),
-    radial-gradient(at 50% 90%, rgba(14, 165, 233, 0.03) 0px, transparent 50%);
+  background-color: #f8fafc;
 }
 
 .bg-ambient-patient {
-  background-color: #f6f9fc;
-  background-image:
-    radial-gradient(at 10% 5%, rgba(13, 148, 136, 0.06) 0px, transparent 55%),
-    radial-gradient(at 90% 10%, rgba(16, 185, 129, 0.045) 0px, transparent 50%),
-    radial-gradient(at 50% 85%, rgba(20, 184, 166, 0.035) 0px, transparent 60%);
+  background-color: #f8fafc;
 }
 
 

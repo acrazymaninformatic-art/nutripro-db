@@ -60,7 +60,7 @@ export function Header({
 
   return (
     <header
-      className="glass-nav sticky top-0 z-30 shrink-0 select-none border-b border-slate-200/80 shadow-[0_4px_18px_-16px_rgba(15,23,42,.5)] bg-white/95 backdrop-blur-xl"
+      className="glass-nav sticky top-0 z-30 shrink-0 select-none border-b border-slate-200/80 shadow-[0_4px_18px_-16px_rgba(15,23,42,.5)] bg-white"
       data-gsap-header
     >
       {/* Fila superior: Marca, Título de sección, Herramientas y Perfil */}
