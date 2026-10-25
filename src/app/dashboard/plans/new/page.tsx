@@ -61,7 +61,7 @@ export default async function NewMealPlanPage() {
   }))
 
   return (
-    <div className="space-y-6 max-w-[1750px] w-full px-2 sm:px-6 mx-auto">
+    <div className="space-y-4 w-full px-1 sm:px-3">
       <div className="flex items-center justify-between">
         <Link
           href="/dashboard/plans"
