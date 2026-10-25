@@ -16,9 +16,10 @@ export function DashboardShell({
 
   return (
     <div
-      className="flex h-screen overflow-hidden bg-ambient-eva print:h-auto print:overflow-visible print:bg-white print:block"
+      className="flex h-screen flex-col overflow-hidden bg-ambient-eva print:h-auto print:overflow-visible print:bg-white print:block"
       data-gsap-portal="admin"
     >
+      {/* Menú drawer lateral exclusivo para dispositivos móviles */}
       <div className="print:hidden">
         <Sidebar
           professionalName={professionalName}
@@ -26,19 +27,24 @@ export function DashboardShell({
           onMobileClose={() => setMobileMenuOpen(false)}
         />
       </div>
-      <div className="flex min-w-0 flex-1 flex-col overflow-hidden print:h-auto print:overflow-visible print:block">
-        <div className="print:hidden">
-          <Header onMenu={() => setMobileMenuOpen(true)} />
-        </div>
-        <main
-          className="surface-grid flex-1 overflow-y-auto bg-transparent p-4 sm:p-6 print:m-0 print:h-auto print:overflow-visible print:bg-white print:block print:p-0"
-          data-gsap-scroll="admin"
-        >
-          <div className="page-shell">
-            <PageMotion>{children}</PageMotion>
-          </div>
-        </main>
+
+      {/* Barra de navegación superior (Encabezado + Enlaces de navegación) */}
+      <div className="print:hidden shrink-0 z-30" data-gsap-header>
+        <Header
+          professionalName={professionalName}
+          onMenu={() => setMobileMenuOpen(true)}
+        />
       </div>
+
+      {/* Contenido principal a ancho completo sin barra lateral izquierda */}
+      <main
+        className="surface-grid flex-1 overflow-y-auto bg-transparent p-4 sm:p-6 lg:p-8 print:m-0 print:h-auto print:overflow-visible print:bg-white print:block print:p-0"
+        data-gsap-scroll="admin"
+      >
+        <div className="page-shell w-full">
+          <PageMotion>{children}</PageMotion>
+        </div>
+      </main>
     </div>
   )
 }

@@ -1,6 +1,5 @@
 'use client'
 
-import { useState } from 'react'
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import {
@@ -11,8 +10,6 @@ import {
   CalendarDays,
   Calendar,
   Calculator,
-  ChevronLeft,
-  ChevronRight,
   Settings,
   ClipboardCheck,
   GitCompareArrows,
@@ -25,13 +22,13 @@ import {
 import { cn } from '@/lib/utils'
 import { logout } from '@/app/login/actions'
 
-interface NavItem {
+export interface NavItem {
   name: string
   href: string
   icon: React.ComponentType<{ className?: string }>
 }
 
-const navItems: NavItem[] = [
+export const navItems: NavItem[] = [
   { name: 'Dashboard', href: '/dashboard', icon: LayoutDashboard },
   { name: 'Pacientes', href: '/dashboard/patients', icon: Users },
   { name: 'Cuestionarios', href: '/dashboard/questionnaires', icon: ClipboardCheck },
@@ -46,6 +43,13 @@ const navItems: NavItem[] = [
   { name: 'Calculadora', href: '/dashboard/calculator', icon: Calculator },
 ]
 
+export function checkIsNavActive(href: string, pathname: string): boolean {
+  if (href === '/dashboard') {
+    return pathname === '/dashboard'
+  }
+  return pathname.startsWith(href)
+}
+
 export function Sidebar({
   professionalName,
   mobileOpen = false,
@@ -55,50 +59,40 @@ export function Sidebar({
   mobileOpen?: boolean
   onMobileClose?: () => void
 }) {
-  const [isCollapsed, setIsCollapsed] = useState(false)
   const pathname = usePathname()
 
-  const checkIsActive = (href: string) => {
-    if (href === '/dashboard') {
-      return pathname === '/dashboard'
-    }
-    return pathname.startsWith(href)
-  }
+  if (!mobileOpen) return null
 
   return (
-    <>
-      {mobileOpen && (
-        <button
-          type="button"
-          aria-label="Cerrar menú de navegación"
-          onClick={onMobileClose}
-          className="fixed inset-0 z-40 bg-slate-950/30 backdrop-blur-[2px] lg:hidden animate-overlay-in"
-          data-gsap-overlay
-        />
-      )}
+    <div className="fixed inset-0 z-50 lg:hidden">
+      {/* Backdrop */}
+      <button
+        type="button"
+        aria-label="Cerrar menú de navegación"
+        onClick={onMobileClose}
+        className="fixed inset-0 bg-slate-950/40 backdrop-blur-xs animate-overlay-in"
+        data-gsap-overlay
+      />
+
+      {/* Drawer */}
       <aside
-        className={cn(
-          'fixed inset-y-0 left-0 z-50 flex h-screen shrink-0 flex-col select-none border-r border-slate-200/80 bg-white/95 shadow-2xl backdrop-blur-xl transition-[width,transform] duration-300 ease-out lg:relative lg:z-20 lg:shadow-none',
-          isCollapsed ? 'lg:w-16' : 'w-72 lg:w-64',
-          mobileOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0',
-          mobileOpen ? 'flex' : 'hidden lg:flex'
-        )}
+        className="fixed inset-y-0 left-0 z-50 flex h-full w-72 flex-col bg-white/95 shadow-2xl backdrop-blur-xl animate-in slide-in-from-left duration-200"
         data-gsap-sidebar
       >
-      {/* Logo & Toggle Header */}
-      <div className="flex h-16 items-center justify-between border-b border-slate-200/80 px-4">
-        <Link
-          href="/dashboard"
-          className="flex items-center gap-3 overflow-hidden focus:outline-none"
-        >
-          <div className="flex h-9 w-9 shrink-0 items-center justify-center overflow-hidden rounded-xl border border-slate-200 bg-white p-0.5 shadow-2xs">
-            <img
-              src="/logo.png"
-              alt="Eva Vidal"
-              className="w-full h-full object-contain"
-            />
-          </div>
-          {!isCollapsed && (
+        {/* Logo & Close */}
+        <div className="flex h-16 items-center justify-between border-b border-slate-200/80 px-4">
+          <Link
+            href="/dashboard"
+            onClick={onMobileClose}
+            className="flex items-center gap-2.5 overflow-hidden focus:outline-none"
+          >
+            <div className="flex h-9 w-9 shrink-0 items-center justify-center overflow-hidden rounded-xl border border-slate-200 bg-white p-1 shadow-2xs">
+              <img
+                src="/logo.png"
+                alt="Eva Vidal"
+                className="w-full h-full object-contain"
+              />
+            </div>
             <div className="flex flex-col min-w-0">
               <span className="text-sm font-black tracking-tight leading-none text-slate-900">
                 EVSoftware
@@ -107,100 +101,64 @@ export function Sidebar({
                 Consulta · Eva Vidal
               </span>
             </div>
-          )}
-        </Link>
-        <button
-          type="button"
-          onClick={onMobileClose}
-          aria-label="Cerrar menú"
-          className="ml-auto rounded-xl p-2 text-slate-400 transition-colors hover:bg-slate-100 hover:text-slate-700 lg:hidden"
-        >
-          <X className="h-4 w-4" />
-        </button>
-        {!isCollapsed && (
+          </Link>
           <button
             type="button"
-            onClick={() => setIsCollapsed(true)}
-            className="p-1.5 text-slate-400 hover:text-slate-700 hover:bg-slate-100 rounded-xl transition-colors"
-            title="Colapsar menú"
-            aria-label="Colapsar menú"
+            onClick={onMobileClose}
+            aria-label="Cerrar menú"
+            className="rounded-xl p-2 text-slate-400 transition-colors hover:bg-slate-100 hover:text-slate-700"
           >
-            <ChevronLeft className="w-4 h-4" />
-          </button>
-        )}
-      </div>
-
-      {/* Collapse Toggle when collapsed */}
-      {isCollapsed && (
-        <div className="flex justify-center py-2 border-b border-slate-100">
-          <button
-            type="button"
-            onClick={() => setIsCollapsed(false)}
-            className="p-1.5 text-slate-400 hover:text-slate-700 hover:bg-slate-100 rounded-xl transition-colors"
-            title="Expandir menú"
-            aria-label="Expandir menú"
-          >
-            <ChevronRight className="w-4 h-4" />
+            <X className="h-5 w-5" />
           </button>
         </div>
-      )}
 
-      {/* Navigation items */}
-      <nav className="flex-1 py-4 overflow-y-auto space-y-1 px-2.5 medical-scrollbar">
-        {navItems.map((item) => {
-          const isActive = checkIsActive(item.href)
-          const Icon = item.icon
+        {/* Navigation items */}
+        <nav className="flex-1 py-4 overflow-y-auto space-y-1 px-3 medical-scrollbar">
+          {navItems.map((item) => {
+            const isActive = checkIsNavActive(item.href, pathname)
+            const Icon = item.icon
 
-          return (
-            <Link
-              key={item.href}
-              href={item.href}
-              prefetch={true}
-              onClick={onMobileClose}
-              aria-current={isActive ? 'page' : undefined}
-              data-gsap-nav-item
-              title={isCollapsed ? item.name : undefined}
-              className={cn(
-                'group flex items-center text-xs font-bold rounded-2xl transition-all duration-200',
-                isCollapsed
-                  ? 'justify-center p-3'
-                  : 'gap-3 px-3.5 py-2.5',
-                isActive
-                  ? 'bg-gradient-to-r from-blue-600 to-blue-700 text-white shadow-xs shadow-blue-600/25'
-                  : 'text-slate-600 hover:bg-blue-50/70 hover:text-blue-700'
-              )}
-            >
-              <div
+            return (
+              <Link
+                key={item.href}
+                href={item.href}
+                prefetch={true}
+                onClick={onMobileClose}
+                aria-current={isActive ? 'page' : undefined}
+                data-gsap-nav-item
                 className={cn(
-                  'w-7 h-7 rounded-xl flex items-center justify-center transition-all duration-200',
+                  'group flex items-center gap-3 px-3.5 py-2.5 rounded-2xl text-xs font-bold transition-all duration-200',
                   isActive
-                    ? 'bg-white/20 text-white'
-                    : 'text-slate-400 group-hover:text-blue-600 group-hover:bg-blue-100/60'
+                    ? 'bg-gradient-to-r from-blue-600 to-blue-700 text-white shadow-xs shadow-blue-600/25'
+                    : 'text-slate-600 hover:bg-blue-50/70 hover:text-blue-700'
                 )}
               >
-                <Icon
+                <div
                   className={cn(
-                    'w-4 h-4 shrink-0 transition-transform group-hover:scale-110',
-                    isActive && 'scale-105'
+                    'w-7 h-7 rounded-xl flex items-center justify-center transition-all duration-200',
+                    isActive
+                      ? 'bg-white/20 text-white'
+                      : 'text-slate-400 group-hover:text-blue-600 group-hover:bg-blue-100/60'
                   )}
-                />
-              </div>
-              {!isCollapsed && (
-                <>
-                  <span className="truncate">{item.name}</span>
-                  {isActive && (
-                    <span className="ml-auto w-1.5 h-1.5 rounded-full bg-white animate-pulse" />
-                  )}
-                </>
-              )}
-            </Link>
-          )
-        })}
-      </nav>
+                >
+                  <Icon
+                    className={cn(
+                      'w-4 h-4 shrink-0 transition-transform group-hover:scale-110',
+                      isActive && 'scale-105'
+                    )}
+                  />
+                </div>
+                <span className="truncate">{item.name}</span>
+                {isActive && (
+                  <span className="ml-auto w-1.5 h-1.5 rounded-full bg-white animate-pulse" />
+                )}
+              </Link>
+            )
+          })}
+        </nav>
 
-      {/* Bottom section: User avatar with name, settings gear icon */}
-      <div className="p-3 border-t border-slate-200/80 bg-white/50">
-        {!isCollapsed ? (
+        {/* Bottom User Profile */}
+        <div className="p-3 border-t border-slate-200/80 bg-white/50">
           <div className="flex items-center justify-between gap-2 p-2 rounded-2xl hover:bg-slate-100/70 transition-colors">
             <div className="flex items-center gap-2.5 min-w-0">
               <div className="flex items-center justify-center w-8 h-8 rounded-xl bg-blue-100 text-blue-800 font-bold text-xs shrink-0 border border-blue-200/80">
@@ -218,45 +176,26 @@ export function Sidebar({
                 href="/dashboard/settings"
                 prefetch={true}
                 onClick={onMobileClose}
-                  className="p-1.5 text-slate-400 hover:text-slate-700 hover:bg-slate-100 rounded-xl transition-colors"
+                className="p-1.5 text-slate-400 hover:text-slate-700 hover:bg-slate-100 rounded-xl transition-colors"
                 title="Configuración"
                 aria-label="Configuración"
               >
                 <Settings className="w-4 h-4" />
               </Link>
               <form action={logout}>
-                <button type="submit" className="p-1.5 text-slate-400 hover:text-rose-700 hover:bg-rose-50 rounded-xl transition-colors" title="Cerrar sesión" aria-label="Cerrar sesión">
+                <button
+                  type="submit"
+                  className="p-1.5 text-slate-400 hover:text-rose-700 hover:bg-rose-50 rounded-xl transition-colors cursor-pointer"
+                  title="Cerrar sesión"
+                  aria-label="Cerrar sesión"
+                >
                   <LogOut className="w-4 h-4" />
                 </button>
               </form>
             </div>
           </div>
-        ) : (
-          <div className="flex flex-col items-center gap-2">
-            <div
-              className="flex items-center justify-center w-8 h-8 rounded-xl bg-blue-100 text-blue-800 font-bold text-xs shrink-0 border border-blue-200/80"
-              title="Eva Vidal - Nutricionista Clínica"
-            >
-              EV
-            </div>
-            <Link
-              href="/dashboard/settings"
-              prefetch={true}
-              className="p-1.5 text-slate-400 hover:text-slate-700 hover:bg-slate-100 rounded-xl transition-colors"
-              title="Configuración"
-              aria-label="Configuración"
-            >
-              <Settings className="w-4 h-4" />
-            </Link>
-            <form action={logout}>
-              <button type="submit" className="p-1.5 text-slate-400 hover:text-rose-700 hover:bg-rose-50 rounded-xl transition-colors" title="Cerrar sesión" aria-label="Cerrar sesión">
-                <LogOut className="w-4 h-4" />
-              </button>
-            </form>
-          </div>
-        )}
-      </div>
+        </div>
       </aside>
-    </>
+    </div>
   )
 }
