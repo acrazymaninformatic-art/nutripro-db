@@ -9,8 +9,7 @@ import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Select } from '@/components/ui/select'
 import { Badge } from '@/components/ui/badge'
-import { Textarea } from '@/components/ui/textarea'
-import { AlertTriangle, Calculator, Check, EyeOff, FileText, Layers, Loader2, Pill, Search, ShieldAlert, Siren, Sparkles, User, Wand2, X, Zap } from 'lucide-react'
+import { AlertTriangle, Calculator, Check, EyeOff, Layers, Loader2, Pill, Search, ShieldAlert, Siren, Sparkles, User, Wand2, X, Zap } from 'lucide-react'
 import {
   getFoodImage,
   generateAutomatedWeeklyPlan,
@@ -1022,28 +1021,6 @@ export function PlanBuilderForm({
         onSave={() => void savePlan()}
         saving={loading}
       />
-
-      {/* 4. NOTAS CLÍNICAS Y PAUTAS GENERALES PARA EL PACIENTE */}
-      <Card className="shadow-sm">
-        <CardHeader className="py-2.5 px-4 border-b bg-gray-50/50">
-          <CardTitle className="text-xs font-bold flex items-center gap-2 text-gray-900">
-            <FileText className="h-4 w-4 text-green-600" />
-            <span>Notas Clínicas, Pautas de Hidratación y Recomendaciones Generales</span>
-          </CardTitle>
-          <CardDescription className="text-[11px]">
-            Estas notas aparecerán ordenadas en la portada y encabezado del informe PDF entregado al paciente.
-          </CardDescription>
-        </CardHeader>
-        <CardContent className="p-3">
-          <Textarea
-            value={generalNotes}
-            onChange={(e) => setGeneralNotes(e.target.value)}
-            rows={2}
-            placeholder="Indicaciones sobre suplementación, horarios de tomas, pautas de intercambio..."
-            className="text-xs text-gray-700 leading-relaxed"
-          />
-        </CardContent>
-      </Card>
 
       {/* 5. MODAL DE BÚSQUEDA RÁPIDA DE ALIMENTOS */}
       {modalTarget && (
