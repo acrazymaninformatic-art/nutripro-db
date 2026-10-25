@@ -363,9 +363,10 @@ firmar en nombre de terceros ni declarar cerrada la revisión.
 | Responsable técnico |  |  |  |
 
 No ejecutar la supresión definitiva sobre datos reales hasta que esta revisión
-esté cerrada y documentada. Tampoco deben publicitarse subidas de archivos
-mientras falte la configuración de Supabase Storage descrita en
-`data-retention-and-backups.md` §7.
+esté cerrada y documentada. El almacenamiento privado (Supabase Storage) ha sido
+configurado y validado técnicamente el 25/10/2026, quedando la infraestructura de
+subida y entrega segura plenamente operativa a la espera de la resolución legal
+sobre el alcance definitivo.
 
 ### 8.5 Texto propuesto para el envío
 
@@ -377,16 +378,16 @@ mientras falte la configuración de Supabase Storage descrita en
 > Adjunto el paquete de revisión legal de EVSoftware, la aplicación de gestión
 > de la consulta. Incluye el alcance de exportación y supresión, el estado de
 > cumplimiento, la política propuesta de retención y copias, los textos legales
-> publicados y la evidencia técnica del 24/10/2026 (migración, despliegue,
-> smoke test y restauración de una copia).
+> publicados y la evidencia técnica del 24 y 25/10/2026 (migración, despliegue,
+> smoke test, restauración de copias, almacenamiento privado y rotación de
+> credenciales).
 >
 > Necesitamos que reviséis especialmente las siete decisiones de la sección 8.2
 > del documento `legal-review-export-erasure.md`: alcance de la exportación,
 > entrega de binarios, conservación frente a supresión, facturas, plazos de
 > auditoría y solicitudes, plazo de backups y representación de menores.
 >
-> No se ejecutará ninguna supresión definitiva sobre datos reales ni se
-> publicitará la subida de archivos hasta cerrar esta revisión y configurar el
-> almacenamiento privado.
+> No se ejecutará ninguna supresión definitiva sobre datos reales hasta cerrar
+> esta revisión.
 >
 > Gracias.

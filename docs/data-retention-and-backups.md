@@ -26,7 +26,7 @@ operaciones indicadas expresamente:
 | `_prisma_migrations` | Creada al marcar el baseline |
 | Baseline `20261021000000_baseline` | Marcado como aplicado y verificado |
 | Migración `20261021120000_security_hardening` | **Aplicada en producción el 24/10/2026** y verificada: 39 tablas, recuentos intactos, FK `SET NULL`, sin drift |
-| Almacenamiento privado en producción | **No configurado** (ver §7) |
+| Almacenamiento privado en producción | **Configurado y verificado el 25/10/2026** (bucket `patient-private`, 15 MB, MIME restringidos; ver §7) |
 
 ### Copia previa al baseline (destruida)
 
@@ -208,40 +208,29 @@ obligación de conservación**.
 | Integridad de migraciones | Checksums de baseline y hardening coinciden con los archivos |
 | Custodia local | Pre-migración cifrada con EFS AES-256, ACL restringida, fuera del repo |
 | Destrucción del pre-baseline | Sobrescritura con bytes aleatorios y borrado; registro conservado |
+| Configuración Supabase Storage | Bucket `patient-private` (privado, 15 MB, MIME clínicos) verificado el 25/10/2026 |
+| Pruebas reales de Storage | Subida 200, descarga con auth 200, acceso público denegado 400, URL firmada 200, borrado 200 |
+| Rotación de PostgreSQL | Ejecutada el 25/10/2026 vía Supabase Management API; Vercel y `.env` actualizados y verificados |
 
 Los clústeres temporales se eliminaron al terminar. Se conserva únicamente la
 copia pre-migración cifrada en `%LOCALAPPDATA%\NutriPro\backups\`; la copia
 pre-baseline se destruyó al quedar sustituida. La custodia offsite sigue
 pendiente.
 
-## 7. Bloqueo detectado: almacenamiento privado en producción
+## 7. Almacenamiento privado y rotación de credenciales (25/10/2026)
 
-El código con almacenamiento privado **se desplegó el 24/10/2026** (commits
-`7d50103` y `c948915`). La configuración de Supabase Storage sigue pendiente; el despliegue
-no la incluye porque la base tenía 0 archivos y el resto de mejoras de seguridad
-eran prioritarias.
+El almacenamiento privado se encuentra **completamente configurado y verificado en producción**:
 
-La consulta a las variables de entorno del proyecto de Vercel
-(`nutripro`, producción y resto de entornos) muestra que **no existen**
-`SUPABASE_URL` ni `SUPABASE_SERVICE_ROLE_KEY`. En producción,
-`savePrivateFile` lanza un error explícito si faltan, de modo que **cualquier
-subida de documento, fotografía o adjunto fallará** y la supresión estricta
-tampoco podrá confirmar el borrado.
-
-El servicio de Storage del proyecto responde (`/storage/v1/version` → 200),
-pero sin la service role key no se puede listar ni crear el bucket. No es un
-problema de código: falta configuración. Antes de publicitar la subida de
-archivos hay que:
-
-1. Crear el bucket privado `patient-private` en Supabase Storage.
-2. Añadir `SUPABASE_URL` y `SUPABASE_SERVICE_ROLE_KEY` en Vercel (producción y
-   preview), marcadas como secretas.
-3. Redesplegar y probar una subida y una descarga firmada reales.
-4. Verificar que el bucket es privado y que la service role key no llega al
-   cliente.
-
-Mientras tanto, la base de datos no contiene documentos ni fotos (0/0), por lo
-que no hay archivos que migrar.
+1. **Bucket privado en Supabase Storage:** se configuró el bucket `patient-private` con acceso exclusivamente privado (`public: false`), límite de archivo de 15 MB y lista estricta de tipos MIME clínicos permitidos (`application/pdf`, `image/jpeg`, `image/png`, `image/webp`, `image/heic`, `image/heif`, `text/plain`, `application/msword`, `application/vnd.openxmlformats-officedocument.wordprocessingml.document`).
+2. **Pruebas de integración reales:** se ejecutó y validó el ciclo completo de almacenamiento privado:
+   - Subida autenticada (`200 OK`).
+   - Descarga autenticada con cabeceras de autorización (`200 OK`).
+   - Descarga no autenticada denegada por Supabase (`400 Bad Request` / no público).
+   - Generación de URL firmada temporal y descarga con éxito (`200 OK`).
+   - Borrado de prueba (`200 OK`).
+3. **Variables de entorno en Vercel:** se configuraron `SUPABASE_URL`, `SUPABASE_STORAGE_BUCKET` y `SUPABASE_SERVICE_ROLE_KEY` (esta última como Secret en `production` y `preview`). En `development` no se almacena la clave de servicio, cayendo de forma segura al almacenamiento local `.private-uploads`.
+4. **Rotación de contraseñas de PostgreSQL:** el 25/10/2026 se rotó la contraseña de PostgreSQL mediante la Management API de Supabase, actualizando de inmediato las variables `DATABASE_URL` y `DIRECT_URL` en Vercel (`production` y `preview`) como Secrets y en el entorno local `.env`. Se verificó la conexión de inmediato y se ejecutaron pruebas de extremo a extremo contra la base de datos de producción a través de Server Actions y limitación de frecuencia.
+5. **Despliegue verificado:** el despliegue de producción asociado al alias estable `https://nutripro-lyart.vercel.app` se encuentra en estado `Ready` y verificado mediante smoke test con cabeceras de seguridad CSP y `no-store`.
 
 ## 8. Pendientes
 
@@ -252,7 +241,8 @@ que no hay archivos que migrar.
       (24/10/2026; EFS AES-256, ACL restringida).
 - [ ] Mover la copia pre-migración a un almacén externo aprobado o exportar el
       certificado EFS; hoy depende de la cuenta de Windows.
-- [ ] Configurar Supabase Storage y probar una subida real.
+- [x] Configurar Supabase Storage y probar una subida real (25/10/2026, bucket `patient-private` verificado).
+- [x] Rotación de contraseñas de PostgreSQL y actualización en Vercel (25/10/2026).
 - [x] Aplicar `20261021120000_security_hardening` con `migrate deploy`
       (24/10/2026, verificado).
 - [ ] Programar la primera prueba de restauración trimestral.

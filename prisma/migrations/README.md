@@ -22,11 +22,11 @@ constraints y valores por defecto; revisa el SQL antes de aplicarlo.
   documentos, 0 fotos, 4 cuestionarios, 3 solicitudes, 64 eventos de auditoría,
   0 huérfanos, FK en `SET NULL`, `RateLimitCounter` creada y defaults de
   `MealPlan` correctos.
-- El código **se desplegó el 24/10/2026** (hardening `7d50103` y ajuste de caché
-  `c948915`; alias `https://nutripro-lyart.vercel.app`). Al desplegarse, las sesiones existentes
-  quedaron invalidadas y la administración exigirá enrolar MFA TOTP. La
-  configuración de Supabase Storage sigue pendiente, por lo que las subidas de
-  archivos no funcionan todavía.
+- El código se desplegó y consolidó en producción (alias estable `https://nutripro-lyart.vercel.app`).
+  Al desplegarse, las sesiones existentes quedaron invalidadas y la administración
+  exige enrolar MFA TOTP. Supabase Storage quedó configurado y verificado el 25/10/2026
+  (bucket `patient-private`), y las credenciales de PostgreSQL fueron rotadas y
+  actualizadas en Vercel.
 - Backups: `pg_dump` pre-baseline (505.653 bytes, ya destruido) y pre-migración
   (507.058 bytes, cifrado con EFS AES-256), verificados y restaurados en un
   PostgreSQL 17.11 aislado con recuentos idénticos. Ver

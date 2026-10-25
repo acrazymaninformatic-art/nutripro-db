@@ -25,8 +25,8 @@
 7. Documentar el procedimiento de verificación del representante legal de menores, conflictos de patria potestad y transición al alcanzar la mayoría de edad.
 8. Definir el procedimiento de brechas, responsables, evidencias, notificación a AEPD en su caso y comunicación a personas afectadas.
 9. Revisar el uso real de Bizum/transferencias y las obligaciones fiscales, contables y de facturación; la app no procesa pagos online.
-10. Rotar cualquier secreto que se haya compartido fuera del entorno seguro y comprobar que ningún `.env` se publica en Git.
-11. Configurar `SUPABASE_URL` y `SUPABASE_SERVICE_ROLE_KEY` en Vercel y probar una subida real. Sin ello, documentos, fotos y adjuntos no funcionan en producción.
+10. Rotar cualquier secreto compartido fuera del entorno seguro: **completado el 25/10/2026** para PostgreSQL (vía Management API y actualizado en Vercel/local) y `AUTH_SECRET` (aleatorio dedicado). Ningún `.env` se publica en Git.
+11. Configurar Supabase Storage: **completado el 25/10/2026**. Bucket privado `patient-private` (15 MB, MIME restringidos), pruebas reales de subida/descarga/URL firmada superadas y variables configuradas en Vercel.
 
 ## Controles implementados en el código
 
@@ -69,18 +69,13 @@
   `https://nutripro-lyart.vercel.app`). Al desplegarse, las sesiones existentes
   quedaron invalidadas y la administración exigirá enrolar MFA TOTP en el
   siguiente acceso.
-- **Bloqueo crítico de Storage:** el proyecto de Vercel no define
-  `SUPABASE_URL` ni `SUPABASE_SERVICE_ROLE_KEY`, por lo que las subidas de
-  documentos, fotos y adjuntos fallan en producción. El endpoint de Storage
-  responde, pero sin la clave no se puede crear ni listar el bucket. La base no
-  contiene archivos (0/0), así que no hay migración pendiente, pero la función
-  no es operativa hasta configurarla. El despliegue se hizo igualmente porque el
-  resto de mejoras de seguridad son críticas.
+- **Almacenamiento privado (Supabase Storage):** configurado y verificado el 25/10/2026. Bucket privado `patient-private` (15 MB, MIME clínicos restringidos). Pruebas de integración reales superadas (subida 200, descarga autenticada 200, denegación sin auth 400, URL firmada 200, borrado 200). Variables `SUPABASE_URL`, `SUPABASE_STORAGE_BUCKET` y `SUPABASE_SERVICE_ROLE_KEY` (Secret) configuradas en Vercel (producción y preview); desarrollo aislado en almacenamiento local.
+- **Rotación de credenciales PostgreSQL:** completada el 25/10/2026 vía Supabase Management API. Variables `DATABASE_URL` y `DIRECT_URL` actualizadas en Vercel y verificadas de extremo a extremo contra la base de datos de producción mediante Server Actions y limitación de frecuencia.
 - **`AUTH_SECRET`:** definido en Vercel (producción, preview y desarrollo) el
   24/10/2026, con un valor aleatorio dedicado. Ya no depende de
   `NEXTAUTH_SECRET`; no debe rotarse sin planificar la migración de los secretos
   MFA.
-- **Smoke test del despliegue (24/10/2026):** `/login` responde 200 con
+- **Smoke test del despliegue (25/10/2026):** tras el redeploy a producción con las credenciales rotadas y Storage activo, `/login` responde 200 con
   `Cache-Control: private, no-cache, no-store` y CSP; `/legal` 200 con CSP;
   `/dashboard` 307 a login; `/api/private-files/...` y API sin sesión 401 con
   `Cache-Control: private, no-store`. No se ha probado el login completo con MFA
