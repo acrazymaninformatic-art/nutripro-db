@@ -160,6 +160,30 @@ export function MenuEditor({
   const [future, setFuture] = useState<Snapshot[]>([])
 
   const gridRef = useRef<HTMLDivElement>(null)
+  const headerRef = useRef<HTMLDivElement>(null)
+  const isSyncingScroll = useRef(false)
+
+  const handleBodyScroll = useCallback((e: React.UIEvent<HTMLDivElement>) => {
+    if (isSyncingScroll.current) return
+    if (headerRef.current) {
+      isSyncingScroll.current = true
+      headerRef.current.scrollLeft = e.currentTarget.scrollLeft
+      requestAnimationFrame(() => {
+        isSyncingScroll.current = false
+      })
+    }
+  }, [])
+
+  const handleHeaderScroll = useCallback((e: React.UIEvent<HTMLDivElement>) => {
+    if (isSyncingScroll.current) return
+    if (gridRef.current) {
+      isSyncingScroll.current = true
+      gridRef.current.scrollLeft = e.currentTarget.scrollLeft
+      requestAnimationFrame(() => {
+        isSyncingScroll.current = false
+      })
+    }
+  }, [])
 
 
 
@@ -636,18 +660,18 @@ export function MenuEditor({
             </span>
           </div>
 
-          {/* Cuadrícula semanal de 7 días */}
+          {/* Cabecera fija superior de días (Lunes - Domingo) */}
           <div
-            ref={gridRef}
-            className="rounded-2xl border border-slate-200 bg-slate-50/70 p-1.5"
+            ref={headerRef}
+            onScroll={handleHeaderScroll}
+            className="sticky top-0 z-30 mb-1.5 overflow-x-hidden rounded-xl border border-slate-200/90 bg-slate-100 p-1.5 shadow-xs"
           >
-            {/* Cabecera anclada superior (INGESTA + 7 DÍAS) */}
             <div
-              className="sticky top-0 z-30 mb-1.5 grid min-w-[620px] lg:min-w-0 gap-1.5 rounded-xl border border-slate-200/90 bg-slate-100 p-1.5 shadow-sm"
+              className="grid min-w-[620px] lg:min-w-0 gap-1.5"
               style={{ gridTemplateColumns: 'clamp(55px, 6vw, 105px) repeat(7, minmax(0, 1fr))' }}
             >
               {/* Esquina */}
-              <div className="sticky left-0 z-40 flex items-center justify-center rounded-xl bg-slate-200 px-1 py-1 text-[8px] font-black uppercase tracking-wider text-slate-700 shadow-xs">
+              <div className="sticky left-0 z-20 flex items-center justify-center rounded-xl bg-slate-200 px-1 py-1 text-[8px] font-black uppercase tracking-wider text-slate-700 shadow-xs">
                 Ingesta
               </div>
 
@@ -675,7 +699,15 @@ export function MenuEditor({
                 />
               ))}
             </div>
+          </div>
 
+          {/* Cuadrícula con scroll de las comidas (Desayuno, Comida, Merienda, Cena) */}
+          <div
+            ref={gridRef}
+            onScroll={handleBodyScroll}
+            className="overflow-y-auto overflow-x-auto rounded-2xl border border-slate-200 bg-slate-50/70 p-1.5"
+            style={{ maxHeight: 'calc(100vh - 280px)', minHeight: '380px' }}
+          >
             {/* Filas por ingesta */}
             <div
               className="grid min-w-[620px] lg:min-w-0 gap-1.5"
