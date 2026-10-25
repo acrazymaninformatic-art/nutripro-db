@@ -517,11 +517,9 @@ export function MenuEditor({
   }
 
   return (
-    <div className="space-y-2.5">
-      {/* ---------------------------------------------------------------- */}
-      {/* Barra superior                                                     */}
-      {/* ---------------------------------------------------------------- */}
-      <div className="flex flex-wrap items-center gap-1.5 rounded-2xl border border-slate-200 bg-white px-2.5 py-1.5 shadow-sm">
+    <div className="flex flex-col" style={{ height: 'calc(100vh - 80px)' }}>
+      {/* Barra superior (toolbar) */}
+      <div className="flex flex-wrap items-center gap-1.5 rounded-2xl border border-slate-200 bg-white px-2.5 py-1.5 shadow-sm shrink-0">
         <button
           type="button"
           onClick={markAllCompleted}
@@ -632,13 +630,11 @@ export function MenuEditor({
         </div>
       </div>
 
-      {/* ---------------------------------------------------------------- */}
-      {/* Layout: cuadrícula a la izquierda + panel lateral a la derecha   */}
-      {/* ---------------------------------------------------------------- */}
-      <div className="flex flex-row items-start gap-2.5 min-w-0 w-full">
-        <div className="min-w-0 flex-1 w-full">
+      {/* Layout: cuadrícula + panel lateral – ocupa el espacio restante */}
+      <div className="flex flex-row min-h-0 flex-1 gap-2.5 min-w-0 w-full">
+        <div className="min-w-0 flex-1 w-full flex flex-col min-h-0">
           {/* Leyenda de días / acciones rápidas */}
-          <div className="mb-1.5 hidden flex-wrap items-center gap-1.5 rounded-xl border border-slate-200 bg-white px-2 py-1 sm:flex">
+          <div className="mb-1.5 hidden flex-wrap items-center gap-1.5 rounded-xl border border-slate-200 bg-white px-2 py-1 sm:flex shrink-0">
             <span className="text-[9px] font-black uppercase tracking-wider text-slate-400">
               Semana completa
             </span>
@@ -660,11 +656,11 @@ export function MenuEditor({
             </span>
           </div>
 
-          {/* Cabecera fija superior de días (Lunes - Domingo) */}
+          {/* Cabecera fija de días – no hace scroll vertical */}
           <div
             ref={headerRef}
             onScroll={handleHeaderScroll}
-            className="sticky top-0 z-30 mb-1.5 overflow-x-hidden rounded-xl border border-slate-200/90 bg-slate-100 p-1.5 shadow-xs"
+            className="mb-1.5 overflow-x-hidden rounded-xl border border-slate-200/90 bg-slate-100 p-1.5 shadow-xs shrink-0"
           >
             <div
               className="grid min-w-[620px] lg:min-w-0 gap-1.5"
@@ -701,12 +697,11 @@ export function MenuEditor({
             </div>
           </div>
 
-          {/* Cuadrícula con scroll de las comidas (Desayuno, Comida, Merienda, Cena) */}
+          {/* Cuadrícula de comidas – ocupa el espacio restante y hace scroll internamente */}
           <div
             ref={gridRef}
             onScroll={handleBodyScroll}
-            className="overflow-y-auto overflow-x-auto rounded-2xl border border-slate-200 bg-slate-50/70 p-1.5"
-            style={{ maxHeight: 'calc(100vh - 280px)', minHeight: '380px' }}
+            className="min-h-0 flex-1 overflow-y-auto overflow-x-auto rounded-2xl border border-slate-200 bg-slate-50/70 p-1.5"
           >
             {/* Filas por ingesta */}
             <div
@@ -927,11 +922,10 @@ export function MenuEditor({
           </div>
         </div>
 
-        {/* Panel lateral: Información del menú a la par del menú, a la derecha, siempre visible */}
+        {/* Panel lateral: llena la altura junto al grid */}
         {panelOpen && (
           <div
-            className="flex w-[290px] lg:w-[315px] 2xl:w-[335px] shrink-0 flex-col sticky top-1 self-start"
-            style={{ height: 'calc(100vh - 80px)', maxHeight: 'calc(100vh - 80px)' }}
+            className="flex w-[290px] lg:w-[315px] 2xl:w-[335px] shrink-0 flex-col min-h-0"
           >
             <MenuSidePanel
               grid={grid}

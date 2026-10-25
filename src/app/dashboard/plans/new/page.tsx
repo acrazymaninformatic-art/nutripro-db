@@ -61,8 +61,8 @@ export default async function NewMealPlanPage() {
   }))
 
   return (
-    <div className="space-y-4 w-full px-1 sm:px-3">
-      <div className="flex items-center justify-between">
+    <div className="flex flex-col h-full w-full px-1 sm:px-3" style={{ height: 'calc(100vh - 90px)' }}>
+      <div className="flex items-center justify-between shrink-0">
         <Link
           href="/dashboard/plans"
           className="inline-flex items-center gap-1.5 text-sm text-gray-500 hover:text-gray-900 transition-colors"
@@ -72,7 +72,7 @@ export default async function NewMealPlanPage() {
         </Link>
       </div>
 
-      <div className="flex items-center gap-3">
+      <div className="flex items-center gap-3 shrink-0">
         <div className="p-2.5 bg-green-50 rounded-xl text-green-700">
           <CalendarDays className="h-6 w-6" />
         </div>

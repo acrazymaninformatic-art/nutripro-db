@@ -625,9 +625,9 @@ export function PlanBuilderForm({
   }
 
   return (
-    <form onSubmit={handleSubmit} noValidate className="space-y-5">
+    <form onSubmit={handleSubmit} noValidate className="flex flex-col gap-3" style={{ height: 'calc(100vh - 130px)' }}>
       {/* 1. BARRA DE CONTROL PRINCIPAL DEL PLAN NUTRICIONAL */}
-      <Card className="rounded-2xl border border-gray-200 shadow-xs bg-white overflow-hidden">
+      <Card className="rounded-2xl border border-gray-200 shadow-xs bg-white overflow-hidden shrink-0">
         <div className="p-3.5 sm:p-4 space-y-3">
           {/* FILA 1: PACIENTE + TÍTULO + FECHA + ACCIONES PRINCIPALES */}
           <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-3">
@@ -945,7 +945,8 @@ export function PlanBuilderForm({
         </div>
       )}
 
-      {/* 3. EDITOR DE MENÚS (CUADRÍCULA SEMANAL ESTILO TABLERO) */}
+      {/* 3. EDITOR DE MENÚS – ocupa el espacio restante del flex */}
+      <div className="min-h-0 flex-1">
       <MenuEditor
         grid={gridSchedule as never}
         foods={foods}
@@ -976,6 +977,7 @@ export function PlanBuilderForm({
         onSave={() => void savePlan()}
         saving={loading}
       />
+      </div>
 
       {/* 5. MODAL DE BÚSQUEDA RÁPIDA DE ALIMENTOS */}
       {modalTarget && (
@@ -1266,7 +1268,7 @@ export function PlanBuilderForm({
       )}
 
       {/* SUBMIT BUTTONS */}
-      <div className="flex items-center justify-between pt-3 border-t">
+      <div className="flex items-center justify-between pt-3 border-t shrink-0">
         <Button
           type="button"
           variant="outline"
