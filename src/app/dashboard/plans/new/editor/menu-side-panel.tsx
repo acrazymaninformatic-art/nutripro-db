@@ -1,14 +1,18 @@
 'use client'
 
-import { useMemo, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import {
   Calculator,
   Check,
   ChevronDown,
+  Clock,
   Info,
+  Lock,
+  Palette,
   ShieldAlert,
   ShieldCheck,
   Sparkles,
+  Unlock,
   X,
 } from 'lucide-react'
 import {
@@ -50,6 +54,8 @@ interface MenuSidePanelProps {
   planName: string
   planNotes: string
   saveLabel: string
+  activeIngestaLabel?: string | null
+  onSelectIngestaLabel?: (label: string | null) => void
   onIngestaMetaChange: (meta: EditorIngestaMeta[]) => void
   onSettingsChange: (settings: MenuSettings) => void
   onPlanNameChange: (name: string) => void
@@ -57,12 +63,13 @@ interface MenuSidePanelProps {
   onClose?: () => void
 }
 
-type TabKey = 'data' | 'config' | 'patients'
+type TabKey = 'data' | 'ingesta' | 'config' | 'patients'
 
 const TABS: Array<{ key: TabKey; label: string }> = [
   { key: 'data', label: 'Datos menú' },
+  { key: 'ingesta', label: 'Ingestas' },
   { key: 'config', label: 'Configuración' },
-  { key: 'patients', label: 'Paciente(s)' },
+  { key: 'patients', label: 'Paciente' },
 ]
 
 const DAY_LETTERS = ['L', 'M', 'X', 'J', 'V', 'S', 'D']
@@ -235,6 +242,17 @@ function MacroDonut({ totals }: { totals: MenuTotals }) {
   )
 }
 
+const COLOR_PRESETS = [
+  { name: 'Ámbar', value: '#f59e0b' },
+  { name: 'Naranja', value: '#f97316' },
+  { name: 'Esmeralda', value: '#10b981' },
+  { name: 'Azul', value: '#2563eb' },
+  { name: 'Índigo', value: '#6366f1' },
+  { name: 'Violeta', value: '#8b5cf6' },
+  { name: 'Rosa', value: '#ec4899' },
+  { name: 'Cian', value: '#06b6d4' },
+]
+
 export function MenuSidePanel({
   grid,
   foods,
@@ -245,6 +263,8 @@ export function MenuSidePanel({
   planName,
   planNotes,
   saveLabel,
+  activeIngestaLabel,
+  onSelectIngestaLabel,
   onIngestaMetaChange,
   onSettingsChange,
   onPlanNameChange,
@@ -252,9 +272,19 @@ export function MenuSidePanel({
   onClose,
 }: MenuSidePanelProps) {
   const foodMap = useMemo(() => new Map(foods.map((food) => [food.id, food])), [foods])
-  const [tab, setTab] = useState<TabKey>('data')
+  const [tab, setTab] = useState<TabKey>(activeIngestaLabel ? 'ingesta' : 'data')
   const [selectedDay, setSelectedDay] = useState<number | 'week'>('week')
   const [showMicros, setShowMicros] = useState(false)
+  const [selectedIngestaLabel, setSelectedIngestaLabel] = useState<string>(
+    activeIngestaLabel || ingestaMeta[0]?.label || 'Desayuno'
+  )
+
+  useEffect(() => {
+    if (activeIngestaLabel) {
+      setSelectedIngestaLabel(activeIngestaLabel)
+      setTab('ingesta')
+    }
+  }, [activeIngestaLabel])
 
   const days = useMemo(
     () =>
@@ -393,6 +423,24 @@ export function MenuSidePanel({
         return match ? { ...ingesta, percent: match.percent } : ingesta
       }),
     })
+  }
+
+  const currentIngesta =
+    ingestaMeta.find((i) => i.label === selectedIngestaLabel) || ingestaMeta[0]
+
+  const updateIngesta = (label: string, patch: Partial<EditorIngestaMeta>) => {
+    const next = ingestaMeta.map((ingesta) =>
+      ingesta.label === label ? { ...ingesta, ...patch } : ingesta
+    )
+    onIngestaMetaChange(next)
+    if (patch.percent !== undefined) {
+      onSettingsChange({
+        ...settings,
+        ingestas: settings.ingestas.map((ingesta) =>
+          ingesta.label === label ? { ...ingesta, percent: patch.percent! } : ingesta
+        ),
+      })
+    }
   }
 
   const inputClass =
@@ -534,6 +582,245 @@ export function MenuSidePanel({
                 <Info className="mt-0.5 h-2.5 w-2.5 shrink-0" />
                 {saveLabel}. El panel se guarda con la pauta al pulsar «Guardar menú».
               </p>
+            </section>
+          )}
+
+          {/* ------------------------------ INGESTAS ------------------------------ */}
+          {tab === 'ingesta' && (
+            <section className="space-y-3">
+              {/* Selector de ingestas */}
+              <div>
+                <span className="mb-1 block text-[8px] font-black uppercase tracking-wider text-slate-400">
+                  Selecciona la comida a configurar
+                </span>
+                <div className="flex flex-wrap items-center gap-1">
+                  {ingestaMeta.map((item) => (
+                    <button
+                      key={item.label}
+                      type="button"
+                      onClick={() => {
+                        setSelectedIngestaLabel(item.label)
+                        onSelectIngestaLabel?.(item.label)
+                      }}
+                      className={`inline-flex items-center gap-1 rounded-lg px-2 py-1 text-[9px] font-bold transition-all ${
+                        selectedIngestaLabel === item.label
+                          ? 'text-white shadow-xs ring-2 ring-blue-500'
+                          : 'border border-slate-200 bg-white text-slate-700 hover:bg-slate-50'
+                      }`}
+                      style={
+                        selectedIngestaLabel === item.label
+                          ? { backgroundColor: item.color }
+                          : undefined
+                      }
+                    >
+                      <span
+                        className="h-2 w-2 rounded-full"
+                        style={{ backgroundColor: item.color }}
+                      />
+                      {item.label}
+                      <span className="text-[8px] opacity-80">{item.percent}%</span>
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              {/* Panel de configuración avanzada de la ingesta */}
+              {currentIngesta && (
+                <div className="space-y-2.5 rounded-xl border border-slate-200 bg-slate-50/70 p-2.5 shadow-2xs">
+                  {/* Tarjeta cabecera con color sólido */}
+                  <div
+                    className="flex items-center justify-between rounded-lg px-2.5 py-1.5 text-white shadow-xs"
+                    style={{ backgroundColor: currentIngesta.color }}
+                  >
+                    <div className="min-w-0">
+                      <span className="text-[11px] font-black uppercase tracking-wider drop-shadow-xs">
+                        {currentIngesta.label}
+                      </span>
+                      <p className="text-[9px] font-semibold text-white/95">
+                        {Math.round(targets.kcal * (currentIngesta.percent / 100))} kcal estimadas
+                      </p>
+                    </div>
+                    <button
+                      type="button"
+                      onClick={() =>
+                        updateIngesta(currentIngesta.label, { locked: !currentIngesta.locked })
+                      }
+                      className="flex items-center gap-1 rounded bg-black/25 px-1.5 py-0.5 text-[8px] font-black text-white hover:bg-black/35"
+                    >
+                      {currentIngesta.locked ? (
+                        <>
+                          <Lock className="h-2.5 w-2.5 text-amber-300" />
+                          Bloqueada
+                        </>
+                      ) : (
+                        <>
+                          <Unlock className="h-2.5 w-2.5" />
+                          Libre
+                        </>
+                      )}
+                    </button>
+                  </div>
+
+                  {/* 1. Porcentaje y calorías */}
+                  <div className="space-y-1">
+                    <div className="flex items-center justify-between text-[9px] font-bold text-slate-700">
+                      <span>Aporte calórico del día</span>
+                      <span className="font-mono font-black text-blue-700">
+                        {currentIngesta.percent}% ({Math.round(targets.kcal * (currentIngesta.percent / 100))} kcal)
+                      </span>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <input
+                        type="range"
+                        min={0}
+                        max={60}
+                        step={1}
+                        value={currentIngesta.percent}
+                        onChange={(e) =>
+                          updateIngesta(currentIngesta.label, { percent: Number(e.target.value) })
+                        }
+                        className="h-1.5 flex-1 cursor-pointer accent-blue-600"
+                      />
+                      <input
+                        type="number"
+                        min={0}
+                        max={100}
+                        value={currentIngesta.percent}
+                        onChange={(e) =>
+                          updateIngesta(currentIngesta.label, {
+                            percent: Math.max(0, Math.min(100, Number(e.target.value) || 0)),
+                          })
+                        }
+                        className="h-6 w-12 rounded border border-slate-200 bg-white px-1 text-center font-mono text-[10px] font-bold text-slate-800"
+                      />
+                      <span className="text-[9px] font-bold text-slate-500">%</span>
+                    </div>
+                  </div>
+
+                  {/* 2. Horario recomendado */}
+                  <div>
+                    <label className="flex items-center justify-between gap-2 text-[9px] font-bold text-slate-700">
+                      <span className="flex items-center gap-1">
+                        <Clock className="h-3 w-3 text-slate-400" />
+                        Hora recomendada
+                      </span>
+                      <input
+                        type="time"
+                        value={currentIngesta.time || '08:00'}
+                        onChange={(e) =>
+                          updateIngesta(currentIngesta.label, { time: e.target.value })
+                        }
+                        className="h-6 rounded border border-slate-200 bg-white px-1.5 font-mono text-[10px] font-bold text-slate-800"
+                      />
+                    </label>
+                  </div>
+
+                  {/* 3. Color identificador */}
+                  <div className="space-y-1">
+                    <span className="flex items-center gap-1 text-[9px] font-bold text-slate-700">
+                      <Palette className="h-3 w-3 text-slate-400" />
+                      Color identificador
+                    </span>
+                    <div className="flex flex-wrap items-center gap-1.5">
+                      {COLOR_PRESETS.map((preset) => (
+                        <button
+                          key={preset.value}
+                          type="button"
+                          onClick={() =>
+                            updateIngesta(currentIngesta.label, { color: preset.value })
+                          }
+                          className={`h-4.5 w-4.5 rounded-full border transition-transform ${
+                            currentIngesta.color === preset.value
+                              ? 'scale-125 border-slate-900 ring-2 ring-blue-400'
+                              : 'border-white hover:scale-110'
+                          }`}
+                          style={{ backgroundColor: preset.value }}
+                          title={preset.name}
+                        />
+                      ))}
+                      <input
+                        type="color"
+                        value={currentIngesta.color}
+                        onChange={(e) =>
+                          updateIngesta(currentIngesta.label, { color: e.target.value })
+                        }
+                        className="h-5 w-6 cursor-pointer rounded border border-slate-200 bg-transparent"
+                        title="Color personalizado"
+                      />
+                    </div>
+                  </div>
+
+                  {/* 4. Macros orientativos de esta ingesta */}
+                  <div className="rounded-lg border border-slate-200 bg-white p-2 text-[9px]">
+                    <span className="mb-1 block font-black uppercase tracking-wider text-slate-400">
+                      Objetivos orientativos para este plato
+                    </span>
+                    <div className="grid grid-cols-4 gap-1 text-center font-mono">
+                      <div className="rounded bg-slate-50 p-1">
+                        <span className="block text-[7px] font-bold text-slate-400">PROT</span>
+                        <span className="font-bold text-slate-800">
+                          {Math.round(targets.proteinG * (currentIngesta.percent / 100))}g
+                        </span>
+                      </div>
+                      <div className="rounded bg-slate-50 p-1">
+                        <span className="block text-[7px] font-bold text-slate-400">HC</span>
+                        <span className="font-bold text-slate-800">
+                          {Math.round(targets.carbsG * (currentIngesta.percent / 100))}g
+                        </span>
+                      </div>
+                      <div className="rounded bg-slate-50 p-1">
+                        <span className="block text-[7px] font-bold text-slate-400">GRASA</span>
+                        <span className="font-bold text-slate-800">
+                          {Math.round(targets.fatG * (currentIngesta.percent / 100))}g
+                        </span>
+                      </div>
+                      <div className="rounded bg-slate-50 p-1">
+                        <span className="block text-[7px] font-bold text-slate-400">FIBRA</span>
+                        <span className="font-bold text-slate-800">
+                          {Math.round((targets.fiberG || 25) * (currentIngesta.percent / 100))}g
+                        </span>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* 5. Pautas clínicas de esta ingesta */}
+                  <div className="space-y-1">
+                    <label className="block text-[9px] font-bold text-slate-700">
+                      Pautas clínicas específicas
+                      <textarea
+                        rows={2}
+                        value={currentIngesta.notes || ''}
+                        onChange={(e) =>
+                          updateIngesta(currentIngesta.label, { notes: e.target.value })
+                        }
+                        placeholder="Ej: Tomar con 300 ml de agua, separar 2h de medicación..."
+                        className="mt-0.5 w-full rounded border border-slate-200 bg-white p-1.5 text-[10px] text-slate-800 focus:border-blue-400 focus:outline-none"
+                      />
+                    </label>
+                  </div>
+
+                  {/* Acciones */}
+                  <div className="flex items-center justify-between border-t border-slate-200 pt-2 text-[8px]">
+                    <button
+                      type="button"
+                      onClick={distribute}
+                      className="inline-flex items-center gap-1 rounded bg-blue-50 px-2 py-1 font-black text-blue-700 hover:bg-blue-100"
+                    >
+                      <Sparkles className="h-2.5 w-2.5" />
+                      Repartir % equitativo
+                    </button>
+                    <span
+                      className={`font-black ${
+                        Math.abs(percentTotal - 100) < 0.05
+                          ? 'text-emerald-600'
+                          : 'text-amber-600'
+                      }`}
+                    >
+                      Total: {formatNumber(percentTotal, 1)}%
+                    </span>
+                  </div>
+                </div>
+              )}
             </section>
           )}
 

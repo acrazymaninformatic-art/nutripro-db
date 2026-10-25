@@ -23,6 +23,8 @@ export interface PatientPlanProfile {
   dietaryPreferences?: string
   foodAversions?: string
   medicalHistory?: string
+  isGLP1Treatment?: boolean
+  isTCAProtocol?: boolean
 }
 
 export interface FoodDatabaseItem {
@@ -769,20 +771,61 @@ export function generateAutomatedWeeklyPlan(
       if (food) rawKcal += food.calories * (it.quantityG / 100)
     })
 
-    // Scale portions proportionally so the day strictly matches the patient's target calories!
+    // Scale portions proportionally with realistic physiological boundaries per food type
     const target = patient.targetKcal || 2000
     const ratio = rawKcal > 0 ? target / rawKcal : 1.0
 
-    // Apply scale to main portions (round to multiples of 5 grams)
+    // Realistic Spanish portion boundaries
     function scalePortions(items: GeneratedMealItem[]) {
       return items.map((it) => {
         const food = allFoods.find((f) => f.id === it.foodId)
         let newQty = it.quantityG
         if (food) {
-          if (food.category === 'Aceites y Grasas') {
-            newQty = Math.max(5, Math.min(20, Math.round(it.quantityG * Math.min(1.3, Math.max(0.7, ratio)))))
-          } else {
-            newQty = Math.max(10, Math.round((it.quantityG * ratio) / 5) * 5)
+          const norm = food.name.toLowerCase()
+          const cat = (food.category || '').toLowerCase()
+
+          // 1. Huevos enteros: unidades completas (~55g por huevo M)
+          if (norm.includes('huevo entero') || norm.includes('huevos camperos') || norm.includes('tortilla francesa')) {
+            newQty = Math.max(55, Math.min(220, Math.round((it.quantityG * ratio) / 55) * 55))
+          }
+          // 2. Aceites y grasas: dosis culinaria real (5g cucharadita, 10g-15g cucharada sopera)
+          else if (cat.includes('aceite') || norm.includes('aceite')) {
+            newQty = Math.max(5, Math.min(15, Math.round((it.quantityG * Math.min(1.2, Math.max(0.8, ratio))) / 2.5) * 2.5))
+          }
+          // 3. Pan de molde / tostadas: rebanadas estándar (~30g-35g)
+          else if (norm.includes('pan de molde') || norm.includes('tostada') || norm.includes('biscote')) {
+            newQty = Math.max(30, Math.min(90, Math.round((it.quantityG * ratio) / 30) * 30))
+          }
+          // 4. Frutos secos: puñado clínico (15g a 30g)
+          else if (cat.includes('fruto seco') || norm.includes('nuez') || norm.includes('almendra') || norm.includes('pistacho')) {
+            newQty = Math.max(15, Math.min(30, Math.round((it.quantityG * ratio) / 5) * 5))
+          }
+          // 5. Carnes, aves y pescados principales: ración realista de plato principal (110g a 220g)
+          else if (cat.includes('carne') || cat.includes('pescado') || norm.includes('pollo') || norm.includes('ternera') || norm.includes('salmon') || norm.includes('merluza')) {
+            newQty = Math.max(110, Math.min(220, Math.round((it.quantityG * ratio) / 5) * 5))
+          }
+          // 6. Legumbres cocidas: ración de plato (130g a 240g)
+          else if (cat.includes('legumbre') || norm.includes('lenteja') || norm.includes('garbanzo') || norm.includes('alubia')) {
+            newQty = Math.max(130, Math.min(240, Math.round((it.quantityG * ratio) / 10) * 10))
+          }
+          // 7. Frutas enteras de mesa: pieza entera (100g a 180g)
+          else if (cat.includes('fruta') && (norm.includes('manzana') || norm.includes('platano') || norm.includes('naranja') || norm.includes('pera') || norm.includes('kiwi'))) {
+            newQty = Math.max(90, Math.min(180, Math.round((it.quantityG * ratio) / 10) * 10))
+          }
+          // 8. Lácteos envasados (yogur 125g/250g, leche 200ml)
+          else if (norm.includes('yogur')) {
+            newQty = Math.max(125, Math.min(250, Math.round((it.quantityG * ratio) / 125) * 125))
+          } else if (norm.includes('leche') || norm.includes('bebida de')) {
+            newQty = Math.max(150, Math.min(250, Math.round((it.quantityG * ratio) / 25) * 25))
+          }
+          // 9. Resto de alimentos (arroz, pasta, patatas, verduras): múltiplos de 5g
+          else {
+            newQty = Math.max(15, Math.round((it.quantityG * ratio) / 5) * 5)
+          }
+
+          // Restricción específica GLP-1: limitar raciones individuales voluminosas
+          if (patient.isGLP1Treatment && newQty > 200) {
+            newQty = Math.min(newQty, 200)
           }
         }
         return {

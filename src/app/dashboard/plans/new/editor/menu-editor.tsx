@@ -28,7 +28,7 @@ import { DayHeader } from './day-header'
 import { IngestaHeader } from './ingesta-header'
 import { FoodCard } from './food-card'
 import { AddFoodButton, FoodPickerModal } from './food-picker-modal'
-import { IngestaEditModal, NotesModal, SwapFoodModal, TutorialModal } from './editor-modals'
+import { NotesModal, SwapFoodModal, TutorialModal } from './editor-modals'
 import { MenuSidePanel } from './menu-side-panel'
 import {
   DAY_NAMES,
@@ -444,30 +444,7 @@ export function MenuEditor({
     )
   }
 
-  const saveIngesta = (patch: Partial<EditorIngestaMeta>) => {
-    if (!ingestaEditTarget) return
-    const nextMeta = ingestaMeta.map((ingesta) =>
-      ingesta.label === ingestaEditTarget ? { ...ingesta, ...patch } : ingesta
-    )
-    onIngestaMetaChange(nextMeta)
-
-    // Mantener el reparto del panel sincronizado con el editor.
-    const edited = nextMeta.find((ingesta) => ingesta.label === ingestaEditTarget)
-    if (edited) {
-      onMenuSettingsChange({
-        ...menuSettings,
-        ingestas: menuSettings.ingestas.map((ingesta) =>
-          ingesta.mealType === MEAL_TYPE_BY_LABEL[edited.label]
-            ? { ...ingesta, label: edited.label, time: edited.time, percent: edited.percent }
-            : ingesta
-        ),
-      })
-    }
-  }
-
   const saveLabelText = saving ? 'Guardando en servidor…' : 'Cambios sin guardar en servidor'
-
-  const editingIngesta = ingestaMeta.find((ingesta) => ingesta.label === ingestaEditTarget)
 
   /** Ingesta a la que pertenece un tipo de comida del grid. */
   const ingestaForMeal = (mealType: string) =>
@@ -665,12 +642,13 @@ export function MenuEditor({
             className="overflow-y-auto overflow-x-auto rounded-2xl border border-slate-200 bg-slate-50/70 p-1.5"
             style={{ maxHeight: 'calc(100vh - 215px)' }}
           >
+            {/* Cabecera anclada superior (INGESTA + 7 DÍAS) */}
             <div
-              className="grid min-w-[620px] lg:min-w-0 gap-1.5"
-              style={{ gridTemplateColumns: 'clamp(44px, 5vw, 95px) repeat(7, minmax(0, 1fr))' }}
+              className="sticky top-0 z-30 mb-1.5 grid min-w-[620px] lg:min-w-0 gap-1.5 rounded-xl bg-slate-100/95 p-1 backdrop-blur-sm shadow-xs"
+              style={{ gridTemplateColumns: 'clamp(55px, 6vw, 105px) repeat(7, minmax(0, 1fr))' }}
             >
               {/* Esquina */}
-              <div className="sticky left-0 top-0 z-30 flex items-center justify-center rounded-xl bg-slate-100 px-1 py-1 text-[8px] font-black uppercase tracking-wider text-slate-500">
+              <div className="sticky left-0 z-40 flex items-center justify-center rounded-xl bg-slate-200/90 px-1 py-1 text-[8px] font-black uppercase tracking-wider text-slate-700 shadow-xs">
                 Ingesta
               </div>
 
@@ -697,8 +675,13 @@ export function MenuEditor({
                   onToggleComplete={() => toggleDayCompleted(dayIndex)}
                 />
               ))}
+            </div>
 
-              {/* Filas por ingesta */}
+            {/* Filas por ingesta */}
+            <div
+              className="grid min-w-[620px] lg:min-w-0 gap-1.5"
+              style={{ gridTemplateColumns: 'clamp(55px, 6vw, 105px) repeat(7, minmax(0, 1fr))' }}
+            >
               {ingestaMeta.map((ingesta) => {
                 const mealType = MEAL_TYPE_BY_LABEL[ingesta.label]
                 const collapsed = collapsedIngestas[ingesta.label] ?? ingesta.collapsed
@@ -707,7 +690,7 @@ export function MenuEditor({
                 return (
                   <Fragment key={ingesta.label}>
                     {/* Banda de color + controles, a toda la altura de la fila */}
-                    <div className="sticky left-0 z-10 overflow-hidden rounded-xl border border-slate-200 bg-white p-1">
+                    <div className="sticky left-0 z-10 overflow-hidden rounded-xl shadow-xs" style={{ backgroundColor: ingesta.color }}>
                       <IngestaHeader
                         label={ingesta.label}
                         color={ingesta.color}
@@ -722,7 +705,10 @@ export function MenuEditor({
                             [ingesta.label]: !collapsed,
                           }))
                         }
-                        onEdit={() => setIngestaEditTarget(ingesta.label)}
+                        onEdit={() => {
+                          setPanelOpen(true)
+                          setIngestaEditTarget(ingesta.label)
+                        }}
                         onToggleLock={() => toggleIngestaLock(ingesta.label)}
                       />
                     </div>
@@ -748,9 +734,10 @@ export function MenuEditor({
                           key={`${ingesta.label}-${dayIndex}`}
                           onDragOver={(event) => event.preventDefault()}
                           onDrop={() => handleDrop(mealType, dayIndex)}
-                          className={`flex flex-col overflow-hidden rounded-xl border bg-white p-1.5 ${
-                            ingesta.locked ? 'border-amber-200 bg-amber-50/30' : 'border-slate-200'
+                          className={`flex flex-col overflow-hidden rounded-xl border bg-white p-1.5 shadow-2xs ${
+                            ingesta.locked ? 'border-amber-200 bg-amber-50/20' : 'border-slate-200'
                           }`}
+                          style={{ borderTop: `4px solid ${ingesta.color}` }}
                         >
                           {/* Móvil: resumen táctil del plato (los 7 días caben) */}
                           <button
@@ -770,9 +757,15 @@ export function MenuEditor({
 
                           {/* Escritorio / tablet: contenido completo del plato */}
                           <div className="hidden min-h-0 flex-1 flex-col sm:flex">
-                          {/* Subtotal del plato: barra, check y aviso, siempre visible */}
+                          {/* Subtotal del plato: etiqueta con color de comida y barra */}
                           <div className="mb-1.5 flex items-center gap-1">
-                            <div className="h-1 flex-1 overflow-hidden rounded-full bg-slate-100">
+                            <span
+                              className="inline-flex shrink-0 items-center rounded px-1 py-0.5 text-[8px] font-black uppercase text-white shadow-2xs"
+                              style={{ backgroundColor: ingesta.color }}
+                            >
+                              {ingesta.label.slice(0, 3)}
+                            </span>
+                            <div className="h-1.5 flex-1 overflow-hidden rounded-full bg-slate-100">
                               <div
                                 className={`h-full rounded-full transition-[width] duration-300 ${barColor}`}
                                 style={{ width: `${pct}%` }}
@@ -919,6 +912,8 @@ export function MenuEditor({
               planName={planName}
               planNotes={planNotes}
               saveLabel={saveLabelText}
+              activeIngestaLabel={ingestaEditTarget}
+              onSelectIngestaLabel={setIngestaEditTarget}
               onIngestaMetaChange={onIngestaMetaChange}
               onSettingsChange={onMenuSettingsChange}
               onPlanNameChange={onPlanNameChange}
@@ -1052,12 +1047,7 @@ export function MenuEditor({
         onSave={saveNotes}
       />
 
-      <IngestaEditModal
-        open={Boolean(editingIngesta)}
-        ingesta={editingIngesta}
-        onClose={() => setIngestaEditTarget(null)}
-        onSave={saveIngesta}
-      />
+
 
       <TutorialModal open={showTutorial} onClose={() => setShowTutorial(false)} />
 

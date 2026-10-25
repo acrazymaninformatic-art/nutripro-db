@@ -37,7 +37,7 @@ export function DayHeader({
   const nameInputRef = useRef<HTMLInputElement>(null)
 
   return (
-    <header className="sticky top-0 z-20 rounded-xl bg-slate-900 px-1 py-1 text-white shadow-md sm:px-1.5 sm:py-1.5">
+    <header className="h-full rounded-xl bg-slate-900 px-1 py-1 text-white shadow-md sm:px-1.5 sm:py-1.5">
       {/* Móvil: letra del día + estado (los 7 días caben siempre) */}
       <div className="flex flex-col items-center gap-0.5 sm:hidden">
         <span className="text-[11px] font-black uppercase">{letter}</span>
