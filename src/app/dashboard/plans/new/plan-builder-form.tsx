@@ -137,6 +137,8 @@ export function PlanBuilderForm({
   const [isGLP1, setIsGLP1] = useState<boolean>(false)
   const [isTCA, setIsTCA] = useState<boolean>(false)
   const [showExchangesModal, setShowExchangesModal] = useState<boolean>(false)
+  const [showBiometrics, setShowBiometrics] = useState<boolean>(false)
+  const [showTemplatesModal, setShowTemplatesModal] = useState<boolean>(false)
 
   // 4. WEEKLY MATRIX STATE: grid[mealType][dayIndex] = GridItem[]
   const [gridSchedule, setGridSchedule] = useState<{
@@ -278,19 +280,29 @@ export function PlanBuilderForm({
     precisionResults.targetFatG,
   ])
 
-  // FUNCTION: Trigger automatic plan generation
+  // FUNCTION: Trigger automatic plan generation using unified menuSettings as single source of truth
   const handleAutoGeneratePlan = () => {
     if (!selectedPatient) return
+
+    const mealDistribution: Record<string, number> = {
+      BREAKFAST: ingestaMeta.find((i) => i.label === 'Desayuno')?.percent || 22,
+      MID_MORNING: ingestaMeta.find((i) => i.label === 'Media mañana')?.percent || 10,
+      LUNCH: ingestaMeta.find((i) => i.label === 'Comida')?.percent || 33,
+      SNACK: ingestaMeta.find((i) => i.label === 'Merienda')?.percent || 10,
+      DINNER: ingestaMeta.find((i) => i.label === 'Cena')?.percent || 25,
+    }
 
     const generated = generateAutomatedWeeklyPlan(
       {
         firstName: selectedPatient.firstName,
         lastName: selectedPatient.lastName,
         objective: selectedPatient.objective,
-        targetKcal: precisionResults.targetKcal,
-        targetProteinG: precisionResults.targetProteinG,
-        targetCarbsG: precisionResults.targetCarbsG,
-        targetFatG: precisionResults.targetFatG,
+        targetKcal: menuSettings.dailyTargets.kcal,
+        targetProteinG: menuSettings.dailyTargets.proteinG,
+        targetCarbsG: menuSettings.dailyTargets.carbsG,
+        targetFatG: menuSettings.dailyTargets.fatG,
+        distribution: mealDistribution,
+        isKeto: menuSettings.ketoMode,
         allergies: selectedPatient.allergies,
         intolerances: selectedPatient.intolerances,
         dietaryPreferences: selectedPatient.dietaryPreferences,
@@ -312,7 +324,7 @@ export function PlanBuilderForm({
 
     setGridSchedule(updatedGrid)
     setAutoGenNotice(
-      `Pauta base generada automáticamente: ${precisionResults.targetKcal} kcal/día, ${precisionResults.targetProteinG}g P, adaptada a ${selectedPatient.firstName}. Puedes modificar cualquier cantidad o arrastrar alimentos.`
+      `Pauta base generada automáticamente: ${menuSettings.dailyTargets.kcal} kcal/día (${menuSettings.dailyTargets.proteinG}g P • ${menuSettings.dailyTargets.carbsG}g C • ${menuSettings.dailyTargets.fatG}g G) adaptada a ${selectedPatient.firstName}.`
     )
   }
 
@@ -321,12 +333,13 @@ export function PlanBuilderForm({
     const template = CLINICAL_TEMPLATES.find((t) => t.id === templateId)
     if (!template) return
 
-    const targetKcal = precisionResults.targetKcal
+    const targetKcal = menuSettings.dailyTargets.kcal
     const scaledGrid = buildPlanFromClinicalTemplate(templateId, targetKcal, foods, selectedPatient)
 
     setGridSchedule(scaledGrid as any)
+    setShowTemplatesModal(false)
     setAutoGenNotice(
-      ` Plantilla clínica "${template.name}" aplicada con 1 clic: Escalada proporcionalmente a ${targetKcal} kcal/día (${template.macroRatio.proteinPct}% P / ${template.macroRatio.carbsPct}% C / ${template.macroRatio.fatPct}% G). Gramajes ajustados para ${selectedPatient?.firstName || 'el paciente'}.`
+      `Plantilla clínica "${template.name}" aplicada: Escalada a ${targetKcal} kcal/día (${template.macroRatio.proteinPct}% P / ${template.macroRatio.carbsPct}% C / ${template.macroRatio.fatPct}% G).`
     )
   }
 
@@ -613,104 +626,256 @@ export function PlanBuilderForm({
 
   return (
     <form onSubmit={handleSubmit} noValidate className="space-y-5">
-      {/* 1. CALCULADORA DE PRECISIÓN CLÍNICA Y BOTÓN DE GENERACIÓN INTELIGENTE */}
-      <Card className="rounded-3xl border border-gray-200 shadow-xs overflow-hidden">
-        <CardHeader className="py-3 px-5 bg-gradient-to-r from-blue-50/90 to-sky-50/40 border-b border-blue-100">
-          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2.5">
-            <div>
-              <CardTitle className="text-sm flex items-center gap-2 text-blue-950 font-bold">
-                <Calculator className="h-4 w-4 text-blue-600" />
-                <span>Calculadora Nutricional de Precisión Clínica</span>
-              </CardTitle>
-              <CardDescription className="text-[11px] text-blue-900/70">
-                Ajustes biométricos por paciente: Katch-McArdle, Mifflin-St Jeor, Harris-Benedict y distribución de macros en g/kg.
-              </CardDescription>
+      {/* 1. BARRA DE CONTROL PRINCIPAL DEL PLAN NUTRICIONAL */}
+      <Card className="rounded-2xl border border-gray-200 shadow-xs bg-white overflow-hidden">
+        <div className="p-3.5 sm:p-4 space-y-3">
+          {/* FILA 1: PACIENTE + TÍTULO + FECHA + ACCIONES PRINCIPALES */}
+          <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-3">
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-2.5 flex-1">
+              <div>
+                <Label className="text-2xs font-bold text-gray-500 uppercase tracking-wider block mb-1">Paciente *</Label>
+                <Select
+                  value={patientId}
+                  onChange={(e) => setPatientId(e.target.value)}
+                  required
+                  className="h-8 text-xs font-bold text-gray-900 border-gray-300"
+                >
+                  {patients.map((p) => (
+                    <option key={p.id} value={p.id}>
+                      {p.name} ({p.latestWeightKg} kg • {OBJECTIVE_LABELS[p.objective as Objective] || p.objective})
+                    </option>
+                  ))}
+                </Select>
+              </div>
+
+              <div>
+                <Label className="text-2xs font-bold text-gray-500 uppercase tracking-wider block mb-1">Nombre del Menú</Label>
+                <Input
+                  value={name}
+                  onChange={(e) => setName(e.target.value)}
+                  placeholder="Pauta Semanal Personalizada"
+                  className="h-8 text-xs font-semibold"
+                />
+              </div>
+
+              <div>
+                <Label className="text-2xs font-bold text-gray-500 uppercase tracking-wider block mb-1">Fecha de Inicio</Label>
+                <Input
+                  type="date"
+                  value={startDate}
+                  onChange={(e) => setStartDate(e.target.value)}
+                  className="h-8 text-xs font-semibold"
+                />
+              </div>
             </div>
 
-            {/* ACTION: GENERAR PLAN BASE AUTOMÁTICO */}
-            <div className="flex items-center gap-2">
-              <Button
-                type="button"
-                variant="outline"
-                onClick={() => {
-                  setGridSchedule(buildSampleGrid(foods) as never)
-                  setDayMeta(buildSampleDayMeta())
-                  setAutoGenNotice(
-                    'Menú de ejemplo cargado (7 días x 5 ingestas) para probar el editor.'
-                  )
-                }}
-                className="h-8 px-3 flex items-center gap-1.5 text-xs font-bold"
-                title="Carga una semana de ejemplo con alimentos reales del catálogo"
-              >
-                <Layers className="h-3.5 w-3.5" />
-                <span>Cargar ejemplo</span>
-              </Button>
-
+            {/* BOTONES DE ACCIÓN RÁPIDA */}
+            <div className="flex items-center gap-2 shrink-0 pt-1 lg:pt-4">
               <Button
                 type="button"
                 onClick={handleAutoGeneratePlan}
-                className="bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold h-8 px-3 flex items-center gap-1.5 shadow-xs"
-                title="Genera una semana completa de alimentos reales ajustados exactamente al objetivo del paciente"
+                className="bg-blue-600 hover:bg-blue-700 text-white text-xs font-black h-8 px-3.5 flex items-center gap-1.5 shadow-sm shadow-blue-600/20"
+                title="Genera automáticamente un menú semanal con variedad inteligente sobre los 5.050 alimentos"
               >
                 <Wand2 className="h-3.5 w-3.5" />
-                <span>Generar Plan Base Automático</span>
+                <span>Generar Plan Automático</span>
               </Button>
 
-              {selectedPatient && (
-                <Badge variant="default" className="hidden sm:inline-flex bg-blue-100 text-blue-900 border-0 text-xs py-1 px-2.5 font-bold">
-                  <User className="h-3 w-3 mr-1 text-blue-700" />
-                  <span className="whitespace-nowrap">{selectedPatient.firstName} {selectedPatient.lastName}</span>
-                </Badge>
-              )}
-            </div>
-          </div>
-
-        </CardHeader>
-
-        <CardContent className="p-3.5 space-y-3">
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-2.5">
-            <div>
-              <Label className="text-xs font-bold text-gray-700">Paciente *</Label>
-              <Select
-                value={patientId}
-                onChange={(e) => setPatientId(e.target.value)}
-                required
-                className="h-8 text-xs font-semibold"
+              <Button
+                type="button"
+                variant="outline"
+                onClick={() => setShowTemplatesModal(true)}
+                className="h-8 px-3 flex items-center gap-1.5 text-xs font-bold border-blue-200 text-blue-700 hover:bg-blue-50"
+                title="Ver plantillas dietéticas prediseñadas (Mediterránea, Hiperproteica, Keto, Vegetariana, Deportiva)"
               >
-                {patients.map((p) => (
-                  <option key={p.id} value={p.id}>
-                    {p.name} ({p.latestWeightKg} kg • {OBJECTIVE_LABELS[p.objective as Objective] || p.objective})
-                  </option>
-                ))}
-              </Select>
-            </div>
+                <Sparkles className="h-3.5 w-3.5 text-blue-600" />
+                <span>Plantillas Clínicas</span>
+              </Button>
 
-            <div>
-              <Label className="text-xs font-bold text-gray-700">Título del Plan *</Label>
-              <Input
-                value={name}
-                onChange={(e) => setName(e.target.value)}
-                required
-                placeholder="Pauta Semanal Personalizada"
-                className="h-8 text-xs"
-              />
-            </div>
-
-            <div>
-              <Label className="text-xs font-bold text-gray-700">Fecha de Inicio *</Label>
-              <Input
-                type="date"
-                value={startDate}
-                onChange={(e) => setStartDate(e.target.value)}
-                required
-                className="h-8 text-xs"
-              />
+              <Button
+                type="button"
+                variant="ghost"
+                onClick={() => {
+                  setGridSchedule(buildSampleGrid(foods) as never)
+                  setDayMeta(buildSampleDayMeta())
+                  setAutoGenNotice('Menú de ejemplo cargado (7 días x 5 ingestas) para probar el editor.')
+                }}
+                className="h-8 px-2 text-xs font-semibold text-gray-500 hover:text-gray-900"
+                title="Cargar menú de muestra"
+              >
+                <Layers className="h-3.5 w-3.5" />
+                <span className="hidden xl:inline">Ejemplo</span>
+              </Button>
             </div>
           </div>
 
-          {/* ALERTA CLÍNICA FÁRMACO-NUTRIENTE EN TIEMPO REAL */}
+          {/* FILA 2: BARRA DE METAS CLÍNICAS + TOGGLES + ACCESO A BIOMETRÍA */}
+          <div className="flex flex-wrap items-center justify-between gap-2 pt-2 border-t border-gray-100 text-xs">
+            {/* Meta unificada (conecta directamente con menuSettings) */}
+            <div className="flex flex-wrap items-center gap-2">
+              <div className="flex items-center gap-1.5 bg-blue-50/80 border border-blue-200/90 rounded-lg px-2.5 py-1 text-blue-950 font-black">
+                <span className="text-[11px] uppercase tracking-wider text-blue-700 font-bold">Meta:</span>
+                <span className="text-xs">{menuSettings.dailyTargets.kcal} kcal</span>
+                <span className="text-blue-400 font-normal">|</span>
+                <span className="text-2xs font-semibold text-blue-900">
+                  {menuSettings.dailyTargets.proteinG}g P • {menuSettings.dailyTargets.carbsG}g C • {menuSettings.dailyTargets.fatG}g G
+                </span>
+              </div>
+
+              {/* Botón toggle para desplegar/ocultar afinadores biométricos sin saturar la pantalla */}
+              <button
+                type="button"
+                onClick={() => setShowBiometrics(!showBiometrics)}
+                className="inline-flex items-center gap-1 text-2xs font-bold px-2.5 py-1 rounded-lg border border-gray-200 hover:bg-gray-100 text-gray-700 transition-colors"
+              >
+                <Calculator className="h-3 w-3 text-gray-500" />
+                <span>{showBiometrics ? 'Ocultar Biometría' : 'Ajustes Biométricos ⚙️'}</span>
+              </button>
+            </div>
+
+            {/* Protocolos especiales del paciente */}
+            <div className="flex flex-wrap items-center gap-3">
+              <label className="flex items-center gap-1.5 cursor-pointer font-bold text-gray-700 text-2xs hover:text-amber-900">
+                <input
+                  type="checkbox"
+                  checked={isGLP1}
+                  onChange={(e) => {
+                    const val = e.target.checked
+                    setIsGLP1(val)
+                    if (val) setProteinGPerKg(Math.max(1.5, proteinGPerKg))
+                  }}
+                  className="rounded text-amber-600 focus:ring-amber-500 h-3 w-3 cursor-pointer"
+                />
+                <Pill className="h-3 w-3 text-amber-600" />
+                <span>GLP-1</span>
+              </label>
+
+              <label className="flex items-center gap-1.5 cursor-pointer font-bold text-gray-700 text-2xs hover:text-purple-900">
+                <input
+                  type="checkbox"
+                  checked={isTCA}
+                  onChange={(e) => setIsTCA(e.target.checked)}
+                  className="rounded text-purple-600 focus:ring-purple-500 h-3 w-3 cursor-pointer"
+                />
+                <EyeOff className="h-3 w-3 text-purple-600" />
+                <span>Modo TCA</span>
+              </label>
+
+              <button
+                type="button"
+                onClick={() => setShowExchangesModal(true)}
+                className="text-2xs font-bold text-blue-700 hover:underline flex items-center gap-1"
+              >
+                <Layers className="h-3 w-3" />
+                <span>Intercambios CESNID</span>
+              </button>
+            </div>
+          </div>
+
+          {/* AFINADORES BIOMÉTRICOS AVANZADOS (COLAPSABLES) */}
+          {showBiometrics && (
+            <div className="p-3 bg-gray-50/80 border border-gray-200 rounded-xl grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-8 gap-2 text-xs animate-in fade-in slide-in-from-top-1">
+              <div>
+                <span className="text-[10px] font-semibold text-gray-600 block">Peso (kg)</span>
+                <Input
+                  type="number"
+                  step="any"
+                  value={calcWeightKg}
+                  onChange={(e) => setCalcWeightKg(parseFloat(e.target.value) || 70)}
+                  className="h-7 text-xs font-bold"
+                />
+              </div>
+              <div>
+                <span className="text-[10px] font-semibold text-gray-600 block">Altura (cm)</span>
+                <Input
+                  type="number"
+                  step="any"
+                  value={calcHeightCm}
+                  onChange={(e) => setCalcHeightCm(parseFloat(e.target.value) || 170)}
+                  className="h-7 text-xs font-bold"
+                />
+              </div>
+              <div>
+                <span className="text-[10px] font-semibold text-gray-600 block">% Grasa</span>
+                <Input
+                  type="number"
+                  step="any"
+                  value={calcBodyFatPct}
+                  onChange={(e) => setCalcBodyFatPct(parseFloat(e.target.value) || 20)}
+                  className="h-7 text-xs font-bold"
+                />
+              </div>
+              <div>
+                <span className="text-[10px] font-semibold text-gray-600 block">Fórmula TMB</span>
+                <Select
+                  value={calcFormula}
+                  onChange={(e) => setCalcFormula(e.target.value as any)}
+                  className="h-7 text-xs font-semibold"
+                >
+                  <option value="katch">Katch-McArdle</option>
+                  <option value="mifflin">Mifflin-St Jeor</option>
+                  <option value="harris">Harris-Benedict</option>
+                  <option value="cunningham">Cunningham</option>
+                </Select>
+              </div>
+              <div>
+                <span className="text-[10px] font-semibold text-gray-600 block">Actividad</span>
+                <Select
+                  value={calcPal.toString()}
+                  onChange={(e) => setCalcPal(parseFloat(e.target.value))}
+                  className="h-7 text-xs font-semibold"
+                >
+                  <option value="1.2">Sedentario (1.20)</option>
+                  <option value="1.375">Ligero (1.375)</option>
+                  <option value="1.55">Moderado (1.55)</option>
+                  <option value="1.725">Activo (1.725)</option>
+                  <option value="1.9">Muy Activo (1.90)</option>
+                </Select>
+              </div>
+              <div>
+                <span className="text-[10px] font-semibold text-gray-600 block">Ajuste Kcal</span>
+                <Select
+                  value={calcDeficit.toString()}
+                  onChange={(e) => setCalcDeficit(parseInt(e.target.value))}
+                  className="h-7 text-xs font-semibold"
+                >
+                  <option value="-600">-600 kcal</option>
+                  <option value="-500">-500 kcal</option>
+                  <option value="-300">-300 kcal</option>
+                  <option value="0">0 kcal (Normo)</option>
+                  <option value="250">+250 kcal</option>
+                  <option value="400">+400 kcal</option>
+                </Select>
+              </div>
+              <div>
+                <span className="text-[10px] font-semibold text-gray-600 block">Prot (g/kg)</span>
+                <Input
+                  type="number"
+                  step="any"
+                  value={proteinGPerKg}
+                  onChange={(e) => setProteinGPerKg(parseFloat(e.target.value) || 2.0)}
+                  className="h-7 text-xs font-bold text-blue-700"
+                />
+              </div>
+              <div>
+                <span className="text-[10px] font-semibold text-amber-800 block">Suelo Kcal</span>
+                <Input
+                  type="number"
+                  step="50"
+                  min="800"
+                  max="2500"
+                  value={minCaloricSafetyKcal}
+                  onChange={(e) => setMinCaloricSafetyKcal(parseInt(e.target.value) || 1200)}
+                  className="h-7 text-xs font-bold text-amber-700 bg-amber-50/50"
+                  title="Mínimo de seguridad calórica clínica"
+                />
+              </div>
+            </div>
+          )}
+
+          {/* ALERTA CLÍNICA FÁRMACO-NUTRIENTE */}
           {drugAlerts.length > 0 && (
-            <div className="p-3 rounded-2xl bg-rose-50 border border-rose-200 text-xs text-rose-950 space-y-1">
+            <div className="p-2.5 rounded-xl bg-rose-50 border border-rose-200 text-xs text-rose-950 space-y-1">
               <div className="flex items-center gap-1.5 font-bold text-rose-900">
                 <ShieldAlert className="h-4 w-4 text-rose-600 shrink-0" />
                 <span>Interacción Fármaco-Alimento ({drugAlerts.map((a) => a.drugName).join(', ')}):</span>
@@ -721,166 +886,9 @@ export function PlanBuilderForm({
             </div>
           )}
 
-          {/* SELECTORES DE PROTOCOLOS ESPECIALES (GLP-1, TCA, INTERCAMBIOS) */}
-          <div className="flex flex-wrap items-center justify-between gap-2 p-2.5 rounded-xl bg-gray-50 border border-gray-200 text-xs">
-            <div className="flex flex-wrap items-center gap-4">
-              <label className="flex items-center gap-1.5 cursor-pointer font-bold text-gray-700 hover:text-amber-900">
-                <input
-                  type="checkbox"
-                  checked={isGLP1}
-                  onChange={(e) => {
-                    const val = e.target.checked
-                    setIsGLP1(val)
-                    if (val) {
-                      setProteinGPerKg(Math.max(1.5, proteinGPerKg))
-                    }
-                  }}
-                  className="rounded text-amber-600 focus:ring-amber-500 h-3.5 w-3.5 cursor-pointer"
-                />
-                <Pill className="h-3.5 w-3.5 text-amber-600" />
-                <span>Protocolo GLP-1 (Ozempic/Wegovy)</span>
-              </label>
-
-              <label className="flex items-center gap-1.5 cursor-pointer font-bold text-gray-700 hover:text-purple-900">
-                <input
-                  type="checkbox"
-                  checked={isTCA}
-                  onChange={(e) => setIsTCA(e.target.checked)}
-                  className="rounded text-purple-600 focus:ring-purple-500 h-3.5 w-3.5 cursor-pointer"
-                />
-                <EyeOff className="h-3.5 w-3.5 text-purple-600" />
-                <span>Modo Privacidad TCA (Sin Gramos/Kcal)</span>
-              </label>
-            </div>
-
-            <Button
-              type="button"
-              variant="outline"
-              size="sm"
-              onClick={() => setShowExchangesModal(true)}
-              className="h-7 text-xs gap-1.5 rounded-lg border-blue-300 text-blue-800 hover:bg-blue-50 font-bold"
-            >
-              <Layers className="h-3.5 w-3.5 text-blue-600" />
-              <span>Ver Tabla de Intercambios (CESNID)</span>
-            </Button>
-          </div>
-
-          {/* Quick Precision Tuners */}
-          <div className="p-2.5 bg-gray-50 border border-gray-200 rounded-xl grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-5 xl:grid-cols-9 gap-2 text-xs">
-            <div>
-              <span className="text-[10px] font-semibold text-gray-600 block">Peso (kg)</span>
-              <Input
-                type="number"
-                step="any"
-                value={calcWeightKg}
-                onChange={(e) => setCalcWeightKg(parseFloat(e.target.value) || 70)}
-                className="h-7 text-xs font-bold"
-              />
-            </div>
-
-            <div>
-              <span className="text-[10px] font-semibold text-gray-600 block">Altura (cm)</span>
-              <Input
-                type="number"
-                step="any"
-                value={calcHeightCm}
-                onChange={(e) => setCalcHeightCm(parseFloat(e.target.value) || 170)}
-                className="h-7 text-xs font-bold"
-              />
-            </div>
-
-            <div>
-              <span className="text-[10px] font-semibold text-gray-600 block">% Grasa</span>
-              <Input
-                type="number"
-                step="any"
-                value={calcBodyFatPct}
-                onChange={(e) => setCalcBodyFatPct(parseFloat(e.target.value) || 20)}
-                className="h-7 text-xs font-bold"
-              />
-            </div>
-
-            <div className="col-span-2 sm:col-span-1">
-              <span className="text-[10px] font-semibold text-gray-600 block">Fórmula TMB</span>
-              <Select
-                value={calcFormula}
-                onChange={(e) => setCalcFormula(e.target.value as any)}
-                className="h-7 text-xs font-semibold"
-              >
-                <option value="katch">Katch-McArdle</option>
-                <option value="mifflin">Mifflin-St Jeor</option>
-                <option value="harris">Harris-Benedict</option>
-                <option value="cunningham">Cunningham</option>
-              </Select>
-            </div>
-
-            <div className="col-span-2 sm:col-span-1">
-              <span className="text-[10px] font-semibold text-gray-600 block">Actividad</span>
-              <Select
-                value={calcPal.toString()}
-                onChange={(e) => setCalcPal(parseFloat(e.target.value))}
-                className="h-7 text-xs font-semibold"
-              >
-                <option value="1.2">Sedentario (1.20)</option>
-                <option value="1.375">Ligero (1.375)</option>
-                <option value="1.55">Moderado (1.55)</option>
-                <option value="1.725">Activo (1.725)</option>
-                <option value="1.9">Muy Activo (1.90)</option>
-              </Select>
-            </div>
-
-            <div>
-              <span className="text-[10px] font-semibold text-gray-600 block">Ajuste Kcal</span>
-              <Select
-                value={calcDeficit.toString()}
-                onChange={(e) => setCalcDeficit(parseInt(e.target.value))}
-                className="h-7 text-xs font-semibold"
-              >
-                <option value="-600">-600 kcal</option>
-                <option value="-500">-500 kcal</option>
-                <option value="-300">-300 kcal</option>
-                <option value="0">0 kcal (Normo)</option>
-                <option value="250">+250 kcal</option>
-                <option value="400">+400 kcal</option>
-              </Select>
-            </div>
-
-            <div>
-              <span className="text-[10px] font-semibold text-gray-600 block">Prot (g/kg)</span>
-              <Input
-                type="number"
-                step="any"
-                value={proteinGPerKg}
-                onChange={(e) => setProteinGPerKg(parseFloat(e.target.value) || 2.0)}
-                className="h-7 text-xs font-bold text-blue-700"
-              />
-            </div>
-
-            <div>
-              <span className="text-[10px] font-semibold text-amber-800 block">Suelo Kcal</span>
-              <Input
-                type="number"
-                step="50"
-                min="800"
-                max="2500"
-                value={minCaloricSafetyKcal}
-                onChange={(e) => setMinCaloricSafetyKcal(parseInt(e.target.value) || 1200)}
-                className="h-7 text-xs font-bold text-amber-700 bg-amber-50/50"
-                title="Mínimo de seguridad calórica clínica"
-              />
-            </div>
-
-            {/* Target Output Badge */}
-            <div className="bg-blue-100/70 p-1 rounded border border-blue-200 text-center flex flex-col justify-center">
-              <span className="text-[9px] font-bold text-blue-800 uppercase block">Meta Diaria</span>
-              <span className="text-sm font-black text-blue-950 leading-tight">{precisionResults.targetKcal} kcal</span>
-              <span className="text-[9px] text-blue-700 font-semibold">{precisionResults.targetProteinG}g P • {precisionResults.targetCarbsG}g C</span>
-            </div>
-          </div>
-
-          {/* Alert Notice for Auto-generated plan */}
+          {/* AVISO DEL GENERADOR AUTOMÁTICO */}
           {autoGenNotice && (
-            <div className="p-2 rounded-lg bg-blue-50 border border-blue-200 text-xs text-blue-900 flex items-center justify-between">
+            <div className="p-2.5 rounded-xl bg-blue-50 border border-blue-200 text-xs text-blue-900 flex items-center justify-between">
               <div className="flex items-center gap-2">
                 <Sparkles className="h-4 w-4 text-blue-600 shrink-0" />
                 <span>{autoGenNotice}</span>
@@ -888,66 +896,13 @@ export function PlanBuilderForm({
               <button
                 type="button"
                 onClick={() => setAutoGenNotice(null)}
-                className="text-blue-700 hover:text-blue-900 text-[11px] underline"
+                className="text-blue-700 hover:text-blue-900 text-[11px] underline font-bold"
               >
                 Cerrar
               </button>
             </div>
           )}
-        </CardContent>
-      </Card>
-
-      {/* PLANTILLAS DIETÉTICAS CLÍNICAS DE 1 CLIC */}
-      <Card className="rounded-3xl border border-blue-200/80 bg-gradient-to-r from-blue-50/70 via-white to-sky-50/40 shadow-xs overflow-hidden">
-        <CardHeader className="py-3 px-5 border-b border-blue-100 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
-          <div>
-            <CardTitle className="text-sm font-bold text-blue-950 flex items-center gap-2">
-              <Sparkles className="h-4 w-4 text-blue-600" />
-              <span>Plantillas Dietéticas Clínicas de 1 Clic</span>
-              <Badge className="bg-blue-600 text-white border-0 text-[10px] font-black uppercase rounded-full px-2 py-0.5">
-                Auto-Escalado Proporcional
-              </Badge>
-            </CardTitle>
-            <CardDescription className="text-xs text-blue-900/80">
-              Menús completos prediseñados que escalan automáticamente todos los gramos al objetivo de <strong>{precisionResults.targetKcal} kcal</strong> del paciente.
-            </CardDescription>
-          </div>
-        </CardHeader>
-        <CardContent className="p-4">
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-3">
-            {CLINICAL_TEMPLATES.map((tmpl) => (
-              <button
-                key={tmpl.id}
-                type="button"
-                onClick={() => handleApplyTemplate(tmpl.id)}
-                className="group p-3.5 rounded-2xl bg-white border border-blue-200/90 hover:border-blue-600 hover:shadow-md text-left transition-all flex flex-col justify-between"
-              >
-                <div>
-                  <div className="flex items-center justify-between mb-1.5">
-                    <Badge variant="outline" className="text-[10px] font-bold bg-blue-50 text-blue-800 border-blue-200 rounded-lg">
-                      {tmpl.badge}
-                    </Badge>
-                    <span className="text-[11px] text-blue-600 font-black group-hover:scale-105 transition-transform">
-                      1 Clic <Zap className="h-[1em] w-[1em] shrink-0" />
-                    </span>
-                  </div>
-                  <h4 className="text-xs font-bold text-gray-900 group-hover:text-blue-700 transition-colors">
-                    {tmpl.name}
-                  </h4>
-                  <p className="text-[10px] text-gray-500 mt-1 line-clamp-2 leading-relaxed">
-                    {tmpl.description}
-                  </p>
-                </div>
-                <div className="mt-3 pt-2 border-t border-gray-100 flex items-center justify-between text-[10px] font-semibold text-gray-600">
-                  <span>{tmpl.macroRatio.proteinPct}% P • {tmpl.macroRatio.carbsPct}% C</span>
-                  <span className="text-blue-700 font-bold bg-blue-50 px-1.5 py-0.5 rounded">
-                    {precisionResults.targetKcal} kcal
-                  </span>
-                </div>
-              </button>
-            ))}
-          </div>
-        </CardContent>
+        </div>
       </Card>
 
       {/* 2.5. ALERTA CLÍNICA CRÍTICA DE ALÉRGENOS DEL PACIENTE */}
@@ -1243,6 +1198,68 @@ export function PlanBuilderForm({
               >
                 Cerrar Guía
               </Button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* MODAL PLANTILLAS DIETÉTICAS CLÍNICAS */}
+      {showTemplatesModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4 animate-in fade-in">
+          <div className="bg-white rounded-3xl max-w-4xl w-full max-h-[85vh] overflow-hidden flex flex-col shadow-2xl border border-gray-200">
+            <div className="p-4 bg-gradient-to-r from-blue-50 to-sky-50 border-b flex items-center justify-between">
+              <div className="flex items-center gap-2">
+                <Sparkles className="h-5 w-5 text-blue-600" />
+                <div>
+                  <h3 className="font-extrabold text-sm text-gray-900">
+                    Plantillas Dietéticas Clínicas de 1 Clic
+                  </h3>
+                  <p className="text-2xs text-gray-600">
+                    Escaladas automáticamente al objetivo de <strong>{menuSettings.dailyTargets.kcal} kcal</strong> de {selectedPatient?.firstName}.
+                  </p>
+                </div>
+              </div>
+              <button
+                type="button"
+                onClick={() => setShowTemplatesModal(false)}
+                className="p-1 rounded-full text-gray-400 hover:text-gray-700 hover:bg-white transition-colors"
+              >
+                <X className="h-5 w-5" />
+              </button>
+            </div>
+
+            <div className="p-4 overflow-y-auto grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+              {CLINICAL_TEMPLATES.map((tmpl) => (
+                <button
+                  key={tmpl.id}
+                  type="button"
+                  onClick={() => handleApplyTemplate(tmpl.id)}
+                  className="group p-3.5 rounded-2xl bg-white border border-gray-200 hover:border-blue-500 hover:shadow-md text-left transition-all flex flex-col justify-between"
+                >
+                  <div>
+                    <div className="flex items-center justify-between mb-1.5">
+                      <Badge variant="outline" className="text-[10px] font-bold bg-blue-50 text-blue-800 border-blue-200 rounded-lg">
+                        {tmpl.badge}
+                      </Badge>
+                      <span className="text-[11px] text-blue-600 font-black group-hover:scale-105 transition-transform flex items-center gap-1">
+                        Aplicar <Zap className="h-3 w-3" />
+                      </span>
+                    </div>
+                    <h4 className="text-xs font-bold text-gray-900 group-hover:text-blue-700 transition-colors">
+                      {tmpl.name}
+                    </h4>
+                    <p className="text-[10px] text-gray-500 mt-1 line-clamp-2 leading-relaxed">
+                      {tmpl.description}
+                    </p>
+                  </div>
+                  <div className="mt-3 pt-2 border-t border-gray-100 flex items-center justify-between text-[10px] font-semibold text-gray-600">
+                    <span>{tmpl.macroRatio.proteinPct}% P • {tmpl.macroRatio.carbsPct}% C</span>
+                    <span className="text-blue-700 font-bold bg-blue-50 px-1.5 py-0.5 rounded">
+                      {menuSettings.dailyTargets.kcal} kcal
+                    </span>
+                  </div>
+                </button>
+              ))}
             </div>
           </div>
         </div>

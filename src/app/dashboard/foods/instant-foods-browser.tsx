@@ -494,7 +494,7 @@ export function InstantFoodsBrowser({
                   macros behind a horizontal scroll. */}
               <div className="divide-y divide-gray-100 xl:hidden">
                 {paginatedFoods.map((food) => {
-                  const imageUrl = food.imageUrl || getFoodImage(food as any)
+                  const imageUrl = getFoodImage(food as any)
                   const isSelected = selectedIds.includes(food.id)
                   return (
                     <div
@@ -622,7 +622,7 @@ export function InstantFoodsBrowser({
                   </thead>
                   <tbody className="divide-y divide-gray-100">
                     {paginatedFoods.map((food) => {
-                      const imageUrl = food.imageUrl || getFoodImage(food as any)
+                      const imageUrl = getFoodImage(food as any)
                       const isSelected = selectedIds.includes(food.id)
                       return (
                         <tr

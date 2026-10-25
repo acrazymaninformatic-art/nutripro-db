@@ -34,6 +34,8 @@ export interface PatientPlanProfile {
   medicalHistory?: string
   isGLP1Treatment?: boolean
   isTCAProtocol?: boolean
+  distribution?: Record<string, number>
+  isKeto?: boolean
 }
 
 export interface FoodDatabaseItem {
@@ -119,7 +121,7 @@ export function generateAutomatedWeeklyPlan(
   const isVegan        = prefs.includes('vegan')
   const isVegetarian   = isVegan || prefs.includes('vegetar')
   const isPescetarian  = !isVegetarian && prefs.includes('pescetar')
-  const isKeto         = prefs.includes('keto') || prefs.includes('cetog') || prefs.includes('baja en hidratos')
+  const isKeto         = patient.isKeto ?? (prefs.includes('keto') || prefs.includes('cetog') || prefs.includes('baja en hidratos'))
   const isLowCarb      = isKeto || prefs.includes('low carb')
   const isHypertensive = medical.includes('hipertens')
   const isDiabetic     = medical.includes('diabet') || medical.includes('sop') || medical.includes('insul')
@@ -138,7 +140,16 @@ export function generateAutomatedWeeklyPlan(
   const noShellfish= allergiesNorm.includes('marisc') || allergiesNorm.includes('gamba') || allergiesNorm.includes('langostino')
 
   // ── 2. DISTRIBUCIÓN CALÓRICA ──────────────────────────────────────────────
-  const dist = KCAL_DISTRIBUTION[patient.objective] || DEFAULT_DIST
+  const defaultDist = KCAL_DISTRIBUTION[patient.objective] || DEFAULT_DIST
+  const dist = patient.distribution
+    ? {
+        B: patient.distribution.BREAKFAST ?? defaultDist.B,
+        MM: patient.distribution.MID_MORNING ?? defaultDist.MM,
+        L: patient.distribution.LUNCH ?? defaultDist.L,
+        S: patient.distribution.SNACK ?? defaultDist.S,
+        D: patient.distribution.DINNER ?? defaultDist.D,
+      }
+    : defaultDist
   const target = Math.max(patient.targetKcal || 1800, 1000)
   const bTarget  = Math.round(target * dist.B  / 100)
   const mmTarget = Math.round(target * dist.MM / 100)
