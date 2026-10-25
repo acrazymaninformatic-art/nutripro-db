@@ -161,14 +161,7 @@ export function MenuEditor({
 
   const gridRef = useRef<HTMLDivElement>(null)
 
-  useEffect(() => {
-    if (!panelOpen) return
-    const onEscape = (event: KeyboardEvent) => {
-      if (event.key === 'Escape') setPanelOpen(false)
-    }
-    window.addEventListener('keydown', onEscape)
-    return () => window.removeEventListener('keydown', onEscape)
-  }, [panelOpen])
+
 
   /* ---------------------------------------------------------------- */
   /* El borrador clínico vive solo en memoria y se guarda en servidor    */
@@ -639,9 +632,9 @@ export function MenuEditor({
       </div>
 
       {/* ---------------------------------------------------------------- */}
-      {/* Layout: cuadrícula a la izquierda + panel lateral siempre visible*/}
+      {/* Layout: cuadrícula a la izquierda + panel lateral a la derecha   */}
       {/* ---------------------------------------------------------------- */}
-      <div className="flex flex-col xl:flex-row items-start gap-2.5 min-w-0 w-full">
+      <div className="flex flex-row items-start gap-2.5 min-w-0 w-full">
         <div className="min-w-0 flex-1 w-full">
           {/* Leyenda de días / acciones rápidas */}
           <div className="mb-1.5 hidden flex-wrap items-center gap-1.5 rounded-xl border border-slate-200 bg-white px-2 py-1 sm:flex">
@@ -666,15 +659,15 @@ export function MenuEditor({
             </span>
           </div>
 
-          {/* Cuadrícula: 7 días siempre visibles, solo scroll vertical */}
+          {/* Cuadrícula: 7 días con scroll horizontal si la pantalla es reducida */}
           <div
             ref={gridRef}
-            className="overflow-y-auto overflow-x-hidden rounded-2xl border border-slate-200 bg-slate-50/70 p-1.5"
+            className="overflow-y-auto overflow-x-auto rounded-2xl border border-slate-200 bg-slate-50/70 p-1.5"
             style={{ maxHeight: 'calc(100vh - 215px)' }}
           >
             <div
-              className="grid min-w-0 gap-1.5"
-              style={{ gridTemplateColumns: 'clamp(44px, 5.5vw, 105px) repeat(7, minmax(0, 1fr))' }}
+              className="grid min-w-[620px] lg:min-w-0 gap-1.5"
+              style={{ gridTemplateColumns: 'clamp(44px, 5vw, 95px) repeat(7, minmax(0, 1fr))' }}
             >
               {/* Esquina */}
               <div className="sticky left-0 top-0 z-30 flex items-center justify-center rounded-xl bg-slate-100 px-1 py-1 text-[8px] font-black uppercase tracking-wider text-slate-500">
@@ -910,11 +903,11 @@ export function MenuEditor({
           </div>
         </div>
 
-        {/* Panel lateral: Información del menú siempre visible en escritorio (xl+) */}
+        {/* Panel lateral: Información del menú a la par del menú, a la derecha, siempre visible */}
         {panelOpen && (
           <div
-            className="hidden xl:flex w-[310px] 2xl:w-[330px] shrink-0 flex-col sticky top-1 self-start"
-            style={{ height: 'calc(100vh - 215px)' }}
+            className="flex w-[290px] lg:w-[315px] 2xl:w-[335px] shrink-0 flex-col sticky top-1 self-start"
+            style={{ height: 'calc(100vh - 215px)', maxHeight: 'calc(100vh - 215px)' }}
           >
             <MenuSidePanel
               grid={grid}
@@ -930,49 +923,10 @@ export function MenuEditor({
               onSettingsChange={onMenuSettingsChange}
               onPlanNameChange={onPlanNameChange}
               onPlanNotesChange={onPlanNotesChange}
-              onClose={() => setPanelOpen(false)}
             />
           </div>
         )}
       </div>
-
-      {/* Cajón emergente solo en pantallas pequeñas (< xl) */}
-      {panelOpen && (
-        <div className="xl:hidden">
-          <ModalPortal>
-            <div
-              className="fixed inset-0 z-[120] flex justify-end bg-slate-950/40 p-2 backdrop-blur-[1px] sm:p-4"
-              onClick={() => setPanelOpen(false)}
-              role="presentation"
-            >
-              <div
-                className="flex h-full w-full max-w-[340px] flex-col"
-                onClick={(event) => event.stopPropagation()}
-                role="dialog"
-                aria-modal="true"
-                aria-label="Información del menú"
-              >
-                <MenuSidePanel
-                  grid={grid}
-                  foods={foods}
-                  patient={patient}
-                  dayMeta={dayMeta}
-                  ingestaMeta={ingestaMeta}
-                  settings={menuSettings}
-                  planName={planName}
-                  planNotes={planNotes}
-                  saveLabel={saveLabelText}
-                  onIngestaMetaChange={onIngestaMetaChange}
-                  onSettingsChange={onMenuSettingsChange}
-                  onPlanNameChange={onPlanNameChange}
-                  onPlanNotesChange={onPlanNotesChange}
-                  onClose={() => setPanelOpen(false)}
-                />
-              </div>
-            </div>
-          </ModalPortal>
-        </div>
-      )}
 
       {/* Hoja móvil: plato completo con tarjetas grandes */}
       {mobileMealTarget &&
