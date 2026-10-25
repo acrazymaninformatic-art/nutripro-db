@@ -4,11 +4,10 @@
  * Automatically constructs realistic, balanced, personalized 7-day meal plans
  * strictly adapted to the patient's caloric goal, macronutrients, objective,
  * food allergies, intolerances, clinical history, and dietary preferences.
+ * Dynamically utilizes the full 5,050 foods catalog with rotational variety.
  */
 
-import {
-  checkPatientAllergenConflict,
-} from './allergens'
+import { checkPatientAllergenConflict } from './allergens'
 
 export interface PatientPlanProfile {
   firstName: string
@@ -35,6 +34,9 @@ export interface FoodDatabaseItem {
   proteinG: number
   carbsG: number
   fatG: number
+  fiberG?: number
+  sodiumMg?: number
+  allergensJson?: string | null
 }
 
 export interface GeneratedMealItem {
@@ -52,6 +54,11 @@ export interface GeneratedDayPlan {
   DINNER: GeneratedMealItem[]
 }
 
+/**
+ * Genera un menú semanal clínico inteligente de 7 días adaptado rigurosamente
+ * a la anamnesis, cuestionarios y objetivos fisiológicos del paciente, utilizando
+ * dinámicamente todo el catálogo de 5.050 alimentos de la base de datos sin monotonía.
+ */
 export function generateAutomatedWeeklyPlan(
   patient: PatientPlanProfile,
   allFoods: FoodDatabaseItem[]
@@ -66,143 +73,14 @@ export function generateAutomatedWeeklyPlan(
 
   const isVegan = preferences.includes('vegan')
   const isVegetarian = isVegan || preferences.includes('vegetar')
+  const isPescetarian = preferences.includes('pescetar')
   const isKeto =
     preferences.includes('keto') ||
     preferences.includes('cetog') ||
     preferences.includes('baja en hidratos')
+  const isHypertensive = medical.includes('hipertens')
+  const isDiabetic = medical.includes('diabet') || medical.includes('sop') || medical.includes('insul')
 
-  /**
-   * Evaluates whether a food is forbidden for this patient due to:
-   * 1. Official allergens & intolerances (using EU 1169/2011 engine)
-   * 2. Patient-specific food aversions
-   * 3. Dietary preferences (vegan, vegetarian, keto)
-   * 4. Medical contraindications (e.g. hypertension -> avoid processed meats)
-   */
-  function isFoodForbidden(name: string, category: string | null): boolean {
-    const n = name.toLowerCase()
-
-    // 1. Check patient food aversions
-    if (aversions.some((av) => n.includes(av))) return true
-
-    // 2. Strict EU Clinical Allergens & Intolerances Check
-    const allergenConflict = checkPatientAllergenConflict(
-      { name, category },
-      {
-        allergies: patient.allergies,
-        intolerances: patient.intolerances,
-        firstName: patient.firstName,
-      }
-    )
-    if (allergenConflict) {
-      return true
-    }
-
-    // 3. Dietary preferences
-    if (
-      isVegetarian &&
-      (category === 'Carnes' ||
-        category === 'Pescados y Mariscos' ||
-        n.includes('pollo') ||
-        n.includes('ternera') ||
-        n.includes('pavo') ||
-        n.includes('cerdo') ||
-        n.includes('jamón') ||
-        n.includes('jamon') ||
-        n.includes('pescado') ||
-        n.includes('salmón') ||
-        n.includes('merluza') ||
-        n.includes('atún') ||
-        n.includes('sepia') ||
-        n.includes('gamba') ||
-        n.includes('bacalao'))
-    ) {
-      return true
-    }
-
-    if (
-      isVegan &&
-      (category === 'Lácteos' ||
-        category === 'Huevos' ||
-        n.includes('leche') ||
-        n.includes('queso') ||
-        n.includes('yogur') ||
-        n.includes('huevo') ||
-        n.includes('kéfir') ||
-        n.includes('mantequilla') ||
-        n.includes('skyr'))
-    ) {
-      return true
-    }
-
-    if (
-      isKeto &&
-      (category === 'Cereales y Harinas' ||
-        category === 'Pastas' ||
-        n.includes('arroz blanco') ||
-        n.includes('pasta') ||
-        n.includes('pan blanco') ||
-        n.includes('patata') ||
-        n.includes('boniato'))
-    ) {
-      return true
-    }
-
-    // 4. Medical considerations (hypertension: avoid cured sodium-heavy meats)
-    if (
-      medical.includes('hipertens') &&
-      (n.includes('jamón serrano') ||
-        n.includes('bacon') ||
-        n.includes('salchicha') ||
-        n.includes('chorizo'))
-    ) {
-      return true
-    }
-
-    return false
-  }
-
-  /**
-   * Safe keyword search with fallback that NEVER returns a forbidden or allergen-conflicting food.
-   */
-  function findFood(keywords: string[], fallbackId?: number): FoodDatabaseItem {
-    for (const kw of keywords) {
-      const match = allFoods.find((f) => {
-        const n = f.name.toLowerCase()
-        if (!n.includes(kw.toLowerCase())) return false
-        if (isFoodForbidden(f.name, f.category)) return false
-        return true
-      })
-      if (match) return match
-    }
-
-    // If direct keywords didn't find permitted item, try broader keyword match
-    for (const kw of keywords) {
-      const tokens = kw.toLowerCase().split(' ')
-      for (const token of tokens) {
-        if (token.length < 4) continue
-        const partial = allFoods.find((f) => {
-          if (!f.name.toLowerCase().includes(token)) return false
-          if (isFoodForbidden(f.name, f.category)) return false
-          return true
-        })
-        if (partial) return partial
-      }
-    }
-
-    // If fallbackId provided and safe, use it
-    if (fallbackId) {
-      const fallback = allFoods.find((f) => f.id === fallbackId)
-      if (fallback && !isFoodForbidden(fallback.name, fallback.category)) {
-        return fallback
-      }
-    }
-
-    // Safe permitted fallback from database
-    const safeFallback = allFoods.find((f) => !isFoodForbidden(f.name, f.category))
-    return safeFallback || allFoods[0]
-  }
-
-  // Precompute patient allergies to select realistic everyday culinary alternatives
   const patientAllergiesNorm = (patient.allergies || '').toLowerCase()
   const patientIntolerancesNorm = (patient.intolerances || '').toLowerCase()
 
@@ -232,550 +110,624 @@ export function generateAutomatedWeeklyPlan(
     patientAllergiesNorm.includes('gamba') ||
     patientAllergiesNorm.includes('langostino')
 
-  // Realistic Spanish Mediterranean weekly meal plans
-  const weeklyTemplates = [
-    // Lunes (Día 1): Pollo al horno con patatas / Salmón a la plancha
-    {
-      breakfast: [
-        {
-          kw: hasGluten
-            ? ['tortitas de maíz', 'tortitas de arroz', 'copos de avena sin gluten']
-            : ['avena integral', 'copos de avena', 'pan integral'],
-          qty: 60,
-          notes: 'Porridge templado con canela o tostada',
-        },
-        {
-          kw: hasLactose || isVegan
-            ? ['bebida de avena', 'bebida de almendras', 'bebida de soja']
-            : ['leche semidesnatada', 'leche desnatada'],
-          qty: 200,
-          notes: 'Con café solo o té verde',
-        },
-        { kw: ['plátano', 'platano'], qty: 100, notes: 'En rodajas sobre la avena' },
-      ],
-      midMorning: [
-        { kw: ['manzana', 'pera'], qty: 160, notes: 'Pieza fresca bien lavada' },
-        {
-          kw: hasNuts ? ['tortitas de arroz', 'arándanos'] : ['nuez', 'almendras'],
-          qty: 20,
-          notes: 'Crudas al natural',
-        },
-      ],
-      lunch: [
-        {
-          kw: isVegetarian
-            ? ['lentejas cocidas', 'tofu firme']
-            : ['pechuga de pollo', 'solomillo de pollo'],
-          qty: 180,
-          notes: 'A la plancha con unas gotas de limón y perejil',
-        },
-        {
-          kw: isKeto ? ['calabacín'] : ['arroz blanco', 'arroz basmati', 'arroz integral'],
-          qty: 85,
-          notes: 'Cocido al punto',
-        },
-        { kw: ['brócoli', 'brocoli', 'judías verdes'], qty: 160, notes: 'Al vapor' },
-        { kw: ['aceite de oliva virgen extra', 'aceite de oliva'], qty: 10, notes: 'En crudo' },
-      ],
-      snack: [
-        {
-          kw: hasLactose || isVegan
-            ? ['bebida de soja', 'arándanos']
-            : ['yogur natural', 'queso fresco batido'],
-          qty: 125,
-          notes: 'Natural sin azúcar',
-        },
-        {
-          kw: hasNuts ? ['fresas'] : ['almendras', 'nueces'],
-          qty: 15,
-          notes: 'Al natural',
-        },
-      ],
-      dinner: [
-        {
-          kw: hasFish || isVegetarian
-            ? ['pechuga de pavo', 'tofu firme']
-            : ['salmón fresco', 'salmon'],
-          qty: 160,
-          notes: 'A la plancha con limón',
-        },
-        { kw: ['judías verdes', 'espárragos verdes', 'calabacín'], qty: 160, notes: 'Salteado' },
-        {
-          kw: isKeto ? ['aguacate'] : ['patata', 'patatas'],
-          qty: 140,
-          notes: 'Cocida o al vapor con piel',
-        },
-        { kw: ['aceite de oliva virgen extra'], qty: 8, notes: 'Aliño en crudo' },
-      ],
-    },
+  /**
+   * Comprueba si un alimento está estrictamente contraindicado para este paciente
+   * por alérgenos (Reglamento UE 1169/2011), aversiones declaradas, pauta médica o estilo dietético.
+   */
+  function isFoodForbidden(name: string, category: string | null): boolean {
+    const n = name.toLowerCase()
 
-    // Martes (Día 2): Pescado blanco y verduras / Ternera magra
-    {
-      breakfast: [
-        {
-          kw: hasGluten
-            ? ['tortitas de maíz', 'tortitas de arroz']
-            : ['pan 100% integral', 'pan de centeno', 'pan de masa madre'],
-          qty: 70,
-          notes: 'Tostado',
-        },
-        {
-          kw: hasEgg || isVegan
-            ? ['aguacate', 'hummus']
-            : ['huevo entero', 'huevos camperos', 'clara de huevo'],
-          qty: 110,
-          notes: 'A la plancha o pasado por agua',
-        },
-        { kw: ['tomate de rama', 'tomate'], qty: 80, notes: 'Rallado sobre la tostada' },
-        { kw: ['aceite de oliva virgen extra'], qty: 8, notes: '1 cucharadita sobre el tomate' },
-      ],
-      midMorning: [
-        { kw: ['arándanos', 'fresas', 'frutos rojos'], qty: 125, notes: 'Frescos' },
-        {
-          kw: hasLactose || isVegan
-            ? ['bebida de almendras', 'tortitas de arroz']
-            : ['queso fresco batido', 'yogur natural'],
-          qty: 140,
-          notes: 'Al natural',
-        },
-      ],
-      lunch: [
-        {
-          kw: isVegetarian
-            ? ['garbanzos cocidos', 'lentejas']
-            : ['filete de ternera magra', 'solomillo de ternera', 'pechuga de pavo'],
-          qty: 160,
-          notes: 'A la plancha vuelta y vuelta',
-        },
-        {
-          kw: isKeto ? ['calabacín'] : ['boniato asado', 'patata cocida'],
-          qty: 160,
-          notes: 'Asado al horno con especias',
-        },
-        { kw: ['calabacín', 'berenjena a la plancha'], qty: 140, notes: 'A la plancha' },
-        { kw: ['aceite de oliva virgen extra'], qty: 10, notes: 'En crudo' },
-      ],
-      snack: [
-        { kw: ['kiwi', 'manzana'], qty: 140, notes: 'Pieza madura' },
-        {
-          kw: hasNuts ? ['tortitas de maíz'] : ['nueces', 'almendras'],
-          qty: 20,
-          notes: 'Al natural',
-        },
-      ],
-      dinner: [
-        {
-          kw: hasFish || isVegetarian
-            ? ['pechuga de pollo', 'tofu firme']
-            : ['merluza fresca', 'merluza'],
-          qty: 180,
-          notes: 'Al vapor o a la plancha con ajo y perejil',
-        },
-        { kw: ['crema de calabacín', 'puré de verduras'], qty: 200, notes: 'Casera sin nata' },
-        { kw: ['aceite de oliva virgen extra'], qty: 8, notes: 'En el puré' },
-      ],
-    },
+    // 1. Aversiones del paciente
+    if (aversions.some((av) => n.includes(av))) return true
 
-    // Miércoles (Día 3): Legumbres mediterráneas / Merluza o Sepia
-    {
-      breakfast: [
-        {
-          kw: hasGluten
-            ? ['tortitas de arroz', 'copos de maíz']
-            : ['avena integral', 'copos de avena'],
-          qty: 65,
-          notes: 'Porridge o tazón',
-        },
-        {
-          kw: hasLactose || isVegan
-            ? ['bebida de avena', 'bebida de soja']
-            : ['leche semidesnatada'],
-          qty: 200,
-          notes: 'Templada',
-        },
-        { kw: ['fresas', 'arándanos'], qty: 90, notes: 'Fruta fresca' },
-      ],
-      midMorning: [
-        { kw: ['naranja fresca', 'mandarina'], qty: 160, notes: 'En gajos entera (no en zumo)' },
-        {
-          kw: hasNuts ? ['tortitas de arroz'] : ['almendras', 'avellanas'],
-          qty: 20,
-          notes: 'Crudas',
-        },
-      ],
-      lunch: [
-        {
-          kw: ['lentejas estofadas con verduras', 'lentejas cocidas'],
-          qty: 220,
-          notes: 'Estofadas con cebolla, zanahoria y pimiento dulce',
-        },
-        {
-          kw: isKeto ? ['ensalada verde'] : ['arroz blanco', 'arroz integral'],
-          qty: 60,
-          notes: 'Acompañamiento clásico',
-        },
-        { kw: ['aceite de oliva virgen extra'], qty: 10, notes: 'En el guiso' },
-      ],
-      snack: [
-        {
-          kw: hasLactose || isVegan
-            ? ['bebida de avena', 'plátano']
-            : ['yogur natural', 'kéfir'],
-          qty: 125,
-          notes: 'Con canela espolvoreada',
-        },
-        { kw: ['manzana'], qty: 120, notes: 'Fresca' },
-      ],
-      dinner: [
-        {
-          kw: hasFish || hasShellfish || isVegetarian
-            ? ['pechuga de pavo', 'tofu firme']
-            : ['sepia a la plancha', 'merluza fresca'],
-          qty: 170,
-          notes: 'A la plancha con limón',
-        },
-        { kw: ['espárragos verdes', 'espárragos trigueros'], qty: 160, notes: 'A la plancha' },
-        {
-          kw: hasGluten || isKeto
-            ? ['patata cocida', 'patata']
-            : ['pan 100% integral', 'pan de centeno'],
-          qty: 40,
-          notes: 'Ración controlada',
-        },
-        { kw: ['aceite de oliva virgen extra'], qty: 8, notes: 'Aliño' },
-      ],
-    },
+    // 2. Alérgenos e intolerancias clínicas según UE 1169/2011
+    const allergenConflict = checkPatientAllergenConflict(
+      { name, category },
+      {
+        allergies: patient.allergies,
+        intolerances: patient.intolerances,
+        firstName: patient.firstName,
+      }
+    )
+    if (allergenConflict) return true
 
-    // Jueves (Día 4): Pasta integral con carne magra / Dorada al horno
-    {
-      breakfast: [
-        {
-          kw: hasGluten
-            ? ['tortitas de maíz', 'tortitas de arroz']
-            : ['pan 100% integral', 'tostada'],
-          qty: 70,
-          notes: 'Tostado',
-        },
-        {
-          kw: isVegetarian
-            ? ['hummus', 'aguacate']
-            : ['pechuga de pavo', 'jamón cocido extra'],
-          qty: 70,
-          notes: 'Embutido magro de calidad',
-        },
-        { kw: ['aguacate'], qty: 40, notes: 'En láminas' },
-      ],
-      midMorning: [
-        { kw: ['plátano'], qty: 100, notes: 'Pieza madura' },
-        {
-          kw: hasNuts ? ['tortitas de maíz'] : ['nueces', 'almendras'],
-          qty: 20,
-          notes: 'Al natural',
-        },
-      ],
-      lunch: [
-        {
-          kw: isVegetarian
-            ? ['soja texturizada', 'tofu firme']
-            : ['carne picada de ternera magra', 'pechuga de pollo'],
-          qty: 160,
-          notes: 'Salteada con orégano y salsa de tomate casera',
-        },
-        {
-          kw: hasGluten || isKeto
-            ? ['arroz blanco', 'quinoa', 'patata']
-            : ['macarrones 100% integrales', 'pasta penne'],
-          qty: 80,
-          notes: 'Al dente',
-        },
-        { kw: ['champiñón', 'champiñones'], qty: 100, notes: 'Salteados con la salsa' },
-        { kw: ['aceite de oliva virgen extra'], qty: 10, notes: 'En crudo' },
-      ],
-      snack: [
-        {
-          kw: hasLactose || isVegan
-            ? ['bebida de soja']
-            : ['queso fresco batido', 'yogur natural'],
-          qty: 140,
-          notes: 'Con fruta',
-        },
-        { kw: ['arándanos silvestres', 'arándanos'], qty: 60, notes: 'Lavados' },
-      ],
-      dinner: [
-        {
-          kw: hasFish || isVegetarian
-            ? ['pechuga de pollo', 'tofu firme']
-            : ['dorada fresca', 'lubina fresca'],
-          qty: 180,
-          notes: 'Al horno con limón',
-        },
-        {
-          kw: isKeto ? ['calabacín'] : ['patata', 'patatas'],
-          qty: 140,
-          notes: 'Panadera al horno',
-        },
-        { kw: ['ensalada de canónigos', 'lechuga'], qty: 100, notes: 'Aliñada con vinagre' },
-        { kw: ['aceite de oliva virgen extra'], qty: 8, notes: 'En crudo' },
-      ],
-    },
+    // 3. Preferencias dietéticas
+    if (
+      isVegetarian &&
+      (category === 'Carnes' ||
+        category === 'Pescados y Mariscos' ||
+        n.includes('pollo') ||
+        n.includes('ternera') ||
+        n.includes('pavo') ||
+        n.includes('cerdo') ||
+        n.includes('jamón') ||
+        n.includes('jamon') ||
+        n.includes('pescado') ||
+        n.includes('salmón') ||
+        n.includes('merluza') ||
+        n.includes('atún') ||
+        n.includes('sepia') ||
+        n.includes('gamba') ||
+        n.includes('bacalao') ||
+        n.includes('conejo') ||
+        n.includes('buey'))
+    ) {
+      return true
+    }
 
-    // Viernes (Día 5): Aves magras / Pescado azul y verduras
-    {
-      breakfast: [
-        {
-          kw: hasGluten
-            ? ['tortitas de maíz', 'tortitas de arroz']
-            : ['avena integral', 'copos de avena'],
-          qty: 60,
-          notes: 'Con bebida caliente',
-        },
-        {
-          kw: hasLactose || isVegan
-            ? ['bebida de almendras', 'bebida de avena']
-            : ['leche desnatada', 'leche semidesnatada'],
-          qty: 200,
-          notes: 'Bebida',
-        },
-        { kw: ['pera', 'manzana'], qty: 120, notes: 'En dados' },
-      ],
-      midMorning: [
-        {
-          kw: hasLactose || isVegan
-            ? ['bebida de avena']
-            : ['yogur natural', 'yogur proteico'],
-          qty: 125,
-          notes: 'Natural',
-        },
-        {
-          kw: hasNuts ? ['fresas'] : ['almendras', 'avellanas'],
-          qty: 20,
-          notes: 'Crudas',
-        },
-      ],
-      lunch: [
-        {
-          kw: isVegetarian
-            ? ['tofu firme']
-            : ['solomillo de cerdo', 'lomo de cerdo magro', 'pechuga de pollo'],
-          qty: 170,
-          notes: 'A la plancha con pimienta negra',
-        },
-        {
-          kw: isKeto ? ['calabacín'] : ['patata cocida', 'patata'],
-          qty: 170,
-          notes: 'Cocida al vapor',
-        },
-        { kw: ['pimientos asados', 'pimiento verde'], qty: 120, notes: 'Asados' },
-        { kw: ['aceite de oliva virgen extra'], qty: 10, notes: 'En crudo' },
-      ],
-      snack: [
-        { kw: ['fresas frescas', 'moras'], qty: 140, notes: 'Fruta fresca' },
-        {
-          kw: hasNuts ? ['tortitas de maíz'] : ['nueces'],
-          qty: 20,
-          notes: 'Al natural',
-        },
-      ],
-      dinner: [
-        {
-          kw: hasFish || isVegetarian
-            ? ['pechuga de pavo', 'tofu firme']
-            : ['atún claro al natural', 'salmón'],
-          qty: 150,
-          notes: 'A la plancha con unas gotas de limón',
-        },
-        { kw: ['espárragos blancos', 'ensalada mixta'], qty: 180, notes: 'Con vinagre de manzana' },
-        { kw: ['aceite de oliva virgen extra'], qty: 8, notes: 'Aliño' },
-      ],
-    },
+    if (
+      isVegan &&
+      (category === 'Lácteos' ||
+        category === 'Huevos' ||
+        category === 'Huevos y Lácteos' ||
+        category === 'Lácteos y Derivados' ||
+        n.includes('leche') ||
+        n.includes('queso') ||
+        n.includes('yogur') ||
+        n.includes('huevo') ||
+        n.includes('kéfir') ||
+        n.includes('kefir') ||
+        n.includes('mantequilla') ||
+        n.includes('skyr') ||
+        n.includes('miel'))
+    ) {
+      return true
+    }
 
-    // Sábado (Día 6): Arroz mediterráneo / Merluza al vapor
-    {
-      breakfast: [
-        {
-          kw: hasGluten
-            ? ['tortitas de arroz']
-            : ['pan de masa madre', 'pan 100% integral'],
-          qty: 70,
-          notes: 'Tostado',
-        },
-        {
-          kw: hasEgg || isVegan
-            ? ['aguacate', 'hummus']
-            : ['huevo entero', 'huevos camperos'],
-          qty: 110,
-          notes: 'Escalfado o revuelto',
-        },
-        { kw: ['aguacate'], qty: 40, notes: 'En láminas' },
-      ],
-      midMorning: [
-        { kw: ['plátano'], qty: 100, notes: 'Pieza madura' },
-        {
-          kw: hasNuts ? ['frutos rojos'] : ['almendras'],
-          qty: 20,
-          notes: 'Al natural',
-        },
-      ],
-      lunch: [
-        {
-          kw: isVegetarian
-            ? ['garbanzos con espinacas', 'lentejas']
-            : ['paella valenciana tradicional', 'arroz con pollo'],
-          qty: 220,
-          notes: 'Plato mediterráneo completo',
-        },
-        { kw: ['ensalada de lechuga y tomate'], qty: 120, notes: 'De acompañamiento' },
-        { kw: ['aceite de oliva virgen extra'], qty: 8, notes: 'Aliño' },
-      ],
-      snack: [
-        {
-          kw: hasLactose || isVegan
-            ? ['bebida vegetal']
-            : ['kéfir', 'yogur natural'],
-          qty: 125,
-          notes: 'Natural',
-        },
-        { kw: ['arándanos'], qty: 60, notes: 'Lavados' },
-      ],
-      dinner: [
-        {
-          kw: hasFish || isVegetarian
-            ? ['pechuga de pollo', 'tofu firme']
-            : ['merluza fresca', 'dorada fresca'],
-          qty: 170,
-          notes: 'Al vapor con perejil',
-        },
-        { kw: ['crema de calabaza', 'puré de verduras'], qty: 200, notes: 'Casera' },
-        { kw: ['aceite de oliva virgen extra'], qty: 8, notes: 'En crudo' },
-      ],
-    },
+    if (
+      isPescetarian &&
+      (category === 'Carnes' ||
+        n.includes('pollo') ||
+        n.includes('ternera') ||
+        n.includes('pavo') ||
+        n.includes('cerdo') ||
+        n.includes('jamón') ||
+        n.includes('jamon') ||
+        n.includes('conejo'))
+    ) {
+      return true
+    }
 
-    // Domingo (Día 7): Pauta dominical / Pollo asado con verduras / Tortilla
-    {
-      breakfast: [
-        {
-          kw: hasGluten
-            ? ['tortitas de maíz', 'tortitas de arroz']
-            : ['avena integral', 'copos de avena'],
-          qty: 60,
-          notes: 'Tortitas saludables de avena o porridge',
-        },
-        {
-          kw: hasEgg || isVegan
-            ? ['bebida de soja']
-            : ['claras de huevo', 'huevo entero'],
-          qty: 100,
-          notes: 'Para las tortitas o revuelto',
-        },
-        { kw: ['arándanos', 'fresas'], qty: 80, notes: 'Fruta por encima' },
-      ],
-      midMorning: [
-        { kw: ['manzana'], qty: 140, notes: 'Pieza fresca' },
-        {
-          kw: hasNuts ? ['tortitas de arroz'] : ['nueces'],
-          qty: 20,
-          notes: 'Al natural',
-        },
-      ],
-      lunch: [
-        {
-          kw: isVegetarian
-            ? ['tofu marinado', 'lentejas']
-            : ['pollo entero asado sin piel', 'pechuga de pollo asada'],
-          qty: 180,
-          notes: 'Asado con hierbas provenzales',
-        },
-        {
-          kw: isKeto ? ['pimientos asados'] : ['patata asada', 'patata'],
-          qty: 160,
-          notes: 'Asada al horno',
-        },
-        { kw: ['pimientos asados', 'verduras asadas'], qty: 140, notes: 'Al horno' },
-        { kw: ['aceite de oliva virgen extra'], qty: 10, notes: 'Aliño' },
-      ],
-      snack: [
-        {
-          kw: hasLactose || isVegan
-            ? ['bebida de avena']
-            : ['yogur natural'],
-          qty: 125,
-          notes: 'Con canela',
-        },
-        {
-          kw: hasNuts ? ['fresas'] : ['almendras'],
-          qty: 20,
-          notes: 'Crudas',
-        },
-      ],
-      dinner: [
-        {
-          kw: hasEgg || isVegetarian
-            ? ['tofu firme', 'pechuga de pavo']
-            : ['huevo entero', 'huevos camperos'],
-          qty: 110,
-          notes: 'Tortilla francesa de dos huevos con calabacín',
-        },
-        { kw: ['calabacín', 'judías verdes cocidas'], qty: 160, notes: 'Salteado en la tortilla' },
-        { kw: ['tomate de ensalada', 'ensalada verde'], qty: 120, notes: 'Con orégano' },
-        { kw: ['aceite de oliva virgen extra'], qty: 8, notes: 'Para cuajar y aliñar' },
-      ],
+    if (
+      isKeto &&
+      (category === 'Cereales y Harinas' ||
+        category === 'Cereales y Derivados' ||
+        category === 'Pastas' ||
+        category === 'Legumbres' ||
+        n.includes('arroz') ||
+        n.includes('pasta') ||
+        n.includes('pan') ||
+        n.includes('patata') ||
+        n.includes('boniato') ||
+        n.includes('batata') ||
+        n.includes('lenteja') ||
+        n.includes('garbanzo') ||
+        n.includes('alubia'))
+    ) {
+      return true
+    }
+
+    // 4. Consideraciones médicas: hipertensión (excluir curados y carnes ricas en sodio)
+    if (
+      isHypertensive &&
+      (n.includes('jamón serrano') ||
+        n.includes('jamon serrano') ||
+        n.includes('bacon') ||
+        n.includes('panceta') ||
+        n.includes('chorizo') ||
+        n.includes('salchicha') ||
+        n.includes('salchichón') ||
+        n.includes('sobrasada') ||
+        n.includes('morcilla') ||
+        n.includes('cecina') ||
+        n.includes('salazón') ||
+        n.includes('mojama'))
+    ) {
+      return true
+    }
+
+    return false
+  }
+
+  // Conjunto de IDs de alimentos ya utilizados para garantizar rotación sin repeticiones monótonas
+  const usedFoodIds = new Set<number>()
+
+  // Semilla base para reproducibilidad y personalización por paciente
+  let patientSeed = 42
+  for (let i = 0; i < (patient.firstName + patient.lastName).length; i++) {
+    patientSeed = (patientSeed * 31 + (patient.firstName + patient.lastName).charCodeAt(i)) & 0x7fffffff
+  }
+
+  /**
+   * Selector dinámico que consulta los 5.050 alimentos de la base de datos,
+   * filtra según seguridad clínica y prioriza alimentos no repetidos en la semana.
+   */
+  function queryFood(
+    options: {
+      category?: string | string[]
+      nameKeywords?: string[]
+      excludeKeywords?: string[]
+      filterFn?: (f: FoodDatabaseItem) => boolean
+      preferredKeywords?: string[]
     },
-  ]
+    stepSeed: number
+  ): FoodDatabaseItem {
+    const categories = Array.isArray(options.category)
+      ? options.category
+      : options.category
+        ? [options.category]
+        : []
+
+    const candidates = allFoods.filter((f) => {
+      // 1. Categoría
+      if (
+        categories.length > 0 &&
+        (!f.category ||
+          !categories.some((c) =>
+            (f.category || '').toLowerCase().includes(c.toLowerCase())
+          ))
+      ) {
+        return false
+      }
+
+      // 2. Alimento seguro y no prohibido
+      if (isFoodForbidden(f.name, f.category)) return false
+
+      const n = f.name.toLowerCase()
+
+      // 3. Palabras clave obligatorias
+      if (options.nameKeywords && options.nameKeywords.length > 0) {
+        if (!options.nameKeywords.some((kw) => n.includes(kw.toLowerCase()))) {
+          return false
+        }
+      }
+
+      // 4. Palabras clave excluidas (ej: harinas, condimentos puros)
+      if (options.excludeKeywords && options.excludeKeywords.length > 0) {
+        if (options.excludeKeywords.some((ex) => n.includes(ex.toLowerCase()))) {
+          return false
+        }
+      }
+
+      // 5. Filtro adicional
+      if (options.filterFn && !options.filterFn(f)) return false
+
+      return true
+    })
+
+    if (candidates.length === 0) {
+      // Fallback seguro de toda la base de datos
+      const fallbackPool = allFoods.filter((f) => !isFoodForbidden(f.name, f.category))
+      return fallbackPool[Math.abs(patientSeed + stepSeed) % fallbackPool.length] || allFoods[0]
+    }
+
+    // Priorizar alimentos que todavía NO se hayan consumido esta semana
+    const unused = candidates.filter((f) => !usedFoodIds.has(f.id))
+    const pool = unused.length > 0 ? unused : candidates
+
+    // Si hay preferencias culinarias específicas dentro del grupo, valorarlas
+    if (options.preferredKeywords && options.preferredKeywords.length > 0) {
+      const preferred = pool.filter((f) =>
+        options.preferredKeywords!.some((kw) =>
+          f.name.toLowerCase().includes(kw.toLowerCase())
+        )
+      )
+      if (preferred.length > 0) {
+        const chosen = preferred[Math.abs(patientSeed + stepSeed) % preferred.length]
+        usedFoodIds.add(chosen.id)
+        return chosen
+      }
+    }
+
+    const chosen = pool[Math.abs(patientSeed + stepSeed) % pool.length]
+    usedFoodIds.add(chosen.id)
+    return chosen
+  }
 
   const weeklySchedule: { [dayIndex: number]: GeneratedDayPlan } = {}
 
   for (let d = 0; d < 7; d++) {
-    const tpl = weeklyTemplates[d]
+    const daySeed = patientSeed + d * 41
 
-    // Construct raw items with guaranteed allergen safety
-    const bItems: GeneratedMealItem[] = tpl.breakfast.map((item, idx) => ({
-      uid: `gen-b-${d}-${idx}-${Math.random()}`,
-      foodId: findFood(item.kw).id,
-      quantityG: item.qty,
-      notes: item.notes,
-    }))
+    // ==========================================
+    // 1. DESAYUNO
+    // ==========================================
+    const bCarb = queryFood(
+      {
+        category: hasGluten
+          ? ['Cereales y Derivados', 'Cereales y Tubérculos']
+          : ['Cereales y Derivados'],
+        nameKeywords: hasGluten
+          ? ['tortitas de maíz', 'tortitas de arroz', 'copos de maíz', 'avena sin gluten', 'quinoa']
+          : isKeto
+            ? ['aguacate']
+            : ['avena', 'pan', 'tostada', 'centeno', 'masa madre', 'espelta', 'copos'],
+        excludeKeywords: ['harina', 'bizcocho', 'galleta', 'magdalena'],
+      },
+      daySeed + 1
+    )
 
-    const mmItems: GeneratedMealItem[] = tpl.midMorning.map((item, idx) => ({
-      uid: `gen-mm-${d}-${idx}-${Math.random()}`,
-      foodId: findFood(item.kw).id,
-      quantityG: item.qty,
-      notes: item.notes,
-    }))
+    const bProt = queryFood(
+      {
+        category: ['Huevos y Lácteos', 'Carnes', 'Legumbres'],
+        nameKeywords: isVegan
+          ? ['tofu', 'hummus', 'crema de cacahuete']
+          : hasEgg
+            ? ['pechuga de pavo', 'jamón cocido extra', 'queso fresco batido', 'hummus']
+            : ['huevo entero', 'huevos camperos', 'clara de huevo', 'pechuga de pavo'],
+        excludeKeywords: ['salchicha', 'chorizo', 'sobrasada'],
+      },
+      daySeed + 2
+    )
 
-    const lItems: GeneratedMealItem[] = tpl.lunch.map((item, idx) => ({
-      uid: `gen-l-${d}-${idx}-${Math.random()}`,
-      foodId: findFood(item.kw).id,
-      quantityG: item.qty,
-      notes: item.notes,
-    }))
+    const bDrink = queryFood(
+      {
+        category: ['Bebidas', 'Huevos y Lácteos'],
+        nameKeywords: hasLactose || isVegan
+          ? ['bebida de avena', 'bebida de almendras', 'bebida de soja', 'bebida de arroz']
+          : ['leche semidesnatada', 'leche desnatada', 'kéfir', 'kefir'],
+        excludeKeywords: ['azúcar', 'cacao soluble azucarado', 'refresco'],
+      },
+      daySeed + 3
+    )
 
-    const sItems: GeneratedMealItem[] = tpl.snack.map((item, idx) => ({
-      uid: `gen-s-${d}-${idx}-${Math.random()}`,
-      foodId: findFood(item.kw).id,
-      quantityG: item.qty,
-      notes: item.notes,
-    }))
+    const bFresh = queryFood(
+      {
+        category: ['Frutas', 'Verduras y Hortalizas'],
+        nameKeywords: hasGluten
+          ? ['plátano', 'fresas', 'arándanos', 'kiwi']
+          : ['tomate', 'plátano', 'fresas', 'arándanos', 'kiwi', 'aguacate'],
+        filterFn: (f) => f.calories <= 100,
+      },
+      daySeed + 4
+    )
 
-    const dItems: GeneratedMealItem[] = tpl.dinner.map((item, idx) => ({
-      uid: `gen-d-${d}-${idx}-${Math.random()}`,
-      foodId: findFood(item.kw).id,
-      quantityG: item.qty,
-      notes: item.notes,
-    }))
+    const bOil = queryFood(
+      {
+        category: ['Aceites y Grasas', 'Grasas y Aceites'],
+        nameKeywords: ['aceite de oliva virgen extra', 'aove'],
+      },
+      daySeed + 5
+    )
 
-    // Calculate preliminary calories for this day
-    const allDayItems = [...bItems, ...mmItems, ...lItems, ...sItems, ...dItems]
-    let rawKcal = 0
-    allDayItems.forEach((it) => {
+    const bItems: GeneratedMealItem[] = [
+      {
+        uid: `gen-b-${d}-0-${Math.random()}`,
+        foodId: bCarb.id,
+        quantityG: bCarb.name.toLowerCase().includes('pan') ? 60 : 50,
+        notes: 'Base energética integral',
+      },
+      {
+        uid: `gen-b-${d}-1-${Math.random()}`,
+        foodId: bProt.id,
+        quantityG: bProt.name.toLowerCase().includes('huevo') ? 110 : 60,
+        notes: 'Aporte proteico saciante',
+      },
+      {
+        uid: `gen-b-${d}-2-${Math.random()}`,
+        foodId: bDrink.id,
+        quantityG: 200,
+        notes: 'Bebida templada o café/té',
+      },
+      {
+        uid: `gen-b-${d}-3-${Math.random()}`,
+        foodId: bFresh.id,
+        quantityG: 80,
+        notes: 'Fruta fresca o tomate de huerta',
+      },
+      {
+        uid: `gen-b-${d}-4-${Math.random()}`,
+        foodId: bOil.id,
+        quantityG: 5,
+        notes: 'AOVE en crudo',
+      },
+    ]
+
+    // ==========================================
+    // 2. MEDIA MAÑANA
+    // ==========================================
+    const mmFruit = queryFood(
+      {
+        category: 'Frutas',
+        filterFn: (f) =>
+          f.calories <= 100 &&
+          !f.name.toLowerCase().includes('deshidratad') &&
+          !f.name.toLowerCase().includes('almíbar') &&
+          !f.name.toLowerCase().includes('pasa'),
+      },
+      daySeed + 6
+    )
+
+    const mmNut = queryFood(
+      {
+        category: hasNuts ? ['Huevos y Lácteos', 'Cereales y Derivados'] : ['Frutos Secos y Semillas'],
+        nameKeywords: hasNuts
+          ? ['yogur natural', 'queso fresco batido', 'tortitas de arroz']
+          : ['nueces', 'almendras', 'avellanas', 'pistachos', 'anacardos', 'semillas de chía'],
+        excludeKeywords: ['frito', 'salado', 'azucarado', 'caramelizado'],
+      },
+      daySeed + 7
+    )
+
+    const mmItems: GeneratedMealItem[] = [
+      {
+        uid: `gen-mm-${d}-0-${Math.random()}`,
+        foodId: mmFruit.id,
+        quantityG: 150,
+        notes: 'Fruta fresca entera de temporada',
+      },
+      {
+        uid: `gen-mm-${d}-1-${Math.random()}`,
+        foodId: mmNut.id,
+        quantityG: hasNuts ? 125 : 20,
+        notes: hasNuts ? 'Lácteo o snack suave' : 'Frutos secos crudos al natural',
+      },
+    ]
+
+    // ==========================================
+    // 3. COMIDA (ALMUERZO PRINCIPAL)
+    // ==========================================
+    let lProt: FoodDatabaseItem
+    if (isVegetarian || isVegan) {
+      lProt = queryFood(
+        {
+          category: ['Legumbres', 'Huevos y Lácteos'],
+          nameKeywords: ['lenteja', 'garbanzo', 'alubia', 'tofu', 'soja texturizada', 'huevo'],
+          excludeKeywords: ['harina'],
+        },
+        daySeed + 8
+      )
+    } else if (d === 0 || d === 3) {
+      // Días de carne y ave magra
+      lProt = queryFood(
+        {
+          category: 'Carnes',
+          nameKeywords: ['pechuga de pollo', 'solomillo de pavo', 'ternera magra', 'lomo de cerdo magro', 'conejo', 'pollo campero'],
+          excludeKeywords: ['salchicha', 'chorizo', 'panceta', 'bacon', 'nuggets', 'frito', 'empanado'],
+          filterFn: (f) => f.proteinG >= 18 && f.fatG <= 12,
+        },
+        daySeed + 8
+      )
+    } else if (d === 1 || d === 4) {
+      // Días de pescado y marisco fresco
+      lProt = queryFood(
+        {
+          category: 'Pescados y Mariscos',
+          nameKeywords: ['merluza', 'dorada', 'lubina', 'bacalao', 'salmón', 'atún', 'trucha', 'sepia', 'calamar', 'lenguado', 'corvina'],
+          excludeKeywords: ['rebozado', 'frito', 'surimi'],
+        },
+        daySeed + 8
+      )
+    } else if (d === 2) {
+      // Día de legumbre mediterránea
+      lProt = queryFood(
+        {
+          category: 'Legumbres',
+          nameKeywords: ['lenteja', 'garbanzo', 'alubia', 'judión', 'edamame'],
+          excludeKeywords: ['harina', 'snack'],
+        },
+        daySeed + 8
+      )
+    } else {
+      // Fin de semana: pescado al horno o ave de corral
+      lProt = queryFood(
+        {
+          category: ['Pescados y Mariscos', 'Carnes'],
+          nameKeywords: ['dorada', 'lubina', 'salmón', 'solomillo', 'pollo asado', 'paella'],
+          excludeKeywords: ['frito', 'empanado'],
+        },
+        daySeed + 8
+      )
+    }
+
+    const lCarb = queryFood(
+      {
+        category: ['Cereales y Derivados', 'Cereales y Tubérculos'],
+        nameKeywords: isKeto
+          ? ['calabacín']
+          : hasGluten
+            ? ['arroz', 'patata', 'boniato', 'quinoa']
+            : isDiabetic
+              ? ['arroz integral', 'quinoa', 'pasta integral', 'patata']
+              : ['arroz', 'patata', 'boniato', 'pasta', 'quinoa', 'cuscús'],
+        excludeKeywords: ['harina', 'galleta', 'frita', 'chips'],
+      },
+      daySeed + 9
+    )
+
+    const lVeg = queryFood(
+      {
+        category: 'Verduras y Hortalizas',
+        excludeKeywords: ['albahaca', 'hierbabuena', 'perejil', 'cilantro', 'deshidratad', 'frito'],
+        filterFn: (f) => f.calories <= 75,
+      },
+      daySeed + 10
+    )
+
+    const lOil = queryFood(
+      {
+        category: ['Aceites y Grasas', 'Grasas y Aceites'],
+        nameKeywords: ['aceite de oliva virgen extra', 'aove'],
+      },
+      daySeed + 11
+    )
+
+    const isLegumeMain = lProt.category?.toLowerCase().includes('legumbre') || lProt.name.toLowerCase().includes('lenteja') || lProt.name.toLowerCase().includes('garbanzo')
+    const lItems: GeneratedMealItem[] = [
+      {
+        uid: `gen-l-${d}-0-${Math.random()}`,
+        foodId: lProt.id,
+        quantityG: isLegumeMain ? 210 : 160,
+        notes: 'Plato proteico principal cocinado a la plancha o al vapor',
+      },
+      {
+        uid: `gen-l-${d}-1-${Math.random()}`,
+        foodId: lCarb.id,
+        quantityG: lCarb.name.toLowerCase().includes('patata') || lCarb.name.toLowerCase().includes('boniato') ? 160 : 75,
+        notes: 'Guarnición de carbohidratos complejos al punto',
+      },
+      {
+        uid: `gen-l-${d}-2-${Math.random()}`,
+        foodId: lVeg.id,
+        quantityG: 160,
+        notes: 'Verduras frescas al vapor, salteadas o en ensalada',
+      },
+      {
+        uid: `gen-l-${d}-3-${Math.random()}`,
+        foodId: lOil.id,
+        quantityG: 10,
+        notes: 'AOVE para cocinado y aliño en crudo',
+      },
+    ]
+
+    // ==========================================
+    // 4. MERIENDA
+    // ==========================================
+    const sDairy = queryFood(
+      {
+        category: hasLactose || isVegan
+          ? ['Bebidas', 'Frutas']
+          : ['Huevos y Lácteos', 'Lácteos y Derivados'],
+        nameKeywords: hasLactose || isVegan
+          ? ['bebida de avena', 'bebida de soja', 'fresas', 'arándanos']
+          : ['yogur natural', 'kéfir', 'queso fresco batido', 'skyr', 'yogur griego'],
+        excludeKeywords: ['azucarado', 'fresa azucarada', 'chocolate'],
+      },
+      daySeed + 12
+    )
+
+    const sFruitOrNut = queryFood(
+      {
+        category: ['Frutas', 'Frutos Secos y Semillas'],
+        filterFn: (f) => f.calories <= 120 || f.category === 'Frutos Secos y Semillas',
+        excludeKeywords: ['frito', 'salado', 'azúcar'],
+      },
+      daySeed + 13
+    )
+
+    const sItems: GeneratedMealItem[] = [
+      {
+        uid: `gen-s-${d}-0-${Math.random()}`,
+        foodId: sDairy.id,
+        quantityG: 125,
+        notes: 'Lácteo fermentado suave o alternativa vegetal',
+      },
+      {
+        uid: `gen-s-${d}-1-${Math.random()}`,
+        foodId: sFruitOrNut.id,
+        quantityG: sFruitOrNut.category === 'Frutas' ? 120 : 20,
+        notes: 'Snack saciante de la tarde',
+      },
+    ]
+
+    // ==========================================
+    // 5. CENA (LIGERA Y REPARADORA)
+    // ==========================================
+    let dProt: FoodDatabaseItem
+    if (isVegetarian || isVegan) {
+      dProt = queryFood(
+        {
+          category: ['Huevos y Lácteos', 'Legumbres'],
+          nameKeywords: ['huevo entero', 'claras de huevo', 'tofu', 'hummus'],
+        },
+        daySeed + 14
+      )
+    } else if (d % 2 === 0) {
+      // Pescados ligeros o mariscos
+      dProt = queryFood(
+        {
+          category: 'Pescados y Mariscos',
+          nameKeywords: ['merluza', 'dorada', 'lubina', 'lenguado', 'sepia', 'calamar', 'salmón'],
+          excludeKeywords: ['frito', 'rebozado'],
+        },
+        daySeed + 14
+      )
+    } else {
+      // Huevos o ave magra
+      dProt = queryFood(
+        {
+          category: ['Huevos y Lácteos', 'Carnes'],
+          nameKeywords: hasEgg
+            ? ['pechuga de pavo', 'pechuga de pollo', 'solomillo de pavo']
+            : ['huevo entero', 'huevos camperos', 'clara de huevo', 'pechuga de pavo'],
+          excludeKeywords: ['frito'],
+        },
+        daySeed + 14
+      )
+    }
+
+    const dVeg = queryFood(
+      {
+        category: 'Verduras y Hortalizas',
+        nameKeywords: ['crema', 'puré', 'espárragos', 'calabacín', 'judías verdes', 'ensalada', 'canónigos', 'champiñones'],
+        excludeKeywords: ['albahaca', 'hierbabuena', 'perejil', 'cilantro'],
+        filterFn: (f) => f.calories <= 75,
+      },
+      daySeed + 15
+    )
+
+    const dCarb = queryFood(
+      {
+        category: ['Cereales y Derivados', 'Cereales y Tubérculos', 'Aceites y Grasas'],
+        nameKeywords: isKeto
+          ? ['aguacate']
+          : hasGluten
+            ? ['patata', 'boniato', 'tortitas de arroz']
+            : ['patata', 'boniato', 'pan 100% integral', 'pan de centeno'],
+        excludeKeywords: ['harina', 'frita'],
+      },
+      daySeed + 16
+    )
+
+    const dOil = queryFood(
+      {
+        category: ['Aceites y Grasas', 'Grasas y Aceites'],
+        nameKeywords: ['aceite de oliva virgen extra', 'aove'],
+      },
+      daySeed + 17
+    )
+
+    const isEggDinner = dProt.name.toLowerCase().includes('huevo')
+    const dItems: GeneratedMealItem[] = [
+      {
+        uid: `gen-d-${d}-0-${Math.random()}`,
+        foodId: dProt.id,
+        quantityG: isEggDinner ? 110 : 160,
+        notes: isEggDinner ? 'Tortilla francesa o revuelto con verduras' : 'Proteína ligera a la plancha o vapor',
+      },
+      {
+        uid: `gen-d-${d}-1-${Math.random()}`,
+        foodId: dVeg.id,
+        quantityG: 180,
+        notes: 'Verdura cocinada, puré casero o ensalada nocturna',
+      },
+      {
+        uid: `gen-d-${d}-2-${Math.random()}`,
+        foodId: dCarb.id,
+        quantityG: dCarb.name.toLowerCase().includes('patata') || dCarb.name.toLowerCase().includes('boniato') ? 130 : 40,
+        notes: 'Carbohidrato ligero controlado',
+      },
+      {
+        uid: `gen-d-${d}-3-${Math.random()}`,
+        foodId: dOil.id,
+        quantityG: 8,
+        notes: 'AOVE para cuajar y aliñar',
+      },
+    ]
+
+    // ==========================================
+    // 6. ESCALADO Y REAJUSTE FISIOLÓGICO REAL
+    // ==========================================
+    const allDayRaw = [...bItems, ...mmItems, ...lItems, ...sItems, ...dItems]
+    let dayRawKcal = 0
+    allDayRaw.forEach((it) => {
       const food = allFoods.find((f) => f.id === it.foodId)
-      if (food) rawKcal += food.calories * (it.quantityG / 100)
+      if (food) dayRawKcal += food.calories * (it.quantityG / 100)
     })
 
-    // Scale portions proportionally with realistic physiological boundaries per food type
     const target = patient.targetKcal || 2000
-    const ratio = rawKcal > 0 ? target / rawKcal : 1.0
+    const ratio = dayRawKcal > 0 ? target / dayRawKcal : 1.0
 
-    // Realistic Spanish portion boundaries
     function scalePortions(items: GeneratedMealItem[]) {
       return items.map((it) => {
         const food = allFoods.find((f) => f.id === it.foodId)
@@ -785,7 +737,7 @@ export function generateAutomatedWeeklyPlan(
           const cat = (food.category || '').toLowerCase()
 
           // 1. Huevos enteros: unidades completas (~55g por huevo M)
-          if (norm.includes('huevo entero') || norm.includes('huevos camperos') || norm.includes('tortilla francesa')) {
+          if (norm.includes('huevo entero') || norm.includes('huevos camperos') || norm.includes('tortilla')) {
             newQty = Math.max(55, Math.min(220, Math.round((it.quantityG * ratio) / 55) * 55))
           }
           // 2. Aceites y grasas: dosis culinaria real (5g cucharadita, 10g-15g cucharada sopera)
@@ -793,7 +745,7 @@ export function generateAutomatedWeeklyPlan(
             newQty = Math.max(5, Math.min(15, Math.round((it.quantityG * Math.min(1.2, Math.max(0.8, ratio))) / 2.5) * 2.5))
           }
           // 3. Pan de molde / tostadas: rebanadas estándar (~30g-35g)
-          else if (norm.includes('pan de molde') || norm.includes('tostada') || norm.includes('biscote')) {
+          else if (norm.includes('pan') || norm.includes('tostada') || norm.includes('biscote')) {
             newQty = Math.max(30, Math.min(90, Math.round((it.quantityG * ratio) / 30) * 30))
           }
           // 4. Frutos secos: puñado clínico (15g a 30g)
@@ -808,11 +760,11 @@ export function generateAutomatedWeeklyPlan(
           else if (cat.includes('legumbre') || norm.includes('lenteja') || norm.includes('garbanzo') || norm.includes('alubia')) {
             newQty = Math.max(130, Math.min(240, Math.round((it.quantityG * ratio) / 10) * 10))
           }
-          // 7. Frutas enteras de mesa: pieza entera (100g a 180g)
+          // 7. Frutas enteras de mesa: pieza entera (90g a 180g)
           else if (cat.includes('fruta') && (norm.includes('manzana') || norm.includes('platano') || norm.includes('naranja') || norm.includes('pera') || norm.includes('kiwi'))) {
             newQty = Math.max(90, Math.min(180, Math.round((it.quantityG * ratio) / 10) * 10))
           }
-          // 8. Lácteos envasados (yogur 125g/250g, leche 200ml)
+          // 8. Lácteos envasados (yogur 125g/250g, leche 150-250ml)
           else if (norm.includes('yogur')) {
             newQty = Math.max(125, Math.min(250, Math.round((it.quantityG * ratio) / 125) * 125))
           } else if (norm.includes('leche') || norm.includes('bebida de')) {
@@ -824,8 +776,8 @@ export function generateAutomatedWeeklyPlan(
           }
 
           // Restricción específica GLP-1: limitar raciones individuales voluminosas
-          if (patient.isGLP1Treatment && newQty > 200) {
-            newQty = Math.min(newQty, 200)
+          if (patient.isGLP1Treatment && newQty > 190) {
+            newQty = Math.min(newQty, 190)
           }
         }
         return {
@@ -841,8 +793,9 @@ export function generateAutomatedWeeklyPlan(
     const scaledSnack = scalePortions(sItems)
     const scaledDinner = scalePortions(dItems)
 
-    // Ajuste fino clínico: absorbe la desviación producida por el acotado de raciones discretas
-    // (ej. huevos en unidades enteras o pan en rebanadas) usando los carbohidratos/aceites base
+    // ==========================================
+    // 7. AJUSTE FINO MATEMÁTICO CLÍNICO (< ±1% margen)
+    // ==========================================
     const allScaledItems = [
       ...scaledBreakfast,
       ...scaledMidMorning,
@@ -858,7 +811,7 @@ export function generateAutomatedWeeklyPlan(
     })
 
     let diffKcal = target - dayKcal
-    if (Math.abs(diffKcal) > 25) {
+    if (Math.abs(diffKcal) > 20) {
       const adjustable = allScaledItems.filter((it) => {
         const food = allFoods.find((f) => f.id === it.foodId)
         if (!food) return false
@@ -883,12 +836,14 @@ export function generateAutomatedWeeklyPlan(
       })
 
       let iterations = 0
-      while (Math.abs(diffKcal) > 25 && iterations < 15 && adjustable.length > 0) {
+      while (Math.abs(diffKcal) > 20 && iterations < 20 && adjustable.length > 0) {
         iterations++
         for (const it of adjustable) {
-          if (Math.abs(diffKcal) <= 25) break
+          if (Math.abs(diffKcal) <= 20) break
           const food = allFoods.find((f) => f.id === it.foodId)!
-          const isOil = (food.category || '').toLowerCase().includes('aceite') || food.name.toLowerCase().includes('aceite')
+          const isOil =
+            (food.category || '').toLowerCase().includes('aceite') ||
+            food.name.toLowerCase().includes('aceite')
           const stepG = isOil ? 2.5 : 10
           const kcalPerStep = (food.calories * stepG) / 100
 

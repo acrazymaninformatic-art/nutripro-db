@@ -297,6 +297,8 @@ export function PlanBuilderForm({
         dietaryPreferences: selectedPatient.dietaryPreferences,
         foodAversions: selectedPatient.foodAversions,
         medicalHistory: selectedPatient.medicalHistory,
+        isGLP1Treatment: Boolean(selectedPatient.isGLP1Treatment),
+        isTCAProtocol: Boolean(selectedPatient.isTCAProtocol),
       },
       foods
     )
@@ -417,6 +419,8 @@ export function PlanBuilderForm({
         dietaryPreferences: selectedPatient.dietaryPreferences,
         foodAversions: selectedPatient.foodAversions,
         medicalHistory: selectedPatient.medicalHistory,
+        isGLP1Treatment: Boolean(selectedPatient.isGLP1Treatment),
+        isTCAProtocol: Boolean(selectedPatient.isTCAProtocol),
       },
       foods
     )

@@ -84,8 +84,9 @@ describe('cifrado del secreto MFA', () => {
 
   it('rechaza un valor cifrado manipulado', () => {
     const encrypted = encryptMfaSecret(RFC_SECRET)
-    const lastCharacter = encrypted.at(-1)
-    const tampered = `${encrypted.slice(0, -1)}${lastCharacter === 'A' ? 'B' : 'A'}`
+    const parts = encrypted.split('.')
+    const tamperedCiphertext = (parts[3][0] === 'A' ? 'B' : 'A') + parts[3].slice(1)
+    const tampered = [parts[0], parts[1], parts[2], tamperedCiphertext].join('.')
     expect(decryptMfaSecret(tampered)).toBeNull()
   })
 
