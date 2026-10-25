@@ -636,19 +636,18 @@ export function MenuEditor({
             </span>
           </div>
 
-          {/* Cuadrícula: 7 días con scroll horizontal si la pantalla es reducida */}
+          {/* Cuadrícula semanal de 7 días */}
           <div
             ref={gridRef}
-            className="overflow-y-auto overflow-x-auto rounded-2xl border border-slate-200 bg-slate-50/70 p-1.5"
-            style={{ maxHeight: 'calc(100vh - 215px)' }}
+            className="rounded-2xl border border-slate-200 bg-slate-50/70 p-1.5"
           >
             {/* Cabecera anclada superior (INGESTA + 7 DÍAS) */}
             <div
-              className="sticky top-0 z-30 mb-1.5 grid min-w-[620px] lg:min-w-0 gap-1.5 rounded-xl bg-slate-100 p-1 shadow-xs"
+              className="sticky top-0 z-30 mb-1.5 grid min-w-[620px] lg:min-w-0 gap-1.5 rounded-xl border border-slate-200/90 bg-slate-100 p-1.5 shadow-sm"
               style={{ gridTemplateColumns: 'clamp(55px, 6vw, 105px) repeat(7, minmax(0, 1fr))' }}
             >
               {/* Esquina */}
-              <div className="sticky left-0 z-40 flex items-center justify-center rounded-xl bg-slate-200/90 px-1 py-1 text-[8px] font-black uppercase tracking-wider text-slate-700 shadow-xs">
+              <div className="sticky left-0 z-40 flex items-center justify-center rounded-xl bg-slate-200 px-1 py-1 text-[8px] font-black uppercase tracking-wider text-slate-700 shadow-xs">
                 Ingesta
               </div>
 
@@ -900,7 +899,7 @@ export function MenuEditor({
         {panelOpen && (
           <div
             className="flex w-[290px] lg:w-[315px] 2xl:w-[335px] shrink-0 flex-col sticky top-1 self-start"
-            style={{ height: 'calc(100vh - 215px)', maxHeight: 'calc(100vh - 215px)' }}
+            style={{ height: 'calc(100vh - 80px)', maxHeight: 'calc(100vh - 80px)' }}
           >
             <MenuSidePanel
               grid={grid}

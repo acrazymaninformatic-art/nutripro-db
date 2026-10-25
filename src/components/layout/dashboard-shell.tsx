@@ -38,7 +38,7 @@ export function DashboardShell({
 
       {/* Contenido principal a ancho completo sin barra lateral izquierda */}
       <main
-        className="surface-grid flex-1 overflow-y-auto bg-transparent p-2 sm:p-4 lg:p-4 print:m-0 print:h-auto print:overflow-visible print:bg-white print:block print:p-0"
+        className="surface-grid flex-1 overflow-auto bg-transparent p-2 sm:p-4 lg:p-4 print:m-0 print:h-auto print:overflow-visible print:bg-white print:block print:p-0"
         data-gsap-scroll="admin"
       >
         <div className="page-shell w-full">
